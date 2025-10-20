@@ -1,0 +1,7 @@
+{
+    "product": "Event",
+    "purpose": "SessionRegistration",
+    "essential": false,
+    "customElementName": "valid-widget"
+    }
+  

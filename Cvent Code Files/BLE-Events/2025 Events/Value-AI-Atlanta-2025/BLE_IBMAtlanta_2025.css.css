@@ -1,0 +1,832 @@
+.main-nav, .main-nav_reg {
+}
+.main-nav, .main-nav .website_navigation {
+  transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1) 0s;
+}
+
+.speaker-space > div {
+    padding-top: 0px !important;
+
+}
+.speaker-cards{
+
+}
+
+.max_width_main>div {
+  max-width: 1400px !important
+}
+.section_full_fluid>div {
+  max-width: 100% !important
+}
+.interior_nav_bar img, .website_navigation img {
+  max-width: 280px !important;
+  height: auto !important
+}
+.nav_links {
+    text-transform: uppercase;
+}
+ [class*=WebsiteNavigator__menuItem]>div:hover, [class*=WebsiteNavigator__menuItem]>div[class^=WebsiteNavigator__selected] {
+     border-top: 3px solid #000 !important;
+     font-weight: 500 !important;
+     opacity: 1;
+}
+.website_navigation ul>li {
+    padding-right: 8px !important;
+}
+.website_navigation ul>li:last-child {
+    padding-right: 0 !important;
+}
+.website_navigation nav>ul>li>div {
+    padding-top: 5px !important;
+    opacity: 0.5;
+}
+.footer_logo img {
+  max-width: 90px !important;
+  height: auto !important
+}
+.link_color_white a {
+  color: #fff;
+}
+.text_dec_none a {
+  text-decoration: none !important
+}
+.text_dec_undr {
+  text-decoration: underline !important
+}
+.img_display_mobile_only img {
+  display: none;
+}
+.head_txt_center {
+  margin: 0 auto !important
+}
+.divider_light>div {
+    border-top: 1px solid rgba(255,255,255,.3) !important;
+}
+.max_width_reduced, .max_width_reduced_1, .max_width_reduced_2, .max_width_reduced_3, .max_width_reduced_4 {
+    /*margin: 0 auto;*/
+}
+.max_width_reduced {
+  max-width: 57%;
+}
+.max_width_reduced_1 {
+  max-width: 50%;
+}
+.max_width_reduced_2 {
+    max-width: 80%;
+}
+.max_width_reduced_3 {
+    max-width: 60%;
+}
+.max_width_reduced_4 {
+    max-width: 70%;
+}
+
+.reg_field_display_horz {
+    display: flex;
+    flex-direction: column;
+}
+
+.mrg_left_0 {
+    margin-left: 0 !important;
+}
+.line_height_sm {
+    line-height: 1.1 !important;
+}
+.line_height_smd {
+    line-height: 1.4 !important;
+}
+.line_height_md {
+    line-height: 1.5 !important;
+}
+.letter_space_md {
+    letter-spacing: 0.1em;
+}
+.btn-primary, .btn-secondary, .btn-inverse {
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out
+}
+.section_hero_main, .section_hero_conf {
+    background-size: contain;
+}
+.section_home_2_col>div>div:first-child {
+    max-width: 42%;
+}
+.section_home_2_col>div>div:last-child {
+    max-width: 58%;
+    margin-left: auto;
+}
+.main_lockup img {
+    max-width: 620px !important;
+}
+.footer_lockup img {
+    max-width: 250px !important;
+}
+.text_01 {
+    border-bottom: 1px solid #888 !important;
+}
+.speaker_default_widget [class*="SpeakersStyles__speakersContainer"]>div {
+    width: 25%;
+}
+.speaker_default_widget [class*="SpeakersStyles__speakersContainer"]>div [class*="SpeakersStyles__speakerImageContainer"] {
+    max-width: 90% !important;
+    width: 90% !important;
+    height: auto;
+}
+.sponsor_logo img {
+    transition: .5s ease;
+}
+.sponsor_logo img:hover {
+    transform: translate(0px, -15px);
+}
+@media only screen and (min-width:1024px) {
+  [class*=WebsiteNavigator__navigation] {
+    margin-left: 70px
+  }
+}
+
+@media only screen and (min-width:600px) {
+  .fix_alignment_1 {
+    margin-left: 8.33333333%;
+    margin-right: 8.33333333%;
+  }
+
+}
+
+@media only screen and (min-width: 1024px) and (max-width: 1440px) {
+    .section_main_middle>div {
+        max-width: 1140px !important;
+    } 
+}
+
+@media only screen and (min-width: 768px) and (max-width: 1024px) {
+    .section_main_middle>div {
+        max-width: 90% !important;
+    }
+}
+@media only screen and (max-width:600px) {
+  .font_16 {
+       font-size: 16px !important;   
+   }
+   .font_18 {
+       font-size: 18px !important;   
+   }
+   .font_20 {
+       font-size: 20px !important;   
+   }
+    .font_28 {
+       font-size: 28px !important;   
+   }
+    .header_2_fix {
+        padding-bottom: 5px !important;
+    }
+    .header_2_fix>div {
+        font-size: 28px !important;
+    } 
+    .text_center_mb {
+        text-align: center !important;
+    }
+     .btn_center_mb>div {
+        text-align: center !important;
+    }
+    .p_top_mobile_0 {
+        padding-top: 0 !important;
+    }
+    .p_top_mobile_reduced {
+        padding-top: 20px !important;
+    }
+    .p_bottom_mobile_reduced {
+        padding-bottom: 25px !important;
+    }
+  [class*=WebsiteNavigator__navigation] {
+    padding-left: 25px;
+    padding-top: 3px
+  }
+  [class*=WebsiteNavigator__group] {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    padding-top: 10px
+  }
+  [class*=WebsiteNavigator__rightContent] .button {
+    font-size: 14px !important;
+    padding: 10px 1.5rem !important;
+
+  }
+    [class*=WebsiteNavigator__rightContent] .already_reg_nav {
+        font-size: 12px !important;
+    }   
+  .website_navigation {
+    padding: 0px 0 10px !important;
+    flex-direction: row-reverse;
+    display: flex !important;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+  }
+  .website_navigation>div {
+    width: 50%
+  }
+  .website_navigation>div:last-of-type {
+    width: 40%
+  }
+  .align_left_mb, .align_left_mb>div, .website_navigation>div:last-of-type>div {
+    text-align: left !important
+  }
+  [class*=Icons-All__menuFilled] {
+    padding: 0 !important;
+    font-size: 2.3em
+  }
+  .interior_nav_bar img, .website_navigation img {
+   /* max-width: 100px !important;*/
+  }
+  .interior_nav_bar {
+    justify-content: center !important
+  }
+  .img_display_mobile_only img {
+    display: block
+  }
+  .eliminate_spacer_mb {
+    padding: 0 !important
+  }
+  .padding_l_r_0 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  .already_reg_link {
+    display: block !important;
+    padding-left: 0 !important;
+    text-align: center !important;
+  }
+ .hide_img_mb {
+      display: none;
+  }
+  .max_width_reduced, .max_width_reduced_1, .max_width_reduced_2, .max_width_reduced_3, .max_width_reduced_4 {
+     max-width: 100%;
+  }
+  .img_width_reduced_1 img {
+        max-width: 80% !important;
+  }
+  .btn_inline {
+    width: auto !important;
+    padding: 14px 2.8rem !important;
+  }
+  .section_home_2_col>div>div{
+    max-width: 100% !important;
+  }
+ .b_lockup img {
+    max-width: 220px !important;
+ }
+ .widget_align_fix_01 {
+    padding: 0 15px 0 15px !important;
+ }
+ .speaker_default_widget [class*="SpeakersStyles__speakersContainer"]>div {
+    width: 100%;
+ }    
+
+ .navigation-mobile > div:nth-child(1)
+{float: right;}
+.navigation-mobile img
+{max-width: 160px; margin: -20px 0 0 0 !important;}
+
+.navigation-mobile div{
+ text-align:left !important;
+}
+
+.title{
+ font-size:40px !important;
+}
+
+}
+
+@media (max-width: 599px) {
+    .WebsiteNavigator__group___Q86mU {
+      padding-top: 0px;
+    }
+  }
+
+
+@media (max-width: 1024px) {
+  .WebsiteNavigator__container___kbeod.navigation-mobile img {
+    width: 75% !important;
+    height: auto !important;
+  }
+
+  [class*="Countdown-Circle-structure__digit"] {
+  /* color: #4ad338 !important; */
+  font-size: 2rem !important;
+}
+
+[class*="Countdown-Circle-structure__label"] {
+  color: #4ad338 !important;
+}
+
+[class*="Countdown-Circle-structure__border"] {
+  border-color: #4ad338 !important;
+  color: #4ad338 !important;
+}
+
+.Countdown-Circle-structure__border___vWCiT {
+    border-width: 4px !important;
+}
+
+.Button__button___XQqEQ {
+  width: 175px !important;
+}
+
+.Button__button___XQqEQ span {
+  font-size: 80% !important;
+}
+
+.CodeWidget__container___838c iframe {
+  width: 50px !important;
+  margin: 20px auto;
+  display: block;
+}
+}
+
+.site-footer a {
+  color: black;
+  text-decoration: none;
+}
+
+.speaker-title-styling {
+font-style: italic;
+}
+
+@media (max-width: 500px) {
+  /* .WebsiteNavigator__container___kbeod.navigation-mobile img {
+    width: 75% !important;
+    height: auto !important;
+  } */
+
+  /* #widget\:be376fe6-d70d-4488-9788-8c706071a92d.WebsiteNavigator__container___IZV0z.navigation-mobile img {
+    max-width: 60% !important;
+    height: auto !important;
+  } */
+  
+  img[alt="Bloomberg Green at COP30 logo"] {
+    max-width: 60% !important;
+    height: auto !important;
+  }
+
+  /* .button.Button__button___XQqEQ {
+    width: 170px;        
+    font-size: 5px;
+    border: 2px solid red; 
+  } */
+
+ /* button {
+    display: none;
+  } */
+
+}
+
+[data-cvent-id="speakers-speakersContainer"] {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 30px;
+  justify-content: center;         /* added */
+  justify-items: center;           /* added */
+  align-items: stretch;
+  padding: 20px;
+  list-style: none;
+  overflow-x: visible;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 0 auto;                  /* centers the container */
+}
+
+[data-cvent-id="speakers-speakerCard"] {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;                     /* changed from 110% */
+  max-width: 320px;                /* fixed width for centering */
+  padding: 20px;
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 12px;
+  box-sizing: border-box;
+  min-height: 300px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+[data-cvent-id="speakers-speakerCard"] img {
+  width: 225px;
+  height: 225px;
+  object-fit: cover;
+  display: block;
+  margin: 0 auto 0px;
+  border-radius: 5%;
+}
+
+/* Responsive: 2 Columns */
+@media (max-width: 1024px) {
+  [data-cvent-id="speakers-speakersContainer"] {
+    grid-template-columns: repeat(2, 1fr);
+    justify-items: center;
+  }
+}
+
+/* Responsive: 1 Column */
+@media (max-width: 600px) {
+  [data-cvent-id="speakers-speakersContainer"] {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  [data-cvent-id="speakers-speakerCard"] {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  [data-cvent-id="speakers-speakerCard"] img {
+    width: 100%;
+    max-width: 225px;
+    height: auto;
+  }
+}
+
+[data-cvent-id="speakers-speakerCard"] h3 {
+  margin: 0px;
+  font-size: 1.375rem;
+  text-align: center;
+  padding: 0px;
+}
+
+[data-cvent-id="speakers-speakerCard"] .speaker-title-styling {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  min-height: 20px; /* Ensures consistent height across varying titles */
+  text-align: center;
+}
+
+[data-cvent-id="speakers-speakerCard"] .speaker-title-styling + div {
+  margin-top: 0px; /* Pushes company name to bottom */
+  text-align: center;
+}
+
+[data-cvent-id="speakers-speakerCard"].tight-spacing .speaker-title-styling + div {
+  margin-top: 6px !important;
+}
+
+@media (min-width: 941px) {
+  #widget\:829d8e5a-ce8c-4a3b-839b-518a05b90fa3 button {
+      display: none;
+  }
+
+  #widget\:05a6198c-49c1-418f-a191-2ed1f37f577d button {
+      display: none;
+  }
+
+  #widget\:a4a5c3f7-84b9-4ef5-8f25-026b8b17721c {
+      display: none;
+  }
+}
+
+@media (max-width: 941px) {
+    /* Hide RTA button in nav for breakpoints below 942px (tablet & mobile) */
+    .WebsiteNavigator__group___ttfUI {
+      display: block !important;
+    }
+  }
+
+@media screen and (min-width: 700px) and (max-width: 1024px) {
+     /* Expand width of event title in hero for tablet breakpoint */
+ .Header__header___uIg7Q {
+    width: 500px; 
+    margin: 0 auto;
+    margin-left: 0px;  
+}
+}
+
+
+@media screen and (min-width: 601px) and (max-width: 941px) {
+  /* home page hero RTA button resize for tablet */
+  div[data-cvent-id="widget-EventRegisterNow-widget:3c82e180-8709-4baf-9b55-cf17316b9d2f"] 
+  button.Button__button___a519Y {
+    white-space: nowrap;
+    width: auto;
+    min-width: max-content;
+  }
+
+  /* speaker page hero RTA button resize for tablet */
+  div[data-cvent-id="widget-EventRegisterNow-widget:a08c0181-2e91-441c-ba4c-69deb418c6ca"]
+  button.Button__button___a519Y {
+    white-space: nowrap;
+    width: auto;
+    min-width: max-content;
+  }
+
+  /* agenda page hero RTA button resize for tablet */
+  div[data-cvent-id="widget-EventRegisterNow-widget:f0687e34-313f-4e1b-b0e2-7d6e88105ab4"]
+  button.Button__button___a519Y {
+    white-space: nowrap;
+    width: auto;
+    min-width: max-content;
+  }
+
+  /* sponsor page hero RTA button resize for tablet */
+  div[data-cvent-id="widget-EventRegisterNow-widget:913517d7-a947-4d64-96d1-286387406e45"]
+  button.Button__button___a519Y{
+    white-space: nowrap;
+    width: auto;
+    min-width: max-content;
+  }
+
+  /* resources page hero RTA button resize for tablet */
+  div[data-cvent-id="widget-EventRegisterNow-widget:7b16f72a-78e3-490d-9260-a3d9055df652"]
+  button.Button__button___a519Y {
+    white-space: nowrap;
+    width: auto;
+    min-width: max-content;
+  }
+
+  /* venue information page hero RTA button resize for tablet */
+  div[data-cvent-id="widget-EventRegisterNow-widget:aa3e52a2-6c10-464d-a08b-46d7d7e439c8"]
+  button.Button__button___a519Y {
+    white-space: nowrap;
+    width: auto;
+    min-width: max-content;
+  }
+
+  /* 2. Show and stack page links into two rows */
+  .WebsiteNavigator__horizontalMenu___th4ey {
+    display: flex !important;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem 1.5rem;
+    max-width: 100%;
+    padding-top: 0.5rem;
+  }
+
+  .WebsiteNavigator__menuItem___YRKZ2 {
+    flex: 0 1 auto;
+  }
+
+  .WebsiteNavigator__menuItem___YRKZ2 div {
+    display: inline-block;
+    padding: 4px 8px;
+    font-size: 15px !important;
+  }
+
+  /* 3. Shrink the nav logo by 30% */
+  .WebsiteNavigator__leftContent___nNuYg img {
+    transform: scale(0.8);
+    transform-origin: left center;
+  }
+
+  /* Optional cleanup for layout structure */
+  .WebsiteNavigator__group___ttfUI {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .WebsiteNavigator__navigation___Fins_ {
+    display: flex !important;
+    justify-content: center;
+    flex: 1 1 100%;
+  }
+
+  /* Hide RTA button in nav for tablet breakpoint */
+  .WebsiteNavigator__rightContent___w0VjY button {
+    display: none !important;
+  }
+  
+  /* Expand width of event title in hero for tablet breakpoint */
+  .Header__container___SuPJ3 {
+    width: 500px; 
+    margin: 0 auto;  
+}
+
+.Header__header___aEP5n {
+    text-align: left;  
+    word-wrap: break-word;  
+}
+
+}
+
+@media screen and (max-width: 600px) {
+  .WebsiteNavigator__rightContent___w0VjY button {
+    display: none !important;
+  }
+
+  .WebsiteNavigator__group___XmmzF {
+    padding-top: 0px;
+  }
+
+  /* Set background hero image to display right side and center */
+  .Classes__sectionContainer___JJgUQ {
+    background-position: 30% center !important;
+  }
+
+  /* Hide "Resource Type" header in resource center mobile breakpoint */
+  div[data-cvent-id="widget-NucleusText-widget:5f01f7ec-cf18-4be2-86f0-712b66c5144b"] {
+    display: none;
+  }
+
+/* Hide "Title" header in resource center mobile breakpoint */
+div[data-cvent-id="widget-NucleusText-widget:bf60453c-bc91-4fe6-9dda-eb6191c4ea14"] {
+    display: none;
+  }
+
+/* Hide "Description" header in resource center mobile breakpoint */
+div[data-cvent-id="widget-NucleusText-widget:87cc9283-5509-474b-9157-38dea215fd80"] {
+    display: none;
+  }
+
+/* Hide "link" header in resource center mobile breakpoint */
+div[data-cvent-id="widget-NucleusText-widget:473803c1-12bf-41e4-ab8f-85cc04cb413e"] {
+    display: none;
+  }
+
+/* Hide "resource type" = "Website" for first resource */
+div[data-cvent-id="widget-NucleusText-widget:01258cb7-b2dd-4376-b46d-806453b37266"] {
+  display: none;
+}
+
+/* Adjust padding on "AI Value Creators" resource title" */
+div[data-cvent-id="widget-NucleusText-widget:0d17d0d5-4768-4ae1-aa34-f00fa1588afd"] {
+    padding: 15px 15px !important;
+}
+
+/* Adjust padding on "AI Value Creators" resource description */
+div[data-cvent-id="widget-NucleusText-widget:47f5a239-f8b1-41bc-a439-57ff4ae4c7de"] {
+    padding: 15px 15px !important;
+}
+
+/* Adjust padding on "AI Value Creators" resource button  */
+div[data-cvent-id="widget-NucleusLinkButton-widget:4fbd2280-20f8-4d52-b831-275adb494099"] {
+    padding: 15px 15px 25px 15px !important;
+}
+
+/* Hide "resource type" = "Podcasts" for second  resource */
+div[data-cvent-id="widget-NucleusText-widget:0b215ff0-d6fe-4a00-99d5-4ce0eea40bd4"] {
+    display: none;
+  }
+
+/* Adjust padding on "The ROI Rules of AI" resource title" */
+div[data-cvent-id="widget-NucleusText-widget:9054bd97-d343-4008-bbfe-5dd0bf2f818c"] {
+    padding: 25px 15px 15px 15px !important;
+}
+
+/* Adjust padding on "The ROI Rules of AI" resource description */
+div[data-cvent-id="widget-NucleusText-widget:a7509678-2b15-448a-b7a4-e801dd54870b"] {
+    padding: 15px 15px !important;
+}
+
+/* Adjust padding on "The ROI Rules of AI" resource button  */
+div[data-cvent-id="widget-NucleusLinkButton-widget:595ae29d-c2bc-4d76-99be-4dff6fec3f63"] {
+    padding: 15px 15px 25px 15px !important;
+}
+
+/* Hide "resource type" = "Website" for third resource */
+div[data-cvent-id="widget-NucleusText-widget:ff10c27f-4e64-44fe-a4ad-409001a41e3e"] {
+    display: none;
+  }
+
+/* Adjust padding on "AI Academy" resource title" */
+div[data-cvent-id="widget-NucleusText-widget:5d688bff-4452-43b9-8662-bbcf7a4b8077"] {
+    padding: 25px 15px 15px 15px !important;
+}
+
+/* Adjust padding on "AI Academy" resource description */
+div[data-cvent-id="widget-NucleusText-widget:724acdf0-5dac-46e9-9f22-9b5ccef2c771"] {
+    padding: 15px 15px !important;
+}
+
+/* Adjust padding on "AI Academy" resource button  */
+div[data-cvent-id="widget-NucleusLinkButton-widget:31406a09-45ef-4a63-a3f1-041277ace5aa"] {
+    padding: 15px 15px 25px 15px !important;
+}
+
+/* Hide "resource type" = "Website" for fourth  resource */
+div[data-cvent-id="widget-NucleusText-widget:c5497ec7-f2fa-4aa3-bd19-d5d8ef3bc3d7"] {
+    display: none;
+  }
+
+/* Adjust padding on "The 2025 Guide to AI Agents" resource title" */
+div[data-cvent-id="widget-NucleusText-widget:aa6cf7df-1c33-477e-beb4-ebf1f9d49025"] {
+    padding: 25px 15px 15px 15px !important;
+}
+
+/* Adjust padding on "The 2025 Guide to AI Agents" resource description */
+div[data-cvent-id="widget-NucleusText-widget:912ae5ac-bd00-4f30-ab6e-9b1f89c407b1"] {
+    padding: 15px 15px !important;
+}
+
+/* Adjust padding on "The 2025 Guide to AI Agents" resource button  */
+div[data-cvent-id="widget-NucleusLinkButton-widget:e6c33aba-d2b7-4e0f-80ca-9743c7fdeef5"] {
+    padding: 15px 15px 25px 15px !important;
+}
+
+/* Hide "resource type" = "Website" for fifth resource */
+div[data-cvent-id="widget-NucleusText-widget:5a3528a6-308f-4f20-b34a-7820b6de9c47"] {
+    display: none;
+  }
+
+/* Adjust padding on "The CEOs Guide to Generative AI" resource title" */
+div[data-cvent-id="widget-NucleusText-widget:33dd7b38-fa8d-4fc2-a87b-a892ef35493d"] {
+    padding: 25px 15px 15px 15px !important;
+}
+
+/* Adjust padding on "The CEOs Guide to Generative AI" resource description */
+div[data-cvent-id="widget-NucleusText-widget:b0190225-7cfd-46f9-b095-b3c222dc3364"] {
+    padding: 15px 15px !important;
+}
+
+/* Adjust padding on "The CEOs Guide to Generative AI" resource button  */
+div[data-cvent-id="widget-NucleusLinkButton-widget:12b7ca63-89ca-42d1-9dd9-eee59d0fc808"] {
+    padding: 15px 15px 25px 15px !important;
+}
+
+/* Hide "resource type" = "Website" for sixth resource */
+div[data-cvent-id="widget-NucleusText-widget:d4a088fc-a380-44ee-b78b-1b31418650b4"] {
+    display: none;
+  }
+
+/* Adjust padding on "AI Topic Updates" resource title" */
+div[data-cvent-id="widget-NucleusText-widget:7c19f32b-d40c-426e-a8be-bc7afcad8779"] {
+    padding: 25px 15px 15px 15px !important;
+}
+
+/* Adjust padding on "AI Topic Updates" resource description */
+div[data-cvent-id="widget-NucleusText-widget:c2929c32-092b-437f-bbd3-bc853624d9c0"] {
+    padding: 15px 15px !important;
+}
+
+/* Adjust padding on "AI Topic Updates" resource button  */
+div[data-cvent-id="widget-NucleusLinkButton-widget:5c9df424-ca17-475a-ba07-fd32d3ba4273"] {
+    padding: 15px 15px 25px 15px !important;
+}
+
+/* Hide "resource type" = "Website" for seventh resource */
+div[data-cvent-id="widget-NucleusText-widget:f88799a0-8939-439e-8cbf-9756d64259cb"] {
+    display: none;
+  }
+
+/* Adjust padding on "IBM Simplifies the Enterprise Data Stack for Gen AI Era" resource title" */
+div[data-cvent-id="widget-NucleusText-widget:c7432c99-31a3-40ed-bbed-d3a94dc3d431"] {
+    padding: 25px 15px 15px 15px !important;
+}
+
+/* Adjust padding on "IBM Simplifies the Enterprise Data Stack for Gen AI Era" resource description */
+div[data-cvent-id="widget-NucleusText-widget:fc90c0ff-6044-4c42-aa48-4f6b21f179f8"] {
+    padding: 15px 15px !important;
+}
+
+/* Adjust padding on "IBM Simplifies the Enterprise Data Stack for Gen AI Era" resource button  */
+div[data-cvent-id="widget-NucleusLinkButton-widget:2a30dd02-cc75-42f9-940f-433d8233067c"] {
+    padding: 15px 15px 25px 15px !important;
+}
+
+/* Hide "resource type" = "Website" for eigth resource */
+div[data-cvent-id="widget-NucleusText-widget:74f1bd9c-ef92-4091-9f4a-2d28ee695e77"] {
+    display: none;
+  }
+
+/* Adjust padding on "Accelerate Agentic AI Adoption..." resource title" */
+div[data-cvent-id="widget-NucleusText-widget:fe23c19a-81f4-4967-a17e-625a5862903a"] {
+    padding: 25px 15px 15px 15px !important;
+}
+
+/* Adjust padding on "Accelerate Agentic AI Adoption..." resource description */
+div[data-cvent-id="widget-NucleusText-widget:d82dea12-9f07-4ccb-b28f-510d4b8bae6b"] {
+    padding: 15px 15px !important;
+}
+
+/* Adjust padding on "Accelerate Agentic AI Adoption..." resource button  */
+div[data-cvent-id="widget-NucleusLinkButton-widget:993b9031-e70e-425c-b62c-eda409389682"] {
+    padding: 15px 15px 25px 15px !important;
+}
+
+/* Hide "resource type" = "Website" for ninth resource */
+div[data-cvent-id="widget-NucleusText-widget:c6893a22-bf91-4c14-80ea-efb7e6a37f16"] {
+    display: none;
+  }
+
+/* Adjust padding on "Will AI Make IBM the Worlds Most Production Company?" resource title" */
+div[data-cvent-id="widget-NucleusText-widget:15e1a652-cd2d-415e-a673-1a0399b8bf54"] {
+    padding: 25px 15px 15px 15px !important;
+}
+
+/* Adjust padding on "Will AI Make IBM the Worlds Most Production Company?" resource description */
+div[data-cvent-id="widget-NucleusText-widget:997b2fb1-4102-4d17-b65b-fa142b1a810c"] {
+    padding: 15px 15px !important;
+}
+
+/* Adjust padding on "Will AI Make IBM the Worlds Most Production Company?" resource button  */
+div[data-cvent-id="widget-NucleusLinkButton-widget:4a54e220-0bbb-44f5-ad82-670fb4ce2aaa"] {
+    padding: 15px 15px 25px 15px !important;
+}
+
+}
+
+
+@media screen and (max-width: 1024px) {
+  /* Hide RTA button in nav for tablet and smaller breakpoints */
+.WebsiteNavigator__rightContent___F7LGI button {
+    display: none !important;
+  }
+}

@@ -1,0 +1,840 @@
+/* last update: October 17 by RJCS */
+
+.main-nav, .main-nav_reg {
+}
+.main-nav, .main-nav .website_navigation {
+  transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1) 0s;
+}
+
+.speaker-space > div {
+    padding-top: 0px !important;
+
+}
+.speaker-cards{
+
+}
+
+.max_width_main>div {
+  max-width: 1400px !important
+}
+.section_full_fluid>div {
+  max-width: 100% !important
+}
+.interior_nav_bar img, .website_navigation img {
+  max-width: 280px !important;
+  height: auto !important
+}
+.nav_links {
+    text-transform: uppercase;
+}
+ [class*=WebsiteNavigator__menuItem]>div:hover, [class*=WebsiteNavigator__menuItem]>div[class^=WebsiteNavigator__selected] {
+     border-bottom: 3px solid #10FFB8 !important;
+     font-weight: 500 !important;
+     opacity: 1;
+}
+.website_navigation ul>li {
+    padding-right: 8px !important;
+}
+.website_navigation ul>li:last-child {
+    padding-right: 0 !important;
+}
+.website_navigation nav>ul>li>div {
+    padding-top: 5px !important;
+    opacity: 0.5;
+}
+.footer_logo img {
+  max-width: 90px !important;
+  height: auto !important
+}
+.link_color_white a {
+  color: #fff;
+}
+.text_dec_none a {
+  text-decoration: none !important
+}
+.text_dec_undr {
+  text-decoration: underline !important
+}
+.img_display_mobile_only img {
+  display: none;
+}
+.head_txt_center {
+  margin: 0 auto !important
+}
+.divider_light>div {
+    border-top: 1px solid rgba(255,255,255,.3) !important;
+}
+.max_width_reduced, .max_width_reduced_1, .max_width_reduced_2, .max_width_reduced_3, .max_width_reduced_4 {
+    /*margin: 0 auto;*/
+}
+.max_width_reduced {
+  max-width: 57%;
+}
+.max_width_reduced_1 {
+  max-width: 50%;
+}
+.max_width_reduced_2 {
+    max-width: 80%;
+}
+.max_width_reduced_3 {
+    max-width: 60%;
+}
+.max_width_reduced_4 {
+    max-width: 70%;
+}
+
+.reg_field_display_horz {
+    display: flex;
+    flex-direction: column;
+}
+
+.mrg_left_0 {
+    margin-left: 0 !important;
+}
+.line_height_sm {
+    line-height: 1.1 !important;
+}
+.line_height_smd {
+    line-height: 1.4 !important;
+}
+.line_height_md {
+    line-height: 1.5 !important;
+}
+.letter_space_md {
+    letter-spacing: 0.1em;
+}
+.btn-primary, .btn-secondary, .btn-inverse {
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out
+}
+.section_hero_main, .section_hero_conf {
+    background-size: contain;
+}
+.section_home_2_col>div>div:first-child {
+    max-width: 42%;
+}
+.section_home_2_col>div>div:last-child {
+    max-width: 58%;
+    margin-left: auto;
+}
+.main_lockup img {
+    max-width: 620px !important;
+}
+.footer_lockup img {
+    max-width: 250px !important;
+}
+.text_01 {
+    border-bottom: 1px solid #888 !important;
+}
+.speaker_default_widget [class*="SpeakersStyles__speakersContainer"]>div {
+    width: 25%;
+}
+.speaker_default_widget [class*="SpeakersStyles__speakersContainer"]>div [class*="SpeakersStyles__speakerImageContainer"] {
+    max-width: 90% !important;
+    width: 90% !important;
+    height: auto;
+}
+.sponsor_logo img {
+    transition: .5s ease;
+}
+.sponsor_logo img:hover {
+    transform: translate(0px, -15px);
+}
+@media only screen and (min-width:1024px) {
+  [class*=WebsiteNavigator__navigation] {
+    margin-left: 70px
+  }
+}
+
+@media only screen and (min-width:600px) {
+  .fix_alignment_1 {
+    margin-left: 8.33333333%;
+    margin-right: 8.33333333%;
+  }
+
+}
+
+@media only screen and (min-width: 1024px) and (max-width: 1440px) {
+    .section_main_middle>div {
+        max-width: 1140px !important;
+    } 
+}
+
+@media only screen and (min-width: 768px) and (max-width: 1024px) {
+    .section_main_middle>div {
+        max-width: 90% !important;
+    }
+}
+@media only screen and (max-width:600px) {
+  .font_16 {
+       font-size: 16px !important;   
+   }
+   .font_18 {
+       font-size: 18px !important;   
+   }
+   .font_20 {
+       font-size: 20px !important;   
+   }
+    .font_28 {
+       font-size: 28px !important;   
+   }
+    .header_2_fix {
+        padding-bottom: 5px !important;
+    }
+    .header_2_fix>div {
+        font-size: 28px !important;
+    } 
+    .text_center_mb {
+        text-align: center !important;
+    }
+     .btn_center_mb>div {
+        text-align: center !important;
+    }
+    .p_top_mobile_0 {
+        padding-top: 0 !important;
+    }
+    .p_top_mobile_reduced {
+        padding-top: 20px !important;
+    }
+    .p_bottom_mobile_reduced {
+        padding-bottom: 25px !important;
+    }
+  [class*=WebsiteNavigator__navigation] {
+    padding-left: 25px;
+    padding-top: 3px
+  }
+  [class*=WebsiteNavigator__group] {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    padding-top: 10px
+  }
+  [class*=WebsiteNavigator__rightContent] .button {
+    font-size: 14px !important;
+    padding: 10px 1.5rem !important;
+
+  }
+    [class*=WebsiteNavigator__rightContent] .already_reg_nav {
+        font-size: 12px !important;
+    }   
+  .website_navigation {
+    padding: 0px 0 10px !important;
+    flex-direction: row-reverse;
+    display: flex !important;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+  }
+  .website_navigation>div {
+    width: 50%
+  }
+  .website_navigation>div:last-of-type {
+    width: 40%
+  }
+  .align_left_mb, .align_left_mb>div, .website_navigation>div:last-of-type>div {
+    text-align: left !important
+  }
+  [class*=Icons-All__menuFilled] {
+    padding: 0 !important;
+    font-size: 2.3em
+  }
+  .interior_nav_bar img, .website_navigation img {
+   /* max-width: 100px !important;*/
+  }
+  .interior_nav_bar {
+    justify-content: center !important
+  }
+  .img_display_mobile_only img {
+    display: block
+  }
+  .eliminate_spacer_mb {
+    padding: 0 !important
+  }
+  .padding_l_r_0 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  .already_reg_link {
+    display: block !important;
+    padding-left: 0 !important;
+    text-align: center !important;
+  }
+ .hide_img_mb {
+      display: none;
+  }
+  .max_width_reduced, .max_width_reduced_1, .max_width_reduced_2, .max_width_reduced_3, .max_width_reduced_4 {
+     max-width: 100%;
+  }
+  .img_width_reduced_1 img {
+        max-width: 80% !important;
+  }
+  .btn_inline {
+    width: auto !important;
+    padding: 14px 2.8rem !important;
+  }
+  .section_home_2_col>div>div{
+    max-width: 100% !important;
+  }
+ .b_lockup img {
+    max-width: 220px !important;
+ }
+ .widget_align_fix_01 {
+    padding: 0 15px 0 15px !important;
+ }
+ .speaker_default_widget [class*="SpeakersStyles__speakersContainer"]>div {
+    width: 100%;
+ }    
+
+ .navigation-mobile > div:nth-child(1)
+{float: right;}
+.navigation-mobile img
+{max-width: 160px; margin: -20px 0 0 0 !important;}
+
+.navigation-mobile div{
+ text-align:left !important;
+}
+
+.title{
+ font-size:40px !important;
+}
+
+}
+
+@media (max-width: 599px) {
+    .WebsiteNavigator__group___Q86mU {
+      padding-top: 0px;
+    }
+  }
+
+
+@media (max-width: 1024px) {
+  .WebsiteNavigator__container___kbeod.navigation-mobile img {
+    width: 75% !important;
+    height: auto !important;
+  }
+
+  [class*="Countdown-Circle-structure__digit"] {
+  /* color: #4ad338 !important; */
+  font-size: 2rem !important;
+}
+
+[class*="Countdown-Circle-structure__label"] {
+  color: #4ad338 !important;
+}
+
+[class*="Countdown-Circle-structure__border"] {
+  border-color: #4ad338 !important;
+  color: #4ad338 !important;
+}
+
+.Countdown-Circle-structure__border___vWCiT {
+    border-width: 4px !important;
+}
+
+.Button__button___XQqEQ {
+  width: 175px !important;
+}
+
+.Button__button___XQqEQ span {
+  font-size: 80% !important;
+}
+
+.CodeWidget__container___838c iframe {
+  width: 50px !important;
+  margin: 20px auto;
+  display: block;
+}
+}
+
+.site-footer a {
+  color: black;
+  text-decoration: none;
+}
+
+.speaker-title-styling {
+font-style: italic;
+}
+
+@media (max-width: 500px) {
+  /* .WebsiteNavigator__container___kbeod.navigation-mobile img {
+    width: 75% !important;
+    height: auto !important;
+  } */
+
+  /* #widget\:be376fe6-d70d-4488-9788-8c706071a92d.WebsiteNavigator__container___IZV0z.navigation-mobile img {
+    max-width: 60% !important;
+    height: auto !important;
+  } */
+  
+  img[alt="Bloomberg Green logo"] {
+    max-width: 60% !important;
+    height: auto !important;
+  }
+
+  .button.Button__button___XQqEQ {
+    width: 170px;        
+    font-size: 5px;
+    border: 2px solid red; 
+  }
+
+ /* button {
+    display: none;
+  } */
+
+}
+
+[data-cvent-id="speakers-speakersContainer"] {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 30px;
+  justify-content: center;         /* added */
+  justify-items: center;           /* added */
+  align-items: stretch;
+  padding: 20px;
+  list-style: none;
+  overflow-x: visible;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 0 auto;                  /* centers the container */
+}
+
+[data-cvent-id="speakers-speakerCard"] {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;                     /* changed from 110% */
+  max-width: 320px;                /* fixed width for centering */
+  padding: 20px;
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 12px;
+  box-sizing: border-box;
+  min-height: 300px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+[data-cvent-id="speakers-speakerCard"] img {
+  width: 225px;
+  height: 225px;
+  object-fit: cover;
+  display: block;
+  margin: 0 auto 0px;
+  border-radius: 5%;
+}
+
+/* Responsive: 2 Columns */
+@media (max-width: 1024px) {
+  [data-cvent-id="speakers-speakersContainer"] {
+    grid-template-columns: repeat(2, 1fr);
+    justify-items: center;
+  }
+}
+
+/* Responsive: 1 Column */
+@media (max-width: 600px) {
+  [data-cvent-id="speakers-speakersContainer"] {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  [data-cvent-id="speakers-speakerCard"] {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  [data-cvent-id="speakers-speakerCard"] img {
+    width: 100%;
+    max-width: 225px;
+    height: auto;
+  }
+}
+
+[data-cvent-id="speakers-speakerCard"] h3 {
+  margin: 0px;
+  font-size: 1.375rem;
+  text-align: center;
+  padding: 0px;
+}
+
+[data-cvent-id="speakers-speakerCard"] .speaker-title-styling {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  min-height: 20px; /* Ensures consistent height across varying titles */
+  text-align: center;
+}
+
+[data-cvent-id="speakers-speakerCard"] .speaker-title-styling + div {
+  margin-top: 0px; /* Pushes company name to bottom */
+  text-align: center;
+}
+
+[data-cvent-id="speakers-speakerCard"].tight-spacing .speaker-title-styling + div {
+  margin-top: 6px !important;
+}
+
+@media (max-width: 941px) {
+    .WebsiteNavigator__hamburgerWrapper___TrqGb {
+      display: block;
+    }
+  
+    .WebsiteNavigator__rightContent___cKoaq {
+      display: none;
+    }
+  }
+
+@media (min-width: 941px) {
+    #widget\:829d8e5a-ce8c-4a3b-839b-518a05b90fa3 button {
+        display: none;
+    }
+
+    #widget\:05a6198c-49c1-418f-a191-2ed1f37f577d button {
+        display: none;
+    }
+
+    #widget\:a4a5c3f7-84b9-4ef5-8f25-026b8b17721c {
+        display: none;
+    }
+} 
+/*Hide element @ Mobile*/
+@media (max-width: 599px){
+  .hide-mobile {
+  display: none;
+  }
+}
+
+.black-url a {
+color:  #000000;
+}
+
+nav ul > li:nth-of-type(9) > div {
+    color: #10FFB8 !important;
+    border: 2px solid #FFFFFF !important;
+    padding: 7px 16px !important;
+    border-radius: 10px !important;
+    background-color: transparent !important;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+  }
+
+nav ul > li:nth-of-type(9) > div:hover {
+  border: 2px solid #10FFB8 !important;
+  color: #000000 !important;
+  background-color: #FFFFFF !important;
+}
+
+nav ul > li:nth-of-type(9) > div[class^=WebsiteNavigator_selected] {
+  border-bottom: #FFFFFF !important;
+}
+
+
+/* nav ul > li:nth-of-type(6) > div:hover {
+    border-top: 2px solid #10FFB8 !important; /* override the 3px top border
+  } */
+  
+  @media (min-width: 500px) and (max-width: 1024px) {
+    nav ul > li:nth-of-type(9) > div {
+      display: none !important;
+    }
+  }
+
+  @media (min-width: 500px) and (max-width: 1024px) {
+    nav ul > li:nth-of-type(9) > div {
+      display: none !important;
+    }
+  }
+
+  @media screen and (max-width: 1025px) {
+    .overlay_logo {
+      max-width: 400px !important;
+      height: auto !important;
+    }
+
+    .WebsiteNavigator__leftContent___F2DCO img {
+      max-width: 70% !important;
+      height: auto !important
+    }
+  }
+  
+  @media screen and (max-width: 480px) {
+  .Image__imageWrapper___t0KIx img {
+    width: 50% !important;
+    height: auto !important;
+  }
+}
+
+.reg-type-font-color p {
+  font-color: #E1E1E1;
+}
+
+.user-select-none {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none; 
+}
+
+@media screen and (max-width: 600px){
+
+ /* Hide "Resource" header in resource center mobile breakpoint */
+ div[data-cvent-id="widget-NucleusText-widget:7a5f7da2-9e33-45d9-97cd-a708787f2db6"] {
+  display: none;
+}
+
+/* Hide "Description" header in resource center mobile breakpoint */
+div[data-cvent-id="widget-NucleusText-widget:62f21c72-13d6-48ab-a289-fdf54e3130b0"] {
+  display: none;
+}
+
+/* Hide "Organization" header in resource center mobile breakpoint */
+div[data-cvent-id="widget-NucleusText-widget:b65168e1-a1a4-40eb-99b0-c73a9df61197"] {
+  display: none;
+}
+
+/* Hide "link" header in resource center mobile breakpoint */
+div[data-cvent-id="widget-NucleusText-widget:a3b6b0ec-c0ec-40d3-ba79-f723bf760bba"] {
+  display: none;
+}
+
+div[data-cvent-id="widget:28d63b7c-386c-48f7-85dc-c062af489a96"] {
+  padding-top: 0px !important;
+  margin-top: 0px !important
+}
+
+div[data-cvent-id="widget:68f6b5ca-c9d1-4a75-bf1d-b012beb82e42"] {
+  padding-top: 0px !important;
+  margin-top: 0px !important
+}
+
+/* Adjust padding on "Seizing the AI opportunity: balancing the change you want with the continuity you need - PwC UK" resource title  */
+div[data-cvent-id="widget-NucleusText-widget:3c889b5f-e990-464f-9415-9b6517b1bee4"] {
+  padding: 0px 15px 10px 15px !important;
+  margin: 0px 0px 10px 0px !important;
+  height: 50px !important;
+  }
+
+  [data-cvent-id="widget-NucleusText-widget:3c889b5f-e990-464f-9415-9b6517b1bee4"] p {
+    font-size: 18px !important;
+    color: #3800EF !important;
+  }
+
+  /* Adjust company name on "Seizing the AI opportunity: balancing the change you want with the continuity you need - PwC UK" resource company  */
+div[data-cvent-id="widget-NucleusText-widget:adc550e0-1e98-413e-b1b4-9be81dbe8187"] p {
+  padding: 0 !important;
+margin: 0 !important;
+text-align: left !important;
+}
+
+/* Adjust padding on "Testing the untestable: How Virgin Money and PwC are building trust in GenAI - PwC UK " resource title  */
+div[data-cvent-id="widget-NucleusText-widget:8895f8f8-3b9a-4da8-b454-79265d6e55fb"] {
+  padding: 0px 15px 10px 15px !important;
+  margin: 0px 0px 10px 0px !important;
+  height: 50px !important;
+  }
+
+  [data-cvent-id="widget-NucleusText-widget:8895f8f8-3b9a-4da8-b454-79265d6e55fb"] p {
+    font-size: 18px !important;
+    color: #3800EF !important;
+  }
+
+/* Adjust company name on "Testing the untestable: How Virgin Money and PwC are building trust in GenAI - PwC UK" resource company  */
+div[data-cvent-id="widget-NucleusText-widget:626e1d8d-f0ff-4170-a7c6-15c0b91c02cf"] p {
+  padding: 0 !important;
+margin: 0 !important;
+text-align: left !important;
+}
+
+/* Adjust padding on "Tata Communications x Formula 1 – Empowering Tomorrow" resource title" */
+div[data-cvent-id="widget-NucleusText-widget:3fd3d2a5-8ca5-4682-8d9a-373290c2b321"] {
+  padding: 15px 15px 0px 15px !important;
+  margin: 0 !important;
+  height: 75px !important;
+  }
+
+  [data-cvent-id="widget-NucleusText-widget:3fd3d2a5-8ca5-4682-8d9a-373290c2b321"] p {
+    font-size: 18px !important;
+    color: #3800EF !important;
+  }
+
+/* Adjust padding on "Tata Communications x Formula 1 – Empowering Tomorrow" resource description */
+|div[data-cvent-id="widget-NucleusText-widget:645a95e4-8f61-4942-82ab-92ea4f33ed4f"] {
+  padding: 15px 15px !important;
+}
+
+/* Adjust company name on "Tata Communications x Formula 1 – Empowering Tomorrow" resource company  */
+div[data-cvent-id="widget-NucleusText-widget:9267a05f-ba80-4032-b390-aee1ffbafd58"] p {
+  padding: 0 !important;
+margin: 0 !important;
+text-align: left !important;
+}
+
+/* Adjust padding on "Rethinking Customer Interactions to Boost Customer Experience" resource title" */
+div[data-cvent-id="widget-NucleusText-widget:34b9f866-78b0-4dbc-badf-ede7d44dee21"] {
+  padding: 15px 15px !important;
+  margin: 0px 0px 15px 0px !important;
+  height: 75px !important;
+  }
+
+  [data-cvent-id="widget-NucleusText-widget:34b9f866-78b0-4dbc-badf-ede7d44dee21"] p {
+    font-size: 18px !important;
+    color: #3800EF !important;
+  }
+
+/* Adjust padding on "Rethinking Customer Interactions to Boost Customer Experience" resource description */
+|div[data-cvent-id="widget-NucleusText-widget:32835038-f1d3-43c6-a074-d3442135b0ae"] {
+  padding: 15px 15px !important;
+}
+
+/* Hide company name on "Rethinking Customer Interactions to Boost Customer Experience" resource company  */
+div[data-cvent-id="widget-NucleusText-widget:e5f10fe7-cda7-4743-ac06-f14276068a8e"] p {
+  padding: 0 !important;
+margin: 0 !important;
+text-align: left !important;
+}
+
+/* Adjust padding on "Kyndryl's 2025 People Readiness Report" resource title" */
+div[data-cvent-id="widget-NucleusText-widget:6a7bcfa7-390f-4d2f-b4f9-35fca723ea61"] {
+  padding: 15px 15px !important;
+  margin: 0px 0px 15px 0px !important;
+  height: 75px !important;
+  }
+
+  [data-cvent-id="widget-NucleusText-widget:6a7bcfa7-390f-4d2f-b4f9-35fca723ea61"] p {
+    font-size: 18px !important;
+    color: #3800EF !important;
+  }
+
+  [data-cvent-id="widget-NucleusText-widget:6a7bcfa7-390f-4d2f-b4f9-35fca723ea61"] span {
+    color: #3800EF !important;
+  }
+  
+
+/* Adjust padding on "Kyndryl's 2025 People Readiness Report" resource description */
+|div[data-cvent-id="widget-NucleusText-widget:ed2cc5bf-e90a-49b6-b939-eb380dce989c"] {
+  padding: 15px 15px !important;
+}
+
+/* Hide company name on "Kyndryl's 2025 People Readiness Report" resource company  */
+div[data-cvent-id="widget-NucleusText-widget:9d218b5e-63f5-47c1-8bf2-5ac9483802f8"] p {
+  padding: 0 !important;
+margin: 0 !important;
+text-align: left !important;
+}
+
+/* Adjust padding on "Ismail Amla: From automation to autonomy: Why agentic AI is the next big bet for business." resource title" */
+div[data-cvent-id="widget-NucleusText-widget:f29ddc2c-290b-4510-8d45-069429ee4172"] {
+  padding: 15px 15px !important;
+  margin: 0px 0px 15px 0px !important;
+  height: 75px !important;
+  }
+
+  [data-cvent-id="widget-NucleusText-widget:f29ddc2c-290b-4510-8d45-069429ee4172"] p {
+    font-size: 18px !important;
+    color: #3800EF !important;
+  }
+
+  [data-cvent-id="widget-NucleusText-widget:f29ddc2c-290b-4510-8d45-069429ee4172"] span {
+    color: #3800EF !important;
+  }
+
+/* Adjust padding on "Ismail Amla: From automation to autonomy: Why agentic AI is the next big bet for business." resource description */
+|div[data-cvent-id="widget-NucleusText-widget:43eda58f-2b7f-44e3-a8f9-586c07c0891c"] {
+  padding: 15px 15px !important;
+}
+
+/* Adjust company name on "Ismail Amla: From automation to autonomy: Why agentic AI is the next big bet for business." resource company  */
+div[data-cvent-id="widget-NucleusText-widget:6c88a30b-3f77-4186-8d69-3399e7cf1ea7"] p {
+  padding: 0 !important;
+margin: 0 !important;
+text-align: left !important;
+}
+}
+
+/* Adjust padding on "Networks, the invisable engines" resource title  */
+div[data-cvent-id="widget-NucleusText-widget:1c9a1771-d626-4a35-a300-f58488cf2355"] {
+  padding: 0px 15px 10px 15px !important;
+  margin: 0px 0px 10px 0px !important;
+  height: 50px !important;
+  }
+
+  [data-cvent-id="widget-NucleusText-widget:1c9a1771-d626-4a35-a300-f58488cf2355"] p {
+    font-size: 18px !important;
+    color: #3800EF !important;
+  }
+
+  /* Adjust company name on "Networks, the invisable engines" resource company  */
+div[data-cvent-id="widget-NucleusText-widget:da20698e-c2d5-4017-a94b-424c51f71f82"] p {
+  padding: 0 !important;
+margin: 0 !important;
+text-align: left !important;
+}
+
+/* Adjust padding on "Architecting AI at scale" resource title  */
+div[data-cvent-id="widget-NucleusText-widget:0f66505a-8f2e-4f49-baeb-3c8621cf0fbb"] {
+  padding: 0px 15px 10px 15px !important;
+  margin: 0px 0px 10px 0px !important;
+  height: 50px !important;
+  }
+
+  [data-cvent-id="widget-NucleusText-widget:0f66505a-8f2e-4f49-baeb-3c8621cf0fbb"] p {
+    font-size: 18px !important;
+    color: #3800EF !important;
+  }
+
+  /* Adjust company name on "Architecting AI at scale" resource company  */
+div[data-cvent-id="widget-NucleusText-widget:5df28e67-e33d-4ab3-93a6-3673bb7e4ee0"] p {
+  padding: 0 !important;
+margin: 0 !important;
+text-align: left !important;
+}
+
+/* Adjust padding on "The Trust Gap" resource title  */
+div[data-cvent-id="widget-NucleusText-widget:af65e4e6-8b72-4e4b-a3b0-9e268b36842f"] {
+  padding: 0px 15px 10px 15px !important;
+  margin: 0px 0px 10px 0px !important;
+  height: 50px !important;
+  }
+
+  [data-cvent-id="widget-NucleusText-widget:af65e4e6-8b72-4e4b-a3b0-9e268b36842f"] p {
+    font-size: 18px !important;
+    color: #3800EF !important;
+  }
+
+  /* Adjust company name on "The Trust Gap" resource company  */
+div[data-cvent-id="widget-NucleusText-widget:2232049c-0712-4447-a1c8-1fcadec0fe5c"] p {
+  padding: 0 !important;
+margin: 0 !important;
+text-align: left !important;
+}
+
+/* Adjust padding on "How does satellite connectivity create business value?" resource title  */
+div[data-cvent-id="widget-NucleusText-widget:6a1e8599-667f-4ce0-a18c-ab255a8e3c3a"] {
+  padding: 0px 15px 10px 15px !important;
+  margin: 0px 0px 10px 0px !important;
+  height: 50px !important;
+  }
+
+  [data-cvent-id="widget-NucleusText-widget:6a1e8599-667f-4ce0-a18c-ab255a8e3c3a"] p {
+    font-size: 18px !important;
+    color: #3800EF !important;
+  }
+
+  /* Adjust company name on "How does satellite connectivity create business value?" resource company  */
+div[data-cvent-id="widget-NucleusText-widget:8eaeb43d-cf2a-4729-9122-1d772144fac1"] p {
+  padding: 0 !important;
+margin: 0 !important;
+text-align: left !important;
+}
+
+
+
+
+
+.reg-type-font-color p {
+  color: #E1E1E1 !important;
+}
+
+.user-select-none {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none; 
+}
