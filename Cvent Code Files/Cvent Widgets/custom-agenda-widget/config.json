@@ -1,0 +1,6 @@
+{
+    "product": "Event",
+    "purpose": "Website",
+    "essential": false,
+    "customElementName": "agenda-with-speakers"
+    }
