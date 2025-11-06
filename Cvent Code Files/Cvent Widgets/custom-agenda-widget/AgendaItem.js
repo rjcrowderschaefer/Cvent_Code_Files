@@ -39,10 +39,13 @@ export class AgendaItem extends HTMLElement {
     this.applyTypographyOverrides(timeEl, cfg.typography?.sessionTime);
 
     // --- Session description (toggleable + stylable) ---
-    const desc = document.createElement('div');
-    desc.innerHTML = s.description || '';
-    this.applyThemeStyle(desc, t.mainText, { margin: '0 0 8px 0'});
-    this.applyTypographyOverrides (desc, cfg.typography?.sessionDescription);
+    if (cfg.showDescription && s.description) {
+      const desc = document.createElement('div');
+      desc.innerHTML = s.description || '';
+      this.applyThemeStyle(desc, t.mainText, { margin: '0 0 8px 0' });
+      this.applyTypographyOverrides(desc, cfg.typography?.sessionDescription);
+      root.append(desc);
+    }
 
     // --- Speakers ---
     const speakersWrap = document.createElement('div');
@@ -134,7 +137,8 @@ export class AgendaItem extends HTMLElement {
       speakersWrap.append(line);
     });
 
-    root.append(titleEl, timeEl, desc, speakersWrap);
+    // Append core sections (desc appended conditionally above)
+    root.append(titleEl, timeEl, speakersWrap);
   }
 
   // Prefer resolvedSpeakers from widget.js, else unwrap legacy session.speakers entries.
@@ -158,11 +162,37 @@ export class AgendaItem extends HTMLElement {
 
   applyTypographyOverrides(element, override) {
     if (!override) return;
-    const { fontSize, color } = override;
+    const { fontSize, color, bold, italic, underline } = override;
+
+    // Size
     if (fontSize !== undefined && fontSize !== null && fontSize !== '') {
       element.style.fontSize = `${fontSize}px`;
     }
-    if (color) element.style.color = color;
+
+    // Color (allow reset via undefined)
+    if (color !== undefined) {
+      if (color) element.style.color = color;
+      else element.style.color = '';
+    }
+
+    // Bold
+    if (bold !== undefined) {
+      element.style.fontWeight = bold ? '700' : '';
+    }
+
+    // Italic
+    if (italic !== undefined) {
+      element.style.fontStyle = italic ? 'italic' : '';
+    }
+
+    // Underline — safer: toggle only the underline line so other decorations survive
+    if (underline !== undefined) {
+      const existing = getComputedStyle(element).textDecorationLine;
+      const parts = new Set((existing || '').split(' ').filter(Boolean));
+      if (underline) parts.add('underline');
+      else parts.delete('underline');
+      element.style.textDecorationLine = parts.size ? Array.from(parts).join(' ') : '';
+    }
   }
 }
 
