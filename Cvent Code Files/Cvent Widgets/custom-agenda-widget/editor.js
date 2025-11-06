@@ -10,13 +10,13 @@ class AgendaWithSpeakersEditor extends HTMLElement {
       showDescription: false,
       // Typography controls: undefined => use event theme defaults
       typography: {
-        eventDate:           { fontSize: undefined, color: undefined }, // day header
-        sessionName:         { fontSize: undefined, color: undefined },
-        sessionTime:         { fontSize: undefined, color: undefined }, // date + start/end
-        sessionDescription:  { fontSize: undefined, color: undefined }, // NEW
-        speakerName:         { fontSize: undefined, color: undefined },
-        speakerTitle:        { fontSize: undefined, color: undefined },
-        speakerCompany:      { fontSize: undefined, color: undefined }
+        eventDate:           { fontSize: undefined, color: undefined, bold: undefined, italic: undefined, underline: undefined },
+        sessionName:         { fontSize: undefined, color: undefined, bold: undefined, italic: undefined, underline: undefined },
+        sessionTime:         { fontSize: undefined, color: undefined, bold: undefined, italic: undefined, underline: undefined },
+        sessionDescription:  { fontSize: undefined, color: undefined, bold: undefined, italic: undefined, underline: undefined },
+        speakerName:         { fontSize: undefined, color: undefined, bold: undefined, italic: undefined, underline: undefined },
+        speakerTitle:        { fontSize: undefined, color: undefined, bold: undefined, italic: undefined, underline: undefined },
+        speakerCompany:      { fontSize: undefined, color: undefined, bold: undefined, italic: undefined, underline: undefined }
       }
     };
 
@@ -26,7 +26,7 @@ class AgendaWithSpeakersEditor extends HTMLElement {
     this.attachShadow({ mode: 'open' });
 
     const title = document.createElement('h2');
-    title.textContent = 'Agenda Settings v16';
+    title.textContent = 'Agenda Settings v21';
     title.style.fontFamily = 'Rubik';
     title.style.margin = '0 0 8px 0';
 
@@ -101,15 +101,16 @@ class AgendaWithSpeakersEditor extends HTMLElement {
       block.style.border = '1px solid #ddd';
       block.style.borderRadius = '8px';
       block.style.padding = '8px';
-
+    
       const legend = document.createElement('legend');
       legend.textContent = label;
       legend.style.fontFamily = 'Rubik';
-
+    
+      // --- Size ---
       const sizeLabel = document.createElement('label');
       sizeLabel.textContent = 'Font size (px)';
       sizeLabel.style.display = 'block';
-
+    
       const sizeInput = document.createElement('input');
       sizeInput.type = 'number';
       sizeInput.min = '10';
@@ -126,11 +127,12 @@ class AgendaWithSpeakersEditor extends HTMLElement {
         };
         this.setConfiguration({ ...this._config, typography: t });
       };
-
+    
+      // --- Color ---
       const colorLabel = document.createElement('label');
       colorLabel.textContent = 'Color';
       colorLabel.style.display = 'block';
-
+    
       const colorInput = document.createElement('input');
       colorInput.type = 'color';
       colorInput.value = this._config.typography?.[key]?.color || '#000000';
@@ -142,23 +144,77 @@ class AgendaWithSpeakersEditor extends HTMLElement {
         };
         this.setConfiguration({ ...this._config, typography: t });
       };
-
+    
+      // --- Style flags: Bold / Italic / Underline ---
+      const stylesRow = document.createElement('div');
+      stylesRow.style.display = 'flex';
+      stylesRow.style.gap = '12px';
+      stylesRow.style.margin = '8px 0';
+    
+      const mkFlag = (flagKey, flagLabel) => {
+        const wrap = document.createElement('label');
+        wrap.style.display = 'inline-flex';
+        wrap.style.alignItems = 'center';
+        wrap.style.gap = '6px';
+    
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = !!this._config.typography?.[key]?.[flagKey];
+        cb.onchange = () => {
+          const t = {
+            ...this._config.typography,
+            [key]: {
+              ...(this._config.typography?.[key] || {}),
+              [flagKey]: cb.checked // true/false; reset button will set undefined
+            }
+          };
+          this.setConfiguration({ ...this._config, typography: t });
+        };
+    
+        const txt = document.createElement('span');
+        txt.textContent = flagLabel;
+    
+        wrap.append(cb, txt);
+        return wrap;
+      };
+    
+      stylesRow.append(
+        mkFlag('bold', 'Bold'),
+        mkFlag('italic', 'Italic'),
+        mkFlag('underline', 'Underline')
+      );
+    
+      // --- Reset ---
       const resetBtn = document.createElement('button');
       resetBtn.type = 'button';
       resetBtn.textContent = 'Use event default';
       resetBtn.onclick = () => {
         const t = {
           ...this._config.typography,
-          [key]: { fontSize: undefined, color: undefined }
+          [key]: {
+            fontSize: undefined,
+            color: undefined,
+            bold: undefined,
+            italic: undefined,
+            underline: undefined
+          }
         };
         this.setConfiguration({ ...this._config, typography: t });
         sizeInput.value = '';
         colorInput.value = '#000000';
+        // clear checkboxes to reflect "undefined" (theme default)
+        stylesRow.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = false; });
       };
-
-      block.append(legend, sizeLabel, sizeInput, colorLabel, colorInput, resetBtn);
+    
+      block.append(
+        legend,
+        sizeLabel, sizeInput,
+        colorLabel, colorInput,
+        stylesRow,
+        resetBtn
+      );
       return block;
-    };
+    };    
 
     const fields = [
       ['eventDate',          'Event Date (day header)'],
