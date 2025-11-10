@@ -1,250 +1,393 @@
-class AgendaWithSpeakersEditor extends HTMLElement {
+// editor.js
+// Planner-facing editor. Recreates your index.html + main.js control surface inside Shadow DOM
+// and persists values via setConfiguration. No mock data required.
+
+export default class ExampleAgendaEditor extends HTMLElement {
   constructor({ setConfiguration, initialConfiguration }) {
     super();
     this.setConfiguration = setConfiguration;
+    this._config = initialConfiguration ?? this._getDefaultConfig();
 
-    const defaults = {
-      sort: 'dateTimeAsc',           // 'dateTimeAsc' | 'dateTimeDesc' | 'nameAsc'
-      maxResults: 100,               // 10–300
-      groupByDay: true,
-      showDescription: false,
-      // Typography controls: undefined => use event theme defaults
-      typography: {
-        eventDate:           { fontSize: undefined, color: undefined, bold: undefined, italic: undefined, underline: undefined },
-        sessionName:         { fontSize: undefined, color: undefined, bold: undefined, italic: undefined, underline: undefined },
-        sessionTime:         { fontSize: undefined, color: undefined, bold: undefined, italic: undefined, underline: undefined },
-        sessionDescription:  { fontSize: undefined, color: undefined, bold: undefined, italic: undefined, underline: undefined },
-        speakerName:         { fontSize: undefined, color: undefined, bold: undefined, italic: undefined, underline: undefined },
-        speakerTitle:        { fontSize: undefined, color: undefined, bold: undefined, italic: undefined, underline: undefined },
-        speakerCompany:      { fontSize: undefined, color: undefined, bold: undefined, italic: undefined, underline: undefined }
-      }
-    };
+    if (!initialConfiguration) {
+      setConfiguration(this._config);
+    }
 
-    this._config = { ...defaults, ...(initialConfiguration || {}) };
-    if (!initialConfiguration) this.setConfiguration(this._config);
-
-    this.attachShadow({ mode: 'open' });
-
-    const title = document.createElement('h2');
-    title.textContent = 'Agenda Settings v21';
-    title.style.fontFamily = 'Rubik';
-    title.style.margin = '0 0 8px 0';
-
-    // Sort selector
-    const sortLabel = document.createElement('label');
-    sortLabel.textContent = 'Sort sessions:';
-    sortLabel.style.display = 'block';
-    sortLabel.style.fontFamily = 'Rubik';
-    sortLabel.style.margin = '8px 0 4px 0';
-
-    const sortSelect = document.createElement('select');
-    [
-      ['dateTimeAsc',  'Date & time (asc)'],
-      ['dateTimeDesc', 'Date & time (desc)'],
-      ['nameAsc',      'Name (A→Z)']
-    ].forEach(([val, txt]) => {
-      const o = document.createElement('option');
-      o.value = val; o.textContent = txt;
-      if (this._config.sort === val) o.selected = true;
-      sortSelect.append(o);
-    });
-    sortSelect.onchange = () =>
-      this.setConfiguration({ ...this._config, sort: sortSelect.value });
-
-    // Max results
-    const maxLabel = document.createElement('label');
-    maxLabel.textContent = 'Max sessions to show (10–300):';
-    maxLabel.style.display = 'block';
-    maxLabel.style.fontFamily = 'Rubik';
-    maxLabel.style.margin = '8px 0 4px 0';
-
-    const maxInput = document.createElement('input');
-    maxInput.type = 'number';
-    maxInput.min = '10';
-    maxInput.max = '300';
-    maxInput.value = this._config.maxResults;
-    maxInput.onchange = () => {
-      const v = Math.max(10, Math.min(300, Number(maxInput.value) || 100));
-      this.setConfiguration({ ...this._config, maxResults: v });
-    };
-
-    // Toggles
-    const mkToggle = (label, key) => {
-      const wrap = document.createElement('label');
-      wrap.style.display = 'block';
-      wrap.style.fontFamily = 'Rubik';
-      wrap.style.margin = '6px 0';
-      const i = document.createElement('input');
-      i.type = 'checkbox';
-      i.checked = !!this._config[key];
-      i.onchange = () =>
-        this.setConfiguration({ ...this._config, [key]: i.checked });
-      const t = document.createElement('span');
-      t.textContent = ' ' + label;
-      wrap.append(i, t);
-      return wrap;
-    };
-
-    // Typography controls
-    const typoHeader = document.createElement('h3');
-    typoHeader.textContent = 'Typography (sizes in px; clear to use event defaults)';
-    typoHeader.style.fontFamily = 'Rubik';
-    typoHeader.style.margin = '16px 0 8px 0';
-
-    const typoContainer = document.createElement('div');
-    typoContainer.style.display = 'grid';
-    typoContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(260px, 1fr))';
-    typoContainer.style.gap = '10px';
-
-    const mkTypographyControls = (key, label) => {
-      const block = document.createElement('fieldset');
-      block.style.border = '1px solid #ddd';
-      block.style.borderRadius = '8px';
-      block.style.padding = '8px';
-    
-      const legend = document.createElement('legend');
-      legend.textContent = label;
-      legend.style.fontFamily = 'Rubik';
-    
-      // --- Size ---
-      const sizeLabel = document.createElement('label');
-      sizeLabel.textContent = 'Font size (px)';
-      sizeLabel.style.display = 'block';
-    
-      const sizeInput = document.createElement('input');
-      sizeInput.type = 'number';
-      sizeInput.min = '10';
-      sizeInput.max = '72';
-      sizeInput.placeholder = 'default';
-      sizeInput.value = this._config.typography?.[key]?.fontSize ?? '';
-      sizeInput.oninput = () => {
-        const val = sizeInput.value === ''
-          ? undefined
-          : Math.max(10, Math.min(72, Number(sizeInput.value) || undefined));
-        const t = {
-          ...this._config.typography,
-          [key]: { ...(this._config.typography?.[key] || {}), fontSize: val }
-        };
-        this.setConfiguration({ ...this._config, typography: t });
-      };
-    
-      // --- Color ---
-      const colorLabel = document.createElement('label');
-      colorLabel.textContent = 'Color';
-      colorLabel.style.display = 'block';
-    
-      const colorInput = document.createElement('input');
-      colorInput.type = 'color';
-      colorInput.value = this._config.typography?.[key]?.color || '#000000';
-      colorInput.onchange = () => {
-        const val = colorInput.value || undefined;
-        const t = {
-          ...this._config.typography,
-          [key]: { ...(this._config.typography?.[key] || {}), color: val }
-        };
-        this.setConfiguration({ ...this._config, typography: t });
-      };
-    
-      // --- Style flags: Bold / Italic / Underline ---
-      const stylesRow = document.createElement('div');
-      stylesRow.style.display = 'flex';
-      stylesRow.style.gap = '12px';
-      stylesRow.style.margin = '8px 0';
-    
-      const mkFlag = (flagKey, flagLabel) => {
-        const wrap = document.createElement('label');
-        wrap.style.display = 'inline-flex';
-        wrap.style.alignItems = 'center';
-        wrap.style.gap = '6px';
-    
-        const cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.checked = !!this._config.typography?.[key]?.[flagKey];
-        cb.onchange = () => {
-          const t = {
-            ...this._config.typography,
-            [key]: {
-              ...(this._config.typography?.[key] || {}),
-              [flagKey]: cb.checked // true/false; reset button will set undefined
-            }
-          };
-          this.setConfiguration({ ...this._config, typography: t });
-        };
-    
-        const txt = document.createElement('span');
-        txt.textContent = flagLabel;
-    
-        wrap.append(cb, txt);
-        return wrap;
-      };
-    
-      stylesRow.append(
-        mkFlag('bold', 'Bold'),
-        mkFlag('italic', 'Italic'),
-        mkFlag('underline', 'Underline')
-      );
-    
-      // --- Reset ---
-      const resetBtn = document.createElement('button');
-      resetBtn.type = 'button';
-      resetBtn.textContent = 'Use event default';
-      resetBtn.onclick = () => {
-        const t = {
-          ...this._config.typography,
-          [key]: {
-            fontSize: undefined,
-            color: undefined,
-            bold: undefined,
-            italic: undefined,
-            underline: undefined
-          }
-        };
-        this.setConfiguration({ ...this._config, typography: t });
-        sizeInput.value = '';
-        colorInput.value = '#000000';
-        // clear checkboxes to reflect "undefined" (theme default)
-        stylesRow.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = false; });
-      };
-    
-      block.append(
-        legend,
-        sizeLabel, sizeInput,
-        colorLabel, colorInput,
-        stylesRow,
-        resetBtn
-      );
-      return block;
-    };    
-
-    const fields = [
-      ['eventDate',          'Event Date (day header)'],
-      ['sessionName',        'Session Name'],
-      ['sessionTime',        'Session Date & Start/End'],
-      ['sessionDescription', 'Session Description'],   // NEW
-      ['speakerName',        'Speaker Name'],
-      ['speakerTitle',       'Speaker Title'],
-      ['speakerCompany',     'Speaker Company']
-    ];
-    fields.forEach(([key, label]) =>
-      typoContainer.append(mkTypographyControls(key, label))
-    );
-
-    this.shadowRoot.append(
-      title,
-      sortLabel,
-      sortSelect,
-      maxLabel,
-      maxInput,
-      mkToggle('Group sessions by day', 'groupByDay'),
-      mkToggle('Show session description', 'showDescription'),
-      typoHeader,
-      typoContainer
-    );
+    this.attachShadow({ mode: "open" });
   }
 
   onConfigurationUpdate(newConfig) {
-    this._config = newConfig;
-    // (UI persists; no dynamic re-render needed for these simple controls)
+    this._config = newConfig || this._config;
+    this._renderUI(); // refresh with latest
+  }
+
+  connectedCallback() {
+    this._renderUI();
+  }
+
+  _getDefaultConfig() {
+    return {
+      sort: "dateTimeAsc",
+      maxResults: 100,
+      groupByDay: true,
+      showDescription: false,
+      gutterBg: "#e8eef9",
+      cardBg: "#ffffff",
+      modalColors: {
+        headerBg: "#ffffff",
+        dividerColor: "#eeeeee",
+        contentBg: "#ffffff"
+      },
+      typography: this._makeDefaultTypography()
+    };
+  }
+
+  _makeDefaultTypography() {
+    const blank = { fontSize: undefined, fontSizeMd: undefined, fontSizeSm: undefined, color: undefined, bold: undefined, italic: undefined, underline: undefined };
+    return {
+      // Day header
+      eventDate:          { ...blank },
+      // Session card (right content)
+      sessionName:        { ...blank },
+      sessionTime:        { ...blank },
+      sessionDescription: { ...blank },
+      // Session speakers (on the card)
+      speakerName:        { ...blank },
+      speakerTitle:       { ...blank },
+      speakerCompany:     { ...blank },
+      // Modal controls
+      modalName:            { ...blank },
+      modalSpeakerName:     { ...blank },
+      modalSpeakerTitle:    { ...blank },
+      modalSpeakerCompany:  { ...blank },
+      modalSpeakerBio:      { ...blank },
+      modalSessionsHeader:  { ...blank },
+      modalSessionName:     { ...blank },
+      modalSessionDateTime: { ...blank }
+    };
+  }
+
+  _renderUI() {
+    this.shadowRoot.innerHTML = "";
+
+    const style = document.createElement("style");
+    style.textContent = `
+      :host { display:block; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+      .panel { padding:14px; }
+      .section { margin: 10px 0 14px; }
+      .field { margin: 8px 0; }
+      .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+      fieldset { border:1px solid #ddd; border-radius:8px; padding:10px; margin:10px 0; }
+      legend { padding:0 6px; font-weight:600; }
+      label { font-size:12px; opacity:.85; }
+      input[type="number"] { width:90px; }
+      input[type="color"] { width:48px; height:28px; padding:0; border:none; background:transparent; }
+      button.reset { border:1px solid #ccc; background:#fff; border-radius:6px; padding:4px 8px; cursor:pointer; }
+      h3 { margin: 14px 0 6px; }
+      details { border:1px solid #e7e7e7; border-radius:8px; margin:10px 0; background:#fff; }
+      summary { list-style:none; cursor:pointer; user-select:none; padding:10px 12px; font-weight:600; display:flex; align-items:center; gap:8px; }
+      summary::-webkit-details-marker { display:none; }
+      .chev { transition: transform .18s ease; }
+      details[open] .chev { transform: rotate(90deg); }
+      .block { padding: 0 12px 12px 12px; }
+      .grid { display:grid; grid-template-columns: 1fr; gap: 10px; }
+      input.hex { width: 92px; height: 28px; padding: 2px 6px; border: 1px solid #ccc; border-radius: 6px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+    `;
+    this.shadowRoot.append(style);
+
+    const panel = document.createElement("div");
+    panel.className = "panel";
+    this.shadowRoot.append(panel);
+
+    // Agenda & Card Controls
+    const agendaDetails = this._details("Agenda & Card Controls");
+    const agendaBlock = document.createElement("div");
+    agendaBlock.className = "block";
+    agendaDetails.append(agendaBlock);
+
+    // Sort
+    const sortWrap = document.createElement("div");
+    sortWrap.className = "section";
+    sortWrap.append(this._label("Sort"), document.createElement("br"));
+    const sort = document.createElement("select");
+    ["dateTimeAsc","dateTimeDesc","nameAsc"].forEach(v => {
+      const opt = document.createElement("option");
+      opt.value = v;
+      opt.textContent = (v === "dateTimeAsc") ? "Date & time (asc)" : (v === "dateTimeDesc" ? "Date & time (desc)" : "Name (A→Z)");
+      if (this._config.sort === v) opt.selected = true;
+      sort.append(opt);
+    });
+    sort.onchange = () => this._patch({ sort: sort.value });
+    sortWrap.append(sort);
+    agendaBlock.append(sortWrap);
+
+    // checkboxes
+    const checks = document.createElement("div");
+    checks.className = "section row";
+    const gb = this._checkbox("Group by day", !!this._config.groupByDay, v => this._patch({ groupByDay: v }));
+    const sd = this._checkbox("Show description", !!this._config.showDescription, v => this._patch({ showDescription: v }));
+    checks.append(gb, sd);
+    agendaBlock.append(checks);
+
+    // Time Column color
+    agendaBlock.append(this._colorRow("Time Column • Background", "gutterBg", this._config.gutterBg || "#e8eef9", v => this._patch({ gutterBg: v })));
+
+    // Card Background
+    agendaBlock.append(this._colorRow("Card Background", "cardBg", this._config.cardBg || "#ffffff", v => this._patch({ cardBg: v })));
+
+    // Typography (Agenda)
+    const h3Agenda = document.createElement("h3"); h3Agenda.textContent = "Typography (Agenda)";
+    agendaBlock.append(h3Agenda);
+    const typoAgenda = document.createElement("div"); typoAgenda.className = "grid";
+    agendaBlock.append(typoAgenda);
+
+    const AGENDA_TYPO_KEYS = [
+      ["eventDate",          "Event Date (day header)"],
+      ["sessionName",        "Session Name"],
+      ["sessionTime",        "Session Date & Start/End"],
+      ["sessionDescription", "Session Description"],
+      ["speakerName",        "Speaker Name (card)"],
+      ["speakerTitle",       "Speaker Title (card)"],
+      ["speakerCompany",     "Speaker Company (card)"]
+    ];
+    AGENDA_TYPO_KEYS.forEach(([key, label]) => {
+      typoAgenda.append(this._typographyBlock(key, label));
+    });
+
+    // Modal Controls
+    const modalDetails = this._details("Speaker Modal Controls");
+    const modalBlock = document.createElement("div");
+    modalBlock.className = "block";
+    modalDetails.append(modalBlock);
+
+    // Modal colors
+    const h3ModalColors = document.createElement("h3"); h3ModalColors.textContent = "Modal Colors";
+    modalBlock.append(h3ModalColors);
+    modalBlock.append(
+      this._colorRow("Header background", "modalHeaderBg", this._config.modalColors?.headerBg || "#ffffff",
+        v => this._patch({ modalColors: { ...this._config.modalColors, headerBg: v } })),
+      this._colorRow("Divider line", "modalDivider", this._config.modalColors?.dividerColor || "#eeeeee",
+        v => this._patch({ modalColors: { ...this._config.modalColors, dividerColor: v } })),
+      this._colorRow("Content background", "modalContentBg", this._config.modalColors?.contentBg || "#ffffff",
+        v => this._patch({ modalColors: { ...this._config.modalColors, contentBg: v } }))
+    );
+
+    // Modal Typography
+    const typoModal = document.createElement("div"); typoModal.className = "grid";
+    modalBlock.append(typoModal);
+    const MODAL_TYPO_KEYS = [
+      ["modalName",            "Modal Name (top header)"],
+      ["modalSpeakerName",     "Modal Speaker Name"],
+      ["modalSpeakerTitle",    "Modal Speaker Title"],
+      ["modalSpeakerCompany",  "Modal Speaker Company"],
+      ["modalSpeakerBio",      "Modal Speaker Bio"],
+      ["modalSessionsHeader",  "Modal Sessions Header"],
+      ["modalSessionName",     "Modal Session Name"],
+      ["modalSessionDateTime", "Modal Session Date & Time"]
+    ];
+    MODAL_TYPO_KEYS.forEach(([key, label]) => {
+      typoModal.append(this._typographyBlock(key, label));
+    });
+
+    this.shadowRoot.append(agendaDetails, modalDetails);
+  }
+
+  // === UI helpers ===
+  _details(title) {
+    const d = document.createElement("details");
+    const sum = document.createElement("summary");
+    const chev = document.createElement("span"); chev.className = "chev"; chev.textContent = "▶";
+    sum.append(chev, document.createTextNode(" " + title));
+    d.append(sum);
+    d.open = true;
+    return d;
+  }
+  _label(text) {
+    const l = document.createElement("label");
+    l.textContent = text;
+    return l;
+  }
+  _checkbox(text, checked, onChange) {
+    const l = document.createElement("label");
+    l.style.display = "inline-flex";
+    l.style.alignItems = "center";
+    l.style.gap = "6px";
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = !!checked;
+    cb.onchange = () => onChange(!!cb.checked);
+    l.append(cb, document.createTextNode(text));
+    return l;
+  }
+
+  _colorRow(labelText, id, current, onChange) {
+    const wrap = document.createElement("div");
+    wrap.className = "row field";
+
+    const lbl = this._label(labelText);
+
+    const input = document.createElement("input");
+    input.type = "color";
+    input.id = id;
+    input.value = current;
+
+    const hex = this._makeHexInput(current, (withHash) => {
+      if (withHash !== input.value) input.value = withHash;
+      onChange(withHash);
+    });
+
+    input.onchange = () => {
+      const v = input.value || "#000000";
+      hex.value = v.toUpperCase();
+      onChange(v);
+    };
+
+    wrap.append(lbl, input, hex);
+    return wrap;
+  }
+
+  _typographyBlock(key, label) {
+    const fs = document.createElement("fieldset");
+    const lg = document.createElement("legend");
+    lg.textContent = label;
+    fs.append(lg);
+
+    const rowSizes = document.createElement("div");
+    rowSizes.className = "row field";
+
+    const mkSize = (lbl, prop) => {
+      const wrap = document.createElement("div");
+      const l = this._label(lbl);
+      const i = document.createElement("input");
+      i.type = "number"; i.min = "10"; i.max = "72"; i.placeholder = "default";
+      i.value = this._config.typography?.[key]?.[prop] ?? "";
+      i.oninput = () => {
+        const val = i.value === "" ? undefined : Math.max(10, Math.min(72, Number(i.value) || undefined));
+        this._patch({ typography: { ...this._config.typography, [key]: { ...(this._config.typography?.[key] || {}), [prop]: val } } });
+      };
+      wrap.append(l, document.createElement("br"), i);
+      return wrap;
+    };
+
+    rowSizes.append(
+      mkSize("Font size (px)", "fontSize"),
+      mkSize("≤1024px (px)", "fontSizeMd"),
+      mkSize("≤600px (px)", "fontSizeSm")
+    );
+
+    const rowColor = document.createElement("div");
+    rowColor.className = "row field";
+
+    const colorWrap = document.createElement("div");
+    const colorLbl = this._label("Color");
+    const colorInput = document.createElement("input");
+    colorInput.type = "color";
+    colorInput.value = this._config.typography?.[key]?.color || "#000000";
+    colorWrap.append(colorLbl, document.createElement("br"), colorInput);
+
+    const hexWrap = document.createElement("div");
+    const hexLbl = this._label("HEX");
+    const initialHex = this._config.typography?.[key]?.color || "#000000";
+    const hexInput = this._makeHexInput(initialHex, (withHash) => {
+      if (withHash !== colorInput.value) colorInput.value = withHash;
+      this._patch({ typography: { ...this._config.typography, [key]: { ...(this._config.typography?.[key] || {}), color: withHash } } });
+    });
+    hexWrap.append(hexLbl, document.createElement("br"), hexInput);
+
+    colorInput.onchange = () => {
+      const v = colorInput.value || "#000000";
+      hexInput.value = v.toUpperCase();
+      this._patch({ typography: { ...this._config.typography, [key]: { ...(this._config.typography?.[key] || {}), color: v } } });
+    };
+
+    const rowBIU = document.createElement("div");
+    rowBIU.className = "row field";
+    rowBIU.append(
+      this._flag(key, "bold", "Bold"),
+      this._flag(key, "italic", "Italic"),
+      this._flag(key, "underline", "Underline")
+    );
+
+    const reset = document.createElement("button");
+    reset.className = "reset";
+    reset.type = "button";
+    reset.textContent = "Use event default";
+    reset.onclick = () => {
+      const cleared = { fontSize: undefined, fontSizeMd: undefined, fontSizeSm: undefined, color: undefined, bold: undefined, italic: undefined, underline: undefined };
+      this._patch({ typography: { ...this._config.typography, [key]: cleared } });
+    };
+
+    fs.append(rowSizes, rowColor, hexWrap, rowBIU, reset);
+    return fs;
+  }
+
+  _flag(key, prop, label) {
+    const wrap = document.createElement("label");
+    wrap.style.display = "inline-flex";
+    wrap.style.alignItems = "center";
+    wrap.style.gap = "6px";
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = !!this._config.typography?.[key]?.[prop];
+    cb.onchange = () => {
+      this._patch({ typography: { ...this._config.typography, [key]: { ...(this._config.typography?.[key] || {}), [prop]: cb.checked } } });
+    };
+
+    const txt = document.createElement("span");
+    txt.textContent = label;
+
+    wrap.append(cb, txt);
+    return wrap;
+  }
+
+  // === hex helpers (ported from your main.js) ===
+  _normalizeHex(v) {
+    if (!v) return "";
+    let s = v.trim().replace(/^#/,"").toUpperCase();
+    if (s.length === 3) s = s.split("").map(ch => ch + ch).join("");
+    return s;
+  }
+  _isValidHex6(v) { return /^[0-9A-F]{6}$/.test(v); }
+  _makeHexInput(initialHex, onValidHex) {
+    const hex = document.createElement("input");
+    hex.type = "text";
+    hex.className = "hex";
+    hex.placeholder = "#RRGGBB";
+    hex.value = initialHex ? `#${this._normalizeHex(initialHex)}` : "#000000";
+
+    const apply = () => {
+      const norm = this._normalizeHex(hex.value);
+      if (this._isValidHex6(norm)) {
+        const withHash = `#${norm}`;
+        onValidHex(withHash);
+        hex.value = withHash;
+        hex.style.borderColor = "#ccc";
+      } else {
+        hex.style.borderColor = "#d33";
+      }
+    };
+    hex.addEventListener("change", apply);
+    hex.addEventListener("blur", apply);
+    hex.addEventListener("input", () => {
+      const norm = this._normalizeHex(hex.value);
+      hex.style.borderColor = this._isValidHex6(norm) ? "#0a0" : "#d33";
+    });
+    return hex;
+  }
+
+  _patch(patch) {
+    // merge top-level
+    const merged = { ...this._config, ...patch };
+
+    // deep-merge for nested typography / modalColors
+    if (patch.typography) {
+      merged.typography = { ...(this._config.typography || {}), ...patch.typography };
+    }
+    if (patch.modalColors) {
+      merged.modalColors = { ...(this._config.modalColors || {}), ...patch.modalColors };
+    }
+
+    this._config = merged;
+    this.setConfiguration(this._config);
   }
 }
-export default AgendaWithSpeakersEditor;
