@@ -207,63 +207,144 @@ export class AgendaItem extends HTMLElement {
     this._typoBindings = [];
   }
 
-  renderSpeakerLine(sp) {
+  renderSpeakerLine(spRaw) {
     const t = this.theme || {};
     const cfg = this.config || {};
-
+  
+    // 0) unwrap if you were passed { speaker, role }
+    const sp = (spRaw && spRaw.speaker) ? spRaw.speaker : spRaw;
+  
+    const sid = sp?.id || sp?.speakerId || "";
     const firstName = (sp?.firstName || "").trim();
     const lastName  = (sp?.lastName  || "").trim();
-    const jobTitle  = (sp?.title     || "").trim();
-    const company   = (sp?.company   || "").trim();
-    const pic       = (sp?.profilePictureUri || "").trim();
-
+  
+    // 1) local values (may be empty pre-hydration)
+    let jobTitle = (
+      sp?.title ||
+      sp?.designation ||   // Cvent commonly uses this for job title
+      sp?.jobTitle ||
+      sp?.position ||
+      sp?.role ||
+      ""
+    ).toString().trim();
+  
+    let company = (
+      sp?.company ||
+      sp?.organization ||
+      sp?.companyName ||
+      sp?.org ||
+      ""
+    ).toString().trim();
+  
+    const pic = (sp?.profilePictureUri || "").trim();
+  
     const line = document.createElement("div");
     line.classList.add("speakerLine");
     line.setAttribute("role", "button");
     line.setAttribute("tabindex", "0");
+    if (sid) line.dataset.speakerId = sid;
     line.addEventListener("click", () => this.openModalForSpeaker(sp));
     line.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") { e.preventDefault(); this.openModalForSpeaker(sp); }
     });
-
+  
     const img = document.createElement("img");
-    img.src = pic || "https://picsum.photos/seed/placeholder/80/80";
+    img.src = pic || "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/pix/2ee8c4642e97488abc1852d9166b179b.png";
     img.alt = `${firstName} ${lastName}`.trim() || "Speaker";
     img.classList.add("avatar");
-
+  
     const info = document.createElement("div");
     info.classList.add("info");
-
+  
     const nameSpan = document.createElement("span");
-    nameSpan.classList.add("speakerName", "truncate");
+    nameSpan.classList.add("speakerName");
     nameSpan.textContent = `${firstName} ${lastName}`.trim();
     this.applyThemeStyle(nameSpan, t.paragraph);
     this.applyTypographyOverrides(nameSpan, cfg.typography?.speakerName, true);
-
+  
     const meta = document.createElement("span");
     meta.style.display = "block";
     meta.classList.add("truncate");
-
+  
     const titleSpan = document.createElement("span");
-    titleSpan.classList.add("speakerTitle");
+    titleSpan.classList.add("speakerTitle", "truncate");
     titleSpan.textContent = jobTitle;
     this.applyThemeStyle(titleSpan, t.paragraph);
     this.applyTypographyOverrides(titleSpan, cfg.typography?.speakerTitle, true);
-
+  
     const comma = document.createTextNode(jobTitle && company ? ", " : "");
-
+  
     const companySpan = document.createElement("span");
-    companySpan.classList.add("speakerCompany");
+    companySpan.classList.add("speakerCompany", "truncate");
     companySpan.textContent = company;
     this.applyThemeStyle(companySpan, t.paragraph);
     this.applyTypographyOverrides(companySpan, cfg.typography?.speakerCompany, true);
-
+  
+    // TEMP: make sure styles can't hide them while testing
+    titleSpan.style.fontSize = titleSpan.style.fontSize || "16px";
+    titleSpan.style.color = titleSpan.style.color || "inherit";
+    companySpan.style.fontSize = companySpan.style.fontSize || "16px";
+    companySpan.style.color = companySpan.style.color || "inherit";
+  
     meta.append(titleSpan, comma, companySpan);
     info.append(nameSpan, meta);
     line.append(img, info);
+  
+    // 2) Lazy hydration- if missing, fetch from SDK and patch DOM
+    const getSpeakersFn = this.config?.getSpeakers || (typeof window !== "undefined" ? window.getSpeakers : undefined);
+    if ((!jobTitle || !company) && typeof getSpeakersFn === "function" && sid) {
+      // log once per line so you can see it fire
+      console.debug("Hydrating speaker", { sid, hadTitle: !!jobTitle, hadCompany: !!company });
+  
+      getSpeakersFn([sid]).then((map) => {
+        const key = String(sid);
+        const full = map?.[key];
+        if (!full || full.failureReason) {
+          console.warn("getSpeakers returned failure for", key, full?.failureReason);
+          return;
+        }
+  
+        const hydratedTitle = (
+          full.title ||
+          full.designation || // per docs
+          ""
+        ).toString().trim();
+  
+        const hydratedCompany = (
+          full.company ||
+          full.organization ||
+          full.companyName ||
+          ""
+        ).toString().trim();
+  
+        // Patch the DOM if we gained data
+        if (hydratedTitle && !jobTitle) {
+          jobTitle = hydratedTitle;
+          titleSpan.textContent = hydratedTitle;
+        }
+        if (hydratedCompany && !company) {
+          company = hydratedCompany;
+          companySpan.textContent = hydratedCompany;
+        }
+        comma.nodeValue = (jobTitle && company) ? ", " : "";
+  
+        console.debug("Hydrated speaker result", {
+          sid: key,
+          title: hydratedTitle,
+          company: hydratedCompany
+        });
+      }).catch((err) => {
+        console.warn("getSpeakers error", err);
+      });
+    } else {
+      // Diagnostics when hydration didn't run:
+      if (!getSpeakersFn) console.warn("getSpeakers not available on config/window");
+      if (!sid) console.warn("Speaker has no id/speakerId; cannot hydrate", sp);
+    }
+  
     return line;
   }
-
+  
   buildModal() {
     const backdrop = document.createElement("div");
     backdrop.classList.add("backdrop");
@@ -339,23 +420,35 @@ export class AgendaItem extends HTMLElement {
     this.applyTypographyOverrides(this.modal.sessionsHdr, cfg.typography?.modalSessionsHeader, true);
   }
 
-  openModalForSpeaker(sp) {
+  openModalForSpeaker(spRaw) {
     const cfg = this.config || {};
     const allSessions = Array.isArray(cfg.allSessions) ? cfg.allSessions : [this.session];
 
+    // unwrap if needed
+    const sp = (spRaw && spRaw.speaker) ? spRaw.speaker : spRaw;
+
     const fullName = `${(sp?.firstName||"").trim()} ${(sp?.lastName||"").trim()}`.trim();
-    const jobTitle = (sp?.title||"").trim();
-    const company  = (sp?.company||"").trim();
-    const bio      = (sp?.bio || sp?.biography || sp?.about || "").toString();
+    let jobTitle = (
+      sp?.title || sp?.designation || sp?.jobTitle || sp?.position || sp?.role || ""
+    ).toString().trim();
+    let company  = (
+      sp?.company || sp?.organization || sp?.companyName || sp?.org || ""
+    ).toString().trim();
+    let bio      = (sp?.biography ?? sp?.bio ?? sp?.about ?? "").toString();
 
     this.modal.title.textContent = fullName || "Speaker";
-    this.modal.avatar.src = (sp?.profilePictureUri || "").trim() || "https://picsum.photos/seed/placeholder/160/160";
+    this.modal.avatar.src = (sp?.profilePictureUri || "").trim() || "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/pix/2ee8c4642e97488abc1852d9166b179b.png";
     this.modal.nameEl.textContent = fullName || "";
-    this.modal.titleEl.textContent = jobTitle ? jobTitle : "";
-    this.modal.companyEl.textContent = company ? company : "";
-    this.modal.bioEl.innerHTML = bio ? `${bio}` : "";
+    this.modal.titleEl.textContent = jobTitle || "";
+    this.modal.companyEl.textContent = company || "";
+    this.modal.bioEl.innerHTML = bio || "";
 
     this.applyModalTypography(cfg);
+
+    // Show/hide blocks when empty
+    this.modal.titleEl.style.display   = jobTitle ? "" : "none";
+    this.modal.companyEl.style.display = company  ? "" : "none";
+    this.modal.bioEl.style.display     = bio      ? "" : "none";
 
     const speakerId = sp?.id || sp?.speakerId;
     const appearsIn = allSessions.filter(sess => {
@@ -391,8 +484,40 @@ export class AgendaItem extends HTMLElement {
       this.modal.sessionsUl.appendChild(li);
     }
 
+    // OPEN modal
     this.modal.backdrop.setAttribute("open", "");
     this.modal.backdrop.querySelector(".closeBtn")?.focus();
+
+    // ===== Optional lazy hydration for modal (title/company/bio) =====
+    if ((!jobTitle || !company || !bio) && speakerId) {
+      const getSpeakersFn = this.config?.getSpeakers || (typeof window !== "undefined" ? window.getSpeakers : undefined);
+      if (typeof getSpeakersFn === "function") {
+        getSpeakersFn([speakerId]).then(map => {
+          const full = map?.[String(speakerId)];
+          if (!full || full.failureReason) return;
+
+          const hTitle = (full.title || full.designation || "").toString().trim();
+          const hCompany = (full.company || full.organization || full.companyName || "").toString().trim();
+          const hBio = (full.biography ?? full.bio ?? full.about ?? "").toString();
+
+          if (hTitle && !jobTitle) {
+            jobTitle = hTitle;
+            this.modal.titleEl.textContent = hTitle;
+            this.modal.titleEl.style.display = "";
+          }
+          if (hCompany && !company) {
+            company = hCompany;
+            this.modal.companyEl.textContent = hCompany;
+            this.modal.companyEl.style.display = "";
+          }
+          if (hBio && !bio) {
+            bio = hBio;
+            this.modal.bioEl.innerHTML = hBio;
+            this.modal.bioEl.style.display = "";
+          }
+        }).catch(() => {/* noop */});
+      }
+    }
   }
 
   closeModal() {
@@ -439,7 +564,7 @@ export class AgendaItem extends HTMLElement {
       const existing = getComputedStyle(element).textDecorationLine;
       const parts = new Set((existing || "").split(" ").filter(Boolean));
       if (underline) parts.add("underline"); else parts.delete("underline");
-      element.style.textDecorationLine = parts.size ? Array.from(parts).join(" ") : "";
+      element.style.textDecorationLine = parts.size ? Array.from(parts.join(" ")) : "";
     }
   }
 
