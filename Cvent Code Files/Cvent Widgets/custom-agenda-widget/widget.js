@@ -64,6 +64,14 @@ export default class extends HTMLElement {
     }
   }
 
+  // === NEW: find the SDK's getSpeakers hook, wherever it lives ===
+  _resolveGetSpeakers() {
+    if (this.cventSdk?.getSpeakers) return this.cventSdk.getSpeakers.bind(this.cventSdk);
+    if (typeof this.getSpeakers === "function") return this.getSpeakers;
+    if (typeof window !== "undefined" && typeof window.getSpeakers === "function") return window.getSpeakers;
+    return undefined;
+  }
+
   async _renderInto(container) {
     const cfg = this.configuration || {};
     const theme = this.theme || {};
@@ -137,25 +145,34 @@ export default class extends HTMLElement {
       }
     });
 
+    // Resolve getSpeakers once per render
+    const getSpeakers = this._resolveGetSpeakers();
+    if (!getSpeakers) {
+      console.warn("[widget.js] getSpeakers not found; speakers will not hydrate (title/company may be empty).");
+    }
+
     // Render
     if (cfg.groupByDay === false) {
-      sorted.forEach((s) => container.appendChild(this._renderItem(s, theme, cfg, sessions)));
+      sorted.forEach((s) => container.appendChild(this._renderItem(s, theme, cfg, sessions, getSpeakers)));
     } else {
       const groups = this._groupSessionsByDay(sorted);
       for (const [dayKey, daySessions] of groups) {
         const header = this._renderDayHeader(dayKey, theme, cfg);
         container.appendChild(header);
-        daySessions.forEach((s) => container.appendChild(this._renderItem(s, theme, cfg, sessions)));
+        daySessions.forEach((s) => container.appendChild(this._renderItem(s, theme, cfg, sessions, getSpeakers)));
       }
     }
   }
 
-  _renderItem(session, theme, cfg, allSessions) {
+  _renderItem(session, theme, cfg, allSessions, getSpeakers) {
     // IMPORTANT: create the custom element by tag name and set properties
     const el = document.createElement("namespace-vertical-agenda");
     el.session = session;
     el.theme = theme;
-    el.config = { ...cfg, allSessions: allSessions || [] };
+
+    // ⬇️ Pass getSpeakers into the component's config so it can hydrate title/company
+    el.config = { ...cfg, allSessions: allSessions || [], getSpeakers };
+
     return el;
   }
 
