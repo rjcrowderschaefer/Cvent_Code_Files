@@ -50,6 +50,14 @@ export class AgendaItem extends HTMLElement {
         }
       }
 
+      @media (max-width: 600px) {
+        .card {
+          grid-template-columns: 65px 1fr;
+          margin-left: 15px;
+          max-width: 330px;
+        }
+      }
+
       .timeGutter {
         display: flex;
         flex-direction: column;
@@ -81,6 +89,20 @@ export class AgendaItem extends HTMLElement {
       }
       .info { display: flex; flex-direction: column; justify-content: center; line-height: 1.2; min-width: 0; }
       .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+      .speakerTitle {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: unset;
+        word-break: break-word;
+      }
+
+      .speakerCompany {
+        white-space: normal;
+        overflow: visible; 
+        text-overflow: unset;
+        word-break: break-word;
+      }
 
       /* ===== Modal ===== */
       .backdrop {
