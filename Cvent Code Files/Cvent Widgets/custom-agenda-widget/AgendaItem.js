@@ -421,6 +421,10 @@ export class AgendaItem extends HTMLElement {
   }
 
   openModalForSpeaker(spRaw) {
+    if (!this.modal) {
+      this.modal = this.buildModal();
+      this.shadowRoot.append(this.modal.backdrop);
+    }
     const cfg = this.config || {};
     const allSessions = Array.isArray(cfg.allSessions) ? cfg.allSessions : [this.session];
 
@@ -564,7 +568,8 @@ export class AgendaItem extends HTMLElement {
       const existing = getComputedStyle(element).textDecorationLine;
       const parts = new Set((existing || "").split(" ").filter(Boolean));
       if (underline) parts.add("underline"); else parts.delete("underline");
-      element.style.textDecorationLine = parts.size ? Array.from(parts.join(" ")) : "";
+      element.style.textDecorationLine = parts.size ? Array.from(parts).join(" ") : "";
+
     }
   }
 
