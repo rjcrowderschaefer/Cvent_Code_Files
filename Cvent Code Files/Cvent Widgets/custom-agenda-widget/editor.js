@@ -29,7 +29,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
       sort: "dateTimeAsc",
       maxResults: 100,
       groupByDay: true,
-      showDescription: false,
+      showDescription: true,
       gutterBg: "#e8eef9",
       cardBg: "#ffffff",
       modalColors: {
@@ -42,27 +42,40 @@ export default class ExampleAgendaEditor extends HTMLElement {
   }
 
   _makeDefaultTypography() {
-    const blank = { fontSize: undefined, fontSizeMd: undefined, fontSizeSm: undefined, color: undefined, bold: undefined, italic: undefined, underline: undefined };
+    // Screen-width-aware font defaults
+    const base = {
+      fontSize: 16,     // desktop
+      fontSizeMd: 15,   // <=1024px
+      fontSizeSm: 14,   // <=600px
+      color: "#222222",
+      bold: false,
+      italic: false,
+      underline: false
+    };
+  
     return {
       // Day header
-      eventDate:          { ...blank },
-      // Session card (right content)
-      sessionName:        { ...blank },
-      sessionTime:        { ...blank },
-      sessionDescription: { ...blank },
-      // Session speakers (on the card)
-      speakerName:        { ...blank },
-      speakerTitle:       { ...blank },
-      speakerCompany:     { ...blank },
-      // Modal controls
-      modalName:            { ...blank },
-      modalSpeakerName:     { ...blank },
-      modalSpeakerTitle:    { ...blank },
-      modalSpeakerCompany:  { ...blank },
-      modalSpeakerBio:      { ...blank },
-      modalSessionsHeader:  { ...blank },
-      modalSessionName:     { ...blank },
-      modalSessionDateTime: { ...blank }
+      eventDate: { ...base, bold: true, fontSize: 18, color: "#003366" },
+  
+      // Session card (Agenda)
+      sessionName: { ...base, fontSize: 20, bold: true, color: "#111111" },
+      sessionTime: { ...base, fontSize: 14, color: "#555555" },
+      sessionDescription: { ...base, fontSize: 15, color: "#333333" },
+  
+      // Speakers on the card
+      speakerName: { ...base, fontSize: 15, bold: true, color: "#000000" },
+      speakerTitle: { ...base, fontSize: 14, italic: true, color: "#333333" },
+      speakerCompany: { ...base, fontSize: 14, color: "#555555" },
+  
+      // Modal elements
+      modalName: { ...base, fontSize: 22, bold: true },
+      modalSpeakerName: { ...base, fontSize: 18, bold: true },
+      modalSpeakerTitle: { ...base, fontSize: 16, italic: true },
+      modalSpeakerCompany: { ...base, fontSize: 16, color: "#444444" },
+      modalSpeakerBio: { ...base, fontSize: 15, color: "#333333" },
+      modalSessionsHeader: { ...base, fontSize: 16, bold: true },
+      modalSessionName: { ...base, fontSize: 14 },
+      modalSessionDateTime: { ...base, fontSize: 13, color: "#555555" }
     };
   }
 
@@ -307,16 +320,16 @@ export default class ExampleAgendaEditor extends HTMLElement {
       this._flag(key, "underline", "Underline")
     );
 
-    const reset = document.createElement("button");
-    reset.className = "reset";
-    reset.type = "button";
-    reset.textContent = "Use event default";
-    reset.onclick = () => {
-      const cleared = { fontSize: undefined, fontSizeMd: undefined, fontSizeSm: undefined, color: undefined, bold: undefined, italic: undefined, underline: undefined };
-      this._patch({ typography: { ...this._config.typography, [key]: cleared } });
-    };
+    // const reset = document.createElement("button");
+    // reset.className = "reset";
+    // reset.type = "button";
+    // reset.textContent = "Use event default";
+    // reset.onclick = () => {
+    //   const cleared = { fontSize: undefined, fontSizeMd: undefined, fontSizeSm: undefined, color: undefined, bold: undefined, italic: undefined, underline: undefined };
+    //   this._patch({ typography: { ...this._config.typography, [key]: cleared } });
+    // };
 
-    fs.append(rowSizes, rowColor, hexWrap, rowBIU, reset);
+    fs.append(rowSizes, rowColor, hexWrap, rowBIU);
     return fs;
   }
 
