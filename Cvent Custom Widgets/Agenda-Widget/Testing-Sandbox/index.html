@@ -1,0 +1,99 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Agenda Sandbox</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      html,body { height:100%; margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+      .app { display:grid; grid-template-columns: 360px 1fr; height:100%; }
+      .panel { padding:14px; border-right:1px solid #eee; overflow:auto; }
+      .preview { padding:16px; overflow:auto; background:#fafafa; }
+      .section { margin: 10px 0 14px; }
+      .field { margin: 8px 0; }
+      .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+      fieldset { border:1px solid #ddd; border-radius:8px; padding:10px; margin:10px 0; }
+      legend { padding:0 6px; font-weight:600; }
+      label { font-size:12px; opacity:.8; }
+      input[type="number"] { width:90px; }
+      input[type="color"] { width:48px; height:28px; padding:0; border:none; background:transparent; }
+      button.reset { border:1px solid #ccc; background:#fff; border-radius:6px; padding:4px 8px; cursor:pointer; }
+      h3 { margin: 14px 0 6px; }
+
+      /* Collapsible */
+      details { border:1px solid #e7e7e7; border-radius:8px; margin:10px 0; background:#fff; }
+      summary {
+        list-style:none;
+        cursor:pointer;
+        user-select:none;
+        padding:10px 12px;
+        font-weight:600;
+        display:flex; align-items:center; gap:8px;
+      }
+      summary::-webkit-details-marker { display:none; }
+      .chev { transition: transform .18s ease; }
+      details[open] .chev { transform: rotate(90deg); }
+
+      .block { padding: 0 12px 12px 12px; }
+      .grid { display:grid; grid-template-columns: 1fr; gap: 10px; }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <div class="panel">
+        <h2>Editor Controls</h2>
+
+        <!-- Agenda & Card Controls -->
+        <details id="agendaSection">
+          <summary><span class="chev">▶</span> Agenda & Card Controls</summary>
+          <div class="block">
+            <div class="section">
+              <label>Sort</label><br/>
+              <select id="sort">
+                <option value="dateTimeAsc">Date & time (asc)</option>
+                <option value="dateTimeDesc">Date & time (desc)</option>
+                <option value="nameAsc">Name (A→Z)</option>
+              </select>
+            </div>
+
+            <div class="section row">
+              <label><input type="checkbox" id="groupByDay" checked /> Group by day</label>
+              <label><input type="checkbox" id="showDescription" /> Show description</label>
+            </div>
+
+            <div class="section">
+              <h3>Time Column</h3>
+              <div class="row field">
+                <label>Background</label>
+                <input type="color" id="gutterBg" value="#e8eef9" />
+              </div>
+            </div>
+
+            <div class="section">
+              <h3>Card Background</h3>
+              <div class="row field">
+                <label>Background</label>
+                <input type="color" id="cardBg" value="#ffffff" />
+              </div>
+            </div>
+
+            <h3>Typography (Agenda)</h3>
+            <div id="typoAgenda" class="grid"></div>
+          </div>
+        </details>
+
+        <!-- Modal Controls -->
+        <details id="modalSection">
+          <summary><span class="chev">▶</span> Speaker Modal Controls</summary>
+          <div class="block">
+            <div id="typoModal" class="grid"></div>
+          </div>
+        </details>
+      </div>
+
+      <div class="preview" id="mount"></div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

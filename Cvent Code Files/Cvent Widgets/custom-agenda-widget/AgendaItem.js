@@ -33,30 +33,37 @@ export class AgendaItem extends HTMLElement {
 
       .card {
         display: grid;
-        grid-template-columns: 84px 1fr; /* gutter + content */
+        grid-template-columns: 84px 1fr;
         background: ${cardBg};
         border-radius: 8px;
         overflow: hidden;
-        width: 100%;
-        max-width: calc(84px + 1050px); /* content capped at 800 */
-        margin-left: 80px;
+        /* FORCE full viewport width */
+        width: 100vw;
+        /* Center the 100vw card inside any parent that is narrower */
+        position: relative;
+        left: 50%;
+        right: 50%;
+        margin-left: -50vw;
+        margin-right: -50vw;
+        max-width: none;
       }
 
       @media (max-width: 1024px) {
         .card {
-          margin-left: 30px;
-          width: 100%;
-          max-width: 700px;
+          grid-template-columns: 84px 1fr;  
+          margin-left: 0px;
+          width: 100vw;
+          margin-left: -50vw;
+          margin-right: -50vw;
         }
       }
 
       @media (max-width: 600px) {
         .card {
           grid-template-columns: 65px 1fr;
-          margin-left: 15px;
-          max-width: 330px;
-        }
+          max-width: 90vw;
       }
+    }
 
       .timeGutter {
         display: flex;
