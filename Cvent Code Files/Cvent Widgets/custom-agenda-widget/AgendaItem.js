@@ -82,6 +82,10 @@ export class AgendaItem extends HTMLElement {
         .comma-node {
         display: none;
         }
+
+        .modalBody > div.modalDetails > div:first-child {
+            display: none !important;
+          }
       }
       
 
@@ -455,7 +459,7 @@ export class AgendaItem extends HTMLElement {
           company = hydratedCompany;
           companySpan.textContent = hydratedCompany;
         }
-        comma.nodeValue = (jobTitle && company) ? ", " : "";
+        comma.textContent = (jobTitle && company) ? ", " : "";
   
         console.debug("Hydrated speaker result", {
           sid: key,
@@ -625,6 +629,10 @@ export class AgendaItem extends HTMLElement {
     this.modal.backdrop.setAttribute("open", "");
     this.modal.backdrop.querySelector(".closeBtn")?.focus();
 
+    if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("cvent-speaker-modal-open"));
+    }
+
     // ===== Optional lazy hydration for modal (title/company/bio) =====
     if ((!jobTitle || !company || !bio) && speakerId) {
       const getSpeakersFn = this.config?.getSpeakers || (typeof window !== "undefined" ? window.getSpeakers : undefined);
@@ -659,7 +667,12 @@ export class AgendaItem extends HTMLElement {
 
   closeModal() {
     this.modal?.backdrop?.removeAttribute("open");
+    if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("cvent-speaker-modal-close"));
+    }
   }
+
+  
 
   reapplyTypography() {
     for (const [el, override] of this._typoBindings) {
@@ -698,11 +711,7 @@ export class AgendaItem extends HTMLElement {
     if (bold !== undefined) element.style.fontWeight = bold ? "700" : "";
     if (italic !== undefined) element.style.fontStyle = italic ? "italic" : "";
     if (underline !== undefined) {
-      const existing = getComputedStyle(element).textDecorationLine;
-      const parts = new Set((existing || "").split(" ").filter(Boolean));
-      if (underline) parts.add("underline"); else parts.delete("underline");
-      element.style.textDecorationLine = parts.size ? Array.from(parts).join(" ") : "";
-
+    element.style.textDecoration = underline ? "underline" : "none";
     }
   }
 
