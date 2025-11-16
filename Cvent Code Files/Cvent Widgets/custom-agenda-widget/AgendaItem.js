@@ -36,7 +36,7 @@ export class AgendaItem extends HTMLElement {
       
       .card {
         display: grid;
-        grid-template-columns: 75px 1fr;
+        grid-template-columns: 70px 1fr;
         background: ${cardBg};
         border-radius: 8px;
         overflow: hidden;
@@ -46,10 +46,14 @@ export class AgendaItem extends HTMLElement {
         box-sizing: border-box;
       }
 
+      .date-header {
+        margin-left: 50px;
+      }
+
 
       @media (max-width: 1024px) {
         .card {
-          grid-template-columns: 84px 1fr;
+          grid-template-columns: 70px 1fr;
           width: calc(100% - 50px);
         }
       }
@@ -58,9 +62,28 @@ export class AgendaItem extends HTMLElement {
         .card {
           grid-template-columns: 70px 1fr;
           width: calc(100% - 30px);
+        }
+          
+        .truncate {
+        white-space: normal;     /* allow wrapping */
+        overflow: visible;       /* no ellipsis */
+        text-overflow: unset;
+        }
 
+        .speakerTitle {
+        display: block;      /* force its own line */
+        margin-bottom: 2px;  /* optional spacing */
+        }
+
+        .speakerCompany {
+        display: block;      /* force second line */
+        }
+
+        .comma-node {
+        display: none;
         }
       }
+      
 
       .timeGutter {
         display: flex;
@@ -82,17 +105,43 @@ export class AgendaItem extends HTMLElement {
         min-width: 0;
       }
 
-      .speakersWrap { display: flex; flex-direction: column; gap: 8px; }
+      .speakersWrap { 
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
       .speakerLine {
-        display: flex; align-items: center; gap: 10px; min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
         cursor: pointer;
       }
+
       .avatar {
-        width: 50px; height: 50px; border-radius: 50%; border: 1px solid #FFFFFF;
-        box-shadow: rgb(165, 165, 165) 2px 3px 5px -1px; object-fit: cover; flex-shrink: 0;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 1px solid #FFFFFF;
+        box-shadow: rgb(165, 165, 165) 2px 3px 5px -1px;
+        object-fit: cover;
+        flex-shrink: 0;
+        align-self: flex-start;
       }
-      .info { display: flex; flex-direction: column; justify-content: center; line-height: 1.2; min-width: 0; }
-      .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        line-height: 1.2;
+        min-width: 0;
+      }
+
+      .truncate {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
 
       .speakerTitle {
         white-space: normal;
@@ -125,28 +174,80 @@ export class AgendaItem extends HTMLElement {
         border-radius: 12px;
         box-shadow: 0 10px 30px rgba(0,0,0,.25);
       }
+
       .modalHeader {
         display:flex; align-items:center; justify-content:space-between;
         padding: 12px 16px;
         background: ${modalHeaderBg};
         border-bottom: 1px solid ${modalDivider};
       }
+
       .modalTitle { /* styled via cfg.typography.modalName */ }
       .closeBtn {
         appearance: none; border: none; background: transparent;
         font-size: 20px; cursor: pointer; line-height: 1;
       }
+
       .modalBody {
-        padding: 16px;
-        display: grid; grid-template-columns: 96px 1fr; gap: 14px;
-        background: ${modalContentBg};
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 96px 1fr;
+      grid-auto-rows: auto;
+      column-gap: 14px;
+      row-gap: 16px;
+      background: ${modalContentBg};
+    }
+
+    /* Row 1, col 1: avatar */
+    .modalAvatar {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      object-fit: cover;
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    /* Row 1, col 2: name/title/company */
+    .modalDetails {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .kv { 
+      margin: 2px 0; 
+    }
+
+    /* Row 2: bio, full width starting under avatar */
+    .bio {
+      margin: 10px 0 0 0;
+      line-height: 1.45;
+      grid-column: 1 / -1; /* span both columns */
+      grid-row: 2;
+    }
+
+    /* Row 3: sessions header full width */
+    .sessionsHeader { 
+      margin-top: 10px;
+      grid-column: 1 / -1;
+      grid-row: 3;
+    }
+
+    /* Row 4: sessions list full width */
+    .sessionsList { 
+      margin: 8px 0 12px 18px;
+      padding: 0;
+      grid-column: 1 / -1;
+      grid-row: 4;
+    }
+
+    .sessionsList li {
+      margin: 4px 0;
+    }
+
+    .modalBody > div > div:first-child {
+      display: none !important;
       }
-      .modalAvatar { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; }
-      .kv { margin: 2px 0; }
-      .bio { margin: 10px 0 0 0; line-height: 1.45; }
-      .sessionsHeader { margin-top: 10px; }
-      .sessionsList { margin: 8px 0 12px 18px; padding: 0; }
-      .sessionsList li { margin: 4px 0; }
     `;
     this.shadowRoot.append(style);
 
@@ -298,8 +399,10 @@ export class AgendaItem extends HTMLElement {
     this.applyThemeStyle(titleSpan, t.paragraph);
     this.applyTypographyOverrides(titleSpan, cfg.typography?.speakerTitle, true);
   
-    const comma = document.createTextNode(jobTitle && company ? ", " : "");
-  
+    const comma = document.createElement("span");
+    comma.textContent = jobTitle && company ? ", " : "";
+    comma.classList.add("comma-node");
+
     const companySpan = document.createElement("span");
     companySpan.classList.add("speakerCompany", "truncate");
     companySpan.textContent = company;
@@ -404,8 +507,9 @@ export class AgendaItem extends HTMLElement {
     avatar.classList.add("modalAvatar");
     avatar.alt = "Speaker photo";
 
-    // right: details
+    // right: name/title/company
     const details = document.createElement("div");
+    details.classList.add("modalDetails"); // ← add a class for targeting
 
     const nameEl = document.createElement("div");
     const titleEl = document.createElement("div"); titleEl.classList.add("kv");
@@ -419,8 +523,11 @@ export class AgendaItem extends HTMLElement {
 
     const sessionsUl = document.createElement("ul"); sessionsUl.classList.add("sessionsList");
 
-    details.append(nameEl, titleEl, companyEl, bioEl, sessionsHdr, sessionsUl);
-    body.append(avatar, details);
+    // Only keep name/title/company in the right column
+    details.append(nameEl, titleEl, companyEl);
+
+    // Bio + sessions become *separate* grid items
+    body.append(avatar, details, bioEl, sessionsHdr, sessionsUl);
 
     modal.append(header, body);
 
