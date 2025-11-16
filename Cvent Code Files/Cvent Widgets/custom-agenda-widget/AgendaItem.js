@@ -29,41 +29,38 @@ export class AgendaItem extends HTMLElement {
 
     const style = document.createElement("style");
     style.textContent = `
-      :host { display: block; font-family: inherit; }
-
+      :host { 
+        display: block;
+        font-family: inherit;
+      }
+      
       .card {
         display: grid;
-        grid-template-columns: 84px 1fr;
+        grid-template-columns: 75px 1fr;
         background: ${cardBg};
         border-radius: 8px;
         overflow: hidden;
-        /* FORCE full viewport width */
-        width: 100vw;
-        /* Center the 100vw card inside any parent that is narrower */
-        position: relative;
-        left: 50%;
-        right: 50%;
-        margin-left: -50vw;
-        margin-right: -50vw;
-        max-width: none;
+        width: calc(100% - 40px); /* 20px on each side */
+        max-width: 1210px;
+        margin: 0 auto;  /* centers it on any screen */
+        box-sizing: border-box;
       }
+
 
       @media (max-width: 1024px) {
         .card {
-          grid-template-columns: 84px 1fr;  
-          margin-left: 0px;
-          width: 100vw;
-          margin-left: -50vw;
-          margin-right: -50vw;
+          grid-template-columns: 84px 1fr;
+          width: calc(100% - 50px);
         }
       }
 
       @media (max-width: 600px) {
         .card {
-          grid-template-columns: 65px 1fr;
-          max-width: 90vw;
+          grid-template-columns: 70px 1fr;
+          width: calc(100% - 30px);
+
+        }
       }
-    }
 
       .timeGutter {
         display: flex;

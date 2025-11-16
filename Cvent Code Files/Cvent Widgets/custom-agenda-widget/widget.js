@@ -205,7 +205,7 @@ export default class extends HTMLElement {
     // theme styles (inline like Cvent example)
     const header3 = theme?.header3 ?? {};
     const { customClasses, ...styles } = header3;
-    Object.assign(el.style, styles, { margin: "8px 0 0 30px" });
+    Object.assign(el.style, styles, { margin: "8px 0 0 0" });
     if (Array.isArray(customClasses) && customClasses.length) el.classList.add(...customClasses);
 
     // minimal typography override support
