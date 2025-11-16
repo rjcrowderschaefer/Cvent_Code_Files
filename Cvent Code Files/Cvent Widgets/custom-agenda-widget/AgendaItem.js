@@ -50,6 +50,11 @@ export class AgendaItem extends HTMLElement {
         margin-left: 50px;
       }
 
+      .content h1 {
+        margin-bottom: 2px !important;
+        margin-top: 0 !important;
+        line-height: 1.2;
+      }
 
       @media (max-width: 1024px) {
         .card {
@@ -88,7 +93,6 @@ export class AgendaItem extends HTMLElement {
           }
       }
       
-
       .timeGutter {
         display: flex;
         flex-direction: column;
@@ -99,6 +103,7 @@ export class AgendaItem extends HTMLElement {
         background: ${gutterBg};
         align-self: stretch;
       }
+
       .timePart { line-height: 1.1; white-space: nowrap; }
 
       .content {
@@ -160,6 +165,56 @@ export class AgendaItem extends HTMLElement {
         text-overflow: unset;
         word-break: break-word;
       }
+
+      .sessionDescriptionBlock {
+        position: relative;
+        margin-top: 0px !important;
+        margin-bottom: 0px;
+      }
+
+
+    .desc-limited {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .show-more-toggle {
+      cursor: pointer;
+      color: #0066cc;
+      font-size: 14px;
+      margin-top: 4px;
+      text-decoration: underline;
+    }
+
+
+      .sessionDescriptionBlock.expanded .desc-limited {
+        -webkit-line-clamp: unset;
+        display: block;
+      }
+
+      .sessionDescriptionBlock.expanded .show-more {
+        display: none;
+      }
+
+    /* --- Limited description mode --- */
+      .desc-limited {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;   /* 2-line clamp */
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .showmore-toggle {
+        cursor: pointer;
+        color: #0055cc;
+        font-size: 14px;
+        margin-top: 4px;
+        text-decoration: underline;
+      }
+
+
 
       /* ===== Modal ===== */
       .backdrop {
@@ -294,15 +349,54 @@ export class AgendaItem extends HTMLElement {
     this.applyTypographyOverrides(titleEl, cfg.typography?.sessionName, true);
     content.append(titleEl);
 
-    // Description
-    if (cfg.showDescription && s.description) {
-      const desc = document.createElement("div");
-      // NOTE: description is treated as HTML by Cvent; ensure it’s trusted or sanitize upstream as needed.
-      desc.innerHTML = s.description;
-      this.applyThemeStyle(desc, t.mainText);
-      this.applyTypographyOverrides(desc, cfg.typography?.sessionDescription, true);
-      content.append(desc);
-    }
+// Description
+if (s.description) {
+  const wrap = document.createElement("div");
+  wrap.classList.add("sessionDescriptionBlock");
+
+  // Inner text block
+  const text = document.createElement("div");
+  text.classList.add("desc-text");
+  text.innerHTML = s.description;
+
+  // Apply typography only to the text
+  this.applyThemeStyle(text, t.mainText);
+  this.applyTypographyOverrides(text, cfg.typography?.sessionDescription, true);
+
+  wrap.append(text);
+
+  // Limited mode (2 lines + toggle)
+  if (cfg.showDescriptionLimited) {
+    
+    // Apply the clamp initially
+    text.classList.add("desc-limited");
+
+    // Create toggle
+    const toggle = document.createElement("div");
+    toggle.classList.add("show-more-toggle");
+    toggle.textContent = "Show more";
+
+    let expanded = false;
+
+    toggle.onclick = () => {
+      expanded = !expanded;
+
+      if (expanded) {
+        text.classList.remove("desc-limited");
+        toggle.textContent = "Show less";
+      } else {
+        text.classList.add("desc-limited");
+        toggle.textContent = "Show more";
+      }
+    };
+
+    wrap.append(toggle);
+  }
+
+  content.append(wrap);
+}
+
+
 
     // Speakers
     const speakersWrap = document.createElement("div");

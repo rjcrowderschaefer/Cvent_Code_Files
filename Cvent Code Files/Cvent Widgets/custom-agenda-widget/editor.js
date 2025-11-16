@@ -6,7 +6,8 @@ export default class ExampleAgendaEditor extends HTMLElement {
   constructor({ setConfiguration, initialConfiguration }) {
     super();
     this.setConfiguration = setConfiguration;
-    this._config = initialConfiguration ?? this._getDefaultConfig();
+    this._config = {...this._getDefaultConfig(), ...(initialConfiguration || {})
+  };
 
     if (!initialConfiguration) {
       setConfiguration(this._config);
@@ -48,6 +49,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
       maxResults: 100,
       groupByDay: true,
       showDescription: true,
+      showDescriptionLimited: false,
       gutterBg: "#e8eef9",
       cardBg: "#ffffff",
       modalColors: {
@@ -192,7 +194,8 @@ export default class ExampleAgendaEditor extends HTMLElement {
     checks.className = "section row";
     checks.append(
       this._checkbox("Group by day", !!this._config.groupByDay, v => this._patch({ groupByDay: v })),
-      this._checkbox("Show description", !!this._config.showDescription, v => this._patch({ showDescription: v }))
+      this._checkbox("Show description", !!this._config.showDescription, v => this._patch({ showDescription: v })),
+      this._checkbox("Show limited description (2 lines + “Show more”)", !!this._config.showDescriptionLimited, v => this._patch({ showDescriptionLimited: v }))
     );
     agendaBlock.append(checks);
 
