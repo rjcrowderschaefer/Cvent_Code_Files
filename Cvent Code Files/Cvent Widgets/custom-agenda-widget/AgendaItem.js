@@ -194,7 +194,7 @@ export class AgendaItem extends HTMLElement {
       grid-template-columns: 96px 1fr;
       grid-auto-rows: auto;
       column-gap: 14px;
-      row-gap: 16px;
+      row-gap: 5px;
       background: ${modalContentBg};
     }
 
@@ -220,7 +220,7 @@ export class AgendaItem extends HTMLElement {
 
     /* Row 2: bio, full width starting under avatar */
     .bio {
-      margin: 10px 0 0 0;
+      margin: 0 0 0 0;
       line-height: 1.45;
       grid-column: 1 / -1; /* span both columns */
       grid-row: 2;
@@ -228,21 +228,21 @@ export class AgendaItem extends HTMLElement {
 
     /* Row 3: sessions header full width */
     .sessionsHeader { 
-      margin-top: 10px;
+      margin-top: 0px;
       grid-column: 1 / -1;
       grid-row: 3;
     }
 
     /* Row 4: sessions list full width */
     .sessionsList { 
-      margin: 8px 0 12px 18px;
+      margin: 0 0 0 18px;
       padding: 0;
       grid-column: 1 / -1;
       grid-row: 4;
     }
 
     .sessionsList li {
-      margin: 4px 0;
+      margin: 0 0;
     }
 
     .modalBody > div > div:first-child {
