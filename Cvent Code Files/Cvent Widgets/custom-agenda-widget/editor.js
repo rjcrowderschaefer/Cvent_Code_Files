@@ -52,6 +52,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
       showDescriptionLimited: false,
       gutterBg: "#e8eef9",
       cardBg: "#ffffff",
+      showMoreColor: "#0066cc",
       modalColors: {
         headerBg: "#ffffff",
         dividerColor: "#eeeeee",
@@ -201,16 +202,23 @@ export default class ExampleAgendaEditor extends HTMLElement {
 
     // Colors
     agendaBlock.append(
-      this._colorRow("Time Column • Background", "gutterBg",
+      this._colorRow("Time Column Bg", "gutterBg",
         this._config.gutterBg || "#e8eef9",
         v => this._patch({ gutterBg: v })
       )
     );
 
     agendaBlock.append(
-      this._colorRow("Card Background", "cardBg",
+      this._colorRow("Card Bg", "cardBg",
         this._config.cardBg || "#ffffff",
         v => this._patch({ cardBg: v })
+      )
+    );
+
+    agendaBlock.append(
+      this._colorRow("Show More Color", "showMoreColor",
+        this._config.showMoreColor || "#0066cc",
+        v => this._patch({ showMoreColor: v })
       )
     );
 

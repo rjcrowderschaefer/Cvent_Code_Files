@@ -22,6 +22,7 @@ export class AgendaItem extends HTMLElement {
 
     const gutterBg = cfg.gutterBg || t.palette?.accent || "#e8eef9";
     const cardBg   = cfg.cardBg   || t.palette?.secondary || "#ffffff";
+    const showMoreColor = cfg.showMoreColor || cfg?.typography?.sessionDescription?.color || "#0066cc";
 
     const modalHeaderBg  = cfg.modalColors?.headerBg      ?? "#ffffff";
     const modalDivider   = cfg.modalColors?.dividerColor  ?? "#eeeeee";
@@ -55,43 +56,6 @@ export class AgendaItem extends HTMLElement {
         margin-top: 0 !important;
         line-height: 1.2;
       }
-
-      @media (max-width: 1024px) {
-        .card {
-          grid-template-columns: 70px 1fr;
-          width: calc(100% - 50px);
-        }
-      }
-
-      @media (max-width: 600px) {
-        .card {
-          grid-template-columns: 70px 1fr;
-          width: calc(100% - 30px);
-        }
-          
-        .truncate {
-        white-space: normal;     /* allow wrapping */
-        overflow: visible;       /* no ellipsis */
-        text-overflow: unset;
-        }
-
-        .speakerTitle {
-        display: block;      /* force its own line */
-        margin-bottom: 2px;  /* optional spacing */
-        }
-
-        .speakerCompany {
-        display: block;      /* force second line */
-        }
-
-        .comma-node {
-        display: none;
-        }
-
-        .modalBody > div.modalDetails > div:first-child {
-            display: none !important;
-          }
-      }
       
       .timeGutter {
         display: flex;
@@ -114,17 +78,31 @@ export class AgendaItem extends HTMLElement {
         min-width: 0;
       }
 
-      .speakersWrap { 
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
+      // .speakersWrap { 
+      //   display: flex;
+      //   flex-direction: column;
+      //   gap: 8px;
+      // }
+
+      .speakersWrap {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 16px;
+        row-gap: 12px;
       }
+
+      // .speakerLine {
+      //   display: flex;
+      //   align-items: center;
+      //   gap: 10px;
+      //   min-width: 0;
+      //   cursor: pointer;
+      // }
 
       .speakerLine {
         display: flex;
         align-items: center;
         gap: 10px;
-        min-width: 0;
         cursor: pointer;
       }
 
@@ -173,21 +151,25 @@ export class AgendaItem extends HTMLElement {
       }
 
 
-    .desc-limited {
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
+      .desc-limited {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
 
-    .show-more-toggle {
-      cursor: pointer;
-      color: #0066cc;
-      font-size: 14px;
-      margin-top: 4px;
-      text-decoration: underline;
-    }
+      .show-more-toggle {
+        cursor: pointer;
+        font-size: 14px;
+        margin-top: 4px;
+        text-decoration: underline;
+        color: ${showMoreColor} !important;
+      }
 
+
+      .show-more-toggle:hover {
+        opacity: 0.75;
+      }
 
       .sessionDescriptionBlock.expanded .desc-limited {
         -webkit-line-clamp: unset;
@@ -205,16 +187,6 @@ export class AgendaItem extends HTMLElement {
         -webkit-box-orient: vertical;
         overflow: hidden;
       }
-
-      .showmore-toggle {
-        cursor: pointer;
-        color: #0055cc;
-        font-size: 14px;
-        margin-top: 4px;
-        text-decoration: underline;
-      }
-
-
 
       /* ===== Modal ===== */
       .backdrop {
@@ -307,6 +279,57 @@ export class AgendaItem extends HTMLElement {
     .modalBody > div > div:first-child {
       display: none !important;
       }
+
+      @media (max-width: 1024px) {
+        .card {
+          grid-template-columns: 70px 1fr;
+          width: calc(100% - 50px);
+        }
+
+        .speakersWrap {
+          grid-template-columns: 1fr;
+      }
+
+      @media (max-width: 600px) {
+        .card {
+          grid-template-columns: 70px 1fr;
+          width: calc(100% - 30px);
+        }
+
+        .speakersWrap {
+          grid-template-columns: 1fr;
+      } 
+          
+        .truncate {
+        white-space: normal;     /* allow wrapping */
+        overflow: visible;       /* no ellipsis */
+        text-overflow: unset;
+        }
+
+        .speakerTitle {
+        display: block;      /* force its own line */
+        margin-bottom: 2px;  /* optional spacing */
+        }
+
+        .speakerCompany {
+        display: block;      /* force second line */
+        }
+
+        .comma-node {
+        display: none;
+        }
+
+        .modalBody > div.modalDetails > div:first-child {
+            display: none !important;
+          }
+
+        .sessionsList li {
+          margin: 2px 0 !important;   /* tighten the list spacing */
+          line-height: 1.3 !important; /* reduce vertical space inside each item */
+          padding: 0 !important;       /* in case theme injects padding */
+        }
+      }
+
     `;
     this.shadowRoot.append(style);
 
@@ -376,6 +399,8 @@ if (s.description) {
     toggle.classList.add("show-more-toggle");
     toggle.textContent = "Show more";
 
+    toggle.style.setProperty("color", showMoreColor, "important");
+
     let expanded = false;
 
     toggle.onclick = () => {
@@ -390,6 +415,7 @@ if (s.description) {
       }
     };
 
+    
     wrap.append(toggle);
   }
 
@@ -460,7 +486,7 @@ if (s.description) {
       sp?.org ||
       ""
     ).toString().trim();
-  
+
     const pic = (sp?.profilePictureUri || "").trim();
   
     const line = document.createElement("div");
