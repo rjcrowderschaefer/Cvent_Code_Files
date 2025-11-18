@@ -12,32 +12,19 @@ export default class ExampleAgendaEditor extends HTMLElement {
     if (!initialConfiguration) {
       setConfiguration(this._config);
     }
-
-    // Track whether a speaker modal is open
-    this._modalIsOpen = false;
-
+    
     this.attachShadow({ mode: "open" });
   }
 
   onConfigurationUpdate(newConfig) {
-    this._config = newConfig || this._config;
-    this._renderUI(); // Refresh with latest
-  }
+  this._config = newConfig || this._config;
+  this._safeRenderUI(); // use the new safe renderer
+}
 
   connectedCallback() {
-    // Listen for modal open / close events from AgendaItem.js
-    window.addEventListener("cvent-speaker-modal-open", () => {
-      this._modalIsOpen = true;
-      this._renderUI();
-    });
+  this._safeRenderUI();
+}
 
-    window.addEventListener("cvent-speaker-modal-close", () => {
-      this._modalIsOpen = false;
-      this._renderUI();
-    });
-
-    this._renderUI();
-  }
 
   // ============================
   // DEFAULT CONFIG
@@ -98,6 +85,29 @@ export default class ExampleAgendaEditor extends HTMLElement {
   // ============================
   // MAIN RENDER FUNCTION
   // ============================
+
+  _safeRenderUI() {
+    // --- Save scroll position of host editor container ---
+    const scrollTop = this.scrollTop;
+
+    // --- Save open/closed state of all existing <details> sections ---
+    const detailsState =
+      [...this.shadowRoot.querySelectorAll("details")].map(d => d.open);
+
+    // --- Rebuild the entire editor ---
+    this._renderUI();
+
+    // --- Restore <details> open/closed state ---
+    const newDetails =
+      [...this.shadowRoot.querySelectorAll("details")];
+
+    detailsState.forEach((wasOpen, i) => {
+      if (newDetails[i]) newDetails[i].open = wasOpen;
+    });
+
+    // --- Restore scroll position ---
+    this.scrollTop = scrollTop;
+  }
 
   _renderUI() {
     this.shadowRoot.innerHTML = "";
@@ -190,15 +200,80 @@ export default class ExampleAgendaEditor extends HTMLElement {
     sortWrap.append(sort);
     agendaBlock.append(sortWrap);
 
-    // Checkboxes
-    const checks = document.createElement("div");
-    checks.className = "section row";
-    checks.append(
-      this._checkbox("Group by day", !!this._config.groupByDay, v => this._patch({ groupByDay: v })),
-      this._checkbox("Show description", !!this._config.showDescription, v => this._patch({ showDescription: v })),
-      this._checkbox("Show limited description (2 lines + “Show more”)", !!this._config.showDescriptionLimited, v => this._patch({ showDescriptionLimited: v }))
+    // Group by day checkbox stays
+    agendaBlock.append(
+      this._checkbox("Group by day", !!this._config.groupByDay, v => this._patch({ groupByDay: v }))
     );
-    agendaBlock.append(checks);
+
+    // Description Display Options (Radio Button Group)
+    const descFieldset = document.createElement("fieldset");
+    descFieldset.style.margin = "12px 0";
+    const legend = document.createElement("legend");
+    legend.textContent = "Description Display";
+    legend.style.fontWeight = "600";
+    descFieldset.append(legend);
+
+    // Helper to make radio rows
+    const makeRadio = (label, value, checked) => {
+      const wrap = document.createElement("label");
+      wrap.style.display = "flex";
+      wrap.style.alignItems = "center";
+      wrap.style.gap = "6px";
+      wrap.style.margin = "4px 0";
+
+      const rb = document.createElement("input");
+      rb.type = "radio";
+      rb.name = "descriptionMode";
+      rb.value = value;
+      rb.checked = checked;
+
+      rb.onchange = () => {
+        if (!rb.checked) return;
+
+        if (value === "none") {
+          this._patch({
+            showDescription: false,
+            showDescriptionLimited: false
+          });
+        }
+
+        if (value === "full") {
+          this._patch({
+            showDescription: true,
+            showDescriptionLimited: false
+          });
+        }
+
+        if (value === "limited") {
+          this._patch({
+            showDescription: true,
+            showDescriptionLimited: true
+          });
+        }
+      };
+
+      wrap.append(rb, document.createTextNode(label));
+      return wrap;
+    };
+
+    // Add three radio options
+    descFieldset.append(
+      makeRadio("Hide description", "none",
+        !this._config.showDescription && !this._config.showDescriptionLimited
+      ),
+
+      makeRadio("Show full description", "full",
+        this._config.showDescription && !this._config.showDescriptionLimited
+      ),
+
+      makeRadio("Show limited description (2 lines + “Show more”)", "limited",
+        this._config.showDescriptionLimited === true
+      )
+    );
+
+    // Add to panel
+    agendaBlock.append(descFieldset);
+
 
     // Colors
     agendaBlock.append(
@@ -247,102 +322,97 @@ export default class ExampleAgendaEditor extends HTMLElement {
 
     panel.append(agendaDetails);
 
+        // ============================
+    // MODAL CONTROLS (always visible)
     // ============================
-    // CONDITIONAL: MODAL CONTROLS
-    // Show only when a speaker modal is open
-    // ============================
 
-    if (this._modalIsOpen) {
-      const modalDetails = this._details("Speaker Modal Controls");
-      const modalBlock = document.createElement("div");
-      modalBlock.className = "block";
-      modalDetails.append(modalBlock);
+    const modalDetails = this._details("Speaker Modal Controls");
+    const modalBlock = document.createElement("div");
+    modalBlock.className = "block";
+    modalDetails.append(modalBlock);
 
-            // -------------------------
-      // Modal Color Controls
-      // -------------------------
+    // -------------------------
+    // Modal Color Controls
+    // -------------------------
 
-      const h3ModalColors = document.createElement("h3");
-      h3ModalColors.textContent = "Modal Colors";
-      modalBlock.append(h3ModalColors);
+    const h3ModalColors = document.createElement("h3");
+    h3ModalColors.textContent = "Modal Colors";
+    modalBlock.append(h3ModalColors);
 
-      modalBlock.append(
-        this._colorRow(
-          "Header background",
-          "modalHeaderBg",
-          this._config.modalColors?.headerBg || "#ffffff",
-          v => this._patch({
-            modalColors: { ...this._config.modalColors, headerBg: v }
-          })
-        )
-      );
+    modalBlock.append(
+      this._colorRow(
+        "Header background",
+        "modalHeaderBg",
+        this._config.modalColors?.headerBg || "#ffffff",
+        v => this._patch({
+          modalColors: { ...this._config.modalColors, headerBg: v }
+        })
+      )
+    );
 
-      modalBlock.append(
-        this._colorRow(
-          "Divider line",
-          "modalDivider",
-          this._config.modalColors?.dividerColor || "#eeeeee",
-          v => this._patch({
-            modalColors: { ...this._config.modalColors, dividerColor: v }
-          })
-        )
-      );
+    modalBlock.append(
+      this._colorRow(
+        "Divider line",
+        "modalDivider",
+        this._config.modalColors?.dividerColor || "#eeeeee",
+        v => this._patch({
+          modalColors: { ...this._config.modalColors, dividerColor: v }
+        })
+      )
+    );
 
-      modalBlock.append(
-        this._colorRow(
-          "Content background",
-          "modalContentBg",
-          this._config.modalColors?.contentBg || "#ffffff",
-          v => this._patch({
-            modalColors: { ...this._config.modalColors, contentBg: v }
-          })
-        )
-      );
+    modalBlock.append(
+      this._colorRow(
+        "Content background",
+        "modalContentBg",
+        this._config.modalColors?.contentBg || "#ffffff",
+        v => this._patch({
+          modalColors: { ...this._config.modalColors, contentBg: v }
+        })
+      )
+    );
 
-      // -------------------------
-      // Modal Typography
-      // -------------------------
+    // -------------------------
+    // Modal Typography
+    // -------------------------
 
-      const typoModal = document.createElement("div");
-      typoModal.className = "grid";
-      modalBlock.append(typoModal);
+    const typoModal = document.createElement("div");
+    typoModal.className = "grid";
+    modalBlock.append(typoModal);
 
-      const MODAL_TYPO_KEYS = [
-        ["modalName", "Modal Name (top header)"],
-        ["modalSpeakerName", "Modal Speaker Name"],
-        ["modalSpeakerTitle", "Modal Speaker Title"],
-        ["modalSpeakerCompany", "Modal Speaker Company"],
-        ["modalSpeakerBio", "Modal Speaker Bio"],
-        ["modalSessionsHeader", "Modal Sessions Header"],
-        ["modalSessionName", "Modal Session Name"],
-        ["modalSessionDateTime", "Modal Session Date & Time"]
-      ];
+    const MODAL_TYPO_KEYS = [
+      ["modalName", "Modal Name (top header)"],
+      ["modalSpeakerName", "Modal Speaker Name"],
+      ["modalSpeakerTitle", "Modal Speaker Title"],
+      ["modalSpeakerCompany", "Modal Speaker Company"],
+      ["modalSpeakerBio", "Modal Speaker Bio"],
+      ["modalSessionsHeader", "Modal Sessions Header"],
+      ["modalSessionName", "Modal Session Name"],
+      ["modalSessionDateTime", "Modal Session Date & Time"]
+    ];
 
-      MODAL_TYPO_KEYS.forEach(([key, label]) => {
-        typoModal.append(this._typographyBlock(key, label));
-      });
+    MODAL_TYPO_KEYS.forEach(([key, label]) => {
+      typoModal.append(this._typographyBlock(key, label));
+    });
 
-      panel.append(modalDetails);
-    }
-  }
+    panel.append(modalDetails);
+      }
 
   // ===========================================================
   // UI HELPERS
   // ===========================================================
 
-  _details(title) {
-    const d = document.createElement("details");
-    d.open = true;
-
-    const sum = document.createElement("summary");
-    const chev = document.createElement("span");
-    chev.className = "chev";
-    chev.textContent = "▶";
-
-    sum.append(chev, document.createTextNode(" " + title));
-    d.append(sum);
-    return d;
-  }
+  _details(title, open = true) {
+  const d = document.createElement("details");
+  d.open = open;
+  const sum = document.createElement("summary");
+  const chev = document.createElement("span");
+  chev.className = "chev";
+  chev.textContent = "▶";
+  sum.append(chev, document.createTextNode(" " + title));
+  d.append(sum);
+  return d;
+}
 
   _label(text) {
     const l = document.createElement("label");

@@ -372,55 +372,54 @@ export class AgendaItem extends HTMLElement {
     this.applyTypographyOverrides(titleEl, cfg.typography?.sessionName, true);
     content.append(titleEl);
 
-// Description
-if (s.description) {
-  const wrap = document.createElement("div");
-  wrap.classList.add("sessionDescriptionBlock");
+    // Description
+    if (s.description) {
+      const wrap = document.createElement("div");
+      wrap.classList.add("sessionDescriptionBlock");
 
-  // Inner text block
-  const text = document.createElement("div");
-  text.classList.add("desc-text");
-  text.innerHTML = s.description;
+      const text = document.createElement("div");
+      text.classList.add("desc-text");
+      text.innerHTML = s.description;
 
-  // Apply typography only to the text
-  this.applyThemeStyle(text, t.mainText);
-  this.applyTypographyOverrides(text, cfg.typography?.sessionDescription, true);
+      this.applyThemeStyle(text, t.mainText);
+      this.applyTypographyOverrides(text, cfg.typography?.sessionDescription, true);
 
-  wrap.append(text);
+      wrap.append(text);
 
-  // Limited mode (2 lines + toggle)
-  if (cfg.showDescriptionLimited) {
-    
-    // Apply the clamp initially
-    text.classList.add("desc-limited");
-
-    // Create toggle
-    const toggle = document.createElement("div");
-    toggle.classList.add("show-more-toggle");
-    toggle.textContent = "Show more";
-
-    toggle.style.setProperty("color", showMoreColor, "important");
-
-    let expanded = false;
-
-    toggle.onclick = () => {
-      expanded = !expanded;
-
-      if (expanded) {
-        text.classList.remove("desc-limited");
-        toggle.textContent = "Show less";
-      } else {
-        text.classList.add("desc-limited");
-        toggle.textContent = "Show more";
+      // NEW: apply Show Description toggle
+      if (!cfg.showDescription && !cfg.showDescriptionLimited) {
+        wrap.style.display = "none";
       }
-    };
 
-    
-    wrap.append(toggle);
-  }
+      // Limited mode (2 lines + toggle)
+      if (cfg.showDescriptionLimited) {
+        text.classList.add("desc-limited");
 
-  content.append(wrap);
-}
+        const toggle = document.createElement("div");
+        toggle.classList.add("show-more-toggle");
+        toggle.textContent = "Show more";
+
+        let expanded = false;
+        toggle.onclick = () => {
+          expanded = !expanded;
+          if (expanded) {
+            text.classList.remove("desc-limited");
+            toggle.textContent = "Show less";
+          } else {
+            text.classList.add("desc-limited");
+            toggle.textContent = "Show more";
+          }
+        };
+
+        this.applyThemeStyle(toggle, t.mainText);
+        this.applyTypographyOverrides(toggle, cfg.typography?.sessionDescription, true);
+
+        wrap.append(toggle);
+      }
+
+      content.append(wrap);
+    }
+
 
 
 
