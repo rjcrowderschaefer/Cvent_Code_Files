@@ -6,25 +6,26 @@ export default class ExampleAgendaEditor extends HTMLElement {
   constructor({ setConfiguration, initialConfiguration }) {
     super();
     this.setConfiguration = setConfiguration;
-    this._config = {...this._getDefaultConfig(), ...(initialConfiguration || {})
-  };
+    this._config = {
+      ...this._getDefaultConfig(),
+      ...(initialConfiguration || {}),
+    };
 
     if (!initialConfiguration) {
       setConfiguration(this._config);
     }
-    
+
     this.attachShadow({ mode: "open" });
   }
 
   onConfigurationUpdate(newConfig) {
-  this._config = newConfig || this._config;
-  this._safeRenderUI(); // use the new safe renderer
-}
+    this._config = newConfig || this._config;
+    this._safeRenderUI(); // use the new safe renderer
+  }
 
   connectedCallback() {
-  this._safeRenderUI();
-}
-
+    this._safeRenderUI();
+  }
 
   // ============================
   // DEFAULT CONFIG
@@ -32,6 +33,8 @@ export default class ExampleAgendaEditor extends HTMLElement {
 
   _getDefaultConfig() {
     return {
+      headerText: "Agenda",
+      subheaderText: "Here's what's scheduled for the event",
       sort: "dateTimeAsc",
       maxResults: 100,
       groupByDay: true,
@@ -43,9 +46,9 @@ export default class ExampleAgendaEditor extends HTMLElement {
       modalColors: {
         headerBg: "#ffffff",
         dividerColor: "#eeeeee",
-        contentBg: "#ffffff"
+        contentBg: "#ffffff",
       },
-      typography: this._makeDefaultTypography()
+      typography: this._makeDefaultTypography(),
     };
   }
 
@@ -57,10 +60,12 @@ export default class ExampleAgendaEditor extends HTMLElement {
       color: "#222222",
       bold: false,
       italic: false,
-      underline: false
+      underline: false,
     };
 
     return {
+      agendaHeader: { ...base, bold: true, fontSize: 18, color: "#003366" },
+      agendaSubheader: { ...base, bold: true, fontSize: 18, color: "#003366" },
       eventDate: { ...base, bold: true, fontSize: 18, color: "#003366" },
 
       sessionName: { ...base, fontSize: 20, bold: true, color: "#111111" },
@@ -78,7 +83,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
       modalSpeakerBio: { ...base, fontSize: 15, color: "#333333" },
       modalSessionsHeader: { ...base, fontSize: 16, bold: true },
       modalSessionName: { ...base, fontSize: 14 },
-      modalSessionDateTime: { ...base, fontSize: 13, color: "#555555" }
+      modalSessionDateTime: { ...base, fontSize: 13, color: "#555555" },
     };
   }
 
@@ -91,15 +96,15 @@ export default class ExampleAgendaEditor extends HTMLElement {
     const scrollTop = this.scrollTop;
 
     // --- Save open/closed state of all existing <details> sections ---
-    const detailsState =
-      [...this.shadowRoot.querySelectorAll("details")].map(d => d.open);
+    const detailsState = [...this.shadowRoot.querySelectorAll("details")].map(
+      (d) => d.open
+    );
 
     // --- Rebuild the entire editor ---
     this._renderUI();
 
     // --- Restore <details> open/closed state ---
-    const newDetails =
-      [...this.shadowRoot.querySelectorAll("details")];
+    const newDetails = [...this.shadowRoot.querySelectorAll("details")];
 
     detailsState.forEach((wasOpen, i) => {
       if (newDetails[i]) newDetails[i].open = wasOpen;
@@ -180,19 +185,63 @@ export default class ExampleAgendaEditor extends HTMLElement {
     agendaBlock.className = "block";
     agendaDetails.append(agendaBlock);
 
+    // Header text
+    const headerWrap = document.createElement("div");
+    headerWrap.className = "section";
+    headerWrap.appendChild(this._label("Header"));
+    headerWrap.appendChild(document.createElement("br"));
+
+    const headerInput = document.createElement("input");
+    headerInput.type = "text";
+    headerInput.value =
+      this._config.headerText !== undefined
+        ? this._config.headerText
+        : "Agenda";
+    headerInput.style.width = "100%";
+
+    headerInput.onchange = () => {
+      this._patch({ headerText: headerInput.value });
+    };
+
+    headerWrap.appendChild(headerInput);
+    agendaBlock.appendChild(headerWrap);
+
+    // Subheader text
+    const subheaderWrap = document.createElement("div");
+    subheaderWrap.className = "section";
+    subheaderWrap.appendChild(this._label("Subheader"));
+    subheaderWrap.appendChild(document.createElement("br"));
+
+    const subheaderInput = document.createElement("input");
+    subheaderInput.type = "text";
+    subheaderInput.value =
+      this._config.subheaderText !== undefined
+        ? this._config.subheaderText
+        : "Here's what's on the schedule";
+    subheaderInput.style.width = "100%";
+
+    subheaderInput.onchange = () => {
+      this._patch({ subheaderText: subheaderInput.value });
+    };
+
+    subheaderWrap.appendChild(subheaderInput);
+    agendaBlock.appendChild(subheaderWrap);
+
     // Sort dropdown
     const sortWrap = document.createElement("div");
     sortWrap.className = "section";
     sortWrap.append(this._label("Sort"), document.createElement("br"));
 
     const sort = document.createElement("select");
-    ["dateTimeAsc","dateTimeDesc","nameAsc"].forEach(v => {
+    ["dateTimeAsc", "dateTimeDesc", "nameAsc"].forEach((v) => {
       const opt = document.createElement("option");
       opt.value = v;
       opt.textContent =
-        v === "dateTimeAsc" ? "Date & time (asc)" :
-        v === "dateTimeDesc" ? "Date & time (desc)" :
-        "Name (A→Z)";
+        v === "dateTimeAsc"
+          ? "Date & time (asc)"
+          : v === "dateTimeDesc"
+          ? "Date & time (desc)"
+          : "Name (A→Z)";
       if (this._config.sort === v) opt.selected = true;
       sort.append(opt);
     });
@@ -202,7 +251,9 @@ export default class ExampleAgendaEditor extends HTMLElement {
 
     // Group by day checkbox stays
     agendaBlock.append(
-      this._checkbox("Group by day", !!this._config.groupByDay, v => this._patch({ groupByDay: v }))
+      this._checkbox("Group by day", !!this._config.groupByDay, (v) =>
+        this._patch({ groupByDay: v })
+      )
     );
 
     // Description Display Options (Radio Button Group)
@@ -233,21 +284,21 @@ export default class ExampleAgendaEditor extends HTMLElement {
         if (value === "none") {
           this._patch({
             showDescription: false,
-            showDescriptionLimited: false
+            showDescriptionLimited: false,
           });
         }
 
         if (value === "full") {
           this._patch({
             showDescription: true,
-            showDescriptionLimited: false
+            showDescriptionLimited: false,
           });
         }
 
         if (value === "limited") {
           this._patch({
             showDescription: true,
-            showDescriptionLimited: true
+            showDescriptionLimited: true,
           });
         }
       };
@@ -258,15 +309,21 @@ export default class ExampleAgendaEditor extends HTMLElement {
 
     // Add three radio options
     descFieldset.append(
-      makeRadio("Hide description", "none",
+      makeRadio(
+        "Hide description",
+        "none",
         !this._config.showDescription && !this._config.showDescriptionLimited
       ),
 
-      makeRadio("Show full description", "full",
+      makeRadio(
+        "Show full description",
+        "full",
         this._config.showDescription && !this._config.showDescriptionLimited
       ),
 
-      makeRadio("Show limited description (2 lines + “Show more”)", "limited",
+      makeRadio(
+        "Show limited description (2 lines + “Show more”)",
+        "limited",
         this._config.showDescriptionLimited === true
       )
     );
@@ -274,26 +331,31 @@ export default class ExampleAgendaEditor extends HTMLElement {
     // Add to panel
     agendaBlock.append(descFieldset);
 
-
     // Colors
     agendaBlock.append(
-      this._colorRow("Time Column Bg", "gutterBg",
+      this._colorRow(
+        "Time Column Bg",
+        "gutterBg",
         this._config.gutterBg || "#e8eef9",
-        v => this._patch({ gutterBg: v })
+        (v) => this._patch({ gutterBg: v })
       )
     );
 
     agendaBlock.append(
-      this._colorRow("Card Bg", "cardBg",
+      this._colorRow(
+        "Card Bg",
+        "cardBg",
         this._config.cardBg || "#ffffff",
-        v => this._patch({ cardBg: v })
+        (v) => this._patch({ cardBg: v })
       )
     );
 
     agendaBlock.append(
-      this._colorRow("Show More Color", "showMoreColor",
+      this._colorRow(
+        "Show More Color",
+        "showMoreColor",
         this._config.showMoreColor || "#0066cc",
-        v => this._patch({ showMoreColor: v })
+        (v) => this._patch({ showMoreColor: v })
       )
     );
 
@@ -307,13 +369,15 @@ export default class ExampleAgendaEditor extends HTMLElement {
     agendaBlock.append(typoAgenda);
 
     const AGENDA_TYPO_KEYS = [
+      ["agendaHeader", "Agenda Header"],
+      ["agendaSubheader", "Agenda Subheader"],
       ["eventDate", "Event Date (day header)"],
       ["sessionName", "Session Name"],
       ["sessionTime", "Session Date & Start/End"],
       ["sessionDescription", "Session Description"],
       ["speakerName", "Speaker Name (card)"],
       ["speakerTitle", "Speaker Title (card)"],
-      ["speakerCompany", "Speaker Company (card)"]
+      ["speakerCompany", "Speaker Company (card)"],
     ];
 
     AGENDA_TYPO_KEYS.forEach(([key, label]) => {
@@ -322,7 +386,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
 
     panel.append(agendaDetails);
 
-        // ============================
+    // ============================
     // MODAL CONTROLS (always visible)
     // ============================
 
@@ -344,9 +408,10 @@ export default class ExampleAgendaEditor extends HTMLElement {
         "Header background",
         "modalHeaderBg",
         this._config.modalColors?.headerBg || "#ffffff",
-        v => this._patch({
-          modalColors: { ...this._config.modalColors, headerBg: v }
-        })
+        (v) =>
+          this._patch({
+            modalColors: { ...this._config.modalColors, headerBg: v },
+          })
       )
     );
 
@@ -355,9 +420,10 @@ export default class ExampleAgendaEditor extends HTMLElement {
         "Divider line",
         "modalDivider",
         this._config.modalColors?.dividerColor || "#eeeeee",
-        v => this._patch({
-          modalColors: { ...this._config.modalColors, dividerColor: v }
-        })
+        (v) =>
+          this._patch({
+            modalColors: { ...this._config.modalColors, dividerColor: v },
+          })
       )
     );
 
@@ -366,9 +432,10 @@ export default class ExampleAgendaEditor extends HTMLElement {
         "Content background",
         "modalContentBg",
         this._config.modalColors?.contentBg || "#ffffff",
-        v => this._patch({
-          modalColors: { ...this._config.modalColors, contentBg: v }
-        })
+        (v) =>
+          this._patch({
+            modalColors: { ...this._config.modalColors, contentBg: v },
+          })
       )
     );
 
@@ -388,7 +455,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
       ["modalSpeakerBio", "Modal Speaker Bio"],
       ["modalSessionsHeader", "Modal Sessions Header"],
       ["modalSessionName", "Modal Session Name"],
-      ["modalSessionDateTime", "Modal Session Date & Time"]
+      ["modalSessionDateTime", "Modal Session Date & Time"],
     ];
 
     MODAL_TYPO_KEYS.forEach(([key, label]) => {
@@ -396,23 +463,23 @@ export default class ExampleAgendaEditor extends HTMLElement {
     });
 
     panel.append(modalDetails);
-      }
+  }
 
   // ===========================================================
   // UI HELPERS
   // ===========================================================
 
   _details(title, open = true) {
-  const d = document.createElement("details");
-  d.open = open;
-  const sum = document.createElement("summary");
-  const chev = document.createElement("span");
-  chev.className = "chev";
-  chev.textContent = "▶";
-  sum.append(chev, document.createTextNode(" " + title));
-  d.append(sum);
-  return d;
-}
+    const d = document.createElement("details");
+    d.open = open;
+    const sum = document.createElement("summary");
+    const chev = document.createElement("span");
+    chev.className = "chev";
+    chev.textContent = "▶";
+    sum.append(chev, document.createTextNode(" " + title));
+    d.append(sum);
+    return d;
+  }
 
   _label(text) {
     const l = document.createElement("label");
@@ -493,17 +560,18 @@ export default class ExampleAgendaEditor extends HTMLElement {
 
       i.oninput = () => {
         const val =
-          i.value === "" ? undefined :
-          Math.max(10, Math.min(72, Number(i.value) || undefined));
+          i.value === ""
+            ? undefined
+            : Math.max(10, Math.min(72, Number(i.value) || undefined));
 
         this._patch({
           typography: {
             ...this._config.typography,
             [key]: {
               ...(this._config.typography?.[key] || {}),
-              [prop]: val
-            }
-          }
+              [prop]: val,
+            },
+          },
         });
       };
 
@@ -548,9 +616,9 @@ export default class ExampleAgendaEditor extends HTMLElement {
           ...this._config.typography,
           [key]: {
             ...(this._config.typography?.[key] || {}),
-            color: withHash
-          }
-        }
+            color: withHash,
+          },
+        },
       });
     });
 
@@ -565,9 +633,9 @@ export default class ExampleAgendaEditor extends HTMLElement {
           ...this._config.typography,
           [key]: {
             ...(this._config.typography?.[key] || {}),
-            color: v
-          }
-        }
+            color: v,
+          },
+        },
       });
     };
 
@@ -612,9 +680,9 @@ export default class ExampleAgendaEditor extends HTMLElement {
           ...this._config.typography,
           [key]: {
             ...(this._config.typography?.[key] || {}),
-            [prop]: cb.checked
-          }
-        }
+            [prop]: cb.checked,
+          },
+        },
       });
     };
 
@@ -629,7 +697,11 @@ export default class ExampleAgendaEditor extends HTMLElement {
   _normalizeHex(v) {
     if (!v) return "";
     let s = v.trim().replace(/^#/, "").toUpperCase();
-    if (s.length === 3) s = s.split("").map(ch => ch + ch).join("");
+    if (s.length === 3)
+      s = s
+        .split("")
+        .map((ch) => ch + ch)
+        .join("");
     return s;
   }
 
@@ -667,7 +739,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
     return hex;
   }
 
-    // ===========================================================
+  // ===========================================================
   // STATE PATCHING
   // ===========================================================
 
@@ -678,7 +750,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
     if (patch.typography) {
       merged.typography = {
         ...(this._config.typography || {}),
-        ...patch.typography
+        ...patch.typography,
       };
     }
 
@@ -686,7 +758,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
     if (patch.modalColors) {
       merged.modalColors = {
         ...(this._config.modalColors || {}),
-        ...patch.modalColors
+        ...patch.modalColors,
       };
     }
 
