@@ -66,15 +66,68 @@ export default class extends HTMLElement {
 
   // === NEW: find the SDK's getSpeakers hook, wherever it lives ===
   _resolveGetSpeakers() {
-    if (this.cventSdk?.getSpeakers) return this.cventSdk.getSpeakers.bind(this.cventSdk);
+    if (this.cventSdk?.getSpeakers)
+      return this.cventSdk.getSpeakers.bind(this.cventSdk);
     if (typeof this.getSpeakers === "function") return this.getSpeakers;
-    if (typeof window !== "undefined" && typeof window.getSpeakers === "function") return window.getSpeakers;
+    if (
+      typeof window !== "undefined" &&
+      typeof window.getSpeakers === "function"
+    )
+      return window.getSpeakers;
     return undefined;
   }
 
   async _renderInto(container) {
     const cfg = this.configuration || {};
     const theme = this.theme || {};
+
+    // Agenda header + subheader
+
+    const headerText = cfg.headerText !== undefined ? cfg.headerText : "Agenda";
+
+    const subheaderText =
+      cfg.subheaderText !== undefined
+        ? cfg.subheaderText
+        : "Here's what's scheduled for the event";
+
+    const headerWrap = document.createElement("div");
+    headerWrap.style.display = "flex";
+    headerWrap.style.flexDirection = "column";
+    headerWrap.style.gap = "4px";
+    headerWrap.style.width = "calc(100% - 40px)";
+    headerWrap.style.maxWidth = "1210px";
+    headerWrap.style.margin = "0 auto 16px auto";
+    headerWrap.style.boxSizing = "border-box";
+
+    const headerEl = document.createElement("h2");
+    headerEl.textContent = headerText;
+    headerEl.style.margin = "0";
+
+    const subheaderEl = document.createElement("div");
+    subheaderEl.textContent = subheaderText;
+    subheaderEl.style.margin = "0";
+
+    this._applyTypographyOverrides(
+      headerEl,
+      (cfg.typography && cfg.typography.agendaHeader) || {},
+      true
+    );
+
+    this._applyTypographyOverrides(
+      subheaderEl,
+      (cfg.typography && cfg.typography.agendaSubheader) || {},
+      true
+    );
+
+    // fallback defaults if planner hasn't styled them yet
+    if (!headerEl.style.fontSize) headerEl.style.fontSize = "32px";
+    if (!headerEl.style.fontWeight) headerEl.style.fontWeight = "700";
+
+    if (!subheaderEl.style.fontSize) subheaderEl.style.fontSize = "18px";
+    if (!subheaderEl.style.color) subheaderEl.style.color = "#444";
+
+    headerWrap.append(headerEl, subheaderEl);
+    container.appendChild(headerWrap);
 
     // Sort + page size config
     const sort =
@@ -148,18 +201,28 @@ export default class extends HTMLElement {
     // Resolve getSpeakers once per render
     const getSpeakers = this._resolveGetSpeakers();
     if (!getSpeakers) {
-      console.warn("[widget.js] getSpeakers not found; speakers will not hydrate (title/company may be empty).");
+      console.warn(
+        "[widget.js] getSpeakers not found; speakers will not hydrate (title/company may be empty)."
+      );
     }
 
     // Render
     if (cfg.groupByDay === false) {
-      sorted.forEach((s) => container.appendChild(this._renderItem(s, theme, cfg, sessions, getSpeakers)));
+      sorted.forEach((s) =>
+        container.appendChild(
+          this._renderItem(s, theme, cfg, sessions, getSpeakers)
+        )
+      );
     } else {
       const groups = this._groupSessionsByDay(sorted);
       for (const [dayKey, daySessions] of groups) {
         const header = this._renderDayHeader(dayKey, theme, cfg);
         container.appendChild(header);
-        daySessions.forEach((s) => container.appendChild(this._renderItem(s, theme, cfg, sessions, getSpeakers)));
+        daySessions.forEach((s) =>
+          container.appendChild(
+            this._renderItem(s, theme, cfg, sessions, getSpeakers)
+          )
+        );
       }
     }
   }
@@ -181,9 +244,10 @@ export default class extends HTMLElement {
     sessions.forEach((s) => {
       const d = s?.startDateTime ? new Date(s.startDateTime) : null;
       const key = d
-        ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-            d.getDate()
-          ).padStart(2, "0")}`
+        ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+            2,
+            "0"
+          )}-${String(d.getDate()).padStart(2, "0")}`
         : "Unknown";
       if (!map.has(key)) map.set(key, []);
       map.get(key).push(s);
@@ -195,7 +259,11 @@ export default class extends HTMLElement {
     if (key === "Unknown") return "Unknown Date";
     const [y, m, d] = key.split("-").map(Number);
     const date = new Date(y, m - 1, d);
-    return date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+    });
   }
 
   _renderDayHeader(dayKey, theme, cfg) {
@@ -206,8 +274,8 @@ export default class extends HTMLElement {
     const header3 = theme?.header3 ?? {};
     const { customClasses, ...styles } = header3;
     Object.assign(el.style, styles, { margin: "8px 0 0 30px" });
-    if (Array.isArray(customClasses) && customClasses.length) el.classList.add(...customClasses);
-    
+    if (Array.isArray(customClasses) && customClasses.length)
+      el.classList.add(...customClasses);
 
     // minimal typography override support
     this._applyTypographyOverrides(el, cfg?.typography?.eventDate, true);
@@ -235,7 +303,9 @@ export default class extends HTMLElement {
       const parts = new Set((existing || "").split(" ").filter(Boolean));
       if (underline) parts.add("underline");
       else parts.delete("underline");
-      element.style.textDecorationLine = parts.size ? Array.from(parts).join(" ") : "";
+      element.style.textDecorationLine = parts.size
+        ? Array.from(parts).join(" ")
+        : "";
     }
   }
 
