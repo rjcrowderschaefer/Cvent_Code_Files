@@ -21,12 +21,15 @@ export class AgendaItem extends HTMLElement {
     const cfg = this.config || {};
 
     const gutterBg = cfg.gutterBg || t.palette?.accent || "#e8eef9";
-    const cardBg   = cfg.cardBg   || t.palette?.secondary || "#ffffff";
-    const showMoreColor = cfg.showMoreColor || cfg?.typography?.sessionDescription?.color || "#0066cc";
+    const cardBg = cfg.cardBg || t.palette?.secondary || "#ffffff";
+    const showMoreColor =
+      cfg.showMoreColor ||
+      cfg?.typography?.sessionDescription?.color ||
+      "#0066cc";
 
-    const modalHeaderBg  = cfg.modalColors?.headerBg      ?? "#ffffff";
-    const modalDivider   = cfg.modalColors?.dividerColor  ?? "#eeeeee";
-    const modalContentBg = cfg.modalColors?.contentBg     ?? "#ffffff";
+    const modalHeaderBg = cfg.modalColors?.headerBg ?? "#ffffff";
+    const modalDivider = cfg.modalColors?.dividerColor ?? "#eeeeee";
+    const modalContentBg = cfg.modalColors?.contentBg ?? "#ffffff";
 
     const style = document.createElement("style");
     style.textContent = `
@@ -78,26 +81,12 @@ export class AgendaItem extends HTMLElement {
         min-width: 0;
       }
 
-      // .speakersWrap { 
-      //   display: flex;
-      //   flex-direction: column;
-      //   gap: 8px;
-      // }
-
       .speakersWrap {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         column-gap: 16px;
         row-gap: 12px;
       }
-
-      // .speakerLine {
-      //   display: flex;
-      //   align-items: center;
-      //   gap: 10px;
-      //   min-width: 0;
-      //   cursor: pointer;
-      // }
 
       .speakerLine {
         display: flex;
@@ -144,10 +133,34 @@ export class AgendaItem extends HTMLElement {
         word-break: break-word;
       }
 
+      // .sessionDescriptionBlock {
+      //   position: relative;
+      //   margin-top: 0px !important;
+      //   margin-bottom: 0px;
+      // }
+
       .sessionDescriptionBlock {
         position: relative;
-        margin-top: 0px !important;
-        margin-bottom: 0px;
+        margin: 0 !important;
+        padding: 0;
+      }
+
+      .sessionDescriptionBlock .desc-text {
+        margin: 0;
+        padding: 0;
+      }
+
+      .sessionDescriptionBlock .desc-text p {
+        margin: 0;
+        padding: 0;
+      }
+
+      .sessionDescriptionBlock .desc-text > *:first-child {
+        margin-top: 0 !important;
+      }
+
+      .sessionDescriptionBlock .desc-text > *:last-child {
+        margin-bottom: 0 !important;
       }
 
 
@@ -187,6 +200,8 @@ export class AgendaItem extends HTMLElement {
         -webkit-box-orient: vertical;
         overflow: hidden;
       }
+
+      
 
       /* ===== Modal ===== */
       .backdrop {
@@ -340,9 +355,13 @@ export class AgendaItem extends HTMLElement {
 
     // Time gutter
     const start = s.startDateTime ? new Date(s.startDateTime) : null;
-    const end   = s.endDateTime   ? new Date(s.endDateTime)   : null;
-    const startText = start ? start.toLocaleString("en-US", { timeStyle: "short" }) : "";
-    const endText   = end   ? end.toLocaleString("en-US",   { timeStyle: "short" }) : "";
+    const end = s.endDateTime ? new Date(s.endDateTime) : null;
+    const startText = start
+      ? start.toLocaleString("en-US", { timeStyle: "short" })
+      : "";
+    const endText = end
+      ? end.toLocaleString("en-US", { timeStyle: "short" })
+      : "";
 
     const gutter = document.createElement("div");
     gutter.classList.add("timeGutter");
@@ -351,7 +370,11 @@ export class AgendaItem extends HTMLElement {
     timeStartEl.classList.add("timePart", "timeStart");
     timeStartEl.textContent = startText || "";
     this.applyThemeStyle(timeStartEl, t.paragraph);
-    this.applyTypographyOverrides(timeStartEl, cfg.typography?.sessionTime, true);
+    this.applyTypographyOverrides(
+      timeStartEl,
+      cfg.typography?.sessionTime,
+      true
+    );
 
     const timeEndEl = document.createElement("div");
     timeEndEl.classList.add("timePart", "timeEnd");
@@ -382,7 +405,11 @@ export class AgendaItem extends HTMLElement {
       text.innerHTML = s.description;
 
       this.applyThemeStyle(text, t.mainText);
-      this.applyTypographyOverrides(text, cfg.typography?.sessionDescription, true);
+      this.applyTypographyOverrides(
+        text,
+        cfg.typography?.sessionDescription,
+        true
+      );
 
       wrap.append(text);
 
@@ -412,7 +439,11 @@ export class AgendaItem extends HTMLElement {
         };
 
         this.applyThemeStyle(toggle, t.mainText);
-        this.applyTypographyOverrides(toggle, cfg.typography?.sessionDescription, true);
+        this.applyTypographyOverrides(
+          toggle,
+          cfg.typography?.sessionDescription,
+          true
+        );
 
         wrap.append(toggle);
       }
@@ -420,15 +451,12 @@ export class AgendaItem extends HTMLElement {
       content.append(wrap);
     }
 
-
-
-
     // Speakers
     const speakersWrap = document.createElement("div");
     speakersWrap.classList.add("speakersWrap");
 
     const speakers = this.getSpeakersArray(s);
-    speakers.forEach(sp => speakersWrap.append(this.renderSpeakerLine(sp)));
+    speakers.forEach((sp) => speakersWrap.append(this.renderSpeakerLine(sp)));
     content.append(speakersWrap);
 
     // Assemble
@@ -460,34 +488,38 @@ export class AgendaItem extends HTMLElement {
   renderSpeakerLine(spRaw) {
     const t = this.theme || {};
     const cfg = this.config || {};
-  
+
     // 0) unwrap if you were passed { speaker, role }
-    const sp = (spRaw && spRaw.speaker) ? spRaw.speaker : spRaw;
-  
+    const sp = spRaw && spRaw.speaker ? spRaw.speaker : spRaw;
+
     const sid = sp?.id || sp?.speakerId || "";
     const firstName = (sp?.firstName || "").trim();
-    const lastName  = (sp?.lastName  || "").trim();
-  
+    const lastName = (sp?.lastName || "").trim();
+
     // 1) local values (may be empty pre-hydration)
     let jobTitle = (
       sp?.title ||
-      sp?.designation ||   // Cvent commonly uses this for job title
+      sp?.designation || // Cvent commonly uses this for job title
       sp?.jobTitle ||
       sp?.position ||
       sp?.role ||
       ""
-    ).toString().trim();
-  
+    )
+      .toString()
+      .trim();
+
     let company = (
       sp?.company ||
       sp?.organization ||
       sp?.companyName ||
       sp?.org ||
       ""
-    ).toString().trim();
+    )
+      .toString()
+      .trim();
 
     const pic = (sp?.profilePictureUri || "").trim();
-  
+
     const line = document.createElement("div");
     line.classList.add("speakerLine");
     line.setAttribute("role", "button");
@@ -495,33 +527,42 @@ export class AgendaItem extends HTMLElement {
     if (sid) line.dataset.speakerId = sid;
     line.addEventListener("click", () => this.openModalForSpeaker(sp));
     line.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); this.openModalForSpeaker(sp); }
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        this.openModalForSpeaker(sp);
+      }
     });
-  
+
     const img = document.createElement("img");
-    img.src = pic || "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/pix/2ee8c4642e97488abc1852d9166b179b.png";
+    img.src =
+      pic ||
+      "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/pix/2ee8c4642e97488abc1852d9166b179b.png";
     img.alt = `${firstName} ${lastName}`.trim() || "Speaker";
     img.classList.add("avatar");
-  
+
     const info = document.createElement("div");
     info.classList.add("info");
-  
+
     const nameSpan = document.createElement("span");
     nameSpan.classList.add("speakerName");
     nameSpan.textContent = `${firstName} ${lastName}`.trim();
     this.applyThemeStyle(nameSpan, t.paragraph);
     this.applyTypographyOverrides(nameSpan, cfg.typography?.speakerName, true);
-  
+
     const meta = document.createElement("span");
     meta.style.display = "block";
     meta.classList.add("truncate");
-  
+
     const titleSpan = document.createElement("span");
     titleSpan.classList.add("speakerTitle", "truncate");
     titleSpan.textContent = jobTitle;
     this.applyThemeStyle(titleSpan, t.paragraph);
-    this.applyTypographyOverrides(titleSpan, cfg.typography?.speakerTitle, true);
-  
+    this.applyTypographyOverrides(
+      titleSpan,
+      cfg.typography?.speakerTitle,
+      true
+    );
+
     const comma = document.createElement("span");
     comma.textContent = jobTitle && company ? ", " : "";
     comma.classList.add("comma-node");
@@ -530,73 +571,94 @@ export class AgendaItem extends HTMLElement {
     companySpan.classList.add("speakerCompany", "truncate");
     companySpan.textContent = company;
     this.applyThemeStyle(companySpan, t.paragraph);
-    this.applyTypographyOverrides(companySpan, cfg.typography?.speakerCompany, true);
-  
+    this.applyTypographyOverrides(
+      companySpan,
+      cfg.typography?.speakerCompany,
+      true
+    );
+
     // TEMP: make sure styles can't hide them while testing
     titleSpan.style.fontSize = titleSpan.style.fontSize || "16px";
     titleSpan.style.color = titleSpan.style.color || "inherit";
     companySpan.style.fontSize = companySpan.style.fontSize || "16px";
     companySpan.style.color = companySpan.style.color || "inherit";
-  
+
     meta.append(titleSpan, comma, companySpan);
     info.append(nameSpan, meta);
     line.append(img, info);
-  
+
     // 2) Lazy hydration- if missing, fetch from SDK and patch DOM
-    const getSpeakersFn = this.config?.getSpeakers || (typeof window !== "undefined" ? window.getSpeakers : undefined);
+    const getSpeakersFn =
+      this.config?.getSpeakers ||
+      (typeof window !== "undefined" ? window.getSpeakers : undefined);
     if ((!jobTitle || !company) && typeof getSpeakersFn === "function" && sid) {
       // log once per line so you can see it fire
-      console.debug("Hydrating speaker", { sid, hadTitle: !!jobTitle, hadCompany: !!company });
-  
-      getSpeakersFn([sid]).then((map) => {
-        const key = String(sid);
-        const full = map?.[key];
-        if (!full || full.failureReason) {
-          console.warn("getSpeakers returned failure for", key, full?.failureReason);
-          return;
-        }
-  
-        const hydratedTitle = (
-          full.title ||
-          full.designation || // per docs
-          ""
-        ).toString().trim();
-  
-        const hydratedCompany = (
-          full.company ||
-          full.organization ||
-          full.companyName ||
-          ""
-        ).toString().trim();
-  
-        // Patch the DOM if we gained data
-        if (hydratedTitle && !jobTitle) {
-          jobTitle = hydratedTitle;
-          titleSpan.textContent = hydratedTitle;
-        }
-        if (hydratedCompany && !company) {
-          company = hydratedCompany;
-          companySpan.textContent = hydratedCompany;
-        }
-        comma.textContent = (jobTitle && company) ? ", " : "";
-  
-        console.debug("Hydrated speaker result", {
-          sid: key,
-          title: hydratedTitle,
-          company: hydratedCompany
-        });
-      }).catch((err) => {
-        console.warn("getSpeakers error", err);
+      console.debug("Hydrating speaker", {
+        sid,
+        hadTitle: !!jobTitle,
+        hadCompany: !!company,
       });
+
+      getSpeakersFn([sid])
+        .then((map) => {
+          const key = String(sid);
+          const full = map?.[key];
+          if (!full || full.failureReason) {
+            console.warn(
+              "getSpeakers returned failure for",
+              key,
+              full?.failureReason
+            );
+            return;
+          }
+
+          const hydratedTitle = (
+            full.title ||
+            full.designation || // per docs
+            ""
+          )
+            .toString()
+            .trim();
+
+          const hydratedCompany = (
+            full.company ||
+            full.organization ||
+            full.companyName ||
+            ""
+          )
+            .toString()
+            .trim();
+
+          // Patch the DOM if we gained data
+          if (hydratedTitle && !jobTitle) {
+            jobTitle = hydratedTitle;
+            titleSpan.textContent = hydratedTitle;
+          }
+          if (hydratedCompany && !company) {
+            company = hydratedCompany;
+            companySpan.textContent = hydratedCompany;
+          }
+          comma.textContent = jobTitle && company ? ", " : "";
+
+          console.debug("Hydrated speaker result", {
+            sid: key,
+            title: hydratedTitle,
+            company: hydratedCompany,
+          });
+        })
+        .catch((err) => {
+          console.warn("getSpeakers error", err);
+        });
     } else {
       // Diagnostics when hydration didn't run:
-      if (!getSpeakersFn) console.warn("getSpeakers not available on config/window");
+      if (!getSpeakersFn)
+        console.warn("getSpeakers not available on config/window");
       if (!sid) console.warn("Speaker has no id/speakerId; cannot hydrate", sp);
     }
-  
+
     return line;
   }
-  
+
   buildModal() {
     const backdrop = document.createElement("div");
     backdrop.classList.add("backdrop");
@@ -635,16 +697,20 @@ export class AgendaItem extends HTMLElement {
     details.classList.add("modalDetails"); // ← add a class for targeting
 
     const nameEl = document.createElement("div");
-    const titleEl = document.createElement("div"); titleEl.classList.add("kv");
-    const companyEl = document.createElement("div"); companyEl.classList.add("kv");
+    const titleEl = document.createElement("div");
+    titleEl.classList.add("kv");
+    const companyEl = document.createElement("div");
+    companyEl.classList.add("kv");
 
-    const bioEl = document.createElement("div"); bioEl.classList.add("bio");
+    const bioEl = document.createElement("div");
+    bioEl.classList.add("bio");
 
     const sessionsHdr = document.createElement("div");
     sessionsHdr.classList.add("sessionsHeader");
     sessionsHdr.textContent = "Sessions";
 
-    const sessionsUl = document.createElement("ul"); sessionsUl.classList.add("sessionsList");
+    const sessionsUl = document.createElement("ul");
+    sessionsUl.classList.add("sessionsList");
 
     // Only keep name/title/company in the right column
     details.append(nameEl, titleEl, companyEl);
@@ -663,17 +729,41 @@ export class AgendaItem extends HTMLElement {
       companyEl,
       bioEl,
       sessionsHdr,
-      sessionsUl
+      sessionsUl,
     };
   }
 
   applyModalTypography(cfg) {
-    this.applyTypographyOverrides(this.modal.title,       cfg.typography?.modalName, true);
-    this.applyTypographyOverrides(this.modal.nameEl,      cfg.typography?.modalSpeakerName, true);
-    this.applyTypographyOverrides(this.modal.titleEl,     cfg.typography?.modalSpeakerTitle, true);
-    this.applyTypographyOverrides(this.modal.companyEl,   cfg.typography?.modalSpeakerCompany, true);
-    this.applyTypographyOverrides(this.modal.bioEl,       cfg.typography?.modalSpeakerBio, true);
-    this.applyTypographyOverrides(this.modal.sessionsHdr, cfg.typography?.modalSessionsHeader, true);
+    this.applyTypographyOverrides(
+      this.modal.title,
+      cfg.typography?.modalName,
+      true
+    );
+    this.applyTypographyOverrides(
+      this.modal.nameEl,
+      cfg.typography?.modalSpeakerName,
+      true
+    );
+    this.applyTypographyOverrides(
+      this.modal.titleEl,
+      cfg.typography?.modalSpeakerTitle,
+      true
+    );
+    this.applyTypographyOverrides(
+      this.modal.companyEl,
+      cfg.typography?.modalSpeakerCompany,
+      true
+    );
+    this.applyTypographyOverrides(
+      this.modal.bioEl,
+      cfg.typography?.modalSpeakerBio,
+      true
+    );
+    this.applyTypographyOverrides(
+      this.modal.sessionsHdr,
+      cfg.typography?.modalSessionsHeader,
+      true
+    );
   }
 
   openModalForSpeaker(spRaw) {
@@ -682,22 +772,41 @@ export class AgendaItem extends HTMLElement {
       this.shadowRoot.append(this.modal.backdrop);
     }
     const cfg = this.config || {};
-    const allSessions = Array.isArray(cfg.allSessions) ? cfg.allSessions : [this.session];
+    const allSessions = Array.isArray(cfg.allSessions)
+      ? cfg.allSessions
+      : [this.session];
 
     // unwrap if needed
-    const sp = (spRaw && spRaw.speaker) ? spRaw.speaker : spRaw;
+    const sp = spRaw && spRaw.speaker ? spRaw.speaker : spRaw;
 
-    const fullName = `${(sp?.firstName||"").trim()} ${(sp?.lastName||"").trim()}`.trim();
+    const fullName = `${(sp?.firstName || "").trim()} ${(
+      sp?.lastName || ""
+    ).trim()}`.trim();
     let jobTitle = (
-      sp?.title || sp?.designation || sp?.jobTitle || sp?.position || sp?.role || ""
-    ).toString().trim();
-    let company  = (
-      sp?.company || sp?.organization || sp?.companyName || sp?.org || ""
-    ).toString().trim();
-    let bio      = (sp?.biography ?? sp?.bio ?? sp?.about ?? "").toString();
+      sp?.title ||
+      sp?.designation ||
+      sp?.jobTitle ||
+      sp?.position ||
+      sp?.role ||
+      ""
+    )
+      .toString()
+      .trim();
+    let company = (
+      sp?.company ||
+      sp?.organization ||
+      sp?.companyName ||
+      sp?.org ||
+      ""
+    )
+      .toString()
+      .trim();
+    let bio = (sp?.biography ?? sp?.bio ?? sp?.about ?? "").toString();
 
     this.modal.title.textContent = fullName || "Speaker";
-    this.modal.avatar.src = (sp?.profilePictureUri || "").trim() || "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/pix/2ee8c4642e97488abc1852d9166b179b.png";
+    this.modal.avatar.src =
+      (sp?.profilePictureUri || "").trim() ||
+      "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/pix/2ee8c4642e97488abc1852d9166b179b.png";
     this.modal.nameEl.textContent = fullName || "";
     this.modal.titleEl.textContent = jobTitle || "";
     this.modal.companyEl.textContent = company || "";
@@ -706,34 +815,57 @@ export class AgendaItem extends HTMLElement {
     this.applyModalTypography(cfg);
 
     // Show/hide blocks when empty
-    this.modal.titleEl.style.display   = jobTitle ? "" : "none";
-    this.modal.companyEl.style.display = company  ? "" : "none";
-    this.modal.bioEl.style.display     = bio      ? "" : "none";
+    this.modal.titleEl.style.display = jobTitle ? "" : "none";
+    this.modal.companyEl.style.display = company ? "" : "none";
+    this.modal.bioEl.style.display = bio ? "" : "none";
 
     const speakerId = sp?.id || sp?.speakerId;
-    const appearsIn = allSessions.filter(sess => {
-      const list = Array.isArray(sess.resolvedSpeakers) ? sess.resolvedSpeakers
-               : Array.isArray(sess.speakers) ? sess.speakers.map(x => (x && x.speaker) ? x.speaker : x).filter(Boolean)
-               : [];
-      return list.some(x => (x?.id || x?.speakerId) === speakerId);
+    const appearsIn = allSessions.filter((sess) => {
+      const list = Array.isArray(sess.resolvedSpeakers)
+        ? sess.resolvedSpeakers
+        : Array.isArray(sess.speakers)
+        ? sess.speakers
+            .map((x) => (x && x.speaker ? x.speaker : x))
+            .filter(Boolean)
+        : [];
+      return list.some((x) => (x?.id || x?.speakerId) === speakerId);
     });
 
     this.modal.sessionsUl.innerHTML = "";
     if (appearsIn.length) {
-      appearsIn.forEach(sess => {
+      appearsIn.forEach((sess) => {
         const li = document.createElement("li");
 
         const nameSpan = document.createElement("span");
         nameSpan.textContent = sess.name || "(Untitled)";
-        this.applyTypographyOverrides(nameSpan, cfg.typography?.modalSessionName, true);
+        this.applyTypographyOverrides(
+          nameSpan,
+          cfg.typography?.modalSessionName,
+          true
+        );
 
         const dtSpan = document.createElement("span");
         const st = sess.startDateTime ? new Date(sess.startDateTime) : null;
         const et = sess.endDateTime ? new Date(sess.endDateTime) : null;
-        const stTxt = st ? st.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "";
-        const etTxt = et ? et.toLocaleString("en-US", { timeStyle: "short" }) : "";
-        dtSpan.textContent = stTxt ? (etTxt ? ` — ${stTxt} – ${etTxt}` : ` — ${stTxt}`) : "";
-        this.applyTypographyOverrides(dtSpan, cfg.typography?.modalSessionDateTime, true);
+        const stTxt = st
+          ? st.toLocaleString("en-US", {
+              dateStyle: "medium",
+              timeStyle: "short",
+            })
+          : "";
+        const etTxt = et
+          ? et.toLocaleString("en-US", { timeStyle: "short" })
+          : "";
+        dtSpan.textContent = stTxt
+          ? etTxt
+            ? ` — ${stTxt} – ${etTxt}`
+            : ` — ${stTxt}`
+          : "";
+        this.applyTypographyOverrides(
+          dtSpan,
+          cfg.typography?.modalSessionDateTime,
+          true
+        );
 
         li.append(nameSpan, dtSpan);
         this.modal.sessionsUl.appendChild(li);
@@ -749,37 +881,57 @@ export class AgendaItem extends HTMLElement {
     this.modal.backdrop.querySelector(".closeBtn")?.focus();
 
     if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent("cvent-speaker-modal-open"));
+      window.dispatchEvent(new CustomEvent("cvent-speaker-modal-open"));
     }
 
     // ===== Optional lazy hydration for modal (title/company/bio) =====
     if ((!jobTitle || !company || !bio) && speakerId) {
-      const getSpeakersFn = this.config?.getSpeakers || (typeof window !== "undefined" ? window.getSpeakers : undefined);
+      const getSpeakersFn =
+        this.config?.getSpeakers ||
+        (typeof window !== "undefined" ? window.getSpeakers : undefined);
       if (typeof getSpeakersFn === "function") {
-        getSpeakersFn([speakerId]).then(map => {
-          const full = map?.[String(speakerId)];
-          if (!full || full.failureReason) return;
+        getSpeakersFn([speakerId])
+          .then((map) => {
+            const full = map?.[String(speakerId)];
+            if (!full || full.failureReason) return;
 
-          const hTitle = (full.title || full.designation || "").toString().trim();
-          const hCompany = (full.company || full.organization || full.companyName || "").toString().trim();
-          const hBio = (full.biography ?? full.bio ?? full.about ?? "").toString();
+            const hTitle = (full.title || full.designation || "")
+              .toString()
+              .trim();
+            const hCompany = (
+              full.company ||
+              full.organization ||
+              full.companyName ||
+              ""
+            )
+              .toString()
+              .trim();
+            const hBio = (
+              full.biography ??
+              full.bio ??
+              full.about ??
+              ""
+            ).toString();
 
-          if (hTitle && !jobTitle) {
-            jobTitle = hTitle;
-            this.modal.titleEl.textContent = hTitle;
-            this.modal.titleEl.style.display = "";
-          }
-          if (hCompany && !company) {
-            company = hCompany;
-            this.modal.companyEl.textContent = hCompany;
-            this.modal.companyEl.style.display = "";
-          }
-          if (hBio && !bio) {
-            bio = hBio;
-            this.modal.bioEl.innerHTML = hBio;
-            this.modal.bioEl.style.display = "";
-          }
-        }).catch(() => {/* noop */});
+            if (hTitle && !jobTitle) {
+              jobTitle = hTitle;
+              this.modal.titleEl.textContent = hTitle;
+              this.modal.titleEl.style.display = "";
+            }
+            if (hCompany && !company) {
+              company = hCompany;
+              this.modal.companyEl.textContent = hCompany;
+              this.modal.companyEl.style.display = "";
+            }
+            if (hBio && !bio) {
+              bio = hBio;
+              this.modal.bioEl.innerHTML = hBio;
+              this.modal.bioEl.style.display = "";
+            }
+          })
+          .catch(() => {
+            /* noop */
+          });
       }
     }
   }
@@ -787,11 +939,9 @@ export class AgendaItem extends HTMLElement {
   closeModal() {
     this.modal?.backdrop?.removeAttribute("open");
     if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent("cvent-speaker-modal-close"));
+      window.dispatchEvent(new CustomEvent("cvent-speaker-modal-close"));
     }
   }
-
-  
 
   reapplyTypography() {
     for (const [el, override] of this._typoBindings) {
@@ -801,9 +951,15 @@ export class AgendaItem extends HTMLElement {
 
   // === helpers ===
   getSpeakersArray(session) {
-    if (Array.isArray(session?.resolvedSpeakers) && session.resolvedSpeakers.length) return session.resolvedSpeakers;
+    if (
+      Array.isArray(session?.resolvedSpeakers) &&
+      session.resolvedSpeakers.length
+    )
+      return session.resolvedSpeakers;
     if (Array.isArray(session?.speakers) && session.speakers.length) {
-      return session.speakers.map(x => (x && x.speaker) ? x.speaker : x).filter(Boolean);
+      return session.speakers
+        .map((x) => (x && x.speaker ? x.speaker : x))
+        .filter(Boolean);
     }
     return [];
   }
@@ -811,7 +967,8 @@ export class AgendaItem extends HTMLElement {
   applyThemeStyle(el, themeStyleObj = {}, extra = {}) {
     const { customClasses, ...styles } = themeStyleObj || {};
     Object.assign(el.style, styles, extra);
-    if (Array.isArray(customClasses) && customClasses.length) el.classList.add(...customClasses);
+    if (Array.isArray(customClasses) && customClasses.length)
+      el.classList.add(...customClasses);
   }
 
   _activeFontSize(ov) {
@@ -825,12 +982,13 @@ export class AgendaItem extends HTMLElement {
   _applyTypographyNow(element, override) {
     const { color, bold, italic, underline } = override || {};
     const fs = this._activeFontSize(override);
-    element.style.fontSize = (fs !== undefined && fs !== null && fs !== "") ? `${fs}px` : "";
+    element.style.fontSize =
+      fs !== undefined && fs !== null && fs !== "" ? `${fs}px` : "";
     if (color !== undefined) element.style.color = color || "";
     if (bold !== undefined) element.style.fontWeight = bold ? "700" : "";
     if (italic !== undefined) element.style.fontStyle = italic ? "italic" : "";
     if (underline !== undefined) {
-    element.style.textDecoration = underline ? "underline" : "none";
+      element.style.textDecoration = underline ? "underline" : "none";
     }
   }
 
