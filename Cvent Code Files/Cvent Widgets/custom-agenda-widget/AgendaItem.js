@@ -81,6 +81,47 @@ export class AgendaItem extends HTMLElement {
         min-width: 0;
       }
 
+      .sessionLocation {
+        display: inline-flex;          
+        align-items: center;
+        gap: 2px;                     
+        align-self: flex-start;
+        font-weight: 400;
+        text-transform: uppercase;
+      }
+
+      .sessionLocationIcon {
+        width: 12px;
+        height: 12px;
+        object-fit: contain;
+        display: inline-block;
+      }
+
+      .sessionCategory {
+        display: inline-flex;          
+        align-items: center;
+        gap: 2px;                     
+        align-self: flex-start;
+        font-weight: 400;
+        text-transform: uppercase;
+      }
+
+      .sessionCategoryIcon {
+        width: 12px;
+        height: 12px;
+        object-fit: contain;
+        display: inline-block;
+      }
+
+      .sessionMetaRow {
+        display: flex;
+        align-items: center;
+        column-gap: 15px;
+        row-gap: 8px;
+        flex-wrap: wrap;
+        align-self: flex-start;
+      }
+
       .speakersWrap {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -98,13 +139,13 @@ export class AgendaItem extends HTMLElement {
       .avatar {
         width: 50px;
         height: 50px;
-        border-radius: 50%;
-        border: 1px solid #FFFFFF;
+        border: none;
         box-shadow: rgb(165, 165, 165) 2px 3px 5px -1px;
         object-fit: cover;
         flex-shrink: 0;
         align-self: flex-start;
       }
+      
       .info {
         display: flex;
         flex-direction: column;
@@ -132,12 +173,6 @@ export class AgendaItem extends HTMLElement {
         text-overflow: unset;
         word-break: break-word;
       }
-
-      // .sessionDescriptionBlock {
-      //   position: relative;
-      //   margin-top: 0px !important;
-      //   margin-bottom: 0px;
-      // }
 
       .sessionDescriptionBlock {
         position: relative;
@@ -201,7 +236,28 @@ export class AgendaItem extends HTMLElement {
         overflow: hidden;
       }
 
-      
+      .speakerMeta {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+
+        .speakerTitle {
+        display: block;
+        margin-bottom: 2px;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: unset;
+        word-break: break-word;
+        }
+
+        .speakerCompany {
+        display: block;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: unset;
+        word-break: break-word;
+      }
 
       /* ===== Modal ===== */
       .backdrop {
@@ -211,7 +267,10 @@ export class AgendaItem extends HTMLElement {
         place-items: center;
         z-index: 999999;
       }
-      .backdrop[open] { display: grid; }
+      .backdrop[open] { 
+        display: grid; 
+      }
+
       .modal {
         width: min(720px, 92vw);
         max-height: 90vh;
@@ -222,7 +281,8 @@ export class AgendaItem extends HTMLElement {
       }
 
       .modalHeader {
-        display:flex; align-items:center; justify-content:space-between;
+        display:flex; align-items:center;
+        justify-content:space-between;
         padding: 12px 16px;
         background: ${modalHeaderBg};
         border-bottom: 1px solid ${modalDivider};
@@ -237,18 +297,17 @@ export class AgendaItem extends HTMLElement {
       .modalBody {
       padding: 16px;
       display: grid;
-      grid-template-columns: 96px 1fr;
+      grid-template-columns: 125px 1fr;
       grid-auto-rows: auto;
       column-gap: 14px;
-      row-gap: 5px;
+      row-gap: 2px;
       background: ${modalContentBg};
     }
 
     /* Row 1, col 1: avatar */
     .modalAvatar {
-      width: 96px;
-      height: 96px;
-      border-radius: 50%;
+      width: 125px;
+      height: 125px;
       object-fit: cover;
       grid-column: 1;
       grid-row: 1;
@@ -258,6 +317,7 @@ export class AgendaItem extends HTMLElement {
     .modalDetails {
       grid-column: 2;
       grid-row: 1;
+      margin-top: 20px;
     }
 
     .kv { 
@@ -266,7 +326,7 @@ export class AgendaItem extends HTMLElement {
 
     /* Row 2: bio, full width starting under avatar */
     .bio {
-      margin: 0 0 0 0;
+      margin: 5px 0 0 0;
       line-height: 1.45;
       grid-column: 1 / -1; /* span both columns */
       grid-row: 2;
@@ -274,7 +334,7 @@ export class AgendaItem extends HTMLElement {
 
     /* Row 3: sessions header full width */
     .sessionsHeader { 
-      margin-top: 0px;
+      margin-top: 10px;
       grid-column: 1 / -1;
       grid-row: 3;
     }
@@ -296,54 +356,55 @@ export class AgendaItem extends HTMLElement {
       }
 
       @media (max-width: 1024px) {
-        .card {
-          grid-template-columns: 70px 1fr;
-          width: calc(100% - 50px);
-        }
+  .card {
+    grid-template-columns: 70px 1fr;
+    width: calc(100% - 50px);
+  }
 
-        .speakersWrap {
-          grid-template-columns: 1fr;
-      }
+  .speakersWrap {
+    grid-template-columns: 1fr;
+  }
+}
 
-      @media (max-width: 600px) {
-        .card {
-          grid-template-columns: 70px 1fr;
-          width: calc(100% - 30px);
-        }
+@media (max-width: 600px) {
+  .card {
+    grid-template-columns: 70px 1fr;
+    width: calc(100% - 30px);
+  }
 
-        .speakersWrap {
-          grid-template-columns: 1fr;
-      } 
-          
-        .truncate {
-        white-space: normal;     /* allow wrapping */
-        overflow: visible;       /* no ellipsis */
-        text-overflow: unset;
-        }
+  .speakersWrap {
+    grid-template-columns: 1fr;
+  }
 
-        .speakerTitle {
-        display: block;      /* force its own line */
-        margin-bottom: 2px;  /* optional spacing */
-        }
+  .truncate {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+  }
 
-        .speakerCompany {
-        display: block;      /* force second line */
-        }
+  .speakerTitle {
+    display: block;
+    margin-bottom: 2px;
+  }
 
-        .comma-node {
-        display: none;
-        }
+  .speakerCompany {
+    display: block;
+  }
 
-        .modalBody > div.modalDetails > div:first-child {
-            display: none !important;
-          }
+  .comma-node {
+    display: none;
+  }
 
-        .sessionsList li {
-          margin: 2px 0 !important;   /* tighten the list spacing */
-          line-height: 1.3 !important; /* reduce vertical space inside each item */
-          padding: 0 !important;       /* in case theme injects padding */
-        }
-      }
+  .modalBody > div.modalDetails > div:first-child {
+    display: none !important;
+  }
+
+  .sessionsList li {
+    margin: 2px 0 !important;
+    line-height: 1.3 !important;
+    padding: 0 !important;
+  }
+}
 
     `;
     this.shadowRoot.append(style);
@@ -352,6 +413,18 @@ export class AgendaItem extends HTMLElement {
     const card = document.createElement("div");
     card.classList.add("card");
     this.shadowRoot.append(card);
+
+    const border = cfg.cardBorder || {
+      width: 1,
+      style: "solid",
+      color: "#000000",
+    };
+
+    if (!border.width || border.width === 0 || border.style === "none") {
+      card.style.border = "none";
+    } else {
+      card.style.border = `${border.width}px ${border.style} ${border.color}`;
+    }
 
     // Time gutter
     const start = s.startDateTime ? new Date(s.startDateTime) : null;
@@ -389,11 +462,89 @@ export class AgendaItem extends HTMLElement {
     content.classList.add("content");
 
     // Title
-    const titleEl = document.createElement("h1");
+    const titleEl = document.createElement("div");
     titleEl.textContent = s.name || "";
     this.applyThemeStyle(titleEl, t.header2, { margin: "0" });
     this.applyTypographyOverrides(titleEl, cfg.typography?.sessionName, true);
     content.append(titleEl);
+
+    // Location & Category
+    const locationName =
+      s &&
+      s.location &&
+      typeof s.location.name === "string" &&
+      s.location.name.trim()
+        ? s.location.name.trim()
+        : "";
+
+    const categoryName =
+      s &&
+      s.category &&
+      typeof s.category.name === "string" &&
+      s.category.name.trim()
+        ? s.category.name.trim()
+        : "";
+
+    if (locationName || categoryName) {
+      const metaRow = document.createElement("div");
+      metaRow.classList.add("sessionMetaRow");
+
+      if (locationName) {
+        const locationEl = document.createElement("div");
+        locationEl.classList.add("sessionLocation");
+
+        const locationIcon = document.createElement("img");
+        locationIcon.src =
+          "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/pix/840e234ada7e4fe585bf4ce841c2d3b5.png";
+        locationIcon.classList.add("sessionLocationIcon");
+
+        const locationText = document.createElement("span");
+        locationText.textContent = locationName;
+
+        locationEl.append(locationIcon, locationText);
+
+        this.applyTypographyOverrides(
+          locationEl,
+          (cfg.typography && cfg.typography.sessionLocation) || {},
+          true
+        );
+
+        metaRow.append(locationEl);
+      }
+
+      if (categoryName) {
+        const categoryEl = document.createElement("div");
+        categoryEl.classList.add("sessionCategory");
+
+        const categoryIcon = document.createElement("img");
+        categoryIcon.src =
+          "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/pix/5379adb990964836bd3e0bfdf2c9ce44.png";
+        categoryIcon.classList.add("sessionCategoryIcon");
+
+        const categoryText = document.createElement("span");
+        categoryText.textContent = categoryName;
+
+        categoryEl.append(categoryIcon, categoryText);
+
+        console.log(
+          "sessionLocation typography:",
+          cfg.typography && cfg.typography.sessionLocation
+        );
+        console.log(
+          "sessionCategory typography:",
+          cfg.typography && cfg.typography.sessionCategory
+        );
+
+        this.applyTypographyOverrides(
+          categoryEl,
+          (cfg.typography && cfg.typography.sessionCategory) || {},
+          true
+        );
+
+        metaRow.append(categoryEl);
+      }
+      content.append(metaRow);
+    }
 
     // Description
     if (s.description) {
@@ -549,12 +700,16 @@ export class AgendaItem extends HTMLElement {
     this.applyThemeStyle(nameSpan, t.paragraph);
     this.applyTypographyOverrides(nameSpan, cfg.typography?.speakerName, true);
 
-    const meta = document.createElement("span");
-    meta.style.display = "block";
-    meta.classList.add("truncate");
+    // const meta = document.createElement("span");
+    // meta.style.display = "block";
+    // meta.classList.add("truncate");
+    const meta = document.createElement("div");
+    meta.classList.add("speakerMeta");
 
-    const titleSpan = document.createElement("span");
-    titleSpan.classList.add("speakerTitle", "truncate");
+    // const titleSpan = document.createElement("span");
+    // titleSpan.classList.add("speakerTitle", "truncate");
+    const titleSpan = document.createElement("div");
+    titleSpan.classList.add("speakerTitle");
     titleSpan.textContent = jobTitle;
     this.applyThemeStyle(titleSpan, t.paragraph);
     this.applyTypographyOverrides(
@@ -563,12 +718,14 @@ export class AgendaItem extends HTMLElement {
       true
     );
 
-    const comma = document.createElement("span");
-    comma.textContent = jobTitle && company ? ", " : "";
-    comma.classList.add("comma-node");
+    // const comma = document.createElement("span");
+    // comma.textContent = jobTitle && company ? ", " : "";
+    // comma.classList.add("comma-node");
 
-    const companySpan = document.createElement("span");
-    companySpan.classList.add("speakerCompany", "truncate");
+    // const companySpan = document.createElement("span");
+    // companySpan.classList.add("speakerCompany", "truncate");
+    const companySpan = document.createElement("div");
+    companySpan.classList.add("speakerCompany");
     companySpan.textContent = company;
     this.applyThemeStyle(companySpan, t.paragraph);
     this.applyTypographyOverrides(
@@ -583,7 +740,7 @@ export class AgendaItem extends HTMLElement {
     companySpan.style.fontSize = companySpan.style.fontSize || "16px";
     companySpan.style.color = companySpan.style.color || "inherit";
 
-    meta.append(titleSpan, comma, companySpan);
+    meta.append(titleSpan, companySpan);
     info.append(nameSpan, meta);
     line.append(img, info);
 
@@ -638,7 +795,7 @@ export class AgendaItem extends HTMLElement {
             company = hydratedCompany;
             companySpan.textContent = hydratedCompany;
           }
-          comma.textContent = jobTitle && company ? ", " : "";
+          // comma.textContent = jobTitle && company ? ", " : "";
 
           console.debug("Hydrated speaker result", {
             sid: key,
@@ -951,19 +1108,49 @@ export class AgendaItem extends HTMLElement {
 
   // === helpers ===
   getSpeakersArray(session) {
+    let speakers = [];
+
     if (
       Array.isArray(session?.resolvedSpeakers) &&
       session.resolvedSpeakers.length
-    )
-      return session.resolvedSpeakers;
-    if (Array.isArray(session?.speakers) && session.speakers.length) {
-      return session.speakers
+    ) {
+      speakers = session.resolvedSpeakers;
+    } else if (Array.isArray(session?.speakers) && session.speakers.length) {
+      speakers = session.speakers
         .map((x) => (x && x.speaker ? x.speaker : x))
         .filter(Boolean);
     }
-    return [];
-  }
 
+    return [...speakers].sort((a, b) => {
+      const aPriority =
+        typeof a?.displayPriority === "number" ? a.displayPriority : null;
+      const bPriority =
+        typeof b?.displayPriority === "number" ? b.displayPriority : null;
+
+      // Both have priority → sort by it
+      if (aPriority !== null && bPriority !== null && aPriority !== bPriority) {
+        return aPriority - bPriority;
+      }
+
+      // Only one has priority → it comes first
+      if (aPriority !== null && bPriority === null) return -1;
+      if (aPriority === null && bPriority !== null) return 1;
+
+      // Same priority or none → alphabetical by first name
+      const aFirst = (a?.firstName || "").trim().toLowerCase();
+      const bFirst = (b?.firstName || "").trim().toLowerCase();
+
+      if (aFirst !== bFirst) {
+        return aFirst.localeCompare(bFirst);
+      }
+
+      // Tie-break → last name
+      const aLast = (a?.lastName || "").trim().toLowerCase();
+      const bLast = (b?.lastName || "").trim().toLowerCase();
+
+      return aLast.localeCompare(bLast);
+    });
+  }
   applyThemeStyle(el, themeStyleObj = {}, extra = {}) {
     const { customClasses, ...styles } = themeStyleObj || {};
     Object.assign(el.style, styles, extra);
