@@ -3,12 +3,41 @@
 // and persists values via setConfiguration. No mock data required.
 
 export default class ExampleAgendaEditor extends HTMLElement {
-  constructor({ setConfiguration, initialConfiguration }) {
+  constructor({ setConfiguration, initialConfiguration } = {}) {
     super();
     this.setConfiguration = setConfiguration;
+    // this._config = {
+    //   ...this._getDefaultConfig(),
+    //   ...(initialConfiguration || {}),
+    // };
+    const defaults = this._getDefaultConfig();
+    const incoming = initialConfiguration || {};
+
+    const defaultTypography = defaults.typography || {};
+    const incomingTypography = incoming.typography || {};
+    const mergedTypography = {};
+
+    Object.keys(defaultTypography).forEach((key) => {
+      mergedTypography[key] = {
+        ...(defaultTypography[key] || {}),
+        ...(incomingTypography[key] || {}),
+      };
+    });
+
+    Object.keys(incomingTypography).forEach((key) => {
+      if (!mergedTypography[key]) {
+        mergedTypography[key] = incomingTypography[key];
+      }
+    });
+
     this._config = {
-      ...this._getDefaultConfig(),
-      ...(initialConfiguration || {}),
+      ...defaults,
+      ...incoming,
+      modalColors: {
+        ...(defaults.modalColors || {}),
+        ...(incoming.modalColors || {}),
+      },
+      typography: mergedTypography,
     };
 
     if (!initialConfiguration) {
@@ -18,9 +47,42 @@ export default class ExampleAgendaEditor extends HTMLElement {
     this.attachShadow({ mode: "open" });
   }
 
+  // onConfigurationUpdate(newConfig) {
+  //   this._config = newConfig || this._config;
+  //   this._safeRenderUI(); // use the new safe renderer
+  // }
   onConfigurationUpdate(newConfig) {
-    this._config = newConfig || this._config;
-    this._safeRenderUI(); // use the new safe renderer
+    const defaults = this._getDefaultConfig();
+    const incoming = newConfig || {};
+
+    const defaultTypography = defaults.typography || {};
+    const incomingTypography = incoming.typography || {};
+    const mergedTypography = {};
+
+    Object.keys(defaultTypography).forEach((key) => {
+      mergedTypography[key] = {
+        ...(defaultTypography[key] || {}),
+        ...(incomingTypography[key] || {}),
+      };
+    });
+
+    Object.keys(incomingTypography).forEach((key) => {
+      if (!mergedTypography[key]) {
+        mergedTypography[key] = incomingTypography[key];
+      }
+    });
+
+    this._config = {
+      ...defaults,
+      ...incoming,
+      modalColors: {
+        ...(defaults.modalColors || {}),
+        ...(incoming.modalColors || {}),
+      },
+      typography: mergedTypography,
+    };
+
+    this._safeRenderUI();
   }
 
   connectedCallback() {
@@ -40,12 +102,17 @@ export default class ExampleAgendaEditor extends HTMLElement {
       groupByDay: true,
       showDescription: true,
       showDescriptionLimited: false,
-      gutterBg: "#e8eef9",
+      gutterBg: "#f7a325",
       cardBg: "#ffffff",
-      showMoreColor: "#0066cc",
+      cardBorder: {
+        width: 1,
+        style: "solid",
+        color: "#000000",
+      },
+      showMoreColor: "#f7a325",
       modalColors: {
-        headerBg: "#ffffff",
-        dividerColor: "#eeeeee",
+        headerBg: "#f7a325",
+        dividerColor: "#555555",
         contentBg: "#ffffff",
       },
       typography: this._makeDefaultTypography(),
@@ -54,36 +121,138 @@ export default class ExampleAgendaEditor extends HTMLElement {
 
   _makeDefaultTypography() {
     const base = {
-      fontSize: 16,
-      fontSizeMd: 15,
+      fontSize: 22,
+      fontSizeMd: 18,
       fontSizeSm: 14,
-      color: "#222222",
+      color: "#000000",
       bold: false,
       italic: false,
       underline: false,
     };
 
     return {
-      agendaHeader: { ...base, bold: true, fontSize: 18, color: "#003366" },
-      agendaSubheader: { ...base, bold: true, fontSize: 18, color: "#003366" },
-      eventDate: { ...base, bold: true, fontSize: 18, color: "#003366" },
+      agendaHeader: {
+        ...base,
+        fontSize: 40,
+        fontSizeMd: 32,
+        fontSizeSm: 24,
+        bold: false,
+      },
+      agendaSubheader: {
+        ...base,
+        fontSize: 20,
+        fontSizeMd: 18,
+        fontSizeSm: 14,
+      },
+      eventDate: {
+        ...base,
+        fontSize: 22,
+        fontSizeMd: 18,
+        fontSizeSm: 14,
+        bold: true,
+      },
+      sessionName: {
+        ...base,
+        fontSize: 25,
+        fontSizeMd: 21,
+        fontSizeSm: 17,
+        bold: true,
+      },
+      sessionTime: {
+        ...base,
+        fontSize: 14,
+        fontSizeMd: 14,
+        fontSizeSm: 12,
+        bold: true,
+        color: "#FFFFFF",
+      },
+      sessionDescription: {
+        ...base,
+        fontSize: 16,
+        fontSizeMd: 14,
+        fontSizeSm: 12,
+      },
+      sessionLocation: {
+        ...base,
+        fontSize: 14,
+        fontSizeMd: 12,
+        fontSizeSm: 10,
+      },
+      sessionCategory: {
+        ...base,
+        fontSize: 14,
+        fontSizeMd: 12,
+        fontSizeSm: 10,
+      },
+      speakerName: {
+        ...base,
+        fontSize: 18,
+        fontSizeMd: 16,
+        fontSizeSm: 14,
+        bold: true,
+        color: "#F7A325",
+      },
 
-      sessionName: { ...base, fontSize: 20, bold: true, color: "#111111" },
-      sessionTime: { ...base, fontSize: 14, color: "#555555" },
-      sessionDescription: { ...base, fontSize: 15, color: "#333333" },
-
-      speakerName: { ...base, fontSize: 15, bold: true, color: "#000000" },
-      speakerTitle: { ...base, fontSize: 14, italic: true, color: "#333333" },
-      speakerCompany: { ...base, fontSize: 14, color: "#555555" },
-
-      modalName: { ...base, fontSize: 22, bold: true },
-      modalSpeakerName: { ...base, fontSize: 18, bold: true },
-      modalSpeakerTitle: { ...base, fontSize: 16, italic: true },
-      modalSpeakerCompany: { ...base, fontSize: 16, color: "#444444" },
-      modalSpeakerBio: { ...base, fontSize: 15, color: "#333333" },
-      modalSessionsHeader: { ...base, fontSize: 16, bold: true },
-      modalSessionName: { ...base, fontSize: 14 },
-      modalSessionDateTime: { ...base, fontSize: 13, color: "#555555" },
+      speakerTitle: {
+        ...base,
+        fontSize: 15,
+        fontSizeMd: 13,
+        fontSizeSm: 11,
+        italic: true,
+      },
+      speakerCompany: {
+        ...base,
+        fontSize: 15,
+        fontSizeMd: 13,
+        fontSizeSm: 11,
+      },
+      modalName: {
+        ...base,
+        bold: true,
+      },
+      modalSpeakerName: {
+        ...base,
+        bold: true,
+      },
+      modalSpeakerTitle: {
+        ...base,
+        fontSize: 18,
+        fontSizeMd: 16,
+        fontSizeSm: 14,
+        italic: true,
+      },
+      modalSpeakerCompany: {
+        ...base,
+        fontSize: 18,
+        fontSizeMd: 16,
+        fontSizeSm: 14,
+      },
+      modalSpeakerBio: {
+        ...base,
+        fontSize: 16,
+        fontSizeMd: 14,
+        fontSizeSm: 12,
+      },
+      modalSessionsHeader: {
+        ...base,
+        fontSize: 18,
+        fontSizeMd: 16,
+        fontSizeSm: 14,
+        bold: true,
+      },
+      modalSessionName: {
+        ...base,
+        fontSize: 16,
+        fontSizeMd: 14,
+        fontSizeSm: 12,
+        bold: true,
+      },
+      modalSessionDateTime: {
+        ...base,
+        fontSize: 16,
+        fontSizeMd: 14,
+        fontSizeSm: 12,
+      },
     };
   }
 
@@ -135,7 +304,15 @@ export default class ExampleAgendaEditor extends HTMLElement {
       }
       legend { padding:0 6px; font-weight:600; }
       label { font-size:12px; opacity:.85; }
-      input[type="number"] { width:90px; }
+      input[type="number"] { 
+        width: 100px;
+        min-width: 100px;
+        pointer-events: auto;
+        user-select: text;
+        -webkit-user-select: text;
+        cursor: text;
+       }
+
       input[type="color"] { width:48px; height:28px; padding:0; border:none; background:transparent; }
       h3 { margin: 14px 0 6px; }
       details {
@@ -350,6 +527,89 @@ export default class ExampleAgendaEditor extends HTMLElement {
       )
     );
 
+    // Card Border Controls
+    const borderFieldset = document.createElement("fieldset");
+    borderFieldset.style.margin = "12px 0";
+
+    const borderLegend = document.createElement("legend");
+    borderLegend.textContent = "Card Border";
+    borderFieldset.append(borderLegend);
+
+    // width
+    const borderWidthWrap = document.createElement("div");
+    borderWidthWrap.className = "row field";
+
+    const borderWidthLabel = this._label("Width (px)");
+    const borderWidthInput = document.createElement("input");
+    borderWidthInput.type = "number";
+    borderWidthInput.min = "0";
+    borderWidthInput.value = this._config.cardBorder?.width ?? 1;
+
+    borderWidthInput.oninput = () => {
+      this._patch({
+        cardBorder: {
+          ...(this._config.cardBorder || {}),
+          width: Number(borderWidthInput.value) || 0,
+        },
+      });
+    };
+
+    borderWidthWrap.append(borderWidthLabel, borderWidthInput);
+
+    // style
+    const borderStyleWrap = document.createElement("div");
+    borderStyleWrap.className = "row field";
+
+    const borderStyleLabel = this._label("Style");
+
+    const borderStyleSelect = document.createElement("select");
+    ["solid", "dashed", "dotted", "none"].forEach((style) => {
+      const opt = document.createElement("option");
+      opt.value = style;
+      opt.textContent = style;
+      if ((this._config.cardBorder?.style || "solid") === style) {
+        opt.selected = true;
+      }
+      borderStyleSelect.append(opt);
+    });
+
+    borderStyleSelect.onchange = () => {
+      this._patch({
+        cardBorder: {
+          ...(this._config.cardBorder || {}),
+          style: borderStyleSelect.value,
+        },
+      });
+    };
+
+    borderStyleWrap.append(borderStyleLabel, borderStyleSelect);
+
+    // color
+    const borderColorWrap = document.createElement("div");
+    borderColorWrap.className = "row field";
+
+    const borderColorLabel = this._label("Color");
+
+    const borderColorInput = document.createElement("input");
+    borderColorInput.type = "color";
+    borderColorInput.value = this._config.cardBorder?.color || "#000000";
+
+    borderColorInput.onchange = () => {
+      this._patch({
+        cardBorder: {
+          ...(this._config.cardBorder || {}),
+          color: borderColorInput.value,
+        },
+      });
+    };
+
+    borderColorWrap.append(borderColorLabel, borderColorInput);
+
+    // assemble
+    borderFieldset.append(borderWidthWrap, borderStyleWrap, borderColorWrap);
+
+    agendaBlock.append(borderFieldset);
+
     agendaBlock.append(
       this._colorRow(
         "Show More Color",
@@ -373,7 +633,9 @@ export default class ExampleAgendaEditor extends HTMLElement {
       ["agendaSubheader", "Agenda Subheader"],
       ["eventDate", "Event Date (day header)"],
       ["sessionName", "Session Name"],
-      ["sessionTime", "Session Date & Start/End"],
+      ["sessionLocation", "Session Location"],
+      ["sessionCategory", "Session Category"],
+      ["sessionTime", "Session Start/End Time"],
       ["sessionDescription", "Session Description"],
       ["speakerName", "Speaker Name (card)"],
       ["speakerTitle", "Speaker Title (card)"],
@@ -534,6 +796,11 @@ export default class ExampleAgendaEditor extends HTMLElement {
   // ===========================================================
 
   _typographyBlock(key, label) {
+    const defaults = this._makeDefaultTypography();
+    const current =
+      (this._config.typography && this._config.typography[key]) || {};
+    const merged = Object.assign({}, defaults[key] || {}, current);
+
     const fs = document.createElement("fieldset");
 
     const lg = document.createElement("legend");
@@ -553,16 +820,33 @@ export default class ExampleAgendaEditor extends HTMLElement {
 
       const i = document.createElement("input");
       i.type = "number";
-      i.min = "10";
+      i.min = "8";
       i.max = "72";
-      i.placeholder = "default";
-      i.value = this._config.typography?.[key]?.[prop] ?? "";
+      i.placeholder = "";
+      i.value = merged[prop] !== undefined ? merged[prop] : "";
 
-      i.oninput = () => {
+      // i.oninput = () => {
+      //   const val =
+      //     i.value === ""
+      //       ? undefined
+      //       : Math.max(10, Math.min(72, Number(i.value) || undefined));
+
+      //   this._patch({
+      //     typography: {
+      //       ...this._config.typography,
+      //       [key]: {
+      //         ...(this._config.typography?.[key] || {}),
+      //         [prop]: val,
+      //       },
+      //     },
+      //   });
+      // };
+
+      const commitSize = () => {
+        const raw = i.value.trim();
+
         const val =
-          i.value === ""
-            ? undefined
-            : Math.max(10, Math.min(72, Number(i.value) || undefined));
+          raw === "" ? undefined : Math.max(10, Math.min(72, Number(raw)));
 
         this._patch({
           typography: {
@@ -574,6 +858,9 @@ export default class ExampleAgendaEditor extends HTMLElement {
           },
         });
       };
+
+      i.onchange = commitSize;
+      i.onblur = commitSize;
 
       wrap.append(l, document.createElement("br"), i);
       return wrap;
@@ -599,14 +886,20 @@ export default class ExampleAgendaEditor extends HTMLElement {
 
     const colorInput = document.createElement("input");
     colorInput.type = "color";
-    colorInput.value = this._config.typography?.[key]?.color || "#000000";
+    colorInput.value =
+      this._config.typography?.[key]?.color ??
+      this._makeDefaultTypography()?.[key]?.color ??
+      "#000000";
 
     colorWrap.append(colorLbl, document.createElement("br"), colorInput);
 
     const hexWrap = document.createElement("div");
     const hexLbl = this._label("HEX");
 
-    const initialHex = this._config.typography?.[key]?.color || "#000000";
+    const initialHex =
+      this._config.typography?.[key]?.color ??
+      this._makeDefaultTypography()?.[key]?.color ??
+      "#000000";
 
     const hexInput = this._makeHexInput(initialHex, (withHash) => {
       if (withHash !== colorInput.value) colorInput.value = withHash;
