@@ -88,7 +88,7 @@ export default class extends HTMLElement {
     const subheaderText =
       cfg.subheaderText !== undefined
         ? cfg.subheaderText
-        : "Here's what's scheduled for the event";
+        : "Here's what's on the schedule";
 
     const headerWrap = document.createElement("div");
     headerWrap.style.display = "flex";
@@ -96,7 +96,7 @@ export default class extends HTMLElement {
     headerWrap.style.gap = "4px";
     headerWrap.style.width = "calc(100% - 40px)";
     headerWrap.style.maxWidth = "1210px";
-    headerWrap.style.margin = "0 auto 16px auto";
+    headerWrap.style.margin = "0px auto 0px auto";
     headerWrap.style.boxSizing = "border-box";
 
     const headerEl = document.createElement("h2");
@@ -273,9 +273,16 @@ export default class extends HTMLElement {
     // theme styles (inline like Cvent example)
     const header3 = theme?.header3 ?? {};
     const { customClasses, ...styles } = header3;
-    Object.assign(el.style, styles, { margin: "8px 0 0 30px" });
-    if (Array.isArray(customClasses) && customClasses.length)
+
+    Object.assign(el.style, styles, {
+      width: "calc(100% - 40px)",
+      maxWidth: "1210px",
+      margin: "0px auto 0 auto",
+    });
+
+    if (Array.isArray(customClasses) && customClasses.length) {
       el.classList.add(...customClasses);
+    }
 
     // minimal typography override support
     this._applyTypographyOverrides(el, cfg?.typography?.eventDate, true);
