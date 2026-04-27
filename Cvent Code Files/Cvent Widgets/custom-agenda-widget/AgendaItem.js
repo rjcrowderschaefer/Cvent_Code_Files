@@ -52,7 +52,7 @@ export class AgendaItem extends HTMLElement {
 
       .date-header {
         margin-left: 50px;
-        border-bottom: 1px solid ${gutterBg};
+        border-bottom: 1px solid ${gutterBg} !important;
         padding-right: 20px;
         padding-left: 20px;
       }
@@ -132,9 +132,13 @@ export class AgendaItem extends HTMLElement {
         row-gap: 12px;
       }
 
+      .speakersWrap[data-count="1"],
+      .speakersWrap[data-count="2"] {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
       .speakerLine {
         display: flex;
-        align-items: center;
         gap: 10px;
         cursor: pointer;
       }
@@ -151,7 +155,7 @@ export class AgendaItem extends HTMLElement {
       .info {
         display: flex;
         flex-direction: column;
-        justify-content: center;
+        justify-content: flex-start;
         line-height: 1.2;
         min-width: 0;
       }
@@ -364,7 +368,7 @@ export class AgendaItem extends HTMLElement {
   }
 
   .speakersWrap {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
 
@@ -375,7 +379,7 @@ export class AgendaItem extends HTMLElement {
   }
 
   .speakersWrap {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
   }
 
   .truncate {
@@ -610,7 +614,8 @@ export class AgendaItem extends HTMLElement {
 
     const speakers = this.getSpeakersArray(s);
     speakers.forEach((sp) => speakersWrap.append(this.renderSpeakerLine(sp)));
-    content.append(speakersWrap);
+    speakersWrap.dataset.count = speakers.length;
+    content.append(speakersWrap);    
 
     // Assemble
     card.append(gutter, content);
