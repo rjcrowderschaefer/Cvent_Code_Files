@@ -52,6 +52,9 @@ export class AgendaItem extends HTMLElement {
 
       .date-header {
         margin-left: 50px;
+        border-bottom: 1px solid ${gutterBg};
+        padding-right: 20px;
+        padding-left: 20px;
       }
 
       .content h1 {
@@ -124,7 +127,7 @@ export class AgendaItem extends HTMLElement {
 
       .speakersWrap {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         column-gap: 16px;
         row-gap: 12px;
       }
@@ -140,7 +143,6 @@ export class AgendaItem extends HTMLElement {
         width: 50px;
         height: 50px;
         border: none;
-        box-shadow: rgb(165, 165, 165) 2px 3px 5px -1px;
         object-fit: cover;
         flex-shrink: 0;
         align-self: flex-start;
@@ -362,7 +364,7 @@ export class AgendaItem extends HTMLElement {
   }
 
   .speakersWrap {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
