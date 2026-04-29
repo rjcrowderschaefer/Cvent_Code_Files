@@ -172,15 +172,24 @@ export default class extends HTMLElement {
     } catch (e) {
       console.warn("[widget.js] Iterating session generator failed:", e);
     }
+    // if (sessions.length > 0) {
+    //   console.log(JSON.stringify(sessions[0], null, 2));
+    // }
+    sessions.forEach(s => {
+      console.log(JSON.stringify(s, null, 2));
+    });
+
+    // Filter out closed sessions
+    const openSessions = sessions.filter(s => s.isOpenForRegistration !== false);
 
     // If we have data, remove placeholder
     const placeholder = container.querySelector("div[style*='height: 200px']");
-    if (sessions.length && placeholder) {
+    if (openSessions.length && placeholder) {
       container.removeChild(placeholder);
     }
 
     // Client-side fallback sort (matches your original)
-    const sorted = [...sessions].sort((a, b) => {
+    const sorted = [...openSessions].sort((a, b) => {
       const aName = (a?.name || "").toLowerCase();
       const bName = (b?.name || "").toLowerCase();
       const aStart = a?.startDateTime ? new Date(a.startDateTime).getTime() : 0;
@@ -210,7 +219,7 @@ export default class extends HTMLElement {
     if (cfg.groupByDay === false) {
       sorted.forEach((s) =>
         container.appendChild(
-          this._renderItem(s, theme, cfg, sessions, getSpeakers)
+          this._renderItem(s, theme, cfg, openSessions, getSpeakers)
         )
       );
     } else {
@@ -220,7 +229,7 @@ export default class extends HTMLElement {
         container.appendChild(header);
         daySessions.forEach((s) =>
           container.appendChild(
-            this._renderItem(s, theme, cfg, sessions, getSpeakers)
+            this._renderItem(s, theme, cfg, openSessions, getSpeakers)
           )
         );
       }
@@ -277,7 +286,8 @@ export default class extends HTMLElement {
     Object.assign(el.style, styles, {
       width: "calc(100% - 40px)",
       maxWidth: "1210px",
-      margin: "0px auto 0 auto",
+      margin: "30px auto 0 auto",
+      textDecoration: "underline", // force underline for day headers
     });
 
     if (Array.isArray(customClasses) && customClasses.length) {
