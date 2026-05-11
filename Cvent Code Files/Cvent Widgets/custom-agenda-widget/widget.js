@@ -179,8 +179,13 @@ export default class extends HTMLElement {
       console.log(JSON.stringify(s, null, 2));
     });
 
-    // Filter out closed sessions
-    const openSessions = sessions.filter(s => s.isOpenForRegistration !== false);
+    // Filter out closed sessions and those marked "Hide from main agenda?" via custom field
+    const openSessions = sessions.filter(s => {
+      if (s.isOpenForRegistration == false) return false;
+      const hideField = s.sessionCustomFields?.find(f => f.name === "Hide from main agenda?");
+      if (hideField?.value?.includes("Yes")) return false;
+      return true;
+    });
 
     // If we have data, remove placeholder
     const placeholder = container.querySelector("div[style*='height: 200px']");
@@ -287,8 +292,19 @@ export default class extends HTMLElement {
       width: "calc(100% - 40px)",
       maxWidth: "1210px",
       margin: "30px auto 0 auto",
-      textDecoration: "underline", // force underline for day headers
     });
+
+    // Object.assign(el.style, styles, {
+    //   width: "100% - 40px",
+    //   maxWidth: "1210px",
+    //   margin: "30 0 0 0",
+    //   padding: "8px 20px",
+    //   boxSizing: "border-box",
+    //   position: "sticky",
+    //   top: "0",
+    //   zIndex: "100",
+    //   backgroundColor: "#ffffff",
+    // });
 
     if (Array.isArray(customClasses) && customClasses.length) {
       el.classList.add(...customClasses);
