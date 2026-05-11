@@ -103,7 +103,7 @@ export class AgendaItem extends HTMLElement {
       .sessionCategory {
         display: inline-flex;          
         align-items: center;
-        gap: 2px;                     
+        gap: 3px;                     
         align-self: flex-start;
         font-weight: 400;
         text-transform: uppercase;

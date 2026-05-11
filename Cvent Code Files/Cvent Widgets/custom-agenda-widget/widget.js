@@ -99,7 +99,7 @@ export default class extends HTMLElement {
     headerWrap.style.margin = "0px auto 0px auto";
     headerWrap.style.boxSizing = "border-box";
 
-    const headerEl = document.createElement("h2");
+    const headerEl = document.createElement("div");
     headerEl.textContent = headerText;
     headerEl.style.margin = "0";
 
@@ -113,6 +113,8 @@ export default class extends HTMLElement {
       true
     );
 
+console.log('agendaHeader typography config:', JSON.stringify(cfg.typography?.agendaHeader));
+
     this._applyTypographyOverrides(
       subheaderEl,
       (cfg.typography && cfg.typography.agendaSubheader) || {},
@@ -121,7 +123,8 @@ export default class extends HTMLElement {
 
     // fallback defaults if planner hasn't styled them yet
     if (!headerEl.style.fontSize) headerEl.style.fontSize = "32px";
-    if (!headerEl.style.fontWeight) headerEl.style.fontWeight = "700";
+    const hasExplicitBold = (cfg.typography?.agendaHeader?.bold !== undefined);
+    if (!hasExplicitBold) headerEl.style.fontWeight = "700";
 
     if (!subheaderEl.style.fontSize) subheaderEl.style.fontSize = "18px";
     if (!subheaderEl.style.color) subheaderEl.style.color = "#444";
