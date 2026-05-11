@@ -105,48 +105,9 @@ export default class extends HTMLElement {
       console.warn("[widget.js] getSpeakers not found; speaker data will not hydrate.");
     }
 
-    // ---- Fetch all event speakers ----
-    let allSpeakers = [];
-    try {
-      if (this.cventSdk?.getSpeakers) {
-        // Fetch all speakers (no IDs = fetch all, per Cvent SDK docs)
-        const result = await this.cventSdk.getSpeakers();
-        if (result && typeof result === "object") {
-          allSpeakers = Object.values(result).filter((s) => s && !s.failureReason);
-        }
-      } else if (typeof this.getSpeakers === "function") {
-        const result = await this.getSpeakers();
-        if (result && typeof result === "object") {
-          allSpeakers = Object.values(result).filter((s) => s && !s.failureReason);
-        }
-      }
-    } catch (e) {
-      console.warn("[widget.js] getSpeakers error:", e);
-    }
-
-    if (!allSpeakers.length) {
-      console.warn("[widget.js] No speakers returned.");
-      const placeholder = container.querySelector("div[style*='height: 200px']");
-      if (placeholder) container.removeChild(placeholder);
-      return;
-    }
-
-    // ---- Filter to planner-selected speakers (featuredSpeakerIds) ----
-    // cfg.featuredSpeakerIds: string[] of IDs the planner selected in the editor.
-    // If none selected yet, fall back to showing all speakers (editor preview mode).
-    const selectedIds = Array.isArray(cfg.featuredSpeakerIds) && cfg.featuredSpeakerIds.length
-      ? cfg.featuredSpeakerIds
-      : null;
-
-    let speakersToRender = selectedIds
-      ? selectedIds
-          .map((id) => allSpeakers.find((s) => (s?.id || s?.speakerId) === id))
-          .filter(Boolean)
-      : allSpeakers;
-
-    // ---- Optional: fetch sessions to power the modal "appears in" list ----
+    // ---- Fetch sessions first (needed both for speaker IDs and modal "appears in") ----
     let allSessions = [];
-    const sort = cfg.sessionSort || "dateTimeAsc";
+    const sort = cfg.sort || "dateTimeAsc";
     const pageSize = 200;
     try {
       let gen = null;
@@ -169,8 +130,56 @@ export default class extends HTMLElement {
         }
       }
     } catch (e) {
-      console.warn("[widget.js] getSessionGenerator error (non-critical):", e);
+      console.warn("[widget.js] getSessionGenerator error:", e);
     }
+
+    // ---- Collect unique speaker IDs from sessions ----
+    const idSet = new Set();
+    allSessions.forEach((sess) => {
+      const list = Array.isArray(sess.resolvedSpeakers)
+        ? sess.resolvedSpeakers
+        : Array.isArray(sess.speakers)
+        ? sess.speakers.map((x) => (x && x.speaker ? x.speaker : x)).filter(Boolean)
+        : [];
+      list.forEach((sp) => {
+        const id = sp?.id || sp?.speakerId;
+        if (id) idSet.add(String(id));
+      });
+    });
+
+    // ---- Fetch full speaker profiles by ID ----
+    let allSpeakers = [];
+    if (idSet.size && getSpeakers) {
+      try {
+        const map = await getSpeakers([...idSet]);
+        if (map && typeof map === "object") {
+          allSpeakers = Object.values(map).filter((s) => s && !s.failureReason);
+        }
+      } catch (e) {
+        console.warn("[widget.js] getSpeakers error:", e);
+      }
+    }
+
+
+    if (!allSpeakers.length) {
+      console.warn("[widget.js] No speakers returned.");
+      const placeholder = container.querySelector("div[style*='height: 200px']");
+      if (placeholder) container.removeChild(placeholder);
+      return;
+    }
+
+    // ---- Filter to planner-selected speakers (featuredSpeakerIds) ----
+    // cfg.featuredSpeakerIds: string[] of IDs the planner selected in the editor.
+    // If none selected yet, fall back to showing all speakers (editor preview mode).
+    const selectedIds = Array.isArray(cfg.featuredSpeakerIds) && cfg.featuredSpeakerIds.length
+      ? cfg.featuredSpeakerIds
+      : null;
+
+    let speakersToRender = selectedIds
+      ? selectedIds
+          .map((id) => allSpeakers.find((s) => String(s?.id || s?.speakerId) === String(id)))
+          .filter(Boolean)
+      : allSpeakers;
 
     // ---- Remove placeholder ----
     const placeholder = container.querySelector("div[style*='height: 200px']");

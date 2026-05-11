@@ -7,7 +7,6 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     super();
     this.setConfiguration = setConfiguration;
 
-    // Deep-merge defaults with any saved configuration
     const defaults = this._getDefaultConfig();
     const incoming = initialConfiguration || {};
 
@@ -35,9 +34,8 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
       typography: mergedTypography,
     };
 
-    // Planner roster: populated via onSpeakersUpdate (Cvent injects this)
-    // Shape: [{ id, firstName, lastName, title, company, profilePictureUri }]
     this._allSpeakers = [];
+    this._speakersLoading = false;
 
     if (!initialConfiguration) {
       setConfiguration(this._config);
@@ -46,10 +44,9 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     this.attachShadow({ mode: "open" });
   }
 
-  // Called by Cvent when the planner's speaker roster changes
-  onSpeakersUpdate(speakers) {
-    this._allSpeakers = Array.isArray(speakers) ? speakers : [];
+  connectedCallback() {
     this._safeRenderUI();
+    this._loadSpeakers();
   }
 
   onConfigurationUpdate(newConfig) {
@@ -83,8 +80,93 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     this._safeRenderUI();
   }
 
-  connectedCallback() {
-    this._safeRenderUI();
+  // =============================================
+  // SPEAKER LOADING
+  // =============================================
+
+  _resolveGetSpeakers() {
+    if (this.cventSdk?.getSpeakers) return this.cventSdk.getSpeakers.bind(this.cventSdk);
+    if (typeof this.getSpeakers === "function") return this.getSpeakers.bind(this);
+    if (typeof window !== "undefined" && typeof window.getSpeakers === "function") return window.getSpeakers;
+    return undefined;
+  }
+
+  async _loadSpeakers() {
+    if (this._speakersLoading) return;
+    this._speakersLoading = true;
+
+    try {
+      let gen = null;
+      if (this.cventSdk?.getSessionGenerator) {
+        gen = await this.cventSdk.getSessionGenerator("dateTimeAsc", 200);
+      } else if (typeof this.getSessionGenerator === "function") {
+        gen = await this.getSessionGenerator("dateTimeAsc", 200);
+      }
+
+      if (!gen) {
+        console.warn("[editor.js] getSessionGenerator not available; cannot load speaker roster.");
+        return;
+      }
+
+      const sessions = [];
+      for await (const page of gen) {
+        const batch = Array.isArray(page)
+          ? page
+          : Array.isArray(page?.sessions)
+          ? page.sessions
+          : Array.isArray(page?.records)
+          ? page.records
+          : [];
+        if (batch.length) sessions.push(...batch);
+        if (sessions.length >= 200) break;
+      }
+
+      const idSet = new Set();
+      sessions.forEach((sess) => {
+        const list = Array.isArray(sess.resolvedSpeakers)
+          ? sess.resolvedSpeakers
+          : Array.isArray(sess.speakers)
+          ? sess.speakers.map((x) => (x && x.speaker ? x.speaker : x)).filter(Boolean)
+          : [];
+        list.forEach((sp) => {
+          const id = sp?.id || sp?.speakerId;
+          if (id) idSet.add(String(id));
+        });
+      });
+
+      const ids = [...idSet];
+      if (!ids.length) {
+        console.warn("[editor.js] No speaker IDs found in sessions.");
+        return;
+      }
+
+      const getSpeakers = this._resolveGetSpeakers();
+      if (!getSpeakers) {
+        console.warn("[editor.js] getSpeakers not available.");
+        return;
+      }
+
+      const map = await getSpeakers(ids);
+      if (!map || typeof map !== "object") {
+        console.warn("[editor.js] getSpeakers returned unexpected shape:", map);
+        return;
+      }
+
+      const speakers = Object.values(map).filter((s) => s && !s.failureReason);
+      speakers.sort((a, b) => {
+        const aName = `${a?.firstName || ""} ${a?.lastName || ""}`.trim().toLowerCase();
+        const bName = `${b?.firstName || ""} ${b?.lastName || ""}`.trim().toLowerCase();
+        return aName.localeCompare(bName);
+      });
+
+      console.log(`[editor.js] Loaded ${speakers.length} speakers from event.`);
+      this._allSpeakers = speakers;
+      this._safeRenderUI();
+    } catch (e) {
+      console.warn("[editor.js] _loadSpeakers error:", e);
+    } finally {
+      this._speakersLoading = false;
+    }
   }
 
   // =============================================
@@ -95,10 +177,10 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     return {
       headerText: "Featured Speakers",
       subheaderText: "Meet the experts taking the stage",
-      featuredSpeakerIds: [],       // string[] — IDs the planner has selected
-      columns: 3,                   // grid columns (1–6)
+      featuredSpeakerIds: [],
+      columns: 3,
       cardGap: "16px",
-      cardLayout: "vertical",       // "vertical" | "horizontal"
+      cardLayout: "vertical",
       cardBg: "#ffffff",
       accentColor: "#f7a325",
       showMoreColor: "#f7a325",
@@ -129,91 +211,20 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
       italic: false,
       underline: false,
     };
-
     return {
-      widgetHeader: {
-        ...base,
-        fontSize: 40,
-        fontSizeMd: 32,
-        fontSizeSm: 24,
-        bold: false,
-      },
-      widgetSubheader: {
-        ...base,
-        fontSize: 20,
-        fontSizeMd: 18,
-        fontSizeSm: 14,
-      },
-      speakerName: {
-        ...base,
-        fontSize: 18,
-        fontSizeMd: 16,
-        fontSizeSm: 14,
-        bold: true,
-        color: "#f7a325",
-      },
-      speakerTitle: {
-        ...base,
-        fontSize: 14,
-        fontSizeMd: 13,
-        fontSizeSm: 12,
-        italic: true,
-      },
-      speakerCompany: {
-        ...base,
-        fontSize: 14,
-        fontSizeMd: 13,
-        fontSizeSm: 12,
-      },
-      speakerBio: {
-        ...base,
-        fontSize: 13,
-        fontSizeMd: 12,
-        fontSizeSm: 12,
-      },
-      modalSpeakerName: {
-        ...base,
-        bold: true,
-      },
-      modalSpeakerTitle: {
-        ...base,
-        fontSize: 16,
-        fontSizeMd: 14,
-        fontSizeSm: 13,
-        italic: true,
-      },
-      modalSpeakerCompany: {
-        ...base,
-        fontSize: 16,
-        fontSizeMd: 14,
-        fontSizeSm: 13,
-      },
-      modalSpeakerBio: {
-        ...base,
-        fontSize: 15,
-        fontSizeMd: 14,
-        fontSizeSm: 13,
-      },
-      modalSessionsHeader: {
-        ...base,
-        fontSize: 16,
-        fontSizeMd: 14,
-        fontSizeSm: 13,
-        bold: true,
-      },
-      modalSessionName: {
-        ...base,
-        fontSize: 14,
-        fontSizeMd: 13,
-        fontSizeSm: 12,
-        bold: true,
-      },
-      modalSessionDateTime: {
-        ...base,
-        fontSize: 14,
-        fontSizeMd: 13,
-        fontSizeSm: 12,
-      },
+      widgetHeader:         { ...base, fontSize: 40, fontSizeMd: 32, fontSizeSm: 24, bold: false },
+      widgetSubheader:      { ...base, fontSize: 20, fontSizeMd: 18, fontSizeSm: 14 },
+      speakerName:          { ...base, fontSize: 18, fontSizeMd: 16, fontSizeSm: 14, bold: true, color: "#f7a325" },
+      speakerTitle:         { ...base, fontSize: 14, fontSizeMd: 13, fontSizeSm: 12, italic: true },
+      speakerCompany:       { ...base, fontSize: 14, fontSizeMd: 13, fontSizeSm: 12 },
+      speakerBio:           { ...base, fontSize: 13, fontSizeMd: 12, fontSizeSm: 12 },
+      modalSpeakerName:     { ...base, bold: true },
+      modalSpeakerTitle:    { ...base, fontSize: 16, fontSizeMd: 14, fontSizeSm: 13, italic: true },
+      modalSpeakerCompany:  { ...base, fontSize: 16, fontSizeMd: 14, fontSizeSm: 13 },
+      modalSpeakerBio:      { ...base, fontSize: 15, fontSizeMd: 14, fontSizeSm: 13 },
+      modalSessionsHeader:  { ...base, fontSize: 16, fontSizeMd: 14, fontSizeSm: 13, bold: true },
+      modalSessionName:     { ...base, fontSize: 14, fontSizeMd: 13, fontSizeSm: 12, bold: true },
+      modalSessionDateTime: { ...base, fontSize: 14, fontSizeMd: 13, fontSizeSm: 12 },
     };
   }
 
@@ -224,14 +235,11 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
   _safeRenderUI() {
     const scrollTop = this.scrollTop;
     const detailsState = [...this.shadowRoot.querySelectorAll("details")].map((d) => d.open);
-
     this._renderUI();
-
     const newDetails = [...this.shadowRoot.querySelectorAll("details")];
     detailsState.forEach((wasOpen, i) => {
       if (newDetails[i]) newDetails[i].open = wasOpen;
     });
-
     this.scrollTop = scrollTop;
   }
 
@@ -272,83 +280,41 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
         border: 1px solid #ccc; border-radius: 6px;
         font-family: ui-monospace; font-size: 12px;
       }
-
-      /* Speaker selector */
       .speaker-roster {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        max-height: 320px;
-        overflow-y: auto;
-        border: 1px solid #e7e7e7;
-        border-radius: 8px;
-        padding: 8px;
-        background: #fafafa;
+        display: flex; flex-direction: column; gap: 6px;
+        max-height: 320px; overflow-y: auto;
+        border: 1px solid #e7e7e7; border-radius: 8px;
+        padding: 8px; background: #fafafa;
       }
       .speaker-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 7px 10px;
-        border-radius: 6px;
-        border: 1px solid transparent;
-        cursor: pointer;
-        background: #fff;
-        transition: background 0.12s, border-color 0.12s;
+        display: flex; align-items: center; gap: 10px;
+        padding: 7px 10px; border-radius: 6px;
+        border: 1px solid transparent; cursor: pointer;
+        background: #fff; transition: background 0.12s, border-color 0.12s;
       }
       .speaker-row:hover { border-color: #ccc; }
-      .speaker-row.selected {
-        border-color: #185FA5;
-        background: #e6f1fb;
-      }
+      .speaker-row.selected { border-color: #185FA5; background: #e6f1fb; }
       .sp-avatar {
-        width: 32px; height: 32px;
-        border-radius: 50%; object-fit: cover; flex-shrink: 0;
-        background: #e0e0e0;
+        width: 32px; height: 32px; border-radius: 50%;
+        object-fit: cover; flex-shrink: 0; background: #e0e0e0;
       }
       .sp-info { flex: 1; min-width: 0; }
       .sp-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .sp-meta { font-size: 11px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .sp-check { font-size: 16px; color: #185FA5; flex-shrink: 0; }
       .selected-order {
-        font-size: 11px;
-        font-weight: 700;
-        color: #fff;
-        background: #185FA5;
-        border-radius: 50%;
-        width: 20px; height: 20px;
-        display: flex; align-items: center; justify-content: center;
-        flex-shrink: 0;
+        font-size: 11px; font-weight: 700; color: #fff; background: #185FA5;
+        border-radius: 50%; width: 20px; height: 20px;
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
       }
-      .roster-empty {
-        padding: 16px;
-        text-align: center;
-        font-size: 13px;
-        color: #888;
-      }
-      .selected-summary {
-        font-size: 12px;
-        color: #555;
-        margin: 6px 0 10px;
-      }
+      .roster-empty { padding: 16px; text-align: center; font-size: 13px; color: #888; }
+      .selected-summary { font-size: 12px; color: #555; margin: 6px 0 10px; }
       .clear-btn {
-        font-size: 11px;
-        color: #c00;
-        cursor: pointer;
-        text-decoration: underline;
-        background: none;
-        border: none;
-        padding: 0;
-        margin-left: 8px;
+        font-size: 11px; color: #c00; cursor: pointer;
+        text-decoration: underline; background: none; border: none; padding: 0; margin-left: 8px;
       }
       .search-input {
-        width: 100%;
-        box-sizing: border-box;
-        padding: 6px 10px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-size: 13px;
-        margin-bottom: 8px;
+        width: 100%; box-sizing: border-box; padding: 6px 10px;
+        border: 1px solid #ddd; border-radius: 6px; font-size: 13px; margin-bottom: 8px;
       }
     `;
     this.shadowRoot.append(style);
@@ -366,29 +332,27 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     widgetBlock.className = "block";
     widgetDetails.append(widgetBlock);
 
-    // Header
     this._appendTextInput(widgetBlock, "Header", "headerText", "Featured Speakers");
-    // Subheader
     this._appendTextInput(widgetBlock, "Subheader", "subheaderText", "Meet the experts taking the stage");
 
     // Columns
     const columnsWrap = document.createElement("div");
     columnsWrap.className = "section";
-    columnsWrap.append(this._label("Columns (1–6)"), document.createElement("br"));
+    columnsWrap.append(this._label("Columns (1\u20136)"), document.createElement("br"));
     const columnsInput = document.createElement("input");
     columnsInput.type = "number";
     columnsInput.min = "1";
     columnsInput.max = "6";
     columnsInput.value = this._config.columns || 3;
     columnsInput.onchange = () => {
-      const v = Math.min(6, Math.max(1, Number(columnsInput.value) || 3));
-      this._patch({ columns: v });
+      this._patch({ columns: Math.min(6, Math.max(1, Number(columnsInput.value) || 3)) });
     };
     columnsWrap.append(columnsInput);
     widgetBlock.append(columnsWrap);
 
-    // Card Layout radio
+    // Card Layout
     const layoutFieldset = document.createElement("fieldset");
+    document.createElement("legend");
     const layoutLegend = document.createElement("legend");
     layoutLegend.textContent = "Card Layout";
     layoutFieldset.append(layoutLegend);
@@ -411,7 +375,7 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     );
     widgetBlock.append(layoutFieldset);
 
-    // Bio display options
+    // Bio display
     const bioFieldset = document.createElement("fieldset");
     const bioLegend = document.createElement("legend");
     bioLegend.textContent = "Bio Display (on card)";
@@ -427,39 +391,33 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
       rb.checked = checked;
       rb.onchange = () => {
         if (!rb.checked) return;
-        if (value === "none") this._patch({ showBio: false, showBioLimited: false });
-        if (value === "full") this._patch({ showBio: true, showBioLimited: false });
-        if (value === "limited") this._patch({ showBio: true, showBioLimited: true });
+        if (value === "none")    this._patch({ showBio: false, showBioLimited: false });
+        if (value === "full")    this._patch({ showBio: true,  showBioLimited: false });
+        if (value === "limited") this._patch({ showBio: true,  showBioLimited: true  });
       };
       wrap.append(rb, document.createTextNode(label));
       return wrap;
     };
     bioFieldset.append(
-      makeBioRadio("Hide bio", "none", !this._config.showBio),
-      makeBioRadio("Show full bio", "full", this._config.showBio && !this._config.showBioLimited),
-      makeBioRadio("Show limited bio (3 lines + `Show more`)", "limited", !!this._config.showBioLimited)
+      makeBioRadio("Hide bio",                               "none",    !this._config.showBio),
+      makeBioRadio("Show full bio",                          "full",    this._config.showBio && !this._config.showBioLimited),
+      makeBioRadio("Show limited bio (3 lines + Show more)", "limited", !!this._config.showBioLimited)
     );
     widgetBlock.append(bioFieldset);
 
-    // Show sessions in modal
     widgetBlock.append(
       this._checkbox("Show sessions in speaker modal", !!this._config.showSessions, (v) =>
         this._patch({ showSessions: v })
       )
     );
 
-    // Colors
     widgetBlock.append(
       this._colorRow("Card background", "cardBg", this._config.cardBg || "#ffffff", (v) =>
         this._patch({ cardBg: v })
-      )
-    );
-    widgetBlock.append(
+      ),
       this._colorRow("Accent color", "accentColor", this._config.accentColor || "#f7a325", (v) =>
         this._patch({ accentColor: v })
-      )
-    );
-    widgetBlock.append(
+      ),
       this._colorRow("Show more color", "showMoreColor", this._config.showMoreColor || "#f7a325", (v) =>
         this._patch({ showMoreColor: v })
       )
@@ -510,7 +468,6 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     borderFieldset.append(borderWidthWrap, borderStyleWrap, borderColorWrap);
     widgetBlock.append(borderFieldset);
 
-    // Typography (widget)
     const h3Widget = document.createElement("h3");
     h3Widget.textContent = "Typography (Widget)";
     widgetBlock.append(h3Widget);
@@ -520,12 +477,12 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     widgetBlock.append(typoWidget);
 
     [
-      ["widgetHeader", "Widget Header"],
-      ["widgetSubheader", "Widget Subheader"],
-      ["speakerName", "Speaker Name"],
-      ["speakerTitle", "Speaker Title"],
+      ["widgetHeader",   "Widget Header"],
+      ["widgetSubheader","Widget Subheader"],
+      ["speakerName",    "Speaker Name"],
+      ["speakerTitle",   "Speaker Title"],
       ["speakerCompany", "Speaker Company"],
-      ["speakerBio", "Speaker Bio (on card)"],
+      ["speakerBio",     "Speaker Bio (on card)"],
     ].forEach(([key, label]) => typoWidget.append(this._typographyBlock(key, label)));
 
     panel.append(widgetDetails);
@@ -543,12 +500,11 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
       ? this._config.featuredSpeakerIds
       : [];
 
-    // Summary line
     const summaryLine = document.createElement("div");
     summaryLine.className = "selected-summary";
     summaryLine.textContent = selectedIds.length
       ? `${selectedIds.length} speaker${selectedIds.length > 1 ? "s" : ""} selected`
-      : "No speakers selected — all event speakers will be shown";
+      : "No speakers selected \u2014 all event speakers will be shown";
 
     if (selectedIds.length) {
       const clearBtn = document.createElement("button");
@@ -559,14 +515,12 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     }
     selectorBlock.append(summaryLine);
 
-    // Search box
     const searchInput = document.createElement("input");
     searchInput.type = "text";
     searchInput.className = "search-input";
     searchInput.placeholder = "Search speakers by name, title, or company...";
     selectorBlock.append(searchInput);
 
-    // Roster
     const roster = document.createElement("div");
     roster.className = "speaker-roster";
     selectorBlock.append(roster);
@@ -577,7 +531,9 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
       if (!this._allSpeakers.length) {
         const empty = document.createElement("div");
         empty.className = "roster-empty";
-        empty.textContent = "No speakers found in this event yet.";
+        empty.textContent = this._speakersLoading
+          ? "Loading speakers\u2026"
+          : "No speakers found. Make sure speakers are assigned to sessions in this event.";
         roster.append(empty);
         return;
       }
@@ -585,8 +541,8 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
       const lower = filter.toLowerCase();
       const filtered = this._allSpeakers.filter((sp) => {
         if (!lower) return true;
-        const name = `${sp?.firstName || ""} ${sp?.lastName || ""}`.toLowerCase();
-        const title = (sp?.title || sp?.designation || "").toLowerCase();
+        const name    = `${sp?.firstName || ""} ${sp?.lastName || ""}`.toLowerCase();
+        const title   = (sp?.title || sp?.designation || "").toLowerCase();
         const company = (sp?.company || sp?.organization || "").toLowerCase();
         return name.includes(lower) || title.includes(lower) || company.includes(lower);
       });
@@ -600,14 +556,13 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
       }
 
       filtered.forEach((sp) => {
-        const id = sp?.id || sp?.speakerId;
+        const id = String(sp?.id || sp?.speakerId || "");
         const orderIdx = selectedIds.indexOf(id);
         const isSelected = orderIdx !== -1;
 
         const row = document.createElement("div");
         row.className = "speaker-row" + (isSelected ? " selected" : "");
 
-        // Order badge or empty spacer
         if (isSelected) {
           const badge = document.createElement("div");
           badge.className = "selected-order";
@@ -619,7 +574,6 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
           row.append(spacer);
         }
 
-        // Avatar
         const avatar = document.createElement("img");
         avatar.className = "sp-avatar";
         avatar.src =
@@ -628,7 +582,6 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
         avatar.alt = "";
         row.append(avatar);
 
-        // Info
         const info = document.createElement("div");
         info.className = "sp-info";
 
@@ -636,16 +589,16 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
         nameDiv.className = "sp-name";
         nameDiv.textContent = `${(sp?.firstName || "").trim()} ${(sp?.lastName || "").trim()}`.trim();
 
-        const titleTxt = (sp?.title || sp?.designation || "").trim();
-        const companyTxt = (sp?.company || sp?.organization || "").trim();
         const metaDiv = document.createElement("div");
         metaDiv.className = "sp-meta";
-        metaDiv.textContent = [titleTxt, companyTxt].filter(Boolean).join(" · ");
+        metaDiv.textContent = [
+          (sp?.title || sp?.designation || "").trim(),
+          (sp?.company || sp?.organization || "").trim(),
+        ].filter(Boolean).join(" \u00b7 ");
 
         info.append(nameDiv, metaDiv);
         row.append(info);
 
-        // Toggle selection on click
         row.onclick = () => {
           const currentIds = Array.isArray(this._config.featuredSpeakerIds)
             ? [...this._config.featuredSpeakerIds]
@@ -664,10 +617,7 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     };
 
     renderRoster();
-
-    searchInput.addEventListener("input", () => {
-      renderRoster(searchInput.value);
-    });
+    searchInput.addEventListener("input", () => renderRoster(searchInput.value));
 
     panel.append(selectorDetails);
 
@@ -705,20 +655,20 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     modalBlock.append(typoModal);
 
     [
-      ["modalSpeakerName", "Modal Speaker Name"],
-      ["modalSpeakerTitle", "Modal Speaker Title"],
+      ["modalSpeakerName",    "Modal Speaker Name"],
+      ["modalSpeakerTitle",   "Modal Speaker Title"],
       ["modalSpeakerCompany", "Modal Speaker Company"],
-      ["modalSpeakerBio", "Modal Speaker Bio"],
+      ["modalSpeakerBio",     "Modal Speaker Bio"],
       ["modalSessionsHeader", "Modal Sessions Header"],
-      ["modalSessionName", "Modal Session Name"],
-      ["modalSessionDateTime", "Modal Session Date & Time"],
+      ["modalSessionName",    "Modal Session Name"],
+      ["modalSessionDateTime","Modal Session Date & Time"],
     ].forEach(([key, label]) => typoModal.append(this._typographyBlock(key, label)));
 
     panel.append(modalDetails);
   }
 
   // =============================================
-  // UI HELPERS  (mirrors editor.js patterns exactly)
+  // UI HELPERS
   // =============================================
 
   _details(title, open = true) {
@@ -727,7 +677,7 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     const sum = document.createElement("summary");
     const chev = document.createElement("span");
     chev.className = "chev";
-    chev.textContent = "▶";
+    chev.textContent = "\u25b6";
     sum.append(chev, document.createTextNode(" " + title));
     d.append(sum);
     return d;
@@ -767,7 +717,6 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
   _colorRow(labelText, id, current, onChange) {
     const wrap = document.createElement("div");
     wrap.className = "row field";
-    const lbl = this._label(labelText);
     const picker = document.createElement("input");
     picker.type = "color";
     picker.id = id;
@@ -781,7 +730,7 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
       hexInput.value = v.toUpperCase();
       onChange(v);
     };
-    wrap.append(lbl, picker, hexInput);
+    wrap.append(this._label(labelText), picker, hexInput);
     return wrap;
   }
 
@@ -801,13 +750,11 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
 
     const mkSize = (lbl, prop) => {
       const wrap = document.createElement("div");
-      const l = this._label(lbl);
       const i = document.createElement("input");
       i.type = "number";
       i.min = "8";
       i.max = "72";
       i.value = merged[prop] !== undefined ? merged[prop] : "";
-
       const commit = () => {
         const raw = i.value.trim();
         const val = raw === "" ? undefined : Math.max(8, Math.min(72, Number(raw)));
@@ -820,11 +767,15 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
       };
       i.onchange = commit;
       i.onblur = commit;
-      wrap.append(l, document.createElement("br"), i);
+      wrap.append(this._label(lbl), document.createElement("br"), i);
       return wrap;
     };
 
-    rowSizes.append(mkSize("Font size (px)", "fontSize"), mkSize("≤1024px (px)", "fontSizeMd"), mkSize("≤600px (px)", "fontSizeSm"));
+    rowSizes.append(
+      mkSize("Font size (px)", "fontSize"),
+      mkSize("\u22641024px (px)", "fontSizeMd"),
+      mkSize("\u2264600px (px)", "fontSizeSm")
+    );
     fs.append(rowSizes);
 
     // Color
@@ -832,15 +783,19 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     rowColor.className = "row field";
 
     const colorWrap = document.createElement("div");
-    const colorLbl = this._label("Color");
     const colorInput = document.createElement("input");
     colorInput.type = "color";
     colorInput.value =
-      this._config.typography?.[key]?.color ?? this._makeDefaultTypography()?.[key]?.color ?? "#000000";
-    colorWrap.append(colorLbl, document.createElement("br"), colorInput);
+      this._config.typography?.[key]?.color ??
+      this._makeDefaultTypography()?.[key]?.color ??
+      "#000000";
+    colorWrap.append(this._label("Color"), document.createElement("br"), colorInput);
 
     const hexWrap = document.createElement("div");
-    const initialHex = this._config.typography?.[key]?.color ?? this._makeDefaultTypography()?.[key]?.color ?? "#000000";
+    const initialHex =
+      this._config.typography?.[key]?.color ??
+      this._makeDefaultTypography()?.[key]?.color ??
+      "#000000";
     const hexInput = this._makeHexInput(initialHex, (withHash) => {
       if (withHash !== colorInput.value) colorInput.value = withHash;
       this._patch({
@@ -869,7 +824,11 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     // Bold / Italic / Underline
     const rowBIU = document.createElement("div");
     rowBIU.className = "row field";
-    rowBIU.append(this._flag(key, "bold", "Bold"), this._flag(key, "italic", "Italic"), this._flag(key, "underline", "Underline"));
+    rowBIU.append(
+      this._flag(key, "bold",      "Bold"),
+      this._flag(key, "italic",    "Italic"),
+      this._flag(key, "underline", "Underline")
+    );
     fs.append(rowBIU);
 
     return fs;
@@ -913,12 +872,12 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     hex.type = "text";
     hex.className = "hex";
     hex.placeholder = "#RRGGBB";
-    hex.value = initialHex ? `#${this._normalizeHex(initialHex)}` : "#000000";
+    hex.value = initialHex ? "#" + this._normalizeHex(initialHex) : "#000000";
 
     const apply = () => {
       const norm = this._normalizeHex(hex.value);
       if (this._isValidHex6(norm)) {
-        const withHash = `#${norm}`;
+        const withHash = "#" + norm;
         hex.style.borderColor = "#ccc";
         hex.value = withHash;
         onValidHex(withHash);
@@ -930,8 +889,7 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     hex.addEventListener("change", apply);
     hex.addEventListener("blur", apply);
     hex.addEventListener("input", () => {
-      const norm = this._normalizeHex(hex.value);
-      hex.style.borderColor = this._isValidHex6(norm) ? "#0a0" : "#d33";
+      hex.style.borderColor = this._isValidHex6(this._normalizeHex(hex.value)) ? "#0a0" : "#d33";
     });
 
     return hex;
@@ -953,32 +911,5 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
 
     this._config = merged;
     this.setConfiguration(this._config);
-  }
-
-  _makeDefaultTypography() {
-    const base = {
-      fontSize: 16,
-      fontSizeMd: 14,
-      fontSizeSm: 13,
-      color: "#000000",
-      bold: false,
-      italic: false,
-      underline: false,
-    };
-    return {
-      widgetHeader:        { ...base, fontSize: 40, fontSizeMd: 32, fontSizeSm: 24, bold: false },
-      widgetSubheader:     { ...base, fontSize: 20, fontSizeMd: 18, fontSizeSm: 14 },
-      speakerName:         { ...base, fontSize: 18, fontSizeMd: 16, fontSizeSm: 14, bold: true, color: "#f7a325" },
-      speakerTitle:        { ...base, fontSize: 14, fontSizeMd: 13, fontSizeSm: 12, italic: true },
-      speakerCompany:      { ...base, fontSize: 14, fontSizeMd: 13, fontSizeSm: 12 },
-      speakerBio:          { ...base, fontSize: 13, fontSizeMd: 12, fontSizeSm: 12 },
-      modalSpeakerName:    { ...base, bold: true },
-      modalSpeakerTitle:   { ...base, fontSize: 16, fontSizeMd: 14, fontSizeSm: 13, italic: true },
-      modalSpeakerCompany: { ...base, fontSize: 16, fontSizeMd: 14, fontSizeSm: 13 },
-      modalSpeakerBio:     { ...base, fontSize: 15, fontSizeMd: 14, fontSizeSm: 13 },
-      modalSessionsHeader: { ...base, fontSize: 16, fontSizeMd: 14, fontSizeSm: 13, bold: true },
-      modalSessionName:    { ...base, fontSize: 14, fontSizeMd: 13, fontSizeSm: 12, bold: true },
-      modalSessionDateTime:{ ...base, fontSize: 14, fontSizeMd: 13, fontSizeSm: 12 },
-    };
   }
 }
