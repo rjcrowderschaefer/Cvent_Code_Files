@@ -113,7 +113,7 @@ export default class extends HTMLElement {
       true
     );
 
-console.log('agendaHeader typography config:', JSON.stringify(cfg.typography?.agendaHeader));
+// console.log('agendaHeader typography config:', JSON.stringify(cfg.typography?.agendaHeader));
 
     this._applyTypographyOverrides(
       subheaderEl,
@@ -153,6 +153,13 @@ console.log('agendaHeader typography config:', JSON.stringify(cfg.typography?.ag
       console.warn("[widget.js] getSessionGenerator error:", e);
     }
 
+    try {
+      const eventInfo = await this.cventSdk.getEventInfo?.();
+      console.log('eventInfo:', JSON.stringify(eventInfo, null, 2));
+    } catch(e) {
+      console.warn('getEventInfo error:', e);
+    }
+
     if (!gen) {
       console.warn("[widget.js] No session generator available.");
       return; // keep placeholder
@@ -175,12 +182,10 @@ console.log('agendaHeader typography config:', JSON.stringify(cfg.typography?.ag
     } catch (e) {
       console.warn("[widget.js] Iterating session generator failed:", e);
     }
-    // if (sessions.length > 0) {
-    //   console.log(JSON.stringify(sessions[0], null, 2));
-    // }
-    sessions.forEach(s => {
-      console.log(JSON.stringify(s, null, 2));
-    });
+    
+    // sessions.forEach(s => {
+    //   console.log(JSON.stringify(s, null, 2));
+    // });
 
     // Filter out closed sessions and those marked "Hide from main agenda?" via custom field
     const openSessions = sessions.filter(s => {
