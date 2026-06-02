@@ -73,7 +73,8 @@ export class FeaturedSpeaker extends HTMLElement {
       }
 
       .avatar {
-        width: ${isHorizontal ? "80px" : "100px"};
+        width: ${isHorizontal ? "80px" : "100  ,cxre\
+          cpx"};
         height: ${isHorizontal ? "80px" : "100px"};
         border-radius: 50%;
         object-fit: cover;
