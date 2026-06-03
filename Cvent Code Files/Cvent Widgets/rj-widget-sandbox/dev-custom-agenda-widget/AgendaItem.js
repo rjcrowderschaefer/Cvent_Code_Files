@@ -435,12 +435,33 @@ export class AgendaItem extends HTMLElement {
     // Time gutter
     const start = s.startDateTime ? new Date(s.startDateTime) : null;
     const end = s.endDateTime ? new Date(s.endDateTime) : null;
+    // const tz = cfg.eventTimezone || 'America/New_York';
+
+    // const startText = start
+    //   ? start.toLocaleString("en-US", { timeStyle: "short", timeZone: tz })
+    //   : "";
+    // const endText = end
+    //   ? end.toLocaleString("en-US", { timeStyle: "short", timeZone: tz })
+    //   : "";
+    // const tzAbbr = start
+    //   ? start.toLocaleString("en-US", { timeZoneName: "short", timeZone: tz })
+    //       .split(" ").pop()
+    //   : "";
+
+    const tz = cfg.eventTimezone || 'America/New_York';
+
     const startText = start
-      ? start.toLocaleString("en-US", { timeStyle: "short" })
+      ? start.toLocaleString("en-US", { timeStyle: "short", timeZone: tz })
       : "";
     const endText = end
-      ? end.toLocaleString("en-US", { timeStyle: "short" })
+      ? end.toLocaleString("en-US", { timeStyle: "short", timeZone: tz })
       : "";
+    const tzRaw = start
+      ? start.toLocaleString("en-US", { timeZoneName: "short", timeZone: tz })
+      : "";
+    const tzAbbr = tzRaw.split(" ").pop();
+    
+    console.log('tz:', tz, '| tzRaw:', tzRaw, '| tzAbbr:', tzAbbr, '| startText:', startText);
 
     const gutter = document.createElement("div");
     gutter.classList.add("timeGutter");
@@ -461,7 +482,13 @@ export class AgendaItem extends HTMLElement {
     this.applyThemeStyle(timeEndEl, t.paragraph);
     this.applyTypographyOverrides(timeEndEl, cfg.typography?.sessionTime, true);
 
-    gutter.append(timeStartEl, timeEndEl);
+    const tzEl = document.createElement("div");
+    tzEl.classList.add("timePart", "timeTz");
+    tzEl.textContent = tzAbbr;
+    this.applyThemeStyle(tzEl, t.paragraph);
+    this.applyTypographyOverrides(tzEl, cfg.typography?.sessionTime, true);
+
+    gutter.append(timeStartEl, timeEndEl, tzEl);
 
     // Content
     const content = document.createElement("div");
@@ -532,14 +559,14 @@ export class AgendaItem extends HTMLElement {
 
         categoryEl.append(categoryIcon, categoryText);
 
-        console.log(
-          "sessionLocation typography:",
-          cfg.typography && cfg.typography.sessionLocation
-        );
-        console.log(
-          "sessionCategory typography:",
-          cfg.typography && cfg.typography.sessionCategory
-        );
+        // console.log(
+        //   "sessionLocation typography:",
+        //   cfg.typography && cfg.typography.sessionLocation
+        // );
+        // console.log(
+        //   "sessionCategory typography:",
+        //   cfg.typography && cfg.typography.sessionCategory
+        // );
 
         this.applyTypographyOverrides(
           categoryEl,

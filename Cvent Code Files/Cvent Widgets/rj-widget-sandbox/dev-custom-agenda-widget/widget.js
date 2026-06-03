@@ -153,9 +153,10 @@ export default class extends HTMLElement {
       console.warn("[widget.js] getSessionGenerator error:", e);
     }
 
+    let eventTimezone = 'America/New_York'; // fallback
     try {
       const eventInfo = await this.cventSdk.getEventInfo?.();
-      console.log('eventInfo:', JSON.stringify(eventInfo, null, 2));
+      if (eventInfo?.timezone) eventTimezone = eventInfo.timezone;
     } catch(e) {
       console.warn('getEventInfo error:', e);
     }
@@ -232,7 +233,7 @@ export default class extends HTMLElement {
     if (cfg.groupByDay === false) {
       sorted.forEach((s) =>
         container.appendChild(
-          this._renderItem(s, theme, cfg, openSessions, getSpeakers)
+          this._renderItem(s, theme, cfg, openSessions, getSpeakers, eventTimezone)
         )
       );
     } else {
@@ -242,21 +243,21 @@ export default class extends HTMLElement {
         container.appendChild(header);
         daySessions.forEach((s) =>
           container.appendChild(
-            this._renderItem(s, theme, cfg, openSessions, getSpeakers)
+            this._renderItem(s, theme, cfg, openSessions, getSpeakers, eventTimezone)
           )
         );
       }
     }
   }
 
-  _renderItem(session, theme, cfg, allSessions, getSpeakers) {
+  _renderItem(session, theme, cfg, allSessions, getSpeakers, eventTimezone) {
     // IMPORTANT: create the custom element by tag name and set properties
     const el = document.createElement("namespace-vertical-agenda");
     el.session = session;
     el.theme = theme;
 
     // ⬇️ Pass getSpeakers into the component's config so it can hydrate title/company
-    el.config = { ...cfg, allSessions: allSessions || [], getSpeakers };
+    el.config = { ...cfg, allSessions: allSessions || [], getSpeakers, eventTimezone };
 
     return el;
   }
