@@ -460,6 +460,7 @@ export class AgendaItem extends HTMLElement {
       ? start.toLocaleString("en-US", { timeZoneName: "short", timeZone: tz })
       : "";
     const tzAbbr = tzRaw.split(" ").pop();
+    console.log('[editor check] tz:', tz, '| tzRaw:', tzRaw, '| tzAbbr:', tzAbbr, '| eventTimezone from cfg:', cfg.eventTimezone);
     
     console.log('tz:', tz, '| tzRaw:', tzRaw, '| tzAbbr:', tzAbbr, '| startText:', startText);
 
@@ -489,6 +490,11 @@ export class AgendaItem extends HTMLElement {
     this.applyTypographyOverrides(tzEl, cfg.typography?.sessionTime, true);
 
     gutter.append(timeStartEl, timeEndEl, tzEl);
+    console.log('[gutter check] tzEl text:', tzEl.textContent, '| tzEl in gutter:', gutter.contains(tzEl), '| gutter children:', gutter.children.length);
+    setTimeout(() => {
+      const cs = getComputedStyle(tzEl);
+      console.log('[tzEl visibility]', 'display:', cs.display, '| visibility:', cs.visibility, '| height:', cs.height, '| color:', cs.color, '| overflow on gutter:', getComputedStyle(gutter).overflow);
+    }, 500);
 
     // Content
     const content = document.createElement("div");
