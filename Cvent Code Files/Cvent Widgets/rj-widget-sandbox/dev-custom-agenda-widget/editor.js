@@ -85,8 +85,45 @@ export default class ExampleAgendaEditor extends HTMLElement {
     this._safeRenderUI();
   }
 
+  async _resolveAutoTimezoneAbbr() {
+    try {
+      let getInfo = null;
+      if (this.cventSdk?.getEventInfo)
+        getInfo = this.cventSdk.getEventInfo.bind(this.cventSdk);
+      else if (typeof this.getEventInfo === "function")
+        getInfo = this.getEventInfo.bind(this);
+      if (!getInfo) return "";
+
+      const info = await getInfo();
+      const tz = info?.timezone;
+      if (!tz) return "";
+
+      const ref = info?.startDate ? new Date(info.startDate) : new Date();
+      const raw = ref.toLocaleString("en-US", {
+        timeZoneName: "short",
+        timeZone: tz,
+      });
+      return raw.split(" ").pop() || "";
+    } catch (e) {
+      console.warn("[editor] timezone resolve failed", e);
+      return "";
+    }
+  }
+
+  async _maybeInitTimezoneAbbr() {
+    if (this._config.timezoneAbbr !== undefined) return;
+    if (this._tzInitTried) return;
+    this._tzInitTried = true;
+
+    const auto = await this._resolveAutoTimezoneAbbr();
+    if (auto && this._config.timezoneAbbr === undefined) {
+      this._patch({ timezoneAbbr: auto });
+    }
+  }
+
   connectedCallback() {
     this._safeRenderUI();
+    this._maybeInitTimezoneAbbr();
   }
 
   // ============================
@@ -403,6 +440,23 @@ export default class ExampleAgendaEditor extends HTMLElement {
 
     subheaderWrap.appendChild(subheaderInput);
     agendaBlock.appendChild(subheaderWrap);
+
+    // Timezone label override
+    const tzWrap = document.createElement("div");
+    tzWrap.className = "section";
+    tzWrap.appendChild(this._label("Timezone label (clear to hide)"));
+    tzWrap.appendChild(document.createElement("br"));
+
+    const tzInput = document.createElement("input");
+    tzInput.type = "text";
+    tzInput.placeholder = "e.g. CET";
+    tzInput.value =
+      this._config.timezoneAbbr !== undefined ? this._config.timezoneAbbr : "";
+    tzInput.style.width = "100%";
+    tzInput.onchange = () => this._patch({ timezoneAbbr: tzInput.value });
+
+    tzWrap.appendChild(tzInput);
+    agendaBlock.appendChild(tzWrap);
 
     // Sort dropdown
     const sortWrap = document.createElement("div");

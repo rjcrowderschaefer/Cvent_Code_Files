@@ -113,8 +113,6 @@ export default class extends HTMLElement {
       true
     );
 
-// console.log('agendaHeader typography config:', JSON.stringify(cfg.typography?.agendaHeader));
-
     this._applyTypographyOverrides(
       subheaderEl,
       (cfg.typography && cfg.typography.agendaSubheader) || {},
@@ -183,10 +181,6 @@ export default class extends HTMLElement {
     } catch (e) {
       console.warn("[widget.js] Iterating session generator failed:", e);
     }
-    
-    // sessions.forEach(s => {
-    //   console.log(JSON.stringify(s, null, 2));
-    // });
 
     // Filter out closed sessions and those marked "Hide from main agenda?" via custom field
     const openSessions = sessions.filter(s => {

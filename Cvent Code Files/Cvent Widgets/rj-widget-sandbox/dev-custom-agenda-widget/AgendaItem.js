@@ -448,7 +448,7 @@ export class AgendaItem extends HTMLElement {
     //       .split(" ").pop()
     //   : "";
 
-    const tz = cfg.eventTimezone || 'America/New_York';
+    const tz = cfg.eventTimezone || "America/New_York";
 
     const startText = start
       ? start.toLocaleString("en-US", { timeStyle: "short", timeZone: tz })
@@ -456,13 +456,19 @@ export class AgendaItem extends HTMLElement {
     const endText = end
       ? end.toLocaleString("en-US", { timeStyle: "short", timeZone: tz })
       : "";
-    const tzRaw = start
-      ? start.toLocaleString("en-US", { timeZoneName: "short", timeZone: tz })
+
+    // Auto-detected abbreviation (fallback when no override is set)
+    const autoTzAbbr = start
+      ? start
+          .toLocaleString("en-US", { timeZoneName: "short", timeZone: tz })
+          .split(" ")
+          .pop()
       : "";
-    const tzAbbr = tzRaw.split(" ").pop();
-    console.log('[editor check] tz:', tz, '| tzRaw:', tzRaw, '| tzAbbr:', tzAbbr, '| eventTimezone from cfg:', cfg.eventTimezone);
-    
-    console.log('tz:', tz, '| tzRaw:', tzRaw, '| tzAbbr:', tzAbbr, '| startText:', startText);
+
+    // Override-aware: undefined → auto; "" → hide; "CET" → that text
+    const tzAbbr =
+      cfg.timezoneAbbr !== undefined ? cfg.timezoneAbbr : autoTzAbbr;
+
 
     const gutter = document.createElement("div");
     gutter.classList.add("timeGutter");
@@ -483,18 +489,16 @@ export class AgendaItem extends HTMLElement {
     this.applyThemeStyle(timeEndEl, t.paragraph);
     this.applyTypographyOverrides(timeEndEl, cfg.typography?.sessionTime, true);
 
-    const tzEl = document.createElement("div");
-    tzEl.classList.add("timePart", "timeTz");
-    tzEl.textContent = tzAbbr;
-    this.applyThemeStyle(tzEl, t.paragraph);
-    this.applyTypographyOverrides(tzEl, cfg.typography?.sessionTime, true);
+    gutter.append(timeStartEl, timeEndEl);
 
-    gutter.append(timeStartEl, timeEndEl, tzEl);
-    console.log('[gutter check] tzEl text:', tzEl.textContent, '| tzEl in gutter:', gutter.contains(tzEl), '| gutter children:', gutter.children.length);
-    setTimeout(() => {
-      const cs = getComputedStyle(tzEl);
-      console.log('[tzEl visibility]', 'display:', cs.display, '| visibility:', cs.visibility, '| height:', cs.height, '| color:', cs.color, '| overflow on gutter:', getComputedStyle(gutter).overflow);
-    }, 500);
+    if (tzAbbr) {
+      const tzEl = document.createElement("div");
+      tzEl.classList.add("timePart", "timeTz");
+      tzEl.textContent = tzAbbr;
+      this.applyThemeStyle(tzEl, t.paragraph);
+      this.applyTypographyOverrides(tzEl, cfg.typography?.sessionTime, true);
+      gutter.append(tzEl);
+    }
 
     // Content
     const content = document.createElement("div");
@@ -564,15 +568,6 @@ export class AgendaItem extends HTMLElement {
         categoryText.textContent = categoryName;
 
         categoryEl.append(categoryIcon, categoryText);
-
-        // console.log(
-        //   "sessionLocation typography:",
-        //   cfg.typography && cfg.typography.sessionLocation
-        // );
-        // console.log(
-        //   "sessionCategory typography:",
-        //   cfg.typography && cfg.typography.sessionCategory
-        // );
 
         this.applyTypographyOverrides(
           categoryEl,
