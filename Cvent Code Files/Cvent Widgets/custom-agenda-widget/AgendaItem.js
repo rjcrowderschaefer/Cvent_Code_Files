@@ -435,12 +435,40 @@ export class AgendaItem extends HTMLElement {
     // Time gutter
     const start = s.startDateTime ? new Date(s.startDateTime) : null;
     const end = s.endDateTime ? new Date(s.endDateTime) : null;
+    // const tz = cfg.eventTimezone || 'America/New_York';
+
+    // const startText = start
+    //   ? start.toLocaleString("en-US", { timeStyle: "short", timeZone: tz })
+    //   : "";
+    // const endText = end
+    //   ? end.toLocaleString("en-US", { timeStyle: "short", timeZone: tz })
+    //   : "";
+    // const tzAbbr = start
+    //   ? start.toLocaleString("en-US", { timeZoneName: "short", timeZone: tz })
+    //       .split(" ").pop()
+    //   : "";
+
+    const tz = cfg.eventTimezone || "America/New_York";
+
     const startText = start
-      ? start.toLocaleString("en-US", { timeStyle: "short" })
+      ? start.toLocaleString("en-US", { timeStyle: "short", timeZone: tz })
       : "";
     const endText = end
-      ? end.toLocaleString("en-US", { timeStyle: "short" })
+      ? end.toLocaleString("en-US", { timeStyle: "short", timeZone: tz })
       : "";
+
+    // Auto-detected abbreviation (fallback when no override is set)
+    const autoTzAbbr = start
+      ? start
+          .toLocaleString("en-US", { timeZoneName: "short", timeZone: tz })
+          .split(" ")
+          .pop()
+      : "";
+
+    // Override-aware: undefined → auto; "" → hide; "CET" → that text
+    const tzAbbr =
+      cfg.timezoneAbbr !== undefined ? cfg.timezoneAbbr : autoTzAbbr;
+
 
     const gutter = document.createElement("div");
     gutter.classList.add("timeGutter");
@@ -462,6 +490,15 @@ export class AgendaItem extends HTMLElement {
     this.applyTypographyOverrides(timeEndEl, cfg.typography?.sessionTime, true);
 
     gutter.append(timeStartEl, timeEndEl);
+
+    if (tzAbbr) {
+      const tzEl = document.createElement("div");
+      tzEl.classList.add("timePart", "timeTz");
+      tzEl.textContent = tzAbbr;
+      this.applyThemeStyle(tzEl, t.paragraph);
+      this.applyTypographyOverrides(tzEl, cfg.typography?.sessionTime, true);
+      gutter.append(tzEl);
+    }
 
     // Content
     const content = document.createElement("div");
@@ -531,15 +568,6 @@ export class AgendaItem extends HTMLElement {
         categoryText.textContent = categoryName;
 
         categoryEl.append(categoryIcon, categoryText);
-
-        console.log(
-          "sessionLocation typography:",
-          cfg.typography && cfg.typography.sessionLocation
-        );
-        console.log(
-          "sessionCategory typography:",
-          cfg.typography && cfg.typography.sessionCategory
-        );
 
         this.applyTypographyOverrides(
           categoryEl,

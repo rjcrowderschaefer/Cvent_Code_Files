@@ -113,8 +113,6 @@ export default class extends HTMLElement {
       true
     );
 
-console.log('agendaHeader typography config:', JSON.stringify(cfg.typography?.agendaHeader));
-
     this._applyTypographyOverrides(
       subheaderEl,
       (cfg.typography && cfg.typography.agendaSubheader) || {},
@@ -153,6 +151,14 @@ console.log('agendaHeader typography config:', JSON.stringify(cfg.typography?.ag
       console.warn("[widget.js] getSessionGenerator error:", e);
     }
 
+    let eventTimezone = 'America/New_York'; // fallback
+    try {
+      const eventInfo = await this.cventSdk.getEventInfo?.();
+      if (eventInfo?.timezone) eventTimezone = eventInfo.timezone;
+    } catch(e) {
+      console.warn('getEventInfo error:', e);
+    }
+
     if (!gen) {
       console.warn("[widget.js] No session generator available.");
       return; // keep placeholder
@@ -175,12 +181,6 @@ console.log('agendaHeader typography config:', JSON.stringify(cfg.typography?.ag
     } catch (e) {
       console.warn("[widget.js] Iterating session generator failed:", e);
     }
-    // if (sessions.length > 0) {
-    //   console.log(JSON.stringify(sessions[0], null, 2));
-    // }
-    sessions.forEach(s => {
-      console.log(JSON.stringify(s, null, 2));
-    });
 
     // Filter out closed sessions and those marked "Hide from main agenda?" via custom field
     const openSessions = sessions.filter(s => {
@@ -227,7 +227,7 @@ console.log('agendaHeader typography config:', JSON.stringify(cfg.typography?.ag
     if (cfg.groupByDay === false) {
       sorted.forEach((s) =>
         container.appendChild(
-          this._renderItem(s, theme, cfg, openSessions, getSpeakers)
+          this._renderItem(s, theme, cfg, openSessions, getSpeakers, eventTimezone)
         )
       );
     } else {
@@ -237,21 +237,21 @@ console.log('agendaHeader typography config:', JSON.stringify(cfg.typography?.ag
         container.appendChild(header);
         daySessions.forEach((s) =>
           container.appendChild(
-            this._renderItem(s, theme, cfg, openSessions, getSpeakers)
+            this._renderItem(s, theme, cfg, openSessions, getSpeakers, eventTimezone)
           )
         );
       }
     }
   }
 
-  _renderItem(session, theme, cfg, allSessions, getSpeakers) {
+  _renderItem(session, theme, cfg, allSessions, getSpeakers, eventTimezone) {
     // IMPORTANT: create the custom element by tag name and set properties
     const el = document.createElement("namespace-vertical-agenda");
     el.session = session;
     el.theme = theme;
 
     // ⬇️ Pass getSpeakers into the component's config so it can hydrate title/company
-    el.config = { ...cfg, allSessions: allSessions || [], getSpeakers };
+    el.config = { ...cfg, allSessions: allSessions || [], getSpeakers, eventTimezone };
 
     return el;
   }
