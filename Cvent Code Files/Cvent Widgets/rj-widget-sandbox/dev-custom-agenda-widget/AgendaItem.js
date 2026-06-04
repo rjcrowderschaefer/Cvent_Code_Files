@@ -610,7 +610,7 @@ export class AgendaItem extends HTMLElement {
 
       wrap.append(text);
 
-      // NEW: apply Show Description toggle
+      // Apply Show Description toggle
       if (!cfg.showDescription && !cfg.showDescriptionLimited) {
         wrap.style.display = "none";
       }
@@ -747,14 +747,9 @@ export class AgendaItem extends HTMLElement {
     this.applyThemeStyle(nameSpan, t.paragraph);
     this.applyTypographyOverrides(nameSpan, cfg.typography?.speakerName, true);
 
-    // const meta = document.createElement("span");
-    // meta.style.display = "block";
-    // meta.classList.add("truncate");
     const meta = document.createElement("div");
     meta.classList.add("speakerMeta");
 
-    // const titleSpan = document.createElement("span");
-    // titleSpan.classList.add("speakerTitle", "truncate");
     const titleSpan = document.createElement("div");
     titleSpan.classList.add("speakerTitle");
     titleSpan.textContent = jobTitle;
@@ -765,12 +760,6 @@ export class AgendaItem extends HTMLElement {
       true
     );
 
-    // const comma = document.createElement("span");
-    // comma.textContent = jobTitle && company ? ", " : "";
-    // comma.classList.add("comma-node");
-
-    // const companySpan = document.createElement("span");
-    // companySpan.classList.add("speakerCompany", "truncate");
     const companySpan = document.createElement("div");
     companySpan.classList.add("speakerCompany");
     companySpan.textContent = company;
@@ -1035,6 +1024,9 @@ export class AgendaItem extends HTMLElement {
       return list.some((x) => (x?.id || x?.speakerId) === speakerId);
     });
 
+    this.modal.sessionsHdr.textContent =
+      appearsIn.length === 1 ? "Session" : "Sessions";
+
     this.modal.sessionsUl.innerHTML = "";
     if (appearsIn.length) {
       appearsIn.forEach((sess) => {
@@ -1049,21 +1041,36 @@ export class AgendaItem extends HTMLElement {
         );
 
         const dtSpan = document.createElement("span");
+        const tz = cfg.eventTimezone || "America/New_York";
         const st = sess.startDateTime ? new Date(sess.startDateTime) : null;
         const et = sess.endDateTime ? new Date(sess.endDateTime) : null;
         const stTxt = st
           ? st.toLocaleString("en-US", {
               dateStyle: "medium",
               timeStyle: "short",
+              timeZone: tz,
             })
           : "";
         const etTxt = et
-          ? et.toLocaleString("en-US", { timeStyle: "short" })
+          ? et.toLocaleString("en-US", { timeStyle: "short", timeZone: tz })
           : "";
+
+        // Timezone label: honor override/hide settings, else auto (DST-aware)
+        const overrideAbbr =
+          typeof cfg.timezoneAbbr === "string" ? cfg.timezoneAbbr.trim() : "";
+        const autoAbbr = st
+          ? st
+              .toLocaleString("en-US", { timeZoneName: "short", timeZone: tz })
+              .split(" ")
+              .pop()
+          : "";
+        const showTz = cfg.showTimezone !== false;
+        const tzAbbr = showTz ? overrideAbbr || autoAbbr : "";
+
         dtSpan.textContent = stTxt
           ? etTxt
-            ? ` — ${stTxt} – ${etTxt}`
-            : ` — ${stTxt}`
+            ? ` — ${stTxt} – ${etTxt}${tzAbbr ? " " + tzAbbr : ""}`
+            : ` — ${stTxt}${tzAbbr ? " " + tzAbbr : ""}`
           : "";
         this.applyTypographyOverrides(
           dtSpan,

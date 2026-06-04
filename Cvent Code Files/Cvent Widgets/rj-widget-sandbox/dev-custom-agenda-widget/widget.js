@@ -305,7 +305,7 @@ export default class extends HTMLElement {
     Object.assign(el.style, styles, {
       width: "calc(100% - 40px)",
       maxWidth: "1210px",
-      margin: "30px auto 0 auto",
+      margin: "0 auto 0 auto",
     });
 
     // Object.assign(el.style, styles, {
