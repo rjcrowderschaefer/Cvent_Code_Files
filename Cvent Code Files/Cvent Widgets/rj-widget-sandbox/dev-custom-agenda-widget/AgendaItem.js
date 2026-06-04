@@ -456,6 +456,7 @@ export class AgendaItem extends HTMLElement {
     const endText = end
       ? end.toLocaleString("en-US", { timeStyle: "short", timeZone: tz })
       : "";
+      console.log('TZ DEBUG | name:', s.name, '| raw UTC:', s.startDateTime, '| tz used:', tz, '| rendered:', startText);
 
     // Auto-detected abbreviation (fallback when no override is set)
     const autoTzAbbr = start
@@ -464,11 +465,16 @@ export class AgendaItem extends HTMLElement {
           .split(" ")
           .pop()
       : "";
+    console.log('TZ ABBR CHECK | tz:', tz, '| autoTzAbbr:', autoTzAbbr, '| override:', cfg.timezoneAbbr);
 
-    // Override-aware: undefined → auto; "" → hide; "CET" → that text
-    const tzAbbr =
-      cfg.timezoneAbbr !== undefined ? cfg.timezoneAbbr : autoTzAbbr;
-
+// Timezone label resolution:
+    //   showTimezone === false      -> hidden entirely
+    //   non-empty override          -> use that static text
+    //   blank override              -> auto (DST-aware, per session date)
+    const overrideAbbr =
+      typeof cfg.timezoneAbbr === "string" ? cfg.timezoneAbbr.trim() : "";
+    const showTz = cfg.showTimezone !== false;
+    const tzAbbr = overrideAbbr || autoTzAbbr;
 
     const gutter = document.createElement("div");
     gutter.classList.add("timeGutter");

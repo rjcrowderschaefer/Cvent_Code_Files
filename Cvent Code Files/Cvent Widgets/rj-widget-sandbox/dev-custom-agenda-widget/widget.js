@@ -151,12 +151,23 @@ export default class extends HTMLElement {
       console.warn("[widget.js] getSessionGenerator error:", e);
     }
 
-    let eventTimezone = 'America/New_York'; // fallback
+    // Cvent returns some zones as DST-stripped GMT anchors. Map those back to
+    // their DST-aware canonical IANA zone so summer/winter offsets resolve correctly.
+    // VERIFIED MAPPINGS (confirmed via getEventInfo on this account):
+    //   Atlantic/Reykjavik  ->  Europe/London   (Cvent's "London" option, needs BST in summer)
+    // Add new entries only after confirming what getEventInfo() returns for that city.
+    const TZ_NORMALIZE = {
+      "Atlantic/Reykjavik": "Europe/London",
+    };
+
+    let eventTimezone = "America/New_York"; // fallback
     try {
       const eventInfo = await this.cventSdk.getEventInfo?.();
-      if (eventInfo?.timezone) eventTimezone = eventInfo.timezone;
-    } catch(e) {
-      console.warn('getEventInfo error:', e);
+      let rawTz = eventInfo?.timezone;
+      if (rawTz && TZ_NORMALIZE[rawTz]) rawTz = TZ_NORMALIZE[rawTz];
+      if (rawTz) eventTimezone = rawTz;
+    } catch (e) {
+      console.warn("getEventInfo error:", e);
     }
 
     if (!gen) {
