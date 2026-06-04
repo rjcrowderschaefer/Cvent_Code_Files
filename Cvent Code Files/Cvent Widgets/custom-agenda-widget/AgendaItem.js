@@ -50,7 +50,7 @@ export class AgendaItem extends HTMLElement {
         background: ${cardBg};
         border-radius: 8px;
         overflow: hidden;
-        width: calc(100% - 40px); * 20px on each side */
+        width: calc(100% - 40px); /* 20px on each side */
         max-width: 1210px;
         margin: 0 auto;  /* centers it on any screen */
         box-sizing: border-box;
@@ -86,7 +86,7 @@ export class AgendaItem extends HTMLElement {
       }
 
       .timeTz {
-      font-size: 12px important!;
+      font-size: 12px !important;
       font-style: italic !important;
       font-weight: normal !important;
       }
@@ -149,10 +149,6 @@ export class AgendaItem extends HTMLElement {
 
       .speakersWrap[data-count="1"] {
       grid-template-columns: minmax(0, 1fr);
-      }
-
-      .speakersWrap[data-count="2"] {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
       .speakerLine {
@@ -383,6 +379,14 @@ export class AgendaItem extends HTMLElement {
   .card {
     grid-template-columns: 80px 1fr;
     width: calc(100% - 40px);
+  }
+
+  .speakersWrap {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .speakersWrap[data-count="1"] {
+    grid-template-columns: minmax(0, 1fr) !important;
   }
 }
 
