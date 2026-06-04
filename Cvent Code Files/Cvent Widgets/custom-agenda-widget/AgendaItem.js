@@ -38,13 +38,19 @@ export class AgendaItem extends HTMLElement {
         font-family: inherit;
       }
       
+      .sessionTitle {
+      padding-top: 0px !important;
+      padding-bottom: 0px !important;
+      line-height: 24px !important;
+      }
+
       .card {
         display: grid;
-        grid-template-columns: 70px 1fr;
+        grid-template-columns: 80px 1fr;
         background: ${cardBg};
         border-radius: 8px;
         overflow: hidden;
-        width: calc(100% - 40px); /* 20px on each side */
+        width: calc(100% - 40px); * 20px on each side */
         max-width: 1210px;
         margin: 0 auto;  /* centers it on any screen */
         box-sizing: border-box;
@@ -74,7 +80,16 @@ export class AgendaItem extends HTMLElement {
         align-self: stretch;
       }
 
-      .timePart { line-height: 1.1; white-space: nowrap; }
+      .timePart { 
+      line-height: 1.1;
+      white-space: nowrap;
+      }
+
+      .timeTz {
+      font-size: 12px important!;
+      font-style: italic !important;
+      font-weight: normal !important;
+      }
 
       .content {
         display: flex;
@@ -132,7 +147,10 @@ export class AgendaItem extends HTMLElement {
         row-gap: 12px;
       }
 
-      .speakersWrap[data-count="1"],
+      .speakersWrap[data-count="1"] {
+      grid-template-columns: minmax(0, 1fr);
+      }
+
       .speakersWrap[data-count="2"] {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
@@ -363,12 +381,8 @@ export class AgendaItem extends HTMLElement {
 
       @media (max-width: 1024px) {
   .card {
-    grid-template-columns: 70px 1fr;
-    width: calc(100% - 50px);
-  }
-
-  .speakersWrap {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-columns: 80px 1fr;
+    width: calc(100% - 40px);
   }
 }
 
@@ -410,6 +424,10 @@ export class AgendaItem extends HTMLElement {
     line-height: 1.3 !important;
     padding: 0 !important;
   }
+
+  .timeTz {
+      font-size: 10px !important;
+      }
 }
 
     `;
@@ -435,19 +453,6 @@ export class AgendaItem extends HTMLElement {
     // Time gutter
     const start = s.startDateTime ? new Date(s.startDateTime) : null;
     const end = s.endDateTime ? new Date(s.endDateTime) : null;
-    // const tz = cfg.eventTimezone || 'America/New_York';
-
-    // const startText = start
-    //   ? start.toLocaleString("en-US", { timeStyle: "short", timeZone: tz })
-    //   : "";
-    // const endText = end
-    //   ? end.toLocaleString("en-US", { timeStyle: "short", timeZone: tz })
-    //   : "";
-    // const tzAbbr = start
-    //   ? start.toLocaleString("en-US", { timeZoneName: "short", timeZone: tz })
-    //       .split(" ").pop()
-    //   : "";
-
     const tz = cfg.eventTimezone || "America/New_York";
 
     const startText = start
@@ -456,6 +461,7 @@ export class AgendaItem extends HTMLElement {
     const endText = end
       ? end.toLocaleString("en-US", { timeStyle: "short", timeZone: tz })
       : "";
+      console.log('TZ DEBUG | name:', s.name, '| raw UTC:', s.startDateTime, '| tz used:', tz, '| rendered:', startText);
 
     // Auto-detected abbreviation (fallback when no override is set)
     const autoTzAbbr = start
@@ -464,11 +470,16 @@ export class AgendaItem extends HTMLElement {
           .split(" ")
           .pop()
       : "";
+    console.log('TZ ABBR CHECK | tz:', tz, '| autoTzAbbr:', autoTzAbbr, '| override:', cfg.timezoneAbbr);
 
-    // Override-aware: undefined → auto; "" → hide; "CET" → that text
-    const tzAbbr =
-      cfg.timezoneAbbr !== undefined ? cfg.timezoneAbbr : autoTzAbbr;
-
+// Timezone label resolution:
+    //   showTimezone === false      -> hidden entirely
+    //   non-empty override          -> use that static text
+    //   blank override              -> auto (DST-aware, per session date)
+    const overrideAbbr =
+      typeof cfg.timezoneAbbr === "string" ? cfg.timezoneAbbr.trim() : "";
+    const showTz = cfg.showTimezone !== false;
+    const tzAbbr = overrideAbbr || autoTzAbbr;
 
     const gutter = document.createElement("div");
     gutter.classList.add("timeGutter");
@@ -507,6 +518,7 @@ export class AgendaItem extends HTMLElement {
     // Title
     const titleEl = document.createElement("div");
     titleEl.textContent = s.name || "";
+    titleEl.classList.add("sessionTitle");
     this.applyThemeStyle(titleEl, t.header2, { margin: "0" });
     this.applyTypographyOverrides(titleEl, cfg.typography?.sessionName, true);
     content.append(titleEl);

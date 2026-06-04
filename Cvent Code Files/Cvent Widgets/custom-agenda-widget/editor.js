@@ -95,8 +95,14 @@ export default class ExampleAgendaEditor extends HTMLElement {
       if (!getInfo) return "";
 
       const info = await getInfo();
-      const tz = info?.timezone;
+      let tz = info?.timezone;
       if (!tz) return "";
+
+      // Same DST-stripped-zone remap as widget.js (keep in sync)
+      const TZ_NORMALIZE = {
+        "Atlantic/Reykjavik": "Europe/London",
+      };
+      if (TZ_NORMALIZE[tz]) tz = TZ_NORMALIZE[tz];
 
       const ref = info?.startDate ? new Date(info.startDate) : new Date();
       const raw = ref.toLocaleString("en-US", {
@@ -111,14 +117,12 @@ export default class ExampleAgendaEditor extends HTMLElement {
   }
 
   async _maybeInitTimezoneAbbr() {
-    if (this._config.timezoneAbbr !== undefined) return;
+    if (this._autoTzAbbr !== undefined) return;
     if (this._tzInitTried) return;
     this._tzInitTried = true;
 
-    const auto = await this._resolveAutoTimezoneAbbr();
-    if (auto && this._config.timezoneAbbr === undefined) {
-      this._patch({ timezoneAbbr: auto });
-    }
+    this._autoTzAbbr = (await this._resolveAutoTimezoneAbbr()) || "";
+    this._safeRenderUI(); // re-render so the placeholder reflects the auto value
   }
 
   connectedCallback() {
@@ -137,6 +141,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
       sort: "dateTimeAsc",
       maxResults: 100,
       groupByDay: true,
+      showTimezone: true,
       showDescription: true,
       showDescriptionLimited: false,
       gutterBg: "#f7a325",
@@ -441,17 +446,36 @@ export default class ExampleAgendaEditor extends HTMLElement {
     subheaderWrap.appendChild(subheaderInput);
     agendaBlock.appendChild(subheaderWrap);
 
-    // Timezone label override
+// Timezone label controls
     const tzWrap = document.createElement("div");
     tzWrap.className = "section";
-    tzWrap.appendChild(this._label("Timezone label (clear to hide)"));
+
+    // Explicit show / hide
+    tzWrap.appendChild(
+      this._checkbox(
+        "Show timezone label",
+        this._config.showTimezone !== false,
+        (v) => this._patch({ showTimezone: v })
+      )
+    );
+    tzWrap.appendChild(document.createElement("br"));
+    tzWrap.appendChild(document.createElement("br"));
+
+    // Optional static override; blank = auto (DST-aware)
+    tzWrap.appendChild(
+      this._label("Timezone label override (leave blank for event default)")
+    );
     tzWrap.appendChild(document.createElement("br"));
 
     const tzInput = document.createElement("input");
     tzInput.type = "text";
-    tzInput.placeholder = "e.g. CET";
+    tzInput.placeholder = this._autoTzAbbr
+      ? `Auto: ${this._autoTzAbbr}`
+      : "e.g. CET";
     tzInput.value =
-      this._config.timezoneAbbr !== undefined ? this._config.timezoneAbbr : "";
+      typeof this._config.timezoneAbbr === "string"
+        ? this._config.timezoneAbbr
+        : "";
     tzInput.style.width = "100%";
     tzInput.onchange = () => this._patch({ timezoneAbbr: tzInput.value });
 
