@@ -465,7 +465,6 @@ export class AgendaItem extends HTMLElement {
     const endText = end
       ? end.toLocaleString("en-US", { timeStyle: "short", timeZone: tz })
       : "";
-      console.log('TZ DEBUG | name:', s.name, '| raw UTC:', s.startDateTime, '| tz used:', tz, '| rendered:', startText);
 
     // Auto-detected abbreviation (fallback when no override is set)
     const autoTzAbbr = start
@@ -474,7 +473,6 @@ export class AgendaItem extends HTMLElement {
           .split(" ")
           .pop()
       : "";
-    console.log('TZ ABBR CHECK | tz:', tz, '| autoTzAbbr:', autoTzAbbr, '| override:', cfg.timezoneAbbr);
 
 // Timezone label resolution:
     //   showTimezone === false      -> hidden entirely
