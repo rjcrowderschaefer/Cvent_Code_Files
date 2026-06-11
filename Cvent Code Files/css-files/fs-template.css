@@ -377,7 +377,7 @@
   margin-left: 50px;
 }
 
-/* //////\\\\\\START NAVIGATION//////\\\\\\ */
+/* ///////START NAVIGATION/////// */
 /* START: Code that manages the sticky nav bar when scrolling - NO UPDATE */
 .blankspace {}
 
@@ -463,9 +463,9 @@ div.scroll {
 }
 
 /* START: Resize nav logo img for breakpoints > 601px wide and < 1024px wide */
-/* //////\\\\\\END NAVIGATION//////\\\\\\ */
+/* //////END NAVIGATION////// */
 
-/* //////\\\\\\START HERO & PAGE HEADER MOBILE STYLING - NO UPDATE//////\\\\\\ */
+/* //////START HERO & PAGE HEADER MOBILE STYLING - NO UPDATE////// */
 
 .hero-text-bg {
   width: 90% !important;
@@ -577,9 +577,9 @@ div.scroll {
   }
 }
 
-/* //////\\\\\\END HERO & PAGE HEADER MOBILE STYLING - NO UPDATE//////\\\\\\ */
+/* //////END HERO & PAGE HEADER MOBILE STYLING - NO UPDATE////// */
 
-/* //////\\\\\\START COUNT DOWN CLOCK//////\\\\\\ */
+/* //////START COUNT DOWN CLOCK////// */
 /* START: Adjust countdown clock component colors & font-size */
 [class*="Countdown-Circle-structure__digit"] {
   color: #FF9E24 !important;
@@ -596,17 +596,17 @@ div.scroll {
   border-width: 4px !important;
 }
 /* END : Adjust countdown clock component colors & font-size */
-/* //////\\\\\\END COUNT DOWN CLOCK//////\\\\\\ */
+/* ///////END COUNT DOWN CLOCK/////// */
 
-/* //////\\\\\\START FOOTER//////\\\\\\ */
+/* ///////START FOOTER/////// */
 /* Controls color of links in the site footer */
 .site-footer a {
   color: black;
   text-decoration: none;
 }
-/* //////\\\\\\END FOOTER//////\\\\\\ */
+/* ///////END FOOTER/////// */
 
-/* //////\\\\\\START SPEAKER WIDGET LAYOUT//////\\\\\\ */
+/* ///////START SPEAKER WIDGET LAYOUT/////// */
 /* START: Speaker widget & card styling */
 [data-cvent-id="speakers-speakersContainer"] {
   display: grid;
@@ -683,19 +683,19 @@ div.scroll {
 }
 
 /* END: Speaker widget & card styling  */
-/* //////\\\\\\END SPEAKER WIDGET LAYOUT//////\\\\\\ */
+/* ///////END SPEAKER WIDGET LAYOUT/////// */
 
-/* //////\\\\\\START REGISTRATION LAYOUT//////\\\\\\ */
+/* ///////START REGISTRATION LAYOUT/////// */
 
 /* START: Hide the reg type option for Organic reg path -- still assigns reg path on the back end */
 
 div[data-cvent-id="widget-content-RegistrationType"] p {
   display: none !important;
 }
-/* //////\\\\\\END REGISTRATION LAYOUT//////\\\\\\ */
+/* ///////END REGISTRATION LAYOUT/////// */
 
 
-/* //////\\\\\\ START GLOBAL REGISTRATION BUTTON VISIBILITY //////\\\\\\ */
+/* /////// START GLOBAL REGISTRATION BUTTON VISIBILITY /////// */
 /* Ensures the registration button area is never hidden by default Cvent behaviors or page logic */
 
 [class*="WebsiteNavigator__rightContent"], 
@@ -718,7 +718,7 @@ div[data-cvent-id="widget-content-RegistrationType"] p {
     display: flex !important;
   }
 }
-/* //////\\\\\\ END GLOBAL REGISTRATION BUTTON VISIBILITY //////\\\\\\ */
+/* /////// END GLOBAL REGISTRATION BUTTON VISIBILITY /////// */
 
 /* <<<<<<<<<< END OF CUSTOM BLOOMBERG CSS FOR CVENT >>>>>>>>>> */
 
