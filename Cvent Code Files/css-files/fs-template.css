@@ -1,0 +1,776 @@
+/* last update: June 11 by RJCS */
+
+/* <<<<<<<<<< START OF DEFAULT CVENT CSS - NO NEED TO EDIT >>>>>>>>>> */
+
+.main-nav,
+.main-nav_reg {
+}
+.main-nav,
+.main-nav .website_navigation {
+  transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1) 0s;
+}
+
+.speaker-space > div {
+  padding-top: 0px !important;
+}
+
+.max_width_main > div {
+  max-width: 1400px !important;
+}
+
+.section_full_fluid > div {
+  max-width: 100% !important;
+}
+
+.interior_nav_bar img,
+.website_navigation img {
+  max-width: 280px !important;
+  height: auto !important;
+}
+
+.nav_links {
+  text-transform: uppercase;
+}
+
+.website_navigation ul > li {
+  padding-right: 8px !important;
+}
+
+.website_navigation ul > li:last-child {
+  padding-right: 0 !important;
+}
+
+.website_navigation nav > ul > li > div {
+  padding-top: 5px !important;
+  opacity: 0.5;
+}
+
+.footer_logo img {
+  max-width: 90px !important;
+  height: auto !important;
+}
+
+.link_color_white a {
+  color: #fff;
+}
+
+.text_dec_none a {
+  text-decoration: none !important;
+}
+
+.text_dec_undr {
+  text-decoration: underline !important;
+}
+
+.img_display_mobile_only img {
+  display: none;
+}
+
+.head_txt_center {
+  margin: 0 auto !important;
+}
+
+.divider_light > div {
+  border-top: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+.max_width_reduced,
+.max_width_reduced_1,
+.max_width_reduced_2,
+.max_width_reduced_3,
+.max_width_reduced_4 {
+  margin: 0 auto;
+}
+
+.max_width_reduced {
+  max-width: 57%;
+}
+
+.max_width_reduced_1 {
+  max-width: 50%;
+}
+
+.max_width_reduced_2 {
+  max-width: 80%;
+}
+
+.max_width_reduced_3 {
+  max-width: 60%;
+}
+
+.max_width_reduced_4 {
+  max-width: 70%;
+}
+
+.reg_field_display_horz {
+  display: flex;
+  flex-direction: column;
+}
+
+.mrg_left_0 {
+  margin-left: 0 !important;
+}
+
+.line_height_sm {
+  line-height: 1.1 !important;
+}
+
+.line_height_smd {
+  line-height: 1.4 !important;
+}
+
+.line_height_md {
+  line-height: 1.5 !important;
+}
+
+.letter_space_md {
+  letter-spacing: 0.1em;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-inverse {
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.section_hero_main,
+.section_hero_conf {
+  background-size: contain;
+}
+
+.section_home_2_col > div > div:first-child {
+  max-width: 42%;
+}
+
+.section_home_2_col > div > div:last-child {
+  max-width: 58%;
+  margin-left: auto;
+}
+
+.main_lockup img {
+  max-width: 620px !important;
+}
+
+.footer_lockup img {
+  max-width: 250px !important;
+}
+
+.text_01 {
+  border-bottom: 1px solid #888 !important;
+}
+
+.speaker_default_widget [class*="SpeakersStyles__speakersContainer"] > div {
+  width: 25%;
+}
+
+.speaker_default_widget
+  [class*="SpeakersStyles__speakersContainer"]
+  > div
+  [class*="SpeakersStyles__speakerImageContainer"] {
+  max-width: 90% !important;
+  width: 90% !important;
+  height: auto;
+}
+
+.sponsor_logo img {
+  transition: 0.5s ease;
+}
+
+.sponsor_logo img:hover {
+  transform: translate(0px, -15px);
+}
+
+@media only screen and (min-width: 1024px) and (max-width: 1440px) {
+  .section_main_middle > div {
+    max-width: 1140px !important;
+  }
+}
+
+@media only screen and (min-width: 768px) and (max-width: 1024px) {
+  .section_main_middle > div {
+    max-width: 90% !important;
+  }
+}
+
+@media only screen and (max-width: 600px) {
+  .font_16 {
+    font-size: 16px !important;
+  }
+  .font_18 {
+    font-size: 18px !important;
+  }
+  .font_20 {
+    font-size: 20px !important;
+  }
+
+  .font_28 {
+    font-size: 28px !important;
+  }
+  .header_2_fix {
+    padding-bottom: 5px !important;
+  }
+  .header_2_fix > div {
+    font-size: 28px !important;
+  }
+  .text_center_mb {
+    text-align: center !important;
+  }
+  .btn_center_mb > div {
+    text-align: center !important;
+  }
+  .p_top_mobile_0 {
+    padding-top: 0 !important;
+  }
+  .p_top_mobile_reduced {
+    padding-top: 20px !important;
+  }
+  .p_bottom_mobile_reduced {
+    padding-bottom: 25px !important;
+  }
+
+  [class*="WebsiteNavigator__navigation"] {
+    padding-left: 25px;
+    padding-top: 3px;
+  }
+
+  [class*="WebsiteNavigator__group"] {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    padding-top: 15px;
+  }
+
+  [class*="WebsiteNavigator__rightContent"] .button {
+    font-size: 14px !important;
+    padding: 10px 1.5rem !important;
+  }
+
+  [class*="WebsiteNavigator__rightContent"] .already_reg_nav {
+    font-size: 12px !important;
+  }
+
+  .website_navigation {
+    padding: 0px 0 10px !important;
+    flex-direction: row-reverse;
+    display: flex !important;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+  }
+
+  .website_navigation > div {
+    width: 50%;
+  }
+
+  .website_navigation > div:last-of-type {
+    width: 40%;
+  }
+
+  .align_left_mb,
+  .align_left_mb > div,
+  .website_navigation > div:last-of-type > div {
+    text-align: left !important;
+  }
+
+  [class*="Icons-All__menuFilled"] {
+    padding: 0 !important;
+    font-size: 2.3em;
+  }
+
+  .interior_nav_bar img,
+  .website_navigation img {
+    max-width: 100px !important;
+  }
+
+  .interior_nav_bar {
+    justify-content: center !important;
+  }
+
+  .img_display_mobile_only img {
+    display: block;
+  }
+
+  .eliminate_spacer_mb {
+    padding: 0 !important;
+  }
+
+  .padding_l_r_0 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .already_reg_link {
+    display: block !important;
+    padding-left: 0 !important;
+    text-align: center !important;
+  }
+
+  .hide_img_mb {
+    display: none;
+  }
+
+  .max_width_reduced,
+  .max_width_reduced_1,
+  .max_width_reduced_2,
+  .max_width_reduced_3,
+  .max_width_reduced_4 {
+    max-width: 100%;
+  }
+
+  .img_width_reduced_1 img {
+    max-width: 80% !important;
+  }
+
+  .btn_inline {
+    width: auto !important;
+    padding: 14px 2.8rem !important;
+  }
+
+  .section_home_2_col > div > div {
+    max-width: 100% !important;
+  }
+
+  .b_lockup img {
+    max-width: 220px !important;
+  }
+
+  .widget_align_fix_01 {
+    padding: 0 15px 0 15px !important;
+  }
+
+  .speaker_default_widget [class*="SpeakersStyles__speakersContainer"] > div {
+    width: 100%;
+  }
+
+  .navigation-mobile > div:nth-child(1) {
+    float: right;
+    padding-top: 5px !important;
+  }
+
+  .navigation-mobile img {
+    max-width: 160px;
+    margin: -20px 0 0 0 !important;
+  }
+
+  .navigation-mobile div {
+    text-align: left !important;
+  }
+
+  .title {
+    font-size: 40px !important;
+  }
+}
+
+/* <<<<<<<<<< END OF DEFAULT CVENT CSS - NO NEED TO EDIT >>>>>>>>>> */
+/* <<<<<<<<<< END OF DEFAULT CVENT CSS - NO NEED TO EDIT >>>>>>>>>> */
+/* <<<<<<<<<< END OF DEFAULT CVENT CSS - NO NEED TO EDIT >>>>>>>>>> */
+
+/* <<<<<<<<<< START OF CUSTOM BLOOMBERG CSS FOR CVENT >>>>>>>>>> */
+/* <<<<<<<<<< START OF CUSTOM BLOOMBERG CSS FOR CVENT >>>>>>>>>> */
+/* <<<<<<<<<< START OF CUSTOM BLOOMBERG CSS FOR CVENT >>>>>>>>>> */
+
+.font-color-white {
+  color: #ffffff !important;
+}
+
+.margin-left {
+  margin-left: 50px;
+}
+
+/* //////\\\\\\START NAVIGATION//////\\\\\\ */
+/* START: Code that manages the sticky nav bar when scrolling - NO UPDATE */
+.blankspace {}
+
+div.scroll {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 99;
+  width: 100%;
+  height: auto;
+  background: #fff;
+  box-shadow: 0 10px 10px rgba(211, 200, 200, 0.1);
+  transform: translateY(0px) !important;
+}
+
+.cus_nav.scroll {
+  transform: translateY(-10px) !important;
+  opacity: 1 !important;
+}
+
+.cus_nav.scroll img {
+  width: 250px;
+  transition: .5s;
+  margin-top: 10px;
+  margin-bottom: 0px;
+}
+
+.cus_nav img {
+  transition: .5s;
+}
+
+/* END : Code that manages the sticky nav bar when scrolling - NO UPDATE */
+
+/* START: Keeps nav items 70px right of nav logo img for breakpoints > 1023px wide - NO UPDATE*/
+@media only screen and (min-width: 1024px) {
+  [class*="WebsiteNavigator__navigation"] {
+    margin-left: 70px;
+  }
+}
+/* END: Keeps nav items 70px right of nav logo img for breakpoints > 1023px wide - NO UPDATE */
+
+/* START: Add primary nav bar underline color for hover and selected states */
+[class*="WebsiteNavigator__menuItem"] > div:hover,
+[class*="WebsiteNavigator__menuItem"]
+  > div[class^="WebsiteNavigator__selected"] {
+  border-bottom: 3px solid #000000 !important; /* << STEP 1: ADD HEX CODE HERE */
+  font-weight: 500 !important;
+  opacity: 1;
+}
+/* END: Add primary nav bar underline color for hover and selected states */
+
+/* START: Resize nav logo img for breakpoints < 601px wide (mobile) */
+@media screen and (max-width: 600px) {
+  div[data-cvent-id="widget-content-WebsiteNavigator"] img {
+    width: 40% !important; /* << STEP 2: Controls % width of logo from original desktop size */
+    height: auto !important;
+    padding-top: 10px !important;
+  }
+
+  .reg-header-mobile {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+
+  .hide-mobile-reg-button {
+    display: none !important;
+  }
+
+}
+
+
+/* END: Resize nav logo img for breakpoints < 601px wide */
+
+/* START: Resize nav logo img for breakpoints > 601px wide and < 1026px wide (tablet) */
+@media screen and (min-width: 601px) and (max-width: 1024px) {
+  div[data-cvent-id="widget-content-WebsiteNavigator"] img {
+    width: 60% !important; /* << STEP 3: Controls % width of logo from original desktop size */
+    height: auto !important;
+    padding-top: 10px !important;
+  }
+}
+
+/* START: Resize nav logo img for breakpoints > 601px wide and < 1024px wide */
+/* //////\\\\\\END NAVIGATION//////\\\\\\ */
+
+/* //////\\\\\\START HERO & PAGE HEADER MOBILE STYLING - NO UPDATE//////\\\\\\ */
+
+.hero-text-bg {
+  width: 90% !important;
+  max-width: 875px !important;
+}
+
+@media screen and (max-width: 900px) {
+  .hero-text-bg {
+    width: 100% !important;
+    max-width: none !important;
+  }
+}
+
+@media screen and (max-width: 800px) {
+  .hero-spacer-padding {
+    display: none !important;
+  }
+
+  .display-none {
+    display: none !important;
+  }
+
+}
+
+@media screen and (max-width: 600px) {
+  .hero-padding {
+    padding-top: 25px !important;
+    padding-bottom: 25px !important;
+  }
+
+  .bg-mb {
+    background-size: cover !important;
+    background-position: right bottom !important;
+  }
+
+  h1 {
+    font-size: 28px !important;
+  }
+
+  .page-titles {
+    font-size: 24px !important;
+  }
+
+  .h2-section-titles {
+    font-size: 24px !important;
+  }
+
+  .event-title {
+    font-size: 28px !important;
+  }
+
+  .event-description {
+    font-size: 18px !important;
+  }
+
+  .description-padding {
+    padding-top: 15px !important;
+    padding-bottom: 15px !important;
+  }
+
+  h2 {
+    font-size: 24px !important;
+  }
+
+  h3 {
+    font-size: 20px !important;
+  }
+
+  .speaker-category {
+    font-size: 24px !important;
+  }
+
+  .speaker-name {
+    font-size: 18px !important;
+  }
+
+  [data-cvent-id="IdentityConfirmation-headerText"] {
+    padding-left: 0px !important;
+  }
+
+  [data-cvent-id="IdentityConfirmation-instructionalText"] {
+    padding-left: 0px !important;
+  }
+
+  /* 1. Make the overall identity confirmation form span its full column */
+  .identity-confirmation {
+    width: 100% !important;
+  }
+
+  /* 2. Make each EventStandardContactFieldText widget full width */
+  .identity-confirmation
+    [data-cvent-id="widget-content-EventStandardContactFieldText"] {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  /* 3. Remove width constraints from the Cvent input containers
+       – use prefix matching so hashes can change safely */
+  .identity-confirmation [class*="Forms__inputContainerGuestSide___"],
+  .identity-confirmation [class*="Forms__textboxContainer___"] {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  /* 4. Make EVERY text input in this form fill its container */
+  .identity-confirmation input[data-cvent-id="input"] {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* //////\\\\\\END HERO & PAGE HEADER MOBILE STYLING - NO UPDATE//////\\\\\\ */
+
+/* //////\\\\\\START COUNT DOWN CLOCK//////\\\\\\ */
+/* START: Adjust countdown clock component colors & font-size */
+[class*="Countdown-Circle-structure__digit"] {
+  color: #FF9E24 !important;
+  font-size: 2rem !important;
+}
+
+[class*="Countdown-Circle-structure__label"] {
+  color: #000000 !important;
+}
+
+[class*="Countdown-Circle-structure__border"] {
+  border-color: #FF9E24 !important;
+  color: #FF9E24 !important;
+  border-width: 4px !important;
+}
+/* END : Adjust countdown clock component colors & font-size */
+/* //////\\\\\\END COUNT DOWN CLOCK//////\\\\\\ */
+
+/* //////\\\\\\START FOOTER//////\\\\\\ */
+/* Controls color of links in the site footer */
+.site-footer a {
+  color: black;
+  text-decoration: none;
+}
+/* //////\\\\\\END FOOTER//////\\\\\\ */
+
+/* //////\\\\\\START SPEAKER WIDGET LAYOUT//////\\\\\\ */
+/* START: Speaker widget & card styling */
+[data-cvent-id="speakers-speakersContainer"] {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 30px;
+  justify-content: center;
+  justify-items: center;
+  align-items: stretch;
+  padding: 20px;
+  list-style: none;
+  overflow-x: visible;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 0 auto;
+}
+
+[data-cvent-id="speakers-speakerCard"] {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;
+  max-width: 320px;
+  padding: 20px;
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 12px;
+  box-sizing: border-box;
+  min-height: 300px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+[data-cvent-id="speakers-speakerCard"] img {
+  width: 210px;
+  height: 210px;
+  object-fit: cover;
+  display: block;
+  margin: 0 auto 0px;
+  border-radius: 5%;
+}
+
+/* Responsive: 2 Columns */
+@media screen and (max-width: 1024px) {
+  [data-cvent-id="speakers-speakersContainer"] {
+    grid-template-columns: repeat(2, 1fr);
+    justify-items: center;
+  }
+}
+
+/* Responsive: 1 Column */
+@media (max-width: 600px) {
+  [data-cvent-id="speakers-speakersContainer"] {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  [data-cvent-id="speakers-speakerCard"] {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  [data-cvent-id="speakers-speakerCard"] img {
+    width: 100%;
+    max-width: 225px;
+    height: auto;
+  }
+}
+
+[data-cvent-id="speakers-speakerCard"] h3 {
+  margin: 0px;
+  font-size: 1.375rem;
+  text-align: center;
+  padding: 0px;
+}
+
+/* END: Speaker widget & card styling  */
+/* //////\\\\\\END SPEAKER WIDGET LAYOUT//////\\\\\\ */
+
+/* //////\\\\\\START REGISTRATION LAYOUT//////\\\\\\ */
+
+/* START: Hide the reg type option for Organic reg path -- still assigns reg path on the back end */
+
+div[data-cvent-id="widget-content-RegistrationType"] p {
+  display: none !important;
+}
+/* //////\\\\\\END REGISTRATION LAYOUT//////\\\\\\ */
+
+
+/* //////\\\\\\ START GLOBAL REGISTRATION BUTTON VISIBILITY //////\\\\\\ */
+/* Ensures the registration button area is never hidden by default Cvent behaviors or page logic */
+
+[class*="WebsiteNavigator__rightContent"], 
+[class*="WebsiteNavigator__registrationAction"],
+[data-cvent-id="website-navigation-registration-action"] {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Specifically target the button inside the nav across all viewports */
+[role="navigation"] button[type="button"],
+[class*="WebsiteNavigator__rightContent"] .button {
+  display: block !important;
+}
+
+/* Ensure mobile nav group handles the visible button properly */
+@media only screen and (max-width: 600px) {
+  [class*="WebsiteNavigator__group"] {
+    display: flex !important;
+  }
+}
+/* //////\\\\\\ END GLOBAL REGISTRATION BUTTON VISIBILITY //////\\\\\\ */
+
+/* <<<<<<<<<< END OF CUSTOM BLOOMBERG CSS FOR CVENT >>>>>>>>>> */
+
+.location-target {
+  height: 1px;
+}
+
+.equal-height-cards [data-element-type="FlexRow"] {
+  align-items: stretch;
+}
+
+.equal-height-cards [class*="Grid__column"] {
+  display: flex;
+  flex-direction: column;
+}
+
+.equal-height-cards [class*="Content__widgetIdcontainer"],
+.equal-height-cards [data-cvent-id="containerParent"],
+.equal-height-cards [data-cvent-id="containerChild"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1 1 auto;
+}
+
+.equal-height-cards [data-element-type="FlexRow"]:only-child {
+  flex: 1 1 auto;
+}
+
+/* Push the button row to the bottom of the card */
+.equal-height-cards [data-element-type="FlexRow"]:last-child:not(:only-child) {
+  margin-top: auto;
+}
+
+/* Stack the three cards at 700px and below (Cvent's default stacks them ~480px) */
+/* 501–700px: stack one per row at ~70% width, left-aligned */
+@media (max-width: 700px) {
+  .equal-height-cards [data-element-type="FlexRow"] {
+    flex-wrap: wrap;
+    justify-content: flex-start;   /* keep the 70% cards pinned left */
+  }
+  .equal-height-cards [class*="Grid__column"][class*="Grid__col_4"] {
+    flex: 0 0 70%;
+    max-width: 70%;
+  }
+}
+
+/* 500px and below: full width */
+@media (max-width: 550px) {
+  .equal-height-cards [class*="Grid__column"][class*="Grid__col_4"] {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
