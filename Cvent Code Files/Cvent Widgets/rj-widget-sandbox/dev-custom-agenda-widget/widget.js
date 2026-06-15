@@ -46,6 +46,10 @@ export default class extends HTMLElement {
 
   disconnectedCallback() {
     if (this._onResize) window.removeEventListener("resize", this._onResize);
+    if (this._dateNavObserver) {
+      this._dateNavObserver.disconnect();
+      this._dateNavObserver = null;
+    }
     this._typoBindings = [];
   }
 
@@ -80,6 +84,11 @@ export default class extends HTMLElement {
   async _renderInto(container) {
     const cfg = this.configuration || {};
     const theme = this.theme || {};
+
+    if (this._dateNavObserver) {
+      this._dateNavObserver.disconnect();
+      this._dateNavObserver = null;
+    }
 
     // Agenda header + subheader
 
@@ -243,15 +252,137 @@ export default class extends HTMLElement {
       );
     } else {
       const groups = this._groupSessionsByDay(sorted);
+      const dayKeys = [...groups.keys()];
+
+      // --- Date navigation bar (all// Date-nav styling (injected so breakpoint font sizes work via media queries)
+      // Date-nav styling (injected so breakpoint font sizes work via media queries)
+      const dn = cfg.dateNav || {};
+      const cventOffset = Number(dn.stickyOffset) || 0;
+      const dnStyle = document.createElement("style");
+      dnStyle.textContent = `
+        .dateNav {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 16px;
+          width: calc(100% - 40px);
+          max-width: 1210px;
+          margin: 0 auto;
+          box-sizing: border-box;
+          position: sticky;
+          top: ${cventOffset}px;
+          z-index: 50;
+          background: ${dn.navBg || "#ffffff"};
+          padding: 8px 0;
+        }
+        .dateNav button {
+          background: none;
+          border: none;
+          padding: 0;
+          cursor: pointer;
+          font-family: inherit;
+          font-weight: 400;
+          color: ${dn.inactiveColor || "#999999"};
+          font-size: ${dn.fontSize ?? 18}px;
+          text-decoration: none;
+        }
+        .dateNav button.active {
+          color: ${dn.activeColor || "#000000"};
+          font-weight: 700;
+          text-decoration: underline;
+          text-decoration-color: ${dn.underlineColor || "#f7a325"};
+          text-underline-offset: 4px;
+        }
+        @media (max-width: 1024px) {
+          .dateNav button { font-size: ${dn.fontSizeMd ?? 16}px; }
+        }
+        @media (max-width: 600px) {
+          .dateNav button { font-size: ${dn.fontSizeSm ?? 14}px; }
+        }
+      `;
+      container.appendChild(dnStyle);
+
+      const dateNav = document.createElement("div");
+      dateNav.classList.add("dateNav");
+
+      const dayHeaderRefs = {}; // dayKey -> header element (scroll target)
+      const navLinks = {};      // dayKey -> nav button
+
+      const setActiveDay = (activeKey) => {
+        Object.entries(navLinks).forEach(([key, link]) => {
+          link.classList.toggle("active", key === activeKey);
+        });
+      };
+
+      dayKeys.forEach((dayKey) => {
+        const link = document.createElement("button");
+        link.type = "button";
+        link.textContent = this._formatDayKeyLabel(dayKey);
+        link.addEventListener("click", () => {
+          setActiveDay(dayKey);
+          const target = dayHeaderRefs[dayKey];
+          if (target && typeof target.scrollIntoView === "function") {
+            target.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        });
+        navLinks[dayKey] = link;
+        dateNav.appendChild(link);
+      });
+
+      container.appendChild(dateNav);
+
+      // --- Render sessions (no inline day headers; cards are the anchors) ---
+      const dayCards = {}; // dayKey -> [cards]
       for (const [dayKey, daySessions] of groups) {
-        const header = this._renderDayHeader(dayKey, theme, cfg);
-        container.appendChild(header);
-        daySessions.forEach((s) =>
-          container.appendChild(
-            this._renderItem(s, theme, cfg, openSessions, getSpeakers, eventTimezone)
-          )
-        );
+        daySessions.forEach((s, idx) => {
+          const card = this._renderItem(
+            s, theme, cfg, openSessions, getSpeakers, eventTimezone
+          );
+          card.dataset.dayKey = dayKey;
+          if (idx === 0) dayHeaderRefs[dayKey] = card; // scroll anchor = first card
+          (dayCards[dayKey] = dayCards[dayKey] || []).push(card);
+          container.appendChild(card);
+        });
       }
+
+      // Default active = first day with sessions
+      if (dayKeys.length) setActiveDay(dayKeys[0]);
+
+      // --- Scroll-spy: active = day of the topmost visible session card ---
+      requestAnimationFrame(() => {
+        const navH = dateNav.offsetHeight || 0;
+        const triggerOffset = cventOffset + navH;
+
+        // Click-scroll lands below the sticky headers
+        Object.values(dayHeaderRefs).forEach((c) => {
+          c.style.scrollMarginTop = `${triggerOffset}px`;
+        });
+
+        const allCards = [];
+        Object.values(dayCards).forEach((arr) => allCards.push(...arr));
+
+        const visible = new Set();
+        const io = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((e) => {
+              if (e.isIntersecting) visible.add(e.target);
+              else visible.delete(e.target);
+            });
+            let topmost = null;
+            visible.forEach((card) => {
+              const top = card.getBoundingClientRect().top;
+              if (!topmost || top < topmost.top) topmost = { card, top };
+            });
+            if (topmost) setActiveDay(topmost.card.dataset.dayKey);
+          },
+          {
+            root: null,
+            rootMargin: `-${triggerOffset}px 0px 0px 0px`,
+            threshold: 0,
+          }
+        );
+        allCards.forEach((c) => io.observe(c));
+        this._dateNavObserver = io;
+      });
     }
   }
 

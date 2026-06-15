@@ -482,6 +482,7 @@ export class AgendaItem extends HTMLElement {
       typeof cfg.timezoneAbbr === "string" ? cfg.timezoneAbbr.trim() : "";
     const showTz = cfg.showTimezone !== false;
     const tzAbbr = overrideAbbr || autoTzAbbr;
+    console.log("TZ CHECK | tz:", tz, "| auto:", autoTzAbbr, "| override:", JSON.stringify(cfg.timezoneAbbr), "| showTz:", showTz);
 
     const gutter = document.createElement("div");
     gutter.classList.add("timeGutter");
@@ -504,7 +505,7 @@ export class AgendaItem extends HTMLElement {
 
     gutter.append(timeStartEl, timeEndEl);
 
-    if (tzAbbr) {
+    if (showTz && tzAbbr) {
       const tzEl = document.createElement("div");
       tzEl.classList.add("timePart", "timeTz");
       tzEl.textContent = tzAbbr;
@@ -1067,7 +1068,9 @@ export class AgendaItem extends HTMLElement {
               .pop()
           : "";
         const showTz = cfg.showTimezone !== false;
-        const tzAbbr = showTz ? overrideAbbr || autoAbbr : "";
+        const tzAbbr = overrideAbbr || autoTzAbbr;
+        console.log("TZ CHECK | tz:", tz, "| auto:", autoTzAbbr, "| override:", JSON.stringify(cfg.timezoneAbbr), "| showTz:", showTz);
+
 
         dtSpan.textContent = stTxt
           ? etTxt

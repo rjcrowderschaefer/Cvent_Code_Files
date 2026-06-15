@@ -33,6 +33,10 @@ export default class ExampleAgendaEditor extends HTMLElement {
     this._config = {
       ...defaults,
       ...incoming,
+      dateNav: {
+        ...(defaults.dateNav || {}),
+        ...(incoming.dateNav || {}),
+      },
       modalColors: {
         ...(defaults.modalColors || {}),
         ...(incoming.modalColors || {}),
@@ -75,6 +79,10 @@ export default class ExampleAgendaEditor extends HTMLElement {
     this._config = {
       ...defaults,
       ...incoming,
+      dateNav: {
+        ...(defaults.dateNav || {}),
+        ...(incoming.dateNav || {}),
+      },
       modalColors: {
         ...(defaults.modalColors || {}),
         ...(incoming.modalColors || {}),
@@ -141,6 +149,16 @@ export default class ExampleAgendaEditor extends HTMLElement {
       sort: "dateTimeAsc",
       maxResults: 100,
       groupByDay: true,
+      dateNav: {
+        fontSize: 18,
+        fontSizeMd: 16,
+        fontSizeSm: 14,
+        activeColor: "#000000",
+        inactiveColor: "#999999",
+        underlineColor: "#f7a325",
+        stickyOffset: 0,
+        navBg: "#ffffff",
+      },
       showTimezone: true,
       showDescription: true,
       showDescriptionLimited: false,
@@ -481,6 +499,116 @@ export default class ExampleAgendaEditor extends HTMLElement {
 
     tzWrap.appendChild(tzInput);
     agendaBlock.appendChild(tzWrap);
+
+// Date Navigation controls
+    const dnWrap = document.createElement("div");
+    dnWrap.className = "section";
+
+    const dnHeading = document.createElement("h3");
+    dnHeading.textContent = "Date Navigation";
+    dnWrap.appendChild(dnHeading);
+
+    const dn = this._config.dateNav || {};
+
+    const dnSizes = document.createElement("div");
+    dnSizes.className = "row field";
+
+    const mkDnSize = (lbl, prop) => {
+      const wrap = document.createElement("div");
+      const l = this._label(lbl);
+      const i = document.createElement("input");
+      i.type = "number";
+      i.min = "8";
+      i.max = "72";
+      i.value = dn[prop] !== undefined ? dn[prop] : "";
+      const commit = () => {
+        const raw = i.value.trim();
+        const val =
+          raw === "" ? undefined : Math.max(8, Math.min(72, Number(raw)));
+        this._patch({
+          dateNav: { ...(this._config.dateNav || {}), [prop]: val },
+        });
+      };
+      i.onchange = commit;
+      i.onblur = commit;
+      wrap.append(l, document.createElement("br"), i);
+      return wrap;
+    };
+
+    dnSizes.append(
+      mkDnSize("Font size (px)", "fontSize"),
+      mkDnSize("≤1024px (px)", "fontSizeMd"),
+      mkDnSize("≤600px (px)", "fontSizeSm")
+    );
+    dnWrap.appendChild(dnSizes);
+
+    dnWrap.appendChild(
+      this._colorRow(
+        "Active date color",
+        "dnActiveColor",
+        dn.activeColor || "#000000",
+        (v) =>
+          this._patch({
+            dateNav: { ...(this._config.dateNav || {}), activeColor: v },
+          })
+      )
+    );
+    dnWrap.appendChild(
+      this._colorRow(
+        "Inactive date color",
+        "dnInactiveColor",
+        dn.inactiveColor || "#999999",
+        (v) =>
+          this._patch({
+            dateNav: { ...(this._config.dateNav || {}), inactiveColor: v },
+          })
+      )
+    );
+    dnWrap.appendChild(
+      this._colorRow(
+        "Underline color",
+        "dnUnderlineColor",
+        dn.underlineColor || "#f7a325",
+        (v) =>
+          this._patch({
+            dateNav: { ...(this._config.dateNav || {}), underlineColor: v },
+          })
+      )
+    );
+
+// Sticky offset = height of the Cvent header the nav should sit beneath
+    const dnOffsetWrap = document.createElement("div");
+    dnOffsetWrap.className = "row field";
+    const dnOffsetLabel = this._label("Sticky offset below Cvent header (px)");
+    const dnOffsetInput = document.createElement("input");
+    dnOffsetInput.type = "number";
+    dnOffsetInput.min = "0";
+    dnOffsetInput.value = dn.stickyOffset ?? 0;
+    const commitOffset = () => {
+      const raw = dnOffsetInput.value.trim();
+      const val = raw === "" ? 0 : Math.max(0, Number(raw) || 0);
+      this._patch({
+        dateNav: { ...(this._config.dateNav || {}), stickyOffset: val },
+      });
+    };
+    dnOffsetInput.onchange = commitOffset;
+    dnOffsetInput.onblur = commitOffset;
+    dnOffsetWrap.append(dnOffsetLabel, dnOffsetInput);
+    dnWrap.appendChild(dnOffsetWrap);
+
+    dnWrap.appendChild(
+      this._colorRow(
+        "Nav background",
+        "dnNavBg",
+        dn.navBg || "#ffffff",
+        (v) =>
+          this._patch({
+            dateNav: { ...(this._config.dateNav || {}), navBg: v },
+          })
+      )
+    );
+
+    agendaBlock.appendChild(dnWrap);
 
     // Sort dropdown
     const sortWrap = document.createElement("div");
