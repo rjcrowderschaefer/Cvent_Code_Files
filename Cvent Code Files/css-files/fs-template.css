@@ -774,3 +774,17 @@ div[data-cvent-id="widget-content-RegistrationType"] p {
     max-width: 100%;
   }
 }
+/* Target by exact widget ID */
+div[data-cvent-id="widget-WebsiteNavigator-widget:be376fe6-d70d-4488-9788-8c706071a92d"] {
+    max-width: 1280px !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+/* Make sure children don't overflow
+div[data-cvent-id="widget-WebsiteNavigator-widget:be376fe6-d70d-4488-9788-8c706071a92d"] > div {
+    flex: 1 !important;
+} */
