@@ -312,6 +312,9 @@ export default class extends HTMLElement {
         });
       };
 
+      // Shared sticky offset (Cvent header + nav), used by click-scroll and spy
+      let triggerOffset = cventOffset; // nav height added once it's measured
+
       dayKeys.forEach((dayKey) => {
         const link = document.createElement("button");
         link.type = "button";
@@ -324,8 +327,13 @@ export default class extends HTMLElement {
             this._navClickLock = null;
           }, 700); // ~smooth-scroll duration
           const target = dayHeaderRefs[dayKey];
-          if (target && typeof target.scrollIntoView === "function") {
+          if (target) {
+            // scroll-margin-top (set in the spy block) handles the sticky offset
             target.scrollIntoView({ behavior: "smooth", block: "start" });
+            // Re-run after reflow (lazy images / async speaker hydration) settles
+            setTimeout(() => {
+              target.scrollIntoView({ behavior: "auto", block: "start" });
+            }, 650);
           }
         });
         navLinks[dayKey] = link;
@@ -356,9 +364,10 @@ export default class extends HTMLElement {
       // --- Scroll-spy: active = day of the topmost visible session card ---
       requestAnimationFrame(() => {
         const navH = dateNav.offsetHeight || 0;
-        const triggerOffset = cventOffset + navH;
+        triggerOffset = cventOffset + navH;
 
         // Click-scroll lands below the sticky headers
+        console.log("SCROLL OFFSET | cventOffset:", cventOffset, "| navH:", navH, "| triggerOffset:", triggerOffset);
         Object.values(dayHeaderRefs).forEach((c) => {
           c.style.scrollMarginTop = `${triggerOffset + 12}px`;
         });
@@ -464,6 +473,7 @@ export default class extends HTMLElement {
 
     // minimal typography override support
     this._applyTypographyOverrides(el, cfg?.typography?.eventDate, true);
+    console.log("DAY HEADER built:", el.textContent, "| color:", el.style.color, "| fontSize:", el.style.fontSize);
     return el;
   }
 
