@@ -1,4 +1,4 @@
-/* last update: June 11 by RJCS */
+/* last update: June 23 by RJCS */
 
 /* <<<<<<<<<< START OF DEFAULT CVENT CSS - NO NEED TO EDIT >>>>>>>>>> */
 
@@ -229,10 +229,10 @@
     padding-bottom: 25px !important;
   }
 
-  [class*="WebsiteNavigator__navigation"] {
+  /* [class*="WebsiteNavigator__navigation"] {
     padding-left: 25px;
     padding-top: 3px;
-  }
+  } */
 
   [class*="WebsiteNavigator__group"] {
     display: flex;
@@ -446,6 +446,12 @@ div.scroll {
 
   .hide-mobile-reg-button {
     display: none !important;
+  }
+
+  .navigation-mobile [class*="WebsiteNavigator__menuIcon"] {
+    display: flex;
+    align-items: center;
+    line-height: 1; 
   }
 
 }
@@ -717,6 +723,8 @@ div[data-cvent-id="widget-content-RegistrationType"] p {
   [class*="WebsiteNavigator__group"] {
     display: flex !important;
   }
+
+
 }
 /* /////// END GLOBAL REGISTRATION BUTTON VISIBILITY /////// */
 
@@ -775,14 +783,29 @@ div[data-cvent-id="widget-content-RegistrationType"] p {
   }
 }
 /* Target by exact widget ID */
-div[data-cvent-id="widget-WebsiteNavigator-widget:be376fe6-d70d-4488-9788-8c706071a92d"] {
+/* div[data-cvent-id="widget-WebsiteNavigator-widget:be376fe6-d70d-4488-9788-8c706071a92d"] {
     max-width: 1280px !important;
     width: 100% !important;
     margin: 0 auto !important;
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
-}
+} */
+
+  .custom-css-scope [class*="WebsiteNavigator__container"].navigation-mobile {
+    max-width: 1280px !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+
+  /* logo left, hamburger right */
+  .navigation-mobile [class*="WebsiteNavigator__leftContent"] {
+    order: -1;
+  }
 
 /* Make sure children don't overflow
 div[data-cvent-id="widget-WebsiteNavigator-widget:be376fe6-d70d-4488-9788-8c706071a92d"] > div {
