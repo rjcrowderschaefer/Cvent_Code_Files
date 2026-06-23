@@ -333,6 +333,10 @@ export default class extends HTMLElement {
       // --- Render sessions (no inline day headers; cards are the anchors) ---
       const dayCards = {}; // dayKey -> [cards]
       for (const [dayKey, daySessions] of groups) {
+        const header = this._renderDayHeader(dayKey, theme, cfg);
+        dayHeaderRefs[dayKey] = header; // scroll anchor = first card
+        container.appendChild(header);
+        
         daySessions.forEach((s, idx) => {
           const card = this._renderItem(
             s, theme, cfg, openSessions, getSpeakers, eventTimezone
