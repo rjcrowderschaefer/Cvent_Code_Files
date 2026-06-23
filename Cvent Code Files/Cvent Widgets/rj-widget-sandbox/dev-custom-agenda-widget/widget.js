@@ -251,11 +251,10 @@ export default class extends HTMLElement {
         )
       );
     } else {
-      const groups = this._groupSessionsByDay(sorted, eventTimeZone);
+      const groups = this._groupSessionsByDay(sorted, eventTimezone);
       const dayKeys = [...groups.keys()];
 
-      // --- Date navigation bar (all// Date-nav styling (injected so breakpoint font sizes work via media queries)
-      // Date-nav styling (injected so breakpoint font sizes work via media queries)
+      // --- Date navigation bar - Date-nav styling (injected so breakpoint font sizes work via media queries)
       const dn = cfg.dateNav || {};
       const cventOffset = Number(dn.stickyOffset) || 0;
       const dnStyle = document.createElement("style");
@@ -319,6 +318,11 @@ export default class extends HTMLElement {
         link.textContent = this._formatDayKeyLabel(dayKey);
         link.addEventListener("click", () => {
           setActiveDay(dayKey);
+          this._navClickLock = dayKey; // suppress spy override during scroll
+          clearTimeout(this._navClickTimer);
+          this._navClickTimer = setTimeout(() => {
+            this._navClickLock = null;
+          }, 700); // ~smooth-scroll duration
           const target = dayHeaderRefs[dayKey];
           if (target && typeof target.scrollIntoView === "function") {
             target.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -331,19 +335,17 @@ export default class extends HTMLElement {
       container.appendChild(dateNav);
 
       // --- Render sessions (no inline day headers; cards are the anchors) ---
-      const dayCards = {}; // dayKey -> [cards]
+      // --- Render inline day header + sessions (headers are the anchors) ---
       for (const [dayKey, daySessions] of groups) {
         const header = this._renderDayHeader(dayKey, theme, cfg);
-        dayHeaderRefs[dayKey] = header; // scroll anchor = first card
+        header.dataset.dayKey = dayKey;       // for scroll-spy
+        dayHeaderRefs[dayKey] = header;       // scroll anchor = header date
         container.appendChild(header);
-        
-        daySessions.forEach((s, idx) => {
+
+        daySessions.forEach((s) => {
           const card = this._renderItem(
             s, theme, cfg, openSessions, getSpeakers, eventTimezone
           );
-          card.dataset.dayKey = dayKey;
-          if (idx === 0) dayHeaderRefs[dayKey] = card; // scroll anchor = first card
-          (dayCards[dayKey] = dayCards[dayKey] || []).push(card);
           container.appendChild(card);
         });
       }
@@ -358,34 +360,34 @@ export default class extends HTMLElement {
 
         // Click-scroll lands below the sticky headers
         Object.values(dayHeaderRefs).forEach((c) => {
-          c.style.scrollMarginTop = `${triggerOffset}px`;
+          c.style.scrollMarginTop = `${triggerOffset + 12}px`;
         });
 
-        const allCards = [];
-        Object.values(dayCards).forEach((arr) => allCards.push(...arr));
+        const headerEls = Object.values(dayHeaderRefs);
 
-        const visible = new Set();
-        const io = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((e) => {
-              if (e.isIntersecting) visible.add(e.target);
-              else visible.delete(e.target);
-            });
-            let topmost = null;
-            visible.forEach((card) => {
-              const top = card.getBoundingClientRect().top;
-              if (!topmost || top < topmost.top) topmost = { card, top };
-            });
-            if (topmost) setActiveDay(topmost.card.dataset.dayKey);
-          },
-          {
-            root: null,
-            rootMargin: `-${triggerOffset}px 0px 0px 0px`,
-            threshold: 0,
+        // Track which headers have passed above the trigger line; the active
+        // day is the last header whose top is at or above that line.
+        const update = () => {
+          if (this._navClickLock) {
+            setActiveDay(this._navClickLock);
+            return;
           }
-        );
-        allCards.forEach((c) => io.observe(c));
+          let activeKey = dayKeys[0];
+          headerEls.forEach((h) => {
+            const top = h.getBoundingClientRect().top;
+            if (top - triggerOffset <= 4) activeKey = h.dataset.dayKey;
+          });
+          if (activeKey) setActiveDay(activeKey);
+        };
+
+        const io = new IntersectionObserver(update, {
+          root: null,
+          rootMargin: `-${triggerOffset}px 0px 0px 0px`,
+          threshold: [0, 1],
+        });
+        headerEls.forEach((h) => io.observe(h));
         this._dateNavObserver = io;
+        update(); // set initial state
       });
     }
   }
