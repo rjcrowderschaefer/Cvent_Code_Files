@@ -251,7 +251,7 @@ export default class extends HTMLElement {
         )
       );
     } else {
-      const groups = this._groupSessionsByDay(sorted);
+      const groups = this._groupSessionsByDay(sorted, eventTimeZone);
       const dayKeys = [...groups.keys()];
 
       // --- Date navigation bar (all// Date-nav styling (injected so breakpoint font sizes work via media queries)
@@ -398,16 +398,17 @@ export default class extends HTMLElement {
     return el;
   }
 
-  _groupSessionsByDay(sessions) {
+  _groupSessionsByDay(sessions, tz = "America/New_York") {
+    const fmt = new Intl.DateTimeFormat("en-CA", {
+      timeZone: tz,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
     const map = new Map();
     sessions.forEach((s) => {
       const d = s?.startDateTime ? new Date(s.startDateTime) : null;
-      const key = d
-        ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
-            2,
-            "0"
-          )}-${String(d.getDate()).padStart(2, "0")}`
-        : "Unknown";
+      const key = d ? fmt.format(d) : "Unknown"; // YYYY-MM-DD in event tz
       if (!map.has(key)) map.set(key, []);
       map.get(key).push(s);
     });
