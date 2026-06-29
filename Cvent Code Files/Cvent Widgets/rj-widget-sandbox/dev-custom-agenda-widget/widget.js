@@ -374,8 +374,17 @@ export default class extends HTMLElement {
           };
 
           scrollToTarget(true);
-          // Correct after reflow (async speaker hydration etc.)
-          setTimeout(() => scrollToTarget(false), 650);
+          // Correct after reflow (async speaker hydration etc.), but only if the
+          // header has drifted more than a few px — avoids a visible snap when
+          // the smooth scroll already landed accurately.
+          setTimeout(() => {
+            const cventBottom = measureCventHeader();
+            const navH = dateNav.offsetHeight || 0;
+            const totalOffset = cventBottom + navH + 12;
+            const currentTop = target.getBoundingClientRect().top;
+            const drift = Math.abs(currentTop - totalOffset);
+            if (drift > 4) scrollToTarget(false);
+          }, 650);
         });
         navLinks[dayKey] = link;
         dateNav.appendChild(link);
