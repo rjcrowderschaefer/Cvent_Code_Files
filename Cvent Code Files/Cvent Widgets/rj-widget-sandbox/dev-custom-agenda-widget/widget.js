@@ -346,6 +346,17 @@ export default class extends HTMLElement {
           return cventOffset;
         };
 
+        // Detect the live front-end header. If it's absent (e.g. the Site
+        // Designer preview), sticky positioning has no correct anchor and looks
+        // misplaced — so render the nav statically in that context instead.
+        const hasLiveHeader = ["#navigationContainer", ".cus_nav"].some((sel) => {
+          const el = document.querySelector(sel);
+          return el && el.getBoundingClientRect().height > 0;
+        });
+        if (!hasLiveHeader) {
+          dateNav.style.position = "static";
+        }
+
         dayKeys.forEach((dayKey) => {
           const link = document.createElement("button");
           link.type = "button";
