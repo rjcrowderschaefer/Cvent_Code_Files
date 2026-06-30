@@ -149,6 +149,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
       sort: "dateTimeAsc",
       maxResults: 100,
       groupByDay: true,
+      hideDateNav: false,
       dateNav: {
         fontSize: 18,
         fontSizeMd: 16,
@@ -636,6 +637,13 @@ export default class ExampleAgendaEditor extends HTMLElement {
     agendaBlock.append(
       this._checkbox("Group by day", !!this._config.groupByDay, (v) =>
         this._patch({ groupByDay: v })
+      )
+    );
+
+    // Hide the sticky date navigation (checked = hidden)
+    agendaBlock.append(
+      this._checkbox("Hide date nav bar", !!this._config.hideDateNav, (v) =>
+        this._patch({ hideDateNav: v })
       )
     );
 
