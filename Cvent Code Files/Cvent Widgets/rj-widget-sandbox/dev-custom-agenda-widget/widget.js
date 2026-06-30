@@ -262,70 +262,30 @@ export default class extends HTMLElement {
       const groups = this._groupSessionsByDay(sorted, eventTimezone);
       const dayKeys = [...groups.keys()];
 
-      // --- Date navigation bar - Date-nav styling (injected so breakpoint font sizes work via media queries)
+      const showDateNav = cfg.hideDateNav !== true;
+      if (!showDateNav) {
+        if (this._navResizeHandler) {
+          window.removeEventListener("resize", this._navResizeHandler);
+          this._navResizeHandler = null;
+        }
+        if (this._navScrollHandler) {
+          window.removeEventListener("scroll", this._navScrollHandler);
+          this._navScrollHandler = null;
+        }
+        if (this._dateNavObserver) {
+          this._dateNavObserver.disconnect();
+          this._dateNavObserver = null;
+        }
+      }
+
       const dn = cfg.dateNav || {};
       const cventOffset = Number(dn.stickyOffset) || 0;
-      const dnStyle = document.createElement("style");
-      dnStyle.textContent = `
-        .dateNav {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 16px;
-          width: calc(100% - 40px);
-          max-width: 1210px;
-          margin: 0 auto;
-          box-sizing: border-box;
-          position: sticky;
-          z-index: 50;
-          background: ${dn.navBg || "#ffffff"};
-          padding: 8px 0;
-        }
-        .dateNav button {
-          background: none;
-          border: none;
-          padding: 0;
-          cursor: pointer;
-          font-family: inherit;
-          font-weight: 400;
-          color: ${dn.inactiveColor || "#999999"};
-          font-size: ${dn.fontSize ?? 18}px;
-          text-decoration: none;
-        }
-        .dateNav button.active {
-          color: ${dn.activeColor || "#000000"};
-          font-weight: 700;
-          text-decoration: underline;
-          text-decoration-color: ${dn.underlineColor || "#f7a325"};
-          text-underline-offset: 4px;
-        }
 
-        .navLabelShort { display: none; }
-        .navLabelFull { display: inline; }
-
-        @media (max-width: 1024px) {
-          .dateNav button { font-size: ${dn.fontSizeMd ?? 16}px; }
-        }
-
-        @media (max-width: 600px) {
-          .dateNav {
-            width: 100%;
-            max-width: 100%;
-            padding-left: 20px;
-            padding-right: 20px;
-          }
-
-          .dateNav button { font-size: ${dn.fontSizeSm ?? 14}px; }
-          .navLabelFull { display: none; }
-          .navLabelShort { display: inline; }
-        }
-      `;
-      container.appendChild(dnStyle);
-
-      const dateNav = document.createElement("div");
-      dateNav.classList.add("dateNav");
-
-      const dayHeaderRefs = {}; // dayKey -> header element (scroll target)
-      const navLinks = {};      // dayKey -> nav button
+      const dayHeaderRefs = {};
+      const navLinks = {};
+      let triggerOffset = cventOffset;
+      let dateNav = null;
+      let measureCventHeader = () => cventOffset;
 
       const setActiveDay = (activeKey) => {
         Object.entries(navLinks).forEach(([key, link]) => {
@@ -333,177 +293,188 @@ export default class extends HTMLElement {
         });
       };
 
-      // Shared sticky offset (Cvent header + nav), used by click-scroll and spy
-      let triggerOffset = cventOffset; // nav height added once it's measured
-
-      dayKeys.forEach((dayKey) => {
-        const link = document.createElement("button");
-        link.type = "button";
-
-        const fullLabel = document.createElement("span");
-        fullLabel.className = "navLabelFull";
-        fullLabel.textContent = this._formatDayKeyLabel(dayKey);
-
-        const shortLabel = document.createElement("span");
-        shortLabel.className = "navLabelShort";
-        shortLabel.textContent = this._formatDayKeyLabelShort(dayKey);
-
-        link.append(fullLabel, shortLabel);
-
-        link.addEventListener("click", () => {
-          setActiveDay(dayKey);
-          this._navClickLock = dayKey;
-          clearTimeout(this._navClickTimer);
-          this._navClickTimer = setTimeout(() => {
-            this._navClickLock = null;
-          }, 700);
-
-          const target = dayHeaderRefs[dayKey];
-          if (!target) return;
-
-          const scrollToTarget = (smooth) => {
-            // Recompute live: main Cvent header bottom + date nav height
-            const cventBottom = measureCventHeader();
-            const navH = dateNav.offsetHeight || 0;
-            const totalOffset = cventBottom + navH + 12; // 12px breathing room
-            const top =
-              target.getBoundingClientRect().top +
-              window.pageYOffset -
-              totalOffset;
-            window.scrollTo({ top, behavior: smooth ? "smooth" : "auto" });
-          };
-
-          scrollToTarget(true);
-          // Correct after reflow (async speaker hydration etc.), but only if the
-          // header has drifted more than a few px — avoids a visible snap when
-          // the smooth scroll already landed accurately.
-          setTimeout(() => {
-            const cventBottom = measureCventHeader();
-            const navH = dateNav.offsetHeight || 0;
-            const totalOffset = cventBottom + navH + 12;
-            const currentTop = target.getBoundingClientRect().top;
-            const drift = Math.abs(currentTop - totalOffset);
-            if (drift > 4) scrollToTarget(false);
-          }, 650);
-        });
-        navLinks[dayKey] = link;
-        dateNav.appendChild(link);
-      });
-
-      container.appendChild(dateNav);
-
-// Measure the Cvent sticky header live so the nav pins right below it,
-      // even as the header's height changes across breakpoints.
-      const measureCventHeader = () => {
-        // Cvent swaps header elements across breakpoints, so check each known
-        // header and measure whichever is actually rendered (nonzero height).
-        // Use live bottom, not height — headers may pin at a negative top offset.
-        const selectors = ["#navigationContainer", ".cus_nav"];
-        for (const sel of selectors) {
-          const el = document.querySelector(sel);
-          if (el) {
-            const r = el.getBoundingClientRect();
-            if (r.height > 0) return Math.max(0, Math.round(r.bottom));
+      if (showDateNav) {
+        const dnStyle = document.createElement("style");
+        dnStyle.textContent = `
+        .dateNav {
+          display: flex; flex-wrap: wrap; gap: 16px;
+          width: calc(100% - 40px); max-width: 1210px; margin: 0 auto;
+          box-sizing: border-box; position: sticky; z-index: 50;
+          background: ${dn.navBg || "#ffffff"}; padding: 8px 0;
+        }
+        .dateNav button {
+          background: none; border: none; padding: 0; cursor: pointer;
+          font-family: inherit; font-weight: 400;
+          color: ${dn.inactiveColor || "#999999"};
+          font-size: ${dn.fontSize ?? 18}px; text-decoration: none;
+        }
+        .dateNav button.active {
+          color: ${dn.activeColor || "#000000"}; font-weight: 700;
+          text-decoration: underline;
+          text-decoration-color: ${dn.underlineColor || "#f7a325"};
+          text-underline-offset: 4px;
+        }
+        .navLabelShort { display: none; }
+        .navLabelFull { display: inline; }
+        @media (max-width: 1024px) {
+          .dateNav button { font-size: ${dn.fontSizeMd ?? 16}px; }
+        }
+        @media (max-width: 600px) {
+          .dateNav {
+            width: 100%; max-width: 100%;
+            padding-left: 20px; padding-right: 20px;
           }
+          .dateNav button { font-size: ${dn.fontSizeSm ?? 14}px; }
+          .navLabelFull { display: none; }
+          .navLabelShort { display: inline; }
         }
-        return cventOffset; // fall back to editor value if none found
-      };
+        `;
+        container.appendChild(dnStyle);
 
-      const applyStickyOffset = () => {
-        console.log("applyStickyOffset RAN");
-        const offset = measureCventHeader();
-        const headerEl = document.querySelector("#navigationContainer");
-        if (headerEl) {
-          const r = headerEl.getBoundingClientRect();
-          console.log("HEADER MEASURE | height:", Math.round(r.height),
-            "| bottom:", Math.round(r.bottom),
-            "| top:", Math.round(r.top),
-            "| offset applied:", offset);
+        dateNav = document.createElement("div");
+        dateNav.classList.add("dateNav");
+
+        measureCventHeader = () => {
+          const selectors = ["#navigationContainer", ".cus_nav"];
+          for (const sel of selectors) {
+            const el = document.querySelector(sel);
+            if (el) {
+              const r = el.getBoundingClientRect();
+              if (r.height > 0) return Math.max(0, Math.round(r.bottom));
+            }
+          }
+          return cventOffset;
+        };
+
+        dayKeys.forEach((dayKey) => {
+          const link = document.createElement("button");
+          link.type = "button";
+
+          const fullLabel = document.createElement("span");
+          fullLabel.className = "navLabelFull";
+          fullLabel.textContent = this._formatDayKeyLabel(dayKey);
+
+          const shortLabel = document.createElement("span");
+          shortLabel.className = "navLabelShort";
+          shortLabel.textContent = this._formatDayKeyLabelShort(dayKey);
+
+          link.append(fullLabel, shortLabel);
+
+          link.addEventListener("click", () => {
+            setActiveDay(dayKey);
+            this._navClickLock = dayKey;
+            clearTimeout(this._navClickTimer);
+            this._navClickTimer = setTimeout(() => {
+              this._navClickLock = null;
+            }, 700);
+
+            const target = dayHeaderRefs[dayKey];
+            if (!target) return;
+
+            const scrollToTarget = (smooth) => {
+              const cventBottom = measureCventHeader();
+              const navH = dateNav.offsetHeight || 0;
+              const totalOffset = cventBottom + navH + 12;
+              const top =
+                target.getBoundingClientRect().top +
+                window.pageYOffset -
+                totalOffset;
+              window.scrollTo({ top, behavior: smooth ? "smooth" : "auto" });
+            };
+
+            scrollToTarget(true);
+            setTimeout(() => {
+              const cventBottom = measureCventHeader();
+              const navH = dateNav.offsetHeight || 0;
+              const totalOffset = cventBottom + navH + 12;
+              const drift = Math.abs(
+                target.getBoundingClientRect().top - totalOffset
+              );
+              if (drift > 4) scrollToTarget(false);
+            }, 650);
+          });
+
+          navLinks[dayKey] = link;
+          dateNav.appendChild(link);
+        });
+
+        container.appendChild(dateNav);
+
+        const applyStickyOffset = () => {
+          dateNav.style.top = `${measureCventHeader()}px`;
+        };
+        applyStickyOffset();
+
+        if (this._navResizeHandler) {
+          window.removeEventListener("resize", this._navResizeHandler);
         }
-        dateNav.style.top = `${offset}px`;
-      };
+        let resizeRAF = null;
+        this._navResizeHandler = () => {
+          if (resizeRAF) cancelAnimationFrame(resizeRAF);
+          resizeRAF = requestAnimationFrame(applyStickyOffset);
+        };
+        window.addEventListener("resize", this._navResizeHandler);
 
-      applyStickyOffset();
-
-      // Re-measure on resize (debounced)
-      if (this._navResizeHandler) {
-        window.removeEventListener("resize", this._navResizeHandler);
+        if (this._navScrollHandler) {
+          window.removeEventListener("scroll", this._navScrollHandler);
+        }
+        let scrollRAF = null;
+        this._navScrollHandler = () => {
+          if (scrollRAF) cancelAnimationFrame(scrollRAF);
+          scrollRAF = requestAnimationFrame(applyStickyOffset);
+        };
+        window.addEventListener("scroll", this._navScrollHandler, {
+          passive: true,
+        });
       }
-      let resizeRAF = null;
-      this._navResizeHandler = () => {
-        if (resizeRAF) cancelAnimationFrame(resizeRAF);
-        resizeRAF = requestAnimationFrame(applyStickyOffset);
-      };
-      window.addEventListener("resize", this._navResizeHandler);
 
-      // Re-measure on scroll (throttled) — the Cvent header pins at a negative
-      // top offset once scrolled, so its bottom only settles after scrolling.
-      if (this._navScrollHandler) {
-        window.removeEventListener("scroll", this._navScrollHandler);
-      }
-      let scrollRAF = null;
-      this._navScrollHandler = () => {
-        if (scrollRAF) cancelAnimationFrame(scrollRAF);
-        scrollRAF = requestAnimationFrame(applyStickyOffset);
-      };
-      window.addEventListener("scroll", this._navScrollHandler, { passive: true });
-
-      // --- Render sessions (no inline day headers; cards are the anchors) ---
-      // --- Render inline day header + sessions (headers are the anchors) ---
+      // --- Render headers + sessions (always, nav or not) ---
       for (const [dayKey, daySessions] of groups) {
         const header = this._renderDayHeader(dayKey, theme, cfg);
-        header.dataset.dayKey = dayKey;       // for scroll-spy
-        dayHeaderRefs[dayKey] = header;       // scroll anchor = header date
+        header.dataset.dayKey = dayKey;
+        dayHeaderRefs[dayKey] = header;
         container.appendChild(header);
 
         daySessions.forEach((s) => {
-          const card = this._renderItem(
-            s, theme, cfg, openSessions, getSpeakers, eventTimezone
+          container.appendChild(
+            this._renderItem(s, theme, cfg, openSessions, getSpeakers, eventTimezone)
           );
-          container.appendChild(card);
         });
       }
 
-      // Default active = first day with sessions
-      if (dayKeys.length) setActiveDay(dayKeys[0]);
+      // --- Scroll-spy (only when nav is shown) ---
+      if (showDateNav) {
+        if (dayKeys.length) setActiveDay(dayKeys[0]);
 
-      // --- Scroll-spy: active = day of the topmost visible session card ---
-      requestAnimationFrame(() => {
-        const navH = dateNav.offsetHeight || 0;
-        triggerOffset = cventOffset + navH;
+        requestAnimationFrame(() => {
+          const navH = dateNav.offsetHeight || 0;
+          triggerOffset = cventOffset + navH;
+          const headerEls = Object.values(dayHeaderRefs);
 
-        // Click-scroll lands below the sticky headers
-        // console.log("SCROLL OFFSET | cventOffset:", cventOffset, "| navH:", navH, "| triggerOffset:", triggerOffset);
-        // Object.values(dayHeaderRefs).forEach((c) => {
-        //   c.style.scrollMarginTop = `${triggerOffset + 12}px`;
-        // });
+          const update = () => {
+            if (this._navClickLock) {
+              setActiveDay(this._navClickLock);
+              return;
+            }
+            let activeKey = dayKeys[0];
+            headerEls.forEach((h) => {
+              if (h.getBoundingClientRect().top - triggerOffset <= 4) {
+                activeKey = h.dataset.dayKey;
+              }
+            });
+            if (activeKey) setActiveDay(activeKey);
+          };
 
-        const headerEls = Object.values(dayHeaderRefs);
-
-        // Track which headers have passed above the trigger line; the active
-        // day is the last header whose top is at or above that line.
-        const update = () => {
-          if (this._navClickLock) {
-            setActiveDay(this._navClickLock);
-            return;
-          }
-          let activeKey = dayKeys[0];
-          headerEls.forEach((h) => {
-            const top = h.getBoundingClientRect().top;
-            if (top - triggerOffset <= 4) activeKey = h.dataset.dayKey;
+          const io = new IntersectionObserver(update, {
+            root: null,
+            rootMargin: `-${triggerOffset}px 0px 0px 0px`,
+            threshold: [0, 1],
           });
-          if (activeKey) setActiveDay(activeKey);
-        };
-
-        const io = new IntersectionObserver(update, {
-          root: null,
-          rootMargin: `-${triggerOffset}px 0px 0px 0px`,
-          threshold: [0, 1],
+          headerEls.forEach((h) => io.observe(h));
+          this._dateNavObserver = io;
+          update();
         });
-        headerEls.forEach((h) => io.observe(h));
-        this._dateNavObserver = io;
-        update(); // set initial state
-      });
+      }
     }
   }
 
@@ -589,7 +560,6 @@ export default class extends HTMLElement {
 
     // minimal typography override support
     this._applyTypographyOverrides(el, cfg?.typography?.eventDate, true);
-    console.log("DAY HEADER built:", el.textContent, "| color:", el.style.color, "| fontSize:", el.style.fontSize);
     return el;
   }
 
