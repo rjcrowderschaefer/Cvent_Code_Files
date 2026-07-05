@@ -1164,6 +1164,22 @@ export class AgendaItem extends HTMLElement {
 
   // === helpers ===
   getSpeakersArray(session) {
+    
+    console.log("SPEAKER ORDER |", session?.name, JSON.stringify(
+      (session?.speakers || []).map((x, i) => {
+        const sp = x && x.speaker ? x.speaker : x;
+        return {
+          arrayIndex: i,
+          name: `${sp?.firstName} ${sp?.lastName}`,
+          displayPriority: sp?.displayPriority,
+          displayOrder: sp?.displayOrder,
+          sortOrder: sp?.sortOrder,
+          order: sp?.order,
+        };
+      })
+    ));
+    
+    
     let speakers = [];
 
     if (
