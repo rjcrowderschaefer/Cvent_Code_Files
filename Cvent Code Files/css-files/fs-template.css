@@ -1,4 +1,4 @@
-/* last update: June 23 by RJCS */
+/* last update: July 08 by RJCS */
 
 /* <<<<<<<<<< START OF DEFAULT CVENT CSS - NO NEED TO EDIT >>>>>>>>>> */
 
@@ -601,6 +601,13 @@ div.scroll {
   color: #FF9E24 !important;
   border-width: 4px !important;
 }
+
+@media screen and (max-width: 600px) {
+  [class*="Countdown-Circle-structure__digit"] {
+    font-size: 1rem !important;
+  }
+}
+
 /* END : Adjust countdown clock component colors & font-size */
 /* ///////END COUNT DOWN CLOCK/////// */
 
