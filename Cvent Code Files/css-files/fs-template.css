@@ -3,9 +3,6 @@
 /* <<<<<<<<<< START OF DEFAULT CVENT CSS - NO NEED TO EDIT >>>>>>>>>> */
 
 .main-nav,
-.main-nav_reg {
-}
-.main-nav,
 .main-nav .website_navigation {
   transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1) 0s;
 }
@@ -229,11 +226,6 @@
     padding-bottom: 25px !important;
   }
 
-  /* [class*="WebsiteNavigator__navigation"] {
-    padding-left: 25px;
-    padding-top: 3px;
-  } */
-
   [class*="WebsiteNavigator__group"] {
     display: flex;
     flex-direction: row-reverse;
@@ -362,11 +354,7 @@
 }
 
 /* <<<<<<<<<< END OF DEFAULT CVENT CSS - NO NEED TO EDIT >>>>>>>>>> */
-/* <<<<<<<<<< END OF DEFAULT CVENT CSS - NO NEED TO EDIT >>>>>>>>>> */
-/* <<<<<<<<<< END OF DEFAULT CVENT CSS - NO NEED TO EDIT >>>>>>>>>> */
 
-/* <<<<<<<<<< START OF CUSTOM BLOOMBERG CSS FOR CVENT >>>>>>>>>> */
-/* <<<<<<<<<< START OF CUSTOM BLOOMBERG CSS FOR CVENT >>>>>>>>>> */
 /* <<<<<<<<<< START OF CUSTOM BLOOMBERG CSS FOR CVENT >>>>>>>>>> */
 
 .font-color-white {
@@ -378,9 +366,8 @@
 }
 
 /* ///////START NAVIGATION/////// */
-/* START: Code that manages the sticky nav bar when scrolling - NO UPDATE */
-.blankspace {}
 
+/* START: Code that manages the sticky nav bar when scrolling - NO UPDATE */
 div.scroll {
   position: fixed;
   top: 0;
@@ -408,10 +395,9 @@ div.scroll {
 .cus_nav img {
   transition: .5s;
 }
+/* END: Code that manages the sticky nav bar when scrolling - NO UPDATE */
 
-/* END : Code that manages the sticky nav bar when scrolling - NO UPDATE */
-
-/* START: Keeps nav items 70px right of nav logo img for breakpoints > 1023px wide - NO UPDATE*/
+/* START: Keeps nav items 70px right of nav logo img for breakpoints > 1023px wide - NO UPDATE */
 @media only screen and (min-width: 1024px) {
   [class*="WebsiteNavigator__navigation"] {
     margin-left: 70px;
@@ -451,15 +437,12 @@ div.scroll {
   .navigation-mobile [class*="WebsiteNavigator__menuIcon"] {
     display: flex;
     align-items: center;
-    line-height: 1; 
+    line-height: 1;
   }
-
 }
-
-
 /* END: Resize nav logo img for breakpoints < 601px wide */
 
-/* START: Resize nav logo img for breakpoints > 601px wide and < 1026px wide (tablet) */
+/* START: Resize nav logo img for breakpoints > 601px wide and < 1024px wide (tablet) */
 @media screen and (min-width: 601px) and (max-width: 1024px) {
   div[data-cvent-id="widget-content-WebsiteNavigator"] img {
     width: 60% !important; /* << STEP 3: Controls % width of logo from original desktop size */
@@ -467,8 +450,7 @@ div.scroll {
     padding-top: 10px !important;
   }
 }
-
-/* START: Resize nav logo img for breakpoints > 601px wide and < 1024px wide */
+/* END: Resize nav logo img for breakpoints > 601px wide and < 1024px wide */
 /* //////END NAVIGATION////// */
 
 /* //////START HERO & PAGE HEADER MOBILE STYLING - NO UPDATE////// */
@@ -493,7 +475,6 @@ div.scroll {
   .display-none {
     display: none !important;
   }
-
 }
 
 @media screen and (max-width: 600px) {
@@ -569,7 +550,7 @@ div.scroll {
   }
 
   /* 3. Remove width constraints from the Cvent input containers
-       – use prefix matching so hashes can change safely */
+       â€“ use prefix matching so hashes can change safely */
   .identity-confirmation [class*="Forms__inputContainerGuestSide___"],
   .identity-confirmation [class*="Forms__textboxContainer___"] {
     width: 100% !important;
@@ -586,6 +567,7 @@ div.scroll {
 /* //////END HERO & PAGE HEADER MOBILE STYLING - NO UPDATE////// */
 
 /* //////START COUNT DOWN CLOCK////// */
+
 /* START: Adjust countdown clock component colors & font-size */
 [class*="Countdown-Circle-structure__digit"] {
   color: #FF9E24 !important;
@@ -607,8 +589,7 @@ div.scroll {
     font-size: 1rem !important;
   }
 }
-
-/* END : Adjust countdown clock component colors & font-size */
+/* END: Adjust countdown clock component colors & font-size */
 /* ///////END COUNT DOWN CLOCK/////// */
 
 /* ///////START FOOTER/////// */
@@ -620,6 +601,7 @@ div.scroll {
 /* ///////END FOOTER/////// */
 
 /* ///////START SPEAKER WIDGET LAYOUT/////// */
+
 /* START: Speaker widget & card styling */
 [data-cvent-id="speakers-speakersContainer"] {
   display: grid;
@@ -694,24 +676,20 @@ div.scroll {
   text-align: center;
   padding: 0px;
 }
-
-/* END: Speaker widget & card styling  */
+/* END: Speaker widget & card styling */
 /* ///////END SPEAKER WIDGET LAYOUT/////// */
 
 /* ///////START REGISTRATION LAYOUT/////// */
 
 /* START: Hide the reg type option for Organic reg path -- still assigns reg path on the back end */
-
 div[data-cvent-id="widget-content-RegistrationType"] p {
   display: none !important;
 }
 /* ///////END REGISTRATION LAYOUT/////// */
 
-
 /* /////// START GLOBAL REGISTRATION BUTTON VISIBILITY /////// */
 /* Ensures the registration button area is never hidden by default Cvent behaviors or page logic */
-
-[class*="WebsiteNavigator__rightContent"], 
+[class*="WebsiteNavigator__rightContent"],
 [class*="WebsiteNavigator__registrationAction"],
 [data-cvent-id="website-navigation-registration-action"] {
   display: flex !important;
@@ -730,8 +708,6 @@ div[data-cvent-id="widget-content-RegistrationType"] p {
   [class*="WebsiteNavigator__group"] {
     display: flex !important;
   }
-
-
 }
 /* /////// END GLOBAL REGISTRATION BUTTON VISIBILITY /////// */
 
@@ -741,6 +717,7 @@ div[data-cvent-id="widget-content-RegistrationType"] p {
   height: 1px;
 }
 
+/* START: Equal-height cards - keeps card content aligned and button rows pinned to the bottom */
 .equal-height-cards [data-element-type="FlexRow"] {
   align-items: stretch;
 }
@@ -770,11 +747,11 @@ div[data-cvent-id="widget-content-RegistrationType"] p {
 }
 
 /* Stack the three cards at 700px and below (Cvent's default stacks them ~480px) */
-/* 501–700px: stack one per row at ~70% width, left-aligned */
+/* 501â€“700px: stack one per row at ~70% width, left-aligned */
 @media (max-width: 700px) {
   .equal-height-cards [data-element-type="FlexRow"] {
     flex-wrap: wrap;
-    justify-content: flex-start;   /* keep the 70% cards pinned left */
+    justify-content: flex-start; /* keep the 70% cards pinned left */
   }
   .equal-height-cards [class*="Grid__column"][class*="Grid__col_4"] {
     flex: 0 0 70%;
@@ -789,32 +766,19 @@ div[data-cvent-id="widget-content-RegistrationType"] p {
     max-width: 100%;
   }
 }
-/* Target by exact widget ID */
-/* div[data-cvent-id="widget-WebsiteNavigator-widget:be376fe6-d70d-4488-9788-8c706071a92d"] {
-    max-width: 1280px !important;
-    width: 100% !important;
-    margin: 0 auto !important;
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-} */
+/* END: Equal-height cards */
 
-  .custom-css-scope [class*="WebsiteNavigator__container"].navigation-mobile {
-    max-width: 1280px !important;
-    width: 100% !important;
-    margin: 0 auto !important;
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-  }
+.custom-css-scope [class*="WebsiteNavigator__container"].navigation-mobile {
+  max-width: 1280px !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
 
-  /* logo left, hamburger right */
-  .navigation-mobile [class*="WebsiteNavigator__leftContent"] {
-    order: -1;
-  }
-
-/* Make sure children don't overflow
-div[data-cvent-id="widget-WebsiteNavigator-widget:be376fe6-d70d-4488-9788-8c706071a92d"] > div {
-    flex: 1 !important;
-} */
+/* logo left, hamburger right */
+.navigation-mobile [class*="WebsiteNavigator__leftContent"] {
+  order: -1;
+}

@@ -1,0 +1,99 @@
+    <div class="scroll-jump">
+  <button class="outer-scroll-trigger js-scroll-location">
+    <span class="scroll-text">LOCATION</span>
+    <svg class="jump-arrow-icon" width="24" height="24" viewBox="0 0 24 24"
+         xmlns="http://www.w3.org/2000/svg"
+         fill="rgb(255, 163, 0)" aria-hidden="true">
+      <path d="M19.707 12.354l-7.354 7.354-.707-.707 6.147-6.147H5v-1h12.793l-6.147-6.148.707-.707z"/>
+    </svg>
+  </button>
+</div>
+<style>
+.scroll-jump { display: flex; justify-content: center; }
+.scroll-text { color: rgb(255, 163, 0); letter-spacing: 2px; }
+.outer-scroll-trigger {
+  background: none; border: none; padding: 0;
+  display: inline-flex; align-items: center; gap: 2px;
+  text-decoration: none; cursor: pointer;
+  font-family: "AvenirNextPForBBG-Demi", "Avenir Next P for BBG Demi",
+               Helvetica, Arial, sans-serif;
+  font-size: 14px; font-weight: 600; color: #000000; margin-left: 8px;
+}
+.jump-arrow-icon { height: 24px; width: 24px; display: block; }
+</style>
+<script>
+(function() {
+  const btn = document.querySelector('.js-scroll-location');
+  if (!btn) return;
+  const SELECTOR = '.location-target';
+  const GAP = 12; // breathing room between the sticky nav and the header
+
+  function findInTree(win) {
+    let doc;
+    try { doc = win.document; } catch (e) { return null; }
+    const hit = doc.querySelector(SELECTOR);
+    if (hit) return hit;
+    for (let f of doc.querySelectorAll('iframe')) {
+      const r = f.getBoundingClientRect();
+      if (f.offsetParent === null || r.width === 0 || r.height === 0) continue;
+      try {
+        const found = findInTree(f.contentWindow);
+        if (found) return found;
+      } catch (e) {  }
+    }
+    return null;
+  }
+
+  // .cus_nav is relative at the top of the page and flips to position:fixed once
+  // scrolled. Predict its pinned bottom up front so the offset is right on click.
+  function navBottom() {
+    const nav = window.top.document.querySelector('.cus_nav');
+    if (!nav) return 0;
+    const r = nav.getBoundingClientRect();
+    if (getComputedStyle(nav).position === 'fixed') {
+      return r.bottom;      // already pinned — trust the live value
+    }
+    return r.height + 60;   // not yet pinned — predicted pinned bottom for this page
+  }
+
+  // Target's top edge relative to the top window's viewport (walks out of nested iframes).
+  function targetViewportTop(el) {
+    let top = el.getBoundingClientRect().top;
+    let win = el.ownerDocument.defaultView;
+    while (win && win !== window.top) {
+      let fe;
+      try { fe = win.frameElement; } catch (e) { break; }
+      if (!fe) break;
+      top += fe.getBoundingClientRect().top;
+      win = win.parent;
+    }
+    return top;
+  }
+
+  function alignToTarget(target) {
+    const topWin = window.top;
+    topWin.scrollBy({ top: targetViewportTop(target) - (navBottom() + GAP), behavior: 'smooth' });
+  }
+
+  btn.addEventListener('click', function() {
+    const topWin = window.top;
+
+    // Already rendered? Align straight to it.
+    const ready = findInTree(topWin);
+    if (ready) { alignToTarget(ready); return; }
+
+    // Not yet rendered: smooth-scroll down to trigger lazy loading, then align once it appears.
+    topWin.scrollTo({ top: topWin.document.documentElement.scrollHeight, behavior: 'smooth' });
+    let attempts = 100;
+    (function check() {
+      const target = findInTree(topWin);
+      if (target) { alignToTarget(target); return; }
+      if (attempts-- <= 0) {
+        console.log("'" + SELECTOR + "' never rendered, even after scrolling.");
+        return;
+      }
+      setTimeout(check, 80);
+    })();
+  });
+})();
+</script>
