@@ -375,21 +375,17 @@ div.scroll {
   z-index: 99;
   width: 100%;
   height: auto;
-  background: #fff;
-  box-shadow: 0 10px 10px rgba(211, 200, 200, 0.1);
   transform: translateY(0px) !important;
 }
 
 .cus_nav.scroll {
-  transform: translateY(-10px) !important;
   opacity: 1 !important;
 }
 
-.cus_nav.scroll img {
-  width: 250px;
+.cus_nav {
+  display: flex;
+  align-items: center;
   transition: .5s;
-  margin-top: 10px;
-  margin-bottom: 0px;
 }
 
 .cus_nav img {
