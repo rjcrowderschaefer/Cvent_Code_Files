@@ -1124,21 +1124,17 @@ div[data-color-style-scheme="mood-background"]:first-of-type {
 /* --- Minimized state: collapses to a small "Have questions?" pill ---- */
 
 .bbg-contact-button.is-minimized {
-  width: min(190px, calc(100vw - 40px)) !important;
-  padding: 14px 20px !important;
-  border-radius: 999px !important;
+  width: min(212px, calc(100vw - 40px)) !important;
+  height: auto !important;
+  padding: 12px 18px !important;
+  border-radius: 14px !important; /* soft rectangle, not a pill/circle */
   justify-content: center;
 }
 
-.bbg-contact-button.is-minimized .bbg-contact-info,
-.bbg-contact-button.is-minimized .bbg-contact-cta,
-.bbg-contact-button.is-minimized .bbg-contact-minimize-toggle {
-  display: none;
-}
-
-.bbg-contact-button.is-minimized .bbg-contact-minimized-label {
-  display: flex;
-}
+/* Note: showing/hiding the button's original content, the minimize toggle,
+   and the "Have questions?" label is handled directly in JS via inline
+   styles (not CSS selectors here) so it doesn't depend on matching Cvent's
+   internal markup/class names or fighting stylesheet specificity. */
 
 /* --- Breakpoints ------------------------------------------------------ */
 
