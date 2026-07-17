@@ -210,12 +210,12 @@ export default class extends HTMLElement {
       console.warn("[widget.js] Iterating session generator failed:", e);
     }
 
-    // Filter out closed sessions and those marked "Hide from main agenda?" via custom field
+    // Visibility is controlled solely by the "Hide from main agenda?" custom
+    // field. Registration status (isOpenForRegistration) is intentionally
+    // ignored so closed sessions still appear on the agenda.
     const openSessions = sessions.filter(s => {
-      if (s.isOpenForRegistration == false) return false;
       const hideField = s.sessionCustomFields?.find(f => f.name === "Hide from main agenda?");
-      if (hideField?.value?.includes("Yes")) return false;
-      return true;
+      return !hideField?.value?.includes("Yes");
     });
 
     // If we have data, remove placeholder
