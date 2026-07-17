@@ -218,6 +218,13 @@ export default class extends HTMLElement {
       return !hideField?.value?.includes("Yes");
     });
 
+    console.log("FILTER | total from SDK:", sessions.length, "| after filter:", openSessions.length);
+    sessions.forEach(s => {
+      const hideField = s.sessionCustomFields?.find(f => f.name === "Hide from main agenda?");
+      const kept = openSessions.includes(s);
+      console.log("  ", kept ? "KEPT  " : "HIDDEN", "|", s.name, "| hideField:", JSON.stringify(hideField?.value), "| isOpenForReg:", s.isOpenForRegistration);
+    });
+
     // If we have data, remove placeholder
     const placeholder = container.querySelector("div[style*='height: 200px']");
     if (openSessions.length && placeholder) {
