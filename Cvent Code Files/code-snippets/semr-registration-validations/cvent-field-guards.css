@@ -1,0 +1,34 @@
+/* ------------------------------------------------------------------ */
+/* Field guard hook classes                                            */
+/* Apply ONE of these to each field's widget in Cvent (Applied Style / */
+/* custom class). They are JS targeting hooks — no visual styling is    */
+/* required for the guard to work; they are declared here so they are   */
+/* available in Cvent's Applied Style workflow.                         */
+/*                                                                      */
+/*   js-name     -> First Name, Last Name                               */
+/*   js-company  -> Company                                             */
+/*   js-city     -> City                                                */
+/*   js-email    -> Email                                               */
+/* ------------------------------------------------------------------ */
+.js-name,
+.js-company,
+.js-city,
+.js-email {
+  /* intentionally empty — JS hook only */
+}
+
+/* ------------------------------------------------------------------ */
+/* OPTIONAL: error-message styling via CSS.                            */
+/* The JS already styles the message inline. Only use this if you want */
+/* me to switch the JS to a class instead (tell me and I'll update it, */
+/* which also shortens the snippet). Then this rule controls the look. */
+/* ------------------------------------------------------------------ */
+/*
+.js-guard-msg {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.3;
+  font-family: inherit;
+  color: #cf0004;
+}
+*/
