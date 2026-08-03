@@ -1343,3 +1343,31 @@ div[data-color-style-scheme="mood-background"]:first-of-type {
 .js-email {
   padding-top: 0px;/* intentionally empty — JS hook only */
 }
+
+/* START: Button hover — amber fill, black text */
+
+/* Top-level stub so the class appears in Cvent's class picker */
+.btn-hover-amber {
+  transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out;
+}
+
+/* Doubled class = specificity (0,3,0), beats Cvent's hashed .css-xxxxxx:hover (0,2,0).
+   The .hover class is Cvent's editor preview hook. */
+.btn-hover-amber.btn-hover-amber:hover,
+.btn-hover-amber.btn-hover-amber:focus-visible,
+.btn-hover-amber.btn-hover-amber.hover {
+  background-color: #ffa300 !important;
+  border-color: #ffa300 !important;
+  color: #000000 !important;
+}
+
+/* Catch inner text nodes that carry their own color (e.g. .font-color-white),
+   since inheritance alone loses to any direct declaration on a child. */
+.btn-hover-amber.btn-hover-amber:hover *,
+.btn-hover-amber.btn-hover-amber:focus-visible *,
+.btn-hover-amber.btn-hover-amber.hover * {
+  color: #000000 !important;
+}
+
+/* END: Button hover */
