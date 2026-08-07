@@ -187,6 +187,8 @@ export default class ExampleAgendaEditor extends HTMLElement {
         cardBg: "#f7f7f5",
         hideSpeakers: true,
         hideDescription: false,
+        iconSize: 20,
+        iconColor: "",
       },
     };
   }
@@ -662,6 +664,40 @@ export default class ExampleAgendaEditor extends HTMLElement {
               ...(this._config.breakStyle || {}),
               hideDescription: v,
             },
+          })
+      )
+    );
+
+    // Break icon size
+    const bsIconSizeWrap = document.createElement("div");
+    bsIconSizeWrap.className = "row field";
+    const bsIconSizeLabel = this._label("Break icon size (px)");
+    const bsIconSizeInput = document.createElement("input");
+    bsIconSizeInput.type = "number";
+    bsIconSizeInput.min = "10";
+    bsIconSizeInput.max = "48";
+    bsIconSizeInput.value = bs.iconSize ?? 20;
+    const commitIconSize = () => {
+      const raw = bsIconSizeInput.value.trim();
+      const val = raw === "" ? 20 : Math.max(10, Math.min(48, Number(raw) || 20));
+      this._patch({
+        breakStyle: { ...(this._config.breakStyle || {}), iconSize: val },
+      });
+    };
+    bsIconSizeInput.onchange = commitIconSize;
+    bsIconSizeInput.onblur = commitIconSize;
+    bsIconSizeWrap.append(bsIconSizeLabel, bsIconSizeInput);
+    bsWrap.appendChild(bsIconSizeWrap);
+
+    // Break icon color (defaults to the break time text color)
+    bsWrap.appendChild(
+      this._colorRow(
+        "Break icon color",
+        "breakIconColor",
+        bs.iconColor || bs.gutterText || "#5f5e5a",
+        (v) =>
+          this._patch({
+            breakStyle: { ...(this._config.breakStyle || {}), iconColor: v },
           })
       )
     );

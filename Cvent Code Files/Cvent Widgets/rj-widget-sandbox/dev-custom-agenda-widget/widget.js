@@ -501,17 +501,28 @@ export default class extends HTMLElement {
     );
     const isBreak = !!breakField?.value?.includes("Yes");
 
+    // Break type drives which icon renders (Coffee/Lunch/Networking/General)
+    const breakTypeField = session?.sessionCustomFields?.find(
+      (f) => f.name === "Break Type"
+    );
+    const breakType =
+      Array.isArray(breakTypeField?.value) && breakTypeField.value.length
+        ? breakTypeField.value[0]
+        : "";
+    console.log("BREAKTYPE |", session.name, "| field found:", !!breakTypeField, "| raw value:", JSON.stringify(breakTypeField?.value), "| allFields:", JSON.stringify(session?.sessionCustomFields?.map(f => f.name)));
+
     el.config = {
       ...cfg,
       allSessions: allSessions || [],
       getSpeakers,
       eventTimezone,
       isBreak,
+      breakType,
     };
 
     return el;
   }
-  
+
   _groupSessionsByDay(sessions, tz = "America/New_York") {
     const fmt = new Intl.DateTimeFormat("en-CA", {
       timeZone: tz,
