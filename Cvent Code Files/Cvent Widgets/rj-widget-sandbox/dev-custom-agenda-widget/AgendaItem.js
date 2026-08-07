@@ -20,8 +20,16 @@ export class AgendaItem extends HTMLElement {
     const t = this.theme || {};
     const cfg = this.config || {};
 
-    const gutterBg = cfg.gutterBg || t.palette?.accent || "#e8eef9";
-    const cardBg = cfg.cardBg || t.palette?.secondary || "#ffffff";
+    const isBreak = cfg.isBreak === true;
+    const bs = cfg.breakStyle || {};
+
+    const gutterBg = isBreak
+      ? bs.gutterBg || "#e8eaed"
+      : cfg.gutterBg || t.palette?.accent || "#e8eef9";
+    const cardBg = isBreak
+      ? bs.cardBg || "#f7f7f5"
+      : cfg.cardBg || t.palette?.secondary || "#ffffff";
+
     const showMoreColor =
       cfg.showMoreColor ||
       cfg?.typography?.sessionDescription?.color ||
@@ -502,6 +510,13 @@ export class AgendaItem extends HTMLElement {
     this.applyThemeStyle(timeEndEl, t.paragraph);
     this.applyTypographyOverrides(timeEndEl, cfg.typography?.sessionTime, true);
 
+    // Break sessions override the gutter text color for a muted look
+    if (isBreak) {
+      const bt = bs.gutterText || "#5f5e5a";
+      timeStartEl.style.color = bt;
+      timeEndEl.style.color = bt;
+    }
+
     gutter.append(timeStartEl, timeEndEl);
 
     if (showTz && tzAbbr) {
@@ -594,8 +609,8 @@ export class AgendaItem extends HTMLElement {
       content.append(metaRow);
     }
 
-    // Description
-    if (s.description) {
+    // Description (optionally skipped on breaks)
+    if (s.description && !(isBreak && bs.hideDescription === true)) {
       const wrap = document.createElement("div");
       wrap.classList.add("sessionDescriptionBlock");
 
@@ -650,14 +665,16 @@ export class AgendaItem extends HTMLElement {
       content.append(wrap);
     }
 
-    // Speakers
-    const speakersWrap = document.createElement("div");
-    speakersWrap.classList.add("speakersWrap");
+    // Speakers (skipped on breaks when configured)
+    if (!(isBreak && bs.hideSpeakers !== false)) {
+      const speakersWrap = document.createElement("div");
+      speakersWrap.classList.add("speakersWrap");
 
-    const speakers = this.getSpeakersArray(s);
-    speakers.forEach((sp) => speakersWrap.append(this.renderSpeakerLine(sp)));
-    speakersWrap.dataset.count = speakers.length;
-    content.append(speakersWrap);    
+      const speakers = this.getSpeakersArray(s);
+      speakers.forEach((sp) => speakersWrap.append(this.renderSpeakerLine(sp)));
+      speakersWrap.dataset.count = speakers.length;
+      content.append(speakersWrap);
+    } 
 
     // Assemble
     card.append(gutter, content);
