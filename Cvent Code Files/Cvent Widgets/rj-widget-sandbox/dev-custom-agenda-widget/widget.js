@@ -495,12 +495,23 @@ export default class extends HTMLElement {
     el.session = session;
     el.theme = theme;
 
-    // ⬇️ Pass getSpeakers into the component's config so it can hydrate title/company
-    el.config = { ...cfg, allSessions: allSessions || [], getSpeakers, eventTimezone };
+    // Detect break sessions via the "Break session?" custom field (Yes/No)
+    const breakField = session?.sessionCustomFields?.find(
+      (f) => f.name === "Break session?"
+    );
+    const isBreak = !!breakField?.value?.includes("Yes");
+
+    el.config = {
+      ...cfg,
+      allSessions: allSessions || [],
+      getSpeakers,
+      eventTimezone,
+      isBreak,
+    };
 
     return el;
   }
-
+  
   _groupSessionsByDay(sessions, tz = "America/New_York") {
     const fmt = new Intl.DateTimeFormat("en-CA", {
       timeZone: tz,
