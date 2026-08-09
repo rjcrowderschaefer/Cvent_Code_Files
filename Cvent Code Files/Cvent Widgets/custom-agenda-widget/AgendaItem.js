@@ -16,12 +16,20 @@ export class AgendaItem extends HTMLElement {
   }
 
   connectedCallback() {
-    const s = this.session || {};
     const t = this.theme || {};
     const cfg = this.config || {};
+    const s = this.session || {};
 
-    const gutterBg = cfg.gutterBg || t.palette?.accent || "#e8eef9";
-    const cardBg = cfg.cardBg || t.palette?.secondary || "#ffffff";
+    const isBreak = cfg.isBreak === true;
+    const bs = cfg.breakStyle || {};
+
+    const gutterBg = isBreak
+      ? bs.gutterBg || "#e8eaed"
+      : cfg.gutterBg || t.palette?.accent || "#e8eef9";
+    const cardBg = isBreak
+      ? bs.cardBg || "#f7f7f5"
+      : cfg.cardBg || t.palette?.secondary || "#ffffff";
+
     const showMoreColor =
       cfg.showMoreColor ||
       cfg?.typography?.sessionDescription?.color ||
@@ -502,6 +510,13 @@ export class AgendaItem extends HTMLElement {
     this.applyThemeStyle(timeEndEl, t.paragraph);
     this.applyTypographyOverrides(timeEndEl, cfg.typography?.sessionTime, true);
 
+    // Break sessions override the gutter text color for a muted look
+    if (isBreak) {
+      const bt = bs.gutterText || "#5f5e5a";
+      timeStartEl.style.color = bt;
+      timeEndEl.style.color = bt;
+    }
+
     gutter.append(timeStartEl, timeEndEl);
 
     if (showTz && tzAbbr) {
@@ -510,6 +525,10 @@ export class AgendaItem extends HTMLElement {
       tzEl.textContent = tzAbbr;
       this.applyThemeStyle(tzEl, t.paragraph);
       this.applyTypographyOverrides(tzEl, cfg.typography?.sessionTime, true);
+      // Match the break gutter text color so the tz label recolors with the times
+      if (isBreak) {
+        tzEl.style.color = bs.gutterText || "#5f5e5a";
+      }
       gutter.append(tzEl);
     }
 
@@ -522,8 +541,27 @@ export class AgendaItem extends HTMLElement {
     titleEl.textContent = s.name || "";
     titleEl.classList.add("sessionTitle");
     this.applyThemeStyle(titleEl, t.header2, { margin: "0" });
+
+    // Break icon inline-left of the title (only when a Break type is set)
+    // Apply title typography to the text element itself (always)
     this.applyTypographyOverrides(titleEl, cfg.typography?.sessionName, true);
-    content.append(titleEl);
+
+    // Break icon inline-left of the title (only when a Break type is set)
+    let titleNode = titleEl;
+    if (isBreak && cfg.breakType) {
+      const iconSize = bs.iconSize ?? 20;
+      const iconColor = bs.iconColor || bs.gutterText || "#5f5e5a";
+      const icon = this._breakIconSvg(cfg.breakType, iconSize, iconColor);
+      if (icon) {
+        const titleRow = document.createElement("div");
+        titleRow.style.display = "flex";
+        titleRow.style.alignItems = "center";
+        titleRow.style.gap = "8px";
+        titleRow.append(icon, titleEl);
+        titleNode = titleRow;
+      }
+    }
+    content.append(titleNode);
 
     // Location & Category
     const locationName =
@@ -594,8 +632,8 @@ export class AgendaItem extends HTMLElement {
       content.append(metaRow);
     }
 
-    // Description
-    if (s.description) {
+    // Description (optionally skipped on breaks)
+    if (s.description && !(isBreak && bs.hideDescription === true)) {
       const wrap = document.createElement("div");
       wrap.classList.add("sessionDescriptionBlock");
 
@@ -650,14 +688,17 @@ export class AgendaItem extends HTMLElement {
       content.append(wrap);
     }
 
-    // Speakers
-    const speakersWrap = document.createElement("div");
-    speakersWrap.classList.add("speakersWrap");
+    
+    // Speakers (skipped on breaks when configured)
+    if (!(isBreak && bs.hideSpeakers !== false)) {
+      const speakersWrap = document.createElement("div");
+      speakersWrap.classList.add("speakersWrap");
 
-    const speakers = this.getSpeakersArray(s);
-    speakers.forEach((sp) => speakersWrap.append(this.renderSpeakerLine(sp)));
-    speakersWrap.dataset.count = speakers.length;
-    content.append(speakersWrap);    
+      const speakers = this.getSpeakersArray(s);
+      speakers.forEach((sp) => speakersWrap.append(this.renderSpeakerLine(sp)));
+      speakersWrap.dataset.count = speakers.length;
+      content.append(speakersWrap);
+    } 
 
     // Assemble
     card.append(gutter, content);
@@ -678,6 +719,38 @@ export class AgendaItem extends HTMLElement {
     // Reapply responsive typography on resize
     this._onResize = () => this.reapplyTypography();
     window.addEventListener("resize", this._onResize);
+  }
+
+  _breakIconSvg(type, size, color) {
+    // Single-path outline icons, keyed by "Break type" custom field value
+    const paths = {
+      Coffee:
+        "M4 11h13v4a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM17 12h1.5a2.5 2.5 0 0 1 0 5H17M7 5V3M10 5V3M13 5V3",
+      Lunch:
+        "M5 3v8M8 3v8M5 11h3M6.5 11v10M15 3c-1.5 1-2.5 3-2.5 5.5S13.5 13 15 13v8",
+      Networking:
+        "M9 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5M4 21v-1a5 5 0 0 1 5-5 5 5 0 0 1 5 5v1M16 3.5a2.5 2.5 0 0 1 0 5M17 15.2a5 5 0 0 1 3 4.8v1",
+      General:
+        "M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16M12 8v4l3 2",
+    };
+    const d = paths[type];
+    if (!d) return null;
+    const svgNs = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(svgNs, "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("width", String(size));
+    svg.setAttribute("height", String(size));
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", color);
+    svg.setAttribute("stroke-width", "2");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+    svg.setAttribute("aria-hidden", "true");
+    svg.style.flexShrink = "0";
+    const path = document.createElementNS(svgNs, "path");
+    path.setAttribute("d", d);
+    svg.appendChild(path);
+    return svg;
   }
 
   disconnectedCallback() {

@@ -88,6 +88,10 @@ export default class ExampleAgendaEditor extends HTMLElement {
         ...(incoming.modalColors || {}),
       },
       typography: mergedTypography,
+      breakStyle: {
+        ...(defaults.breakStyle || {}),
+        ...(incoming.breakStyle || {}),
+      },
     };
 
     this._safeRenderUI();
@@ -177,6 +181,15 @@ export default class ExampleAgendaEditor extends HTMLElement {
         contentBg: "#ffffff",
       },
       typography: this._makeDefaultTypography(),
+      breakStyle: {
+        gutterBg: "#e8eaed",
+        gutterText: "#5f5e5a",
+        cardBg: "#f7f7f5",
+        hideSpeakers: true,
+        hideDescription: false,
+        iconSize: 20,
+        iconColor: "",
+      },
     };
   }
 
@@ -576,6 +589,120 @@ export default class ExampleAgendaEditor extends HTMLElement {
           })
       )
     );
+
+    // Break Session Styling
+    const bsWrap = document.createElement("div");
+    bsWrap.className = "section";
+
+    const bsHeading = document.createElement("h3");
+    bsHeading.textContent = "Break Session Styling";
+    bsWrap.appendChild(bsHeading);
+
+    const bsNote = document.createElement("div");
+    bsNote.style.fontSize = "11px";
+    bsNote.style.opacity = "0.7";
+    bsNote.style.margin = "0 0 8px";
+    bsNote.textContent =
+      'Applies to sessions with the "Break session?" custom field set to Yes.';
+    bsWrap.appendChild(bsNote);
+
+    const bs = this._config.breakStyle || {};
+
+    bsWrap.appendChild(
+      this._colorRow(
+        "Break time column bg",
+        "breakGutterBg",
+        bs.gutterBg || "#e8eaed",
+        (v) =>
+          this._patch({
+            breakStyle: { ...(this._config.breakStyle || {}), gutterBg: v },
+          })
+      )
+    );
+
+    bsWrap.appendChild(
+      this._colorRow(
+        "Break time text color",
+        "breakGutterText",
+        bs.gutterText || "#5f5e5a",
+        (v) =>
+          this._patch({
+            breakStyle: { ...(this._config.breakStyle || {}), gutterText: v },
+          })
+      )
+    );
+
+    bsWrap.appendChild(
+      this._colorRow(
+        "Break card bg",
+        "breakCardBg",
+        bs.cardBg || "#f7f7f5",
+        (v) =>
+          this._patch({
+            breakStyle: { ...(this._config.breakStyle || {}), cardBg: v },
+          })
+      )
+    );
+
+    bsWrap.appendChild(
+      this._checkbox("Hide speakers on breaks", bs.hideSpeakers !== false, (v) =>
+        this._patch({
+          breakStyle: { ...(this._config.breakStyle || {}), hideSpeakers: v },
+        })
+      )
+    );
+
+    bsWrap.appendChild(document.createElement("br"));
+
+    bsWrap.appendChild(
+      this._checkbox(
+        "Hide description on breaks",
+        bs.hideDescription === true,
+        (v) =>
+          this._patch({
+            breakStyle: {
+              ...(this._config.breakStyle || {}),
+              hideDescription: v,
+            },
+          })
+      )
+    );
+
+    // Break icon size
+    const bsIconSizeWrap = document.createElement("div");
+    bsIconSizeWrap.className = "row field";
+    const bsIconSizeLabel = this._label("Break icon size (px)");
+    const bsIconSizeInput = document.createElement("input");
+    bsIconSizeInput.type = "number";
+    bsIconSizeInput.min = "10";
+    bsIconSizeInput.max = "48";
+    bsIconSizeInput.value = bs.iconSize ?? 20;
+    const commitIconSize = () => {
+      const raw = bsIconSizeInput.value.trim();
+      const val = raw === "" ? 20 : Math.max(10, Math.min(48, Number(raw) || 20));
+      this._patch({
+        breakStyle: { ...(this._config.breakStyle || {}), iconSize: val },
+      });
+    };
+    bsIconSizeInput.onchange = commitIconSize;
+    bsIconSizeInput.onblur = commitIconSize;
+    bsIconSizeWrap.append(bsIconSizeLabel, bsIconSizeInput);
+    bsWrap.appendChild(bsIconSizeWrap);
+
+    // Break icon color (defaults to the break time text color)
+    bsWrap.appendChild(
+      this._colorRow(
+        "Break icon color",
+        "breakIconColor",
+        bs.iconColor || bs.gutterText || "#5f5e5a",
+        (v) =>
+          this._patch({
+            breakStyle: { ...(this._config.breakStyle || {}), iconColor: v },
+          })
+      )
+    );
+
+    agendaBlock.appendChild(bsWrap);
 
 // Sticky offset = height of the Cvent header the nav should sit beneath
     const dnOffsetWrap = document.createElement("div");
