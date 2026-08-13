@@ -62,6 +62,7 @@ export default class extends HTMLElement {
   }
 
   onConfigurationUpdate(newConfig) {
+    console.log("CONFIG UPDATE | speakerOrder:", newConfig?.speakerOrder);
     this.configuration = newConfig || {};
     // re-render into the current container
     const container = this.shadowRoot?.firstElementChild;
@@ -509,7 +510,6 @@ export default class extends HTMLElement {
       Array.isArray(breakTypeField?.value) && breakTypeField.value.length
         ? breakTypeField.value[0]
         : "";
-    console.log("BREAKTYPE |", session.name, "| field found:", !!breakTypeField, "| raw value:", JSON.stringify(breakTypeField?.value), "| allFields:", JSON.stringify(session?.sessionCustomFields?.map(f => f.name)));
 
     el.config = {
       ...cfg,

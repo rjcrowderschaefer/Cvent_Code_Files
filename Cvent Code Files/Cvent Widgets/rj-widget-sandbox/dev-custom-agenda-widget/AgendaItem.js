@@ -546,10 +546,6 @@ export class AgendaItem extends HTMLElement {
     this.applyThemeStyle(titleEl, t.header2, { margin: "0" });
 
     // Break icon inline-left of the title (only when a Break type is set)
-    // Apply title typography to the text element itself (always)
-    this.applyTypographyOverrides(titleEl, cfg.typography?.sessionName, true);
-
-    // Break icon inline-left of the title (only when a Break type is set)
     let titleNode = titleEl;
     if (isBreak && cfg.breakType) {
       const iconSize = bs.iconSize ?? 20;
@@ -564,6 +560,7 @@ export class AgendaItem extends HTMLElement {
         titleNode = titleRow;
       }
     }
+    this.applyTypographyOverrides(titleNode, cfg.typography?.sessionName, true);
     content.append(titleNode);
 
     // Location & Category
@@ -728,13 +725,13 @@ export class AgendaItem extends HTMLElement {
     // Single-path outline icons, keyed by "Break type" custom field value
     const paths = {
       Coffee:
-        "M4 11h13v4a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM17 12h1.5a2.5 2.5 0 0 1 0 5H17M7 5V3M10 5V3M13 5V3",
+        "M3 14c.83.642 2.077 1.017 3.5 1 1.423.017 2.67-.358 3.5-1 .83-.642 2.077-1.017 3.5-1 1.423-.017 2.67.358 3.5 1M8 3a2.4 2.4 0 0 0-1 2 2.4 2.4 0 0 0 1 2M12 3a2.4 2.4 0 0 0-1 2 2.4 2.4 0 0 0 1 2M3 10h14v5a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6zM16.746 16.726a3 3 0 1 0 .252-5.555",
       Lunch:
-        "M5 3v8M8 3v8M5 11h3M6.5 11v10M15 3c-1.5 1-2.5 3-2.5 5.5S13.5 13 15 13v8",
+        "M4 3v18M4 8h4M8 3v18M6 3v5M13 3v18c-1.333 0-3-1-3-3.5S11.667 11 13 11M20 3c-1.5 0-3 2-3 5s1.5 5 3 5",
       Networking:
-        "M9 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5M4 21v-1a5 5 0 0 1 5-5 5 5 0 0 1 5 5v1M16 3.5a2.5 2.5 0 0 1 0 5M17 15.2a5 5 0 0 1 3 4.8v1",
+        "M9 7a4 4 0 1 0 8 0 4 4 0 0 0-8 0M3 21v-2a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v2M16 3.13a4 4 0 0 1 0 7.75",
       General:
-        "M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16M12 8v4l3 2",
+        "M9 4.55a8 8 0 0 1 6 14.9M9 4.55V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v.55M12 8v4l2 2",
     };
     const d = paths[type];
     if (!d) return null;
@@ -1240,24 +1237,8 @@ export class AgendaItem extends HTMLElement {
 
   // === helpers ===
   getSpeakersArray(session) {
-    
-    console.log("SPEAKER ORDER |", session?.name, JSON.stringify(
-      (session?.speakers || []).map((x, i) => {
-        const sp = x && x.speaker ? x.speaker : x;
-        return {
-          arrayIndex: i,
-          name: `${sp?.firstName} ${sp?.lastName}`,
-          displayPriority: sp?.displayPriority,
-          displayOrder: sp?.displayOrder,
-          sortOrder: sp?.sortOrder,
-          order: sp?.order,
-        };
-      })
-    ));
-    
-    
+    // Normalize to a flat speaker array, preserving Cvent's raw array order
     let speakers = [];
-
     if (
       Array.isArray(session?.resolvedSpeakers) &&
       session.resolvedSpeakers.length
@@ -1269,33 +1250,21 @@ export class AgendaItem extends HTMLElement {
         .filter(Boolean);
     }
 
+    // "sessionOrder" preserves Cvent's drag-and-drop order (raw array order).
+    // Default "alphabetical" keeps existing behavior so published events are
+    // unaffected unless a planner opts in.
+    const mode = this.config?.speakerOrder || "alphabetical";
+    console.log("SPEAKER MODE |", session?.name, "| mode:", mode, "| order:", speakers.map(s => s.firstName).join(", "));
+    if (mode === "sessionOrder") {
+      return speakers;
+    }
+
     return [...speakers].sort((a, b) => {
-      const aPriority =
-        typeof a?.displayPriority === "number" ? a.displayPriority : null;
-      const bPriority =
-        typeof b?.displayPriority === "number" ? b.displayPriority : null;
-
-      // Both have priority → sort by it
-      if (aPriority !== null && bPriority !== null && aPriority !== bPriority) {
-        return aPriority - bPriority;
-      }
-
-      // Only one has priority → it comes first
-      if (aPriority !== null && bPriority === null) return -1;
-      if (aPriority === null && bPriority !== null) return 1;
-
-      // Same priority or none → alphabetical by first name
       const aFirst = (a?.firstName || "").trim().toLowerCase();
       const bFirst = (b?.firstName || "").trim().toLowerCase();
-
-      if (aFirst !== bFirst) {
-        return aFirst.localeCompare(bFirst);
-      }
-
-      // Tie-break → last name
+      if (aFirst !== bFirst) return aFirst.localeCompare(bFirst);
       const aLast = (a?.lastName || "").trim().toLowerCase();
       const bLast = (b?.lastName || "").trim().toLowerCase();
-
       return aLast.localeCompare(bLast);
     });
   }
