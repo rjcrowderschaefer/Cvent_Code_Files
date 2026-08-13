@@ -62,6 +62,7 @@ export default class extends HTMLElement {
   }
 
   onConfigurationUpdate(newConfig) {
+    console.log("CONFIG UPDATE | speakerOrder:", newConfig?.speakerOrder);
     this.configuration = newConfig || {};
     // re-render into the current container
     const container = this.shadowRoot?.firstElementChild;

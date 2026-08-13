@@ -153,6 +153,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
       sort: "dateTimeAsc",
       maxResults: 100,
       groupByDay: true,
+      speakerOrder: "alphabetical",
       hideDateNav: false,
       dateNav: {
         fontSize: 18,
@@ -766,6 +767,34 @@ export default class ExampleAgendaEditor extends HTMLElement {
         this._patch({ groupByDay: v })
       )
     );
+
+    // Speaker order
+    const soWrap = document.createElement("div");
+    soWrap.className = "section";
+    soWrap.appendChild(this._label("Speaker order"));
+    soWrap.appendChild(document.createElement("br"));
+
+    const soSelect = document.createElement("select");
+    soSelect.style.width = "100%";
+    [
+      { value: "alphabetical", label: "Alphabetical (by first name)" },
+      { value: "sessionOrder", label: "Session order (drag & drop in Cvent)" },
+    ].forEach((opt) => {
+      const o = document.createElement("option");
+      o.value = opt.value;
+      o.textContent = opt.label;
+      if ((this._config.speakerOrder || "alphabetical") === opt.value) {
+        o.selected = true;
+      }
+      soSelect.appendChild(o);
+    });
+soSelect.onchange = () => {
+      console.log("SO DROPDOWN | value:", soSelect.value);
+      this._patch({ speakerOrder: soSelect.value });
+    };
+
+    soWrap.appendChild(soSelect);
+    agendaBlock.appendChild(soWrap);
 
     // Hide the sticky date navigation (checked = hidden)
     agendaBlock.append(
