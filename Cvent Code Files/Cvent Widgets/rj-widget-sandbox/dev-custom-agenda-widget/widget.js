@@ -624,11 +624,24 @@ export default class extends HTMLElement {
       if (cluster.length === 1) {
         blocks.push({ type: "single", session: cluster[0] });
       } else {
-        const sorted = [...cluster].sort(
-          (a, b) =>
-            new Date(a.startDateTime) - new Date(b.startDateTime) ||
-            new Date(a.endDateTime) - new Date(b.endDateTime)
-        );
+        // Sort by start, then end. Tiebreaker for SAME start time: plenary
+        // (non-focus) sessions come first so they claim the left columns, and
+        // focus sessions come last so they land on the right.
+        const isFocusSession = (s) => {
+          const f = s?.sessionCustomFields?.find(
+            (x) => x.name?.trim().toLowerCase() === "focus session?"
+          );
+          return !!f?.value?.includes("Yes");
+        };
+        const sorted = [...cluster].sort((a, b) => {
+          const startDiff =
+            new Date(a.startDateTime) - new Date(b.startDateTime);
+          if (startDiff !== 0) return startDiff;
+          // Same start time: plenary (false=0) before focus (true=1).
+          const focusDiff = (isFocusSession(a) ? 1 : 0) - (isFocusSession(b) ? 1 : 0);
+          if (focusDiff !== 0) return focusDiff;
+          return new Date(a.endDateTime) - new Date(b.endDateTime);
+        });
         blocks.push({
           type: "group",
           sessions: sorted,
@@ -1041,11 +1054,19 @@ export default class extends HTMLElement {
     return map;
   }
 
+  // Map the detected event language to a full locale for date formatting.
+  _dateLocale() {
+    const lang = this._eventLang || "en";
+    if (lang === "es") return "es";
+    if (lang === "pt") return "pt-BR";
+    return "en-US";
+  }
+
   _formatDayKeyLabel(key) {
     if (key === "Unknown") return "Unknown Date";
     const [y, m, d] = key.split("-").map(Number);
     const date = new Date(y, m - 1, d);
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString(this._dateLocale(), {
       weekday: "long",
       month: "long",
       day: "numeric",
@@ -1056,7 +1077,7 @@ export default class extends HTMLElement {
     if (key === "Unknown") return "Unknown Date";
     const [y, m, d] = key.split("-").map(Number);
     const date = new Date(y, m - 1, d);
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString(this._dateLocale(), {
       month: "long",
       day: "numeric",
     });

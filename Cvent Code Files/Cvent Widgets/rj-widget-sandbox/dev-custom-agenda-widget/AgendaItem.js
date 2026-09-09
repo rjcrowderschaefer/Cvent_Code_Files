@@ -1005,6 +1005,17 @@ export class AgendaItem extends HTMLElement {
         appearance:none; border:none; background:transparent; cursor:pointer;
         font-size:13px; font-weight:600; color:#555; padding:0; text-decoration:underline;
       }
+      .modalBody {
+        padding:16px; display:grid; grid-template-columns:125px 1fr;
+        grid-auto-rows:auto; column-gap:14px; row-gap:2px; background:#fff;
+      }
+      .modalAvatar { width:125px; height:125px; object-fit:cover; border-radius:4px; grid-column:1; grid-row:1; }
+      .modalDetails { grid-column:2; grid-row:1; margin-top:20px; }
+      .kv { margin:2px 0; }
+      .bio { margin:5px 0 0 0; line-height:1.45; grid-column:1 / -1; grid-row:2; }
+      .sessionsHeader { margin-top:10px; grid-column:1 / -1; grid-row:3; }
+      .sessionsList { margin:0 0 0 18px; padding:0; grid-column:1 / -1; grid-row:4; }
+      .sessionsList li { margin:0; }
     `;
     this.shadowRoot.append(style);
 
@@ -1323,7 +1334,6 @@ export class AgendaItem extends HTMLElement {
   }
 
   _renderSpeakerView(sp) {
-    const { cfg, tz } = this._sessionCtx;
     const { modal } = this._sessionModal;
     modal.innerHTML = "";
 
@@ -1343,54 +1353,12 @@ export class AgendaItem extends HTMLElement {
     );
     head.append(back, close);
 
-    // Body: speaker detail
-    const bodyEl = document.createElement("div");
-    bodyEl.classList.add("smodalBody");
-    bodyEl.style.display = "block";
+    // Body: identical markup/classes to the standalone speaker modal, populated
+    // by the SAME shared filler so both views look the same.
+    const refs = this._buildSpeakerBody();
+    this._fillSpeakerRefs(refs, sp);
 
-    const top = document.createElement("div");
-    top.style.display = "flex";
-    top.style.gap = "14px";
-    top.style.alignItems = "flex-start";
-    const img = document.createElement("img");
-    img.src =
-      (sp?.profilePictureUri || "").trim() ||
-      "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/pix/2ee8c4642e97488abc1852d9166b179b.png";
-    img.style.width = "110px";
-    img.style.height = "110px";
-    img.style.objectFit = "cover";
-    img.style.borderRadius = "6px";
-    img.style.flexShrink = "0";
-    const info = document.createElement("div");
-    const nm = document.createElement("div");
-    nm.style.fontSize = "18px";
-    nm.style.fontWeight = "700";
-    nm.textContent = `${sp?.firstName || ""} ${sp?.lastName || ""}`.trim();
-    const jt = document.createElement("div");
-    jt.style.fontSize = "14px";
-    jt.style.fontStyle = "italic";
-    jt.style.color = "#444";
-    jt.style.marginTop = "2px";
-    jt.textContent = (sp?.title || sp?.designation || sp?.jobTitle || "").trim();
-    const co = document.createElement("div");
-    co.style.fontSize = "14px";
-    co.style.color = "#444";
-    co.textContent = (sp?.company || sp?.organization || "").trim();
-    info.append(nm, jt, co);
-    top.append(img, info);
-    bodyEl.append(top);
-
-    const bio = (sp?.biography ?? sp?.bio ?? sp?.about ?? "").toString().trim();
-    if (bio) {
-      const bioEl = document.createElement("div");
-      bioEl.style.marginTop = "14px";
-      bioEl.style.fontSize = "14px";
-      bioEl.style.lineHeight = "1.5";
-      bioEl.innerHTML = bio;
-      bodyEl.append(bioEl);
-    }
-
-    modal.append(head, bodyEl);
+    modal.append(head, refs.body);
     back.focus();
   }
 
@@ -1786,199 +1754,202 @@ export class AgendaItem extends HTMLElement {
     );
   }
 
-  openModalForSpeaker(spRaw) {
-    if (!this.modal) {
-      this.modal = this.buildModal();
-      this.shadowRoot.append(this.modal.backdrop);
-    }
+  // Build the reusable speaker-detail body (avatar, name/title/company, bio,
+  // sessions list) using the same classes as the standalone modal. Returns the
+  // container plus element refs. Used by BOTH the standalone speaker modal and
+  // the session-modal speaker view, so they render identically.
+  _buildSpeakerBody() {
+    const body = document.createElement("div");
+    body.classList.add("modalBody");
+
+    const avatar = document.createElement("img");
+    avatar.classList.add("modalAvatar");
+    avatar.alt = "Speaker photo";
+
+    const details = document.createElement("div");
+    details.classList.add("modalDetails");
+    const nameEl = document.createElement("div");
+    const titleEl = document.createElement("div");
+    titleEl.classList.add("kv");
+    const companyEl = document.createElement("div");
+    companyEl.classList.add("kv");
+    details.append(nameEl, titleEl, companyEl);
+
+    const bioEl = document.createElement("div");
+    bioEl.classList.add("bio");
+
+    const sessionsHdr = document.createElement("div");
+    sessionsHdr.classList.add("sessionsHeader");
+    sessionsHdr.textContent = "Sessions";
+
+    const sessionsUl = document.createElement("ul");
+    sessionsUl.classList.add("sessionsList");
+
+    body.append(avatar, details, bioEl, sessionsHdr, sessionsUl);
+
+    return { body, avatar, nameEl, titleEl, companyEl, bioEl, sessionsHdr, sessionsUl };
+  }
+
+  // Populate a set of speaker refs (from _buildSpeakerBody or this.modal) with a
+  // speaker's data: name/title/company/bio, "appears in" sessions, typography,
+  // focus recolor, and lazy hydration. Shared by both speaker-view flows.
+  _fillSpeakerRefs(refs, spRaw) {
     const cfg = this.config || {};
     const allSessions = Array.isArray(cfg.allSessions)
       ? cfg.allSessions
       : [this.session];
-
-    // unwrap if needed
     const sp = spRaw && spRaw.speaker ? spRaw.speaker : spRaw;
 
     const fullName = `${(sp?.firstName || "").trim()} ${(
       sp?.lastName || ""
     ).trim()}`.trim();
     let jobTitle = (
-      sp?.title ||
-      sp?.designation ||
-      sp?.jobTitle ||
-      sp?.position ||
-      sp?.role ||
-      ""
-    )
-      .toString()
-      .trim();
+      sp?.title || sp?.designation || sp?.jobTitle || sp?.position || sp?.role || ""
+    ).toString().trim();
     let company = (
-      sp?.company ||
-      sp?.organization ||
-      sp?.companyName ||
-      sp?.org ||
-      ""
-    )
-      .toString()
-      .trim();
+      sp?.company || sp?.organization || sp?.companyName || sp?.org || ""
+    ).toString().trim();
     let bio = (sp?.biography ?? sp?.bio ?? sp?.about ?? "").toString();
 
-    this.modal.title.textContent = fullName || "Speaker";
-    this.modal.avatar.src =
+    if (refs.title) refs.title.textContent = fullName || "Speaker";
+    refs.avatar.src =
       (sp?.profilePictureUri || "").trim() ||
       "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/pix/2ee8c4642e97488abc1852d9166b179b.png";
-    this.modal.nameEl.textContent = fullName || "";
-    this.modal.titleEl.textContent = jobTitle || "";
-    this.modal.companyEl.textContent = company || "";
-    this.modal.bioEl.innerHTML = bio || "";
+    refs.nameEl.textContent = fullName || "";
+    refs.titleEl.textContent = jobTitle || "";
+    refs.companyEl.textContent = company || "";
+    refs.bioEl.innerHTML = bio || "";
 
-    this.applyModalTypography(cfg);
+    // Typography (mirror applyModalTypography on these refs)
+    this.applyTypographyOverrides(refs.nameEl, cfg.typography?.modalSpeakerName, true);
+    this.applyTypographyOverrides(refs.titleEl, cfg.typography?.modalSpeakerTitle, true);
+    this.applyTypographyOverrides(refs.companyEl, cfg.typography?.modalSpeakerCompany, true);
+    this.applyTypographyOverrides(refs.bioEl, cfg.typography?.modalSpeakerBio, true);
+    this.applyTypographyOverrides(refs.sessionsHdr, cfg.typography?.modalSessionsHeader, true);
 
-    // Focus override wins over typography: if this card is a focus session,
-    // recolor the modal header + speaker name to the focus accent each open.
-    if (this.config?.isFocus === true && this.config?.showAccentBar === true) {
-      const fa = this.config?.focusAccent || "#1a7f8e";
-      this.modal.header.style.background = fa;
-      this.modal.nameEl.style.color = fa;
+    // Focus recolor of the speaker name
+    if (cfg.isFocus === true && cfg.showAccentBar === true) {
+      refs.nameEl.style.color = cfg.focusAccent || "#1a7f8e";
     }
 
-    // Show/hide blocks when empty
-    this.modal.titleEl.style.display = jobTitle ? "" : "none";
-    this.modal.companyEl.style.display = company ? "" : "none";
-    this.modal.bioEl.style.display = bio ? "" : "none";
+    refs.titleEl.style.display = jobTitle ? "" : "none";
+    refs.companyEl.style.display = company ? "" : "none";
+    refs.bioEl.style.display = bio ? "" : "none";
 
+    // "Appears in" sessions
     const speakerId = sp?.id || sp?.speakerId;
     const appearsIn = allSessions.filter((sess) => {
       const list = Array.isArray(sess.resolvedSpeakers)
         ? sess.resolvedSpeakers
         : Array.isArray(sess.speakers)
-        ? sess.speakers
-            .map((x) => (x && x.speaker ? x.speaker : x))
-            .filter(Boolean)
+        ? sess.speakers.map((x) => (x && x.speaker ? x.speaker : x)).filter(Boolean)
         : [];
       return list.some((x) => (x?.id || x?.speakerId) === speakerId);
     });
+    refs.sessionsHdr.textContent = appearsIn.length === 1 ? "Session" : "Sessions";
 
-    this.modal.sessionsHdr.textContent =
-      appearsIn.length === 1 ? "Session" : "Sessions";
-
-    this.modal.sessionsUl.innerHTML = "";
+    refs.sessionsUl.innerHTML = "";
+    const tz = cfg.eventTimezone || "America/New_York";
     if (appearsIn.length) {
       appearsIn.forEach((sess) => {
         const li = document.createElement("li");
-
         const nameSpan = document.createElement("span");
         nameSpan.textContent = sess.name || "(Untitled)";
-        this.applyTypographyOverrides(
-          nameSpan,
-          cfg.typography?.modalSessionName,
-          true
-        );
+        this.applyTypographyOverrides(nameSpan, cfg.typography?.modalSessionName, true);
 
         const dtSpan = document.createElement("span");
-        const tz = cfg.eventTimezone || "America/New_York";
         const st = sess.startDateTime ? new Date(sess.startDateTime) : null;
         const et = sess.endDateTime ? new Date(sess.endDateTime) : null;
         const stTxt = st
-          ? st.toLocaleString("en-US", {
-              dateStyle: "medium",
-              timeStyle: "short",
-              timeZone: tz,
-            })
+          ? st.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: tz })
           : "";
         const etTxt = et
           ? et.toLocaleString("en-US", { timeStyle: "short", timeZone: tz })
           : "";
-
-        // Timezone label: honor override/hide settings, else auto (DST-aware)
         const overrideAbbr =
           typeof cfg.timezoneAbbr === "string" ? cfg.timezoneAbbr.trim() : "";
         const autoAbbr = st
-          ? st
-              .toLocaleString("en-US", { timeZoneName: "short", timeZone: tz })
-              .split(" ")
-              .pop()
+          ? st.toLocaleString("en-US", { timeZoneName: "short", timeZone: tz }).split(" ").pop()
           : "";
         const showTz = cfg.showTimezone !== false;
         const tzAbbr = showTz ? overrideAbbr || autoAbbr : "";
-
         dtSpan.textContent = stTxt
           ? etTxt
             ? ` — ${stTxt} – ${etTxt}${tzAbbr ? " " + tzAbbr : ""}`
             : ` — ${stTxt}${tzAbbr ? " " + tzAbbr : ""}`
           : "";
-        this.applyTypographyOverrides(
-          dtSpan,
-          cfg.typography?.modalSessionDateTime,
-          true
-        );
+        this.applyTypographyOverrides(dtSpan, cfg.typography?.modalSessionDateTime, true);
 
         li.append(nameSpan, dtSpan);
-        this.modal.sessionsUl.appendChild(li);
+        refs.sessionsUl.appendChild(li);
       });
     } else {
       const li = document.createElement("li");
       li.textContent = "No other sessions found.";
-      this.modal.sessionsUl.appendChild(li);
+      refs.sessionsUl.appendChild(li);
     }
 
-    // OPEN modal
-    this.modal.backdrop.setAttribute("open", "");
-    this.modal.backdrop.querySelector(".closeBtn")?.focus();
-
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("cvent-speaker-modal-open"));
-    }
-
-    // ===== Optional lazy hydration for modal (title/company/bio) =====
+    // Lazy hydration of missing title/company/bio
     if ((!jobTitle || !company || !bio) && speakerId) {
       const getSpeakersFn =
-        this.config?.getSpeakers ||
+        cfg.getSpeakers ||
         (typeof window !== "undefined" ? window.getSpeakers : undefined);
       if (typeof getSpeakersFn === "function") {
         getSpeakersFn([speakerId])
           .then((map) => {
             const full = map?.[String(speakerId)];
             if (!full || full.failureReason) return;
-
-            const hTitle = (full.title || full.designation || "")
-              .toString()
-              .trim();
-            const hCompany = (
-              full.company ||
-              full.organization ||
-              full.companyName ||
-              ""
-            )
-              .toString()
-              .trim();
-            const hBio = (
-              full.biography ??
-              full.bio ??
-              full.about ??
-              ""
-            ).toString();
-
+            const hTitle = (full.title || full.designation || "").toString().trim();
+            const hCompany = (full.company || full.organization || full.companyName || "").toString().trim();
+            const hBio = (full.biography ?? full.bio ?? full.about ?? "").toString();
             if (hTitle && !jobTitle) {
-              jobTitle = hTitle;
-              this.modal.titleEl.textContent = hTitle;
-              this.modal.titleEl.style.display = "";
+              refs.titleEl.textContent = hTitle;
+              refs.titleEl.style.display = "";
             }
             if (hCompany && !company) {
-              company = hCompany;
-              this.modal.companyEl.textContent = hCompany;
-              this.modal.companyEl.style.display = "";
+              refs.companyEl.textContent = hCompany;
+              refs.companyEl.style.display = "";
             }
             if (hBio && !bio) {
-              bio = hBio;
-              this.modal.bioEl.innerHTML = hBio;
-              this.modal.bioEl.style.display = "";
+              refs.bioEl.innerHTML = hBio;
+              refs.bioEl.style.display = "";
             }
           })
-          .catch(() => {
-            /* noop */
-          });
+          .catch(() => {});
       }
+    }
+  }
+
+  openModalForSpeaker(spRaw) {
+    if (!this.modal) {
+      this.modal = this.buildModal();
+      this.shadowRoot.append(this.modal.backdrop);
+    }
+    // Populate the standalone modal's refs via the shared filler.
+    this._fillSpeakerRefs(
+      {
+        title: this.modal.title,
+        avatar: this.modal.avatar,
+        nameEl: this.modal.nameEl,
+        titleEl: this.modal.titleEl,
+        companyEl: this.modal.companyEl,
+        bioEl: this.modal.bioEl,
+        sessionsHdr: this.modal.sessionsHdr,
+        sessionsUl: this.modal.sessionsUl,
+      },
+      spRaw
+    );
+
+    // Focus recolor of the modal header (name recolor handled in filler).
+    const cfg = this.config || {};
+    if (cfg.isFocus === true && cfg.showAccentBar === true) {
+      this.modal.header.style.background = cfg.focusAccent || "#1a7f8e";
+    }
+
+    this.modal.backdrop.setAttribute("open", "");
+    this.modal.backdrop.querySelector(".closeBtn")?.focus();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("cvent-speaker-modal-open"));
     }
   }
 
