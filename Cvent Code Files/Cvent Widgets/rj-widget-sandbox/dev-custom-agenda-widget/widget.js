@@ -148,6 +148,9 @@ export default class extends HTMLElement {
     headerWrap.append(headerEl, subheaderEl);
     container.appendChild(headerWrap);
 
+    // (Focus legend is rendered inline with the first date header row below,
+    // so it aligns vertically with the date.)
+
     // Sort + page size config
     const sort =
       cfg.sort === "nameAsc" ||
@@ -179,14 +182,23 @@ export default class extends HTMLElement {
     };
 
     let eventTimezone = "America/New_York"; // fallback
+    let eventLang = "en"; // fallback language for legend/eyebrow phrasing
     try {
       const eventInfo = await this.cventSdk.getEventInfo?.();
       let rawTz = eventInfo?.timezone;
       if (rawTz && TZ_NORMALIZE[rawTz]) rawTz = TZ_NORMALIZE[rawTz];
       if (rawTz) eventTimezone = rawTz;
+      // Detect language from the default locale (e.g. "es-MX" -> "es").
+      const locales = eventInfo?.locales || [];
+      const def = locales.find((l) => l.isDefault) || locales[0];
+      const code = (def?.cultureCode || "").toLowerCase();
+      if (code.startsWith("es")) eventLang = "es";
+      else if (code.startsWith("pt")) eventLang = "pt";
+      else eventLang = "en";
     } catch (e) {
       console.warn("getEventInfo error:", e);
     }
+    this._eventLang = eventLang;
 
     if (!gen) {
       console.warn("[widget.js] No session generator available.");
@@ -441,16 +453,73 @@ export default class extends HTMLElement {
       }
 
       // --- Render headers + sessions (always, nav or not) ---
+      const legendEnabled =
+        cfg.showAccentBar === true && cfg.showFocusLegend === true;
+      let isFirstHeader = true;
       for (const [dayKey, daySessions] of groups) {
         const header = this._renderDayHeader(dayKey, theme, cfg);
         header.dataset.dayKey = dayKey;
         dayHeaderRefs[dayKey] = header;
-        container.appendChild(header);
 
-        daySessions.forEach((s) => {
-          container.appendChild(
-            this._renderItem(s, theme, cfg, openSessions, getSpeakers, eventTimezone)
-          );
+        // On the first day header, place it in a row with the focus legend
+        // right-aligned so the legend aligns vertically with the date.
+        if (isFirstHeader && legendEnabled) {
+          const isMobile =
+            (window.innerWidth || document.documentElement.clientWidth || 1920) <=
+            600;
+          const row = document.createElement("div");
+          row.style.display = "flex";
+          // On mobile, stack date over legend so neither is crowded/wraps oddly.
+          row.style.flexDirection = isMobile ? "column" : "row";
+          row.style.alignItems = isMobile ? "flex-start" : "center";
+          row.style.justifyContent = "space-between";
+          row.style.gap = isMobile ? "4px" : "12px";
+          row.style.width = "calc(100% - 40px)";
+          row.style.maxWidth = "1210px";
+          row.style.margin = "0 auto";
+          row.style.boxSizing = "border-box";
+
+          // The header's own width/margin would fight the row; neutralize them.
+          header.style.width = "auto";
+          header.style.maxWidth = "none";
+          header.style.margin = "0";
+
+          row.append(header, this._buildFocusLegend(cfg));
+          container.appendChild(row);
+        } else {
+          container.appendChild(header);
+        }
+
+        // Thin divider under the FIRST date/legend to mark where the agenda
+        // begins.
+        if (isFirstHeader) {
+          const startLine = document.createElement("div");
+          startLine.style.width = "calc(100% - 40px)";
+          startLine.style.maxWidth = "1210px";
+          startLine.style.margin = "6px auto 2px auto";
+          startLine.style.borderTop = "1px solid #d9d9d9";
+          startLine.style.boxSizing = "border-box";
+          container.appendChild(startLine);
+        }
+        isFirstHeader = false;
+
+        // Split into blocks: singles render as today; concurrent groups render
+        // as a time grid. Non-overlapping sessions are completely unchanged.
+        const blocks = this._buildDayBlocks(daySessions);
+        blocks.forEach((blk) => {
+          if (blk.type === "single") {
+            container.appendChild(
+              this._renderItem(
+                blk.session, theme, cfg, openSessions, getSpeakers, eventTimezone
+              )
+            );
+          } else {
+            container.appendChild(
+              this._renderConcurrentGroup(
+                blk, theme, cfg, openSessions, getSpeakers, eventTimezone
+              )
+            );
+          }
         });
       }
 
@@ -490,19 +559,437 @@ export default class extends HTMLElement {
     }
   }
 
-  _renderItem(session, theme, cfg, allSessions, getSpeakers, eventTimezone) {
-    // IMPORTANT: create the custom element by tag name and set properties
-    const el = document.createElement("namespace-vertical-agenda");
-    el.session = session;
-    el.theme = theme;
+  // ===========================================================
+  // CONCURRENT SESSION GROUPING (Stage 1: detection + columns)
+  // ===========================================================
 
-    // Detect break sessions via the "Break session?" custom field (Yes/No)
+  // Two sessions overlap only if their time ranges STRICTLY intersect.
+  // Touching at a boundary (one ends when the next starts) is NOT overlap.
+  _sessionsOverlap(a, b) {
+    const aStart = a?.startDateTime ? new Date(a.startDateTime).getTime() : null;
+    const aEnd = a?.endDateTime ? new Date(a.endDateTime).getTime() : null;
+    const bStart = b?.startDateTime ? new Date(b.startDateTime).getTime() : null;
+    const bEnd = b?.endDateTime ? new Date(b.endDateTime).getTime() : null;
+    if (aStart == null || aEnd == null || bStart == null || bEnd == null) {
+      return false; // missing times -> treat as non-overlapping (standalone)
+    }
+    return aStart < bEnd && bStart < aEnd;
+  }
+
+  // Split a day's sessions into an ordered list of "blocks". Each block is
+  // either { type: "single", session } or { type: "group", sessions: [...] }.
+  // Breaks are always standalone singles, even if their time overlaps.
+  // Order is by start time so the agenda reads top-to-bottom chronologically.
+  _buildDayBlocks(daySessions) {
+    const isBreakSession = (s) => {
+      const f = s?.sessionCustomFields?.find(
+        (x) => x.name?.trim().toLowerCase() === "break session?"
+      );
+      return !!f?.value?.includes("Yes");
+    };
+
+    // Sessions eligible to participate in concurrency (non-breaks with times)
+    const eligible = [];
+    const forcedSingles = [];
+    daySessions.forEach((s) => {
+      const hasTimes = s?.startDateTime && s?.endDateTime;
+      if (isBreakSession(s) || !hasTimes) forcedSingles.push(s);
+      else eligible.push(s);
+    });
+
+    // Union-find style clustering: group eligible sessions that overlap
+    // transitively (A-B overlap, B-C overlap => A,B,C one group).
+    const clusters = [];
+    eligible.forEach((s) => {
+      let placed = null;
+      for (const cluster of clusters) {
+        if (cluster.some((c) => this._sessionsOverlap(c, s))) {
+          if (placed) {
+            // s bridges two clusters -> merge them
+            placed.push(...cluster);
+            cluster.length = 0;
+          } else {
+            cluster.push(s);
+            placed = cluster;
+          }
+        }
+      }
+      if (!placed) clusters.push([s]);
+    });
+    const realClusters = clusters.filter((c) => c.length > 0);
+
+    // Build blocks: a cluster of 1 is a single; 2+ is a concurrent group.
+    const blocks = [];
+    realClusters.forEach((cluster) => {
+      if (cluster.length === 1) {
+        blocks.push({ type: "single", session: cluster[0] });
+      } else {
+        const sorted = [...cluster].sort(
+          (a, b) =>
+            new Date(a.startDateTime) - new Date(b.startDateTime) ||
+            new Date(a.endDateTime) - new Date(b.endDateTime)
+        );
+        blocks.push({
+          type: "group",
+          sessions: sorted,
+          columns: this._assignColumns(sorted),
+        });
+      }
+    });
+    forcedSingles.forEach((s) => blocks.push({ type: "single", session: s }));
+
+    // Order all blocks by their earliest start time
+    const blockStart = (blk) =>
+      blk.type === "single"
+        ? new Date(blk.session.startDateTime || 0).getTime()
+        : new Date(blk.sessions[0].startDateTime || 0).getTime();
+    blocks.sort((a, b) => blockStart(a) - blockStart(b));
+    return blocks;
+  }
+
+  // Option B column assignment: each session takes the first column whose
+  // last-placed session has already ended. Returns { colOf: Map, colCount }.
+  _assignColumns(sortedSessions) {
+    const colEndTimes = []; // colEndTimes[i] = end time of last session in col i
+    const colOf = new Map(); // session -> column index
+    sortedSessions.forEach((s) => {
+      const start = new Date(s.startDateTime).getTime();
+      const end = new Date(s.endDateTime).getTime();
+      let col = colEndTimes.findIndex((endT) => endT <= start);
+      if (col === -1) {
+        col = colEndTimes.length;
+        colEndTimes.push(end);
+      } else {
+        colEndTimes[col] = end;
+      }
+      colOf.set(s, col);
+    });
+    return { colOf, colCount: colEndTimes.length };
+  }
+
+  // ===========================================================
+  // CONCURRENT GROUP RENDERING (Stage 2: time-grid geometry)
+  // ===========================================================
+  _renderConcurrentGroup(blk, theme, cfg, allSessions, getSpeakers, eventTimezone) {
+    const colCount = blk.columns.colCount;
+
+    // Decide grid vs. stacked based on per-tile width. When columns would be
+    // narrower than MIN_TILE_W, collapse to a single vertical stack (mobile).
+    const MIN_TILE_W = 150;
+    const RAIL_RESERVE = 88; // rail width + gap, matches grid layout
+    const viewportW =
+      window.innerWidth || document.documentElement.clientWidth || 1920;
+    const usableW = Math.min(viewportW - 40, 1210) - RAIL_RESERVE;
+    const perTileW = usableW / colCount;
+
+    if (perTileW < MIN_TILE_W) {
+      return this._renderConcurrentStack(
+        blk, theme, cfg, allSessions, getSpeakers, eventTimezone
+      );
+    }
+
+    return this._renderConcurrentGrid(
+      blk, theme, cfg, allSessions, getSpeakers, eventTimezone
+    );
+  }
+
+  // Mobile / narrow: stack the group's sessions vertically in start-time order,
+  // full-width content-height cards, with a grouping accent + shared time header
+  // so they still read as concurrent.
+  _renderConcurrentStack(blk, theme, cfg, allSessions, getSpeakers, eventTimezone) {
+    const tz = eventTimezone || "America/New_York";
+    const sessions = [...blk.sessions].sort(
+      (a, b) => new Date(a.startDateTime) - new Date(b.startDateTime)
+    );
+
+    const wrap = document.createElement("div");
+    wrap.classList.add("concurrentStack");
+    wrap.style.width = "calc(100% - 40px)";
+    wrap.style.maxWidth = "1210px";
+    wrap.style.margin = "0 auto";
+    wrap.style.boxSizing = "border-box";
+    wrap.style.paddingTop = "14px";
+    // Left accent binds the group visually.
+    wrap.style.borderLeft = "3px solid #c9c9c9";
+    wrap.style.paddingLeft = "12px";
+
+    // Shared time header spanning the group's overall window.
+    const groupStart = new Date(
+      Math.min(...sessions.map((s) => new Date(s.startDateTime).getTime()))
+    );
+    const groupEnd = new Date(
+      Math.max(...sessions.map((s) => new Date(s.endDateTime).getTime()))
+    );
+    const fmt = (d) =>
+      d.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        timeZone: tz,
+      });
+    const header = document.createElement("div");
+    header.style.fontSize = "13px";
+    header.style.fontWeight = "700";
+    header.style.marginBottom = "10px";
+    header.textContent = `${fmt(groupStart)}–${fmt(groupEnd)} · Concurrent sessions`;
+    wrap.appendChild(header);
+
+    // Each session as a full-width, content-height compact TILE card (same
+    // look as desktop tiles, not the heavy standalone card).
+    const stackInner = document.createElement("div");
+    stackInner.style.display = "flex";
+    stackInner.style.flexDirection = "column";
+    stackInner.style.gap = "10px";
+    sessions.forEach((s) => {
+      const el = document.createElement("namespace-vertical-agenda");
+      el.session = s;
+      el.theme = theme;
+      el.config = {
+        ...cfg,
+        allSessions: allSessions || [],
+        getSpeakers,
+        eventTimezone,
+        ...this._detectSessionFields(s),
+        eventLang: this._eventLang || "en",
+        tileMode: true,
+        tileStack: true, // content-height, no fixed-height truncation
+      };
+      el.style.display = "block";
+      el.style.width = "100%";
+      stackInner.appendChild(el);
+    });
+    wrap.appendChild(stackInner);
+
+    return wrap;
+  }
+
+  _renderConcurrentGrid(blk, theme, cfg, allSessions, getSpeakers, eventTimezone) {
+    // --- Tunable geometry constants ---
+    const PX_PER_MIN = 3; // tile height per minute of duration
+    const MIN_H = 34; // floor so a very short tile can still show title + "show more"
+    const MAX_H = 320; // cap so a very long session doesn't dominate the grid
+    const ROW_GAP = 5; // visual gap below each tile (separates stacked tiles)
+    const RAIL_W = 80; // left time-rail width (matches single-card gutter)
+    const COL_GAP = 12; // gap between columns
+
+    const tz = eventTimezone || "America/New_York";
+    const sessions = blk.sessions;
+    const { colOf, colCount } = blk.columns;
+
+    // Group start = earliest start; all positions measured from it.
+    const groupStartMs = Math.min(
+      ...sessions.map((s) => new Date(s.startDateTime).getTime())
+    );
+    const durMin = (s) =>
+      (new Date(s.endDateTime).getTime() -
+        new Date(s.startDateTime).getTime()) /
+      60000;
+    // True time position of any timestamp (px from group start).
+    const timePos = (ms) =>
+      Math.round(((ms - groupStartMs) / 60000) * PX_PER_MIN);
+    // Tile top = exact start position. Tile height = exact duration, clamped.
+    // Because sessions sharing a column never overlap in time, exact-positioned
+    // tiles can never collide — no push logic needed.
+    const topOf = (s) => timePos(new Date(s.startDateTime).getTime());
+    // Full duration-based height (clamped), WITHOUT the row-gap trim.
+    const fullTileHeight = (s) =>
+      Math.max(MIN_H, Math.min(MAX_H, Math.round(durMin(s) * PX_PER_MIN)));
+
+    // Determine the last tile in each column (it should NOT be gap-trimmed, so
+    // it reaches its true end-time gridline).
+    const lastInColumn = new Set();
+    for (let c = 0; c < colCount; c++) {
+      const colSessions = sessions
+        .filter((x) => colOf.get(x) === c)
+        .sort((a, b) => new Date(a.startDateTime) - new Date(b.startDateTime));
+      if (colSessions.length) lastInColumn.add(colSessions[colSessions.length - 1]);
+    }
+
+    // Rendered height: last tile in a column keeps full height (aligns to end
+    // gridline); others are trimmed by ROW_GAP for visual separation.
+    const tileHeight = (s) =>
+      lastInColumn.has(s)
+        ? fullTileHeight(s)
+        : Math.max(MIN_H, fullTileHeight(s) - ROW_GAP);
+
+    // Distinct times (starts + ends) for gridlines + rail labels.
+    const distinctTimes = new Map(); // pos -> ms
+    sessions.forEach((s) => {
+      const startMs = new Date(s.startDateTime).getTime();
+      const endMs = new Date(s.endDateTime).getTime();
+      distinctTimes.set(timePos(startMs), startMs);
+      distinctTimes.set(timePos(endMs), endMs);
+    });
+
+    // Grid height = furthest tile bottom (accounts for min/max clamping).
+    let gridHeight = 0;
+    sessions.forEach((s) => {
+      gridHeight = Math.max(gridHeight, topOf(s) + tileHeight(s));
+    });
+    // Also ensure the last time label/gridline isn't clipped.
+    [...distinctTimes.keys()].forEach((pos) => {
+      gridHeight = Math.max(gridHeight, pos);
+    });
+
+    // Outer wrapper matches the single-card width/centering.
+    const wrap = document.createElement("div");
+    wrap.classList.add("concurrentGroup");
+    wrap.style.width = "calc(100% - 40px)";
+    wrap.style.maxWidth = "1210px";
+    wrap.style.margin = "0 auto";
+    wrap.style.boxSizing = "border-box";
+    wrap.style.display = "grid";
+    wrap.style.gridTemplateColumns = `${RAIL_W}px 1fr`;
+    wrap.style.gap = "8px";
+    wrap.style.paddingTop = "14px"; // clear the previous block above the rail
+
+    // Time rail: a label at each distinct time, positioned by true time.
+    // Styled to RHYME with the single-card gutter (same time typography +
+    // italic timezone abbreviation) so single and concurrent feel consistent.
+    const railTzAbbr = (() => {
+      // Mirror the single-card timezone label logic (override, else auto).
+      const override =
+        typeof cfg.timezoneAbbr === "string" ? cfg.timezoneAbbr.trim() : "";
+      if (cfg.showTimezone === false) return "";
+      if (override) return override;
+      const anyStart = sessions[0]?.startDateTime
+        ? new Date(sessions[0].startDateTime)
+        : null;
+      return anyStart
+        ? anyStart
+            .toLocaleString("en-US", { timeZoneName: "short", timeZone: tz })
+            .split(" ")
+            .pop()
+        : "";
+    })();
+    // Time typography derived the SAME way as the standalone gutter and tiles:
+    // theme paragraph weight/family as a base, then sessionTime overrides.
+    const stTypo = cfg.typography?.sessionTime || {};
+    const paraTheme = theme?.paragraph || {};
+    const railActiveSize = (() => {
+      const w =
+        window.innerWidth || document.documentElement.clientWidth || 1920;
+      if (w <= 600 && stTypo.fontSizeSm) return stTypo.fontSizeSm;
+      if (w <= 1024 && stTypo.fontSizeMd) return stTypo.fontSizeMd;
+      return stTypo.fontSize;
+    })();
+    const railFontSize = railActiveSize ? `${railActiveSize}px` : "14px";
+    // Weight: sessionTime.bold wins if set; else theme paragraph weight; else 700.
+    const railWeight =
+      stTypo.bold === true
+        ? "700"
+        : stTypo.bold === false
+        ? "400"
+        : paraTheme.fontWeight || "700";
+    const railFontFamily = paraTheme.fontFamily || "";
+
+    const rail = document.createElement("div");
+    rail.classList.add("concurrentRail");
+    rail.style.position = "relative";
+
+    // Sort distinct times top-to-bottom, suppress labels that would collide
+    // with the one above (within MIN_LABEL_GAP px), and show the timezone
+    // abbreviation only once (on the first label).
+    const MIN_LABEL_GAP = 26; // px; smaller than a two-line label so no overlap
+    const sortedTimes = [...distinctTimes.entries()].sort((a, b) => a[0] - b[0]);
+    let lastShownPos = -Infinity;
+    let tzShown = false;
+    sortedTimes.forEach(([pos, ms]) => {
+      if (pos - lastShownPos < MIN_LABEL_GAP) return; // too close -> skip label
+      lastShownPos = pos;
+
+      const lbl = document.createElement("div");
+      lbl.style.position = "absolute";
+      lbl.style.left = "8px"; // match single-card gutter's left padding
+      if (pos <= 0) {
+        // Topmost label: align its TOP with the first tile's top (like the
+        // gutter time sits at the top of a single card), not centered on 0
+        // (which would pull it up toward the date header).
+        lbl.style.top = "8px";
+      } else {
+        lbl.style.top = `${pos}px`;
+        lbl.style.transform = "translateY(-50%)";
+      }
+
+      const timeLine = document.createElement("div");
+      timeLine.textContent = new Date(ms).toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        timeZone: tz,
+      });
+      timeLine.style.fontSize = railFontSize;
+      timeLine.style.fontWeight = railWeight;
+      if (railFontFamily) timeLine.style.fontFamily = railFontFamily;
+      timeLine.style.color = "#333";
+      timeLine.style.lineHeight = "1.1";
+      lbl.appendChild(timeLine);
+
+      // Timezone abbreviation once, under the first shown label only.
+      if (railTzAbbr && !tzShown) {
+        tzShown = true;
+        const tzLine = document.createElement("div");
+        tzLine.textContent = railTzAbbr;
+        tzLine.style.fontSize = "11px";
+        tzLine.style.fontStyle = "italic";
+        tzLine.style.color = "#888";
+        tzLine.style.lineHeight = "1.1";
+        lbl.appendChild(tzLine);
+      }
+
+      rail.appendChild(lbl);
+    });
+
+    // Positioned tile area.
+    const grid = document.createElement("div");
+    grid.classList.add("concurrentGrid");
+    grid.style.position = "relative";
+    grid.style.height = `${gridHeight}px`;
+
+    const colWidthPct = 100 / colCount;
+    sessions.forEach((s) => {
+      const col = colOf.get(s);
+      const tile = document.createElement("div");
+      tile.classList.add("concurrentTile");
+      tile.style.position = "absolute";
+      tile.style.top = `${topOf(s)}px`;
+      tile.style.height = `${tileHeight(s)}px`;
+      tile.style.left = `calc(${col * colWidthPct}% + ${col === 0 ? 0 : COL_GAP / 2}px)`;
+      tile.style.width = `calc(${colWidthPct}% - ${COL_GAP}px)`;
+      tile.style.boxSizing = "border-box";
+
+      // Render the tile as an AgendaItem in "tile mode" so it reuses all the
+      // existing card logic (speakers, accent/focus/break coloring, modal).
+      const el = document.createElement("namespace-vertical-agenda");
+      el.session = s;
+      el.theme = theme;
+      el.config = {
+        ...cfg,
+        allSessions: allSessions || [],
+        getSpeakers,
+        eventTimezone,
+        ...this._detectSessionFields(s),
+        eventLang: this._eventLang || "en",
+        tileMode: true,
+        tileHeight: tileHeight(s),
+      };
+      el.style.display = "block";
+      el.style.height = "100%";
+      tile.appendChild(el);
+
+      grid.appendChild(tile);
+    });
+
+    wrap.append(rail, grid);
+    return wrap;
+  }
+
+  // Shared session-field detection (break / break type / focus) used by both
+  // single-card rendering and concurrent tiles.
+  _detectSessionFields(session) {
     const breakField = session?.sessionCustomFields?.find(
       (f) => f.name === "Break session?"
     );
     const isBreak = !!breakField?.value?.includes("Yes");
 
-    // Break type drives which icon renders (Coffee/Lunch/Networking/General)
     const breakTypeField = session?.sessionCustomFields?.find(
       (f) => f.name === "Break Type"
     );
@@ -511,13 +998,27 @@ export default class extends HTMLElement {
         ? breakTypeField.value[0]
         : "";
 
+    const focusField = session?.sessionCustomFields?.find(
+      (f) => f.name?.trim().toLowerCase() === "focus session?"
+    );
+    const isFocus = !!focusField?.value?.includes("Yes");
+
+    return { isBreak, breakType, isFocus };
+  }
+
+  _renderItem(session, theme, cfg, allSessions, getSpeakers, eventTimezone) {
+    // IMPORTANT: create the custom element by tag name and set properties
+    const el = document.createElement("namespace-vertical-agenda");
+    el.session = session;
+    el.theme = theme;
+
     el.config = {
       ...cfg,
       allSessions: allSessions || [],
       getSpeakers,
       eventTimezone,
-      isBreak,
-      breakType,
+      eventLang: this._eventLang || "en",
+      ...this._detectSessionFields(session),
     };
 
     return el;
@@ -559,6 +1060,47 @@ export default class extends HTMLElement {
       month: "long",
       day: "numeric",
     });
+  }
+
+  _buildFocusLegend(cfg) {
+    const focusColor = cfg.focusAccent || "#1a7f8e";
+    const focusLabel =
+      typeof cfg.focusLabel === "string" && cfg.focusLabel.trim()
+        ? cfg.focusLabel.trim()
+        : "Focus";
+
+    const legend = document.createElement("div");
+    legend.style.display = "flex";
+    legend.style.alignItems = "center";
+    legend.style.gap = "8px";
+    legend.style.flexShrink = "0";
+
+    const swatch = document.createElement("span");
+    swatch.style.width = "16px";
+    swatch.style.height = "16px";
+    swatch.style.borderRadius = "4px";
+    swatch.style.background = focusColor;
+    swatch.style.flexShrink = "0";
+    swatch.style.display = "inline-block";
+
+    const labelEl = document.createElement("span");
+    // Localized sentence template (auto-detected event language). The [label]
+    // stays planner-editable; only the surrounding phrasing is translated.
+    const lang = this._eventLang || "en";
+    const legendText =
+      lang === "es"
+        ? `Indica una sesión de ${focusLabel}`
+        : lang === "pt"
+        ? `Indica uma sessão de ${focusLabel}`
+        : `Indicates a ${focusLabel} session`;
+    labelEl.textContent = legendText;
+    const legendMobile =
+      (window.innerWidth || document.documentElement.clientWidth || 1920) <= 600;
+    labelEl.style.fontSize = legendMobile ? "12px" : "14px";
+    labelEl.style.fontStyle = "italic";
+
+    legend.append(swatch, labelEl);
+    return legend;
   }
 
   _renderDayHeader(dayKey, theme, cfg) {

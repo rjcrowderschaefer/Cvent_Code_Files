@@ -155,6 +155,12 @@ export default class ExampleAgendaEditor extends HTMLElement {
       groupByDay: true,
       speakerOrder: "alphabetical",
       hideDateNav: false,
+      plenaryAccent: "#f7a325",
+      focusAccent: "#1a7f8e",
+      focusGutterText: "#e8f6f8",
+      showAccentBar: false,
+      showFocusLegend: false,
+      focusLabel: "Focus",
       dateNav: {
         fontSize: 18,
         fontSizeMd: 16,
@@ -171,9 +177,9 @@ export default class ExampleAgendaEditor extends HTMLElement {
       gutterBg: "#f7a325",
       cardBg: "#ffffff",
       cardBorder: {
-        width: 1,
+        width: 0.5,
         style: "solid",
-        color: "#000000",
+        color: "#cccccc",
       },
       showMoreColor: "#f7a325",
       modalColors: {
@@ -181,7 +187,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
         dividerColor: "#555555",
         contentBg: "#ffffff",
       },
-      typography: this._makeDefaultTypography(),
+      typography: this._makeCompactTypography(),
       breakStyle: {
         gutterBg: "#e8eaed",
         gutterText: "#5f5e5a",
@@ -328,6 +334,42 @@ export default class ExampleAgendaEditor extends HTMLElement {
         fontSizeMd: 14,
         fontSizeSm: 12,
       },
+    };
+  }
+
+  // Compact typography scale — matches the concurrent-tile aesthetic. Applied
+  // when "Compact card styling" is turned on (overwrites all typography).
+  // Keeps the same colors/bold/italic flags as the standard scale.
+  _makeCompactTypography() {
+    const base = {
+      fontSize: 15,
+      fontSizeMd: 14,
+      fontSizeSm: 13,
+      color: "#000000",
+      bold: false,
+      italic: false,
+      underline: false,
+    };
+    return {
+      agendaHeader: { ...base, fontSize: 28, fontSizeMd: 24, fontSizeSm: 20, bold: false },
+      agendaSubheader: { ...base, fontSize: 15, fontSizeMd: 14, fontSizeSm: 13 },
+      eventDate: { ...base, fontSize: 18, fontSizeMd: 16, fontSizeSm: 14, bold: true },
+      sessionName: { ...base, fontSize: 17, fontSizeMd: 15, fontSizeSm: 14, bold: true },
+      sessionTime: { ...base, fontSize: 12, fontSizeMd: 12, fontSizeSm: 11, bold: true, color: "#FFFFFF" },
+      sessionDescription: { ...base, fontSize: 13, fontSizeMd: 12, fontSizeSm: 12 },
+      sessionLocation: { ...base, fontSize: 12, fontSizeMd: 11, fontSizeSm: 10 },
+      sessionCategory: { ...base, fontSize: 12, fontSizeMd: 11, fontSizeSm: 10 },
+      speakerName: { ...base, fontSize: 14, fontSizeMd: 13, fontSizeSm: 12, bold: true, color: "#F7A325" },
+      speakerTitle: { ...base, fontSize: 12, fontSizeMd: 11, fontSizeSm: 11, italic: true },
+      speakerCompany: { ...base, fontSize: 12, fontSizeMd: 11, fontSizeSm: 11 },
+      modalName: { ...base, fontSize: 18, bold: true },
+      modalSpeakerName: { ...base, fontSize: 16, bold: true },
+      modalSpeakerTitle: { ...base, fontSize: 13, fontSizeMd: 12, fontSizeSm: 12, italic: true },
+      modalSpeakerCompany: { ...base, fontSize: 13, fontSizeMd: 12, fontSizeSm: 12 },
+      modalSpeakerBio: { ...base, fontSize: 13, fontSizeMd: 12, fontSizeSm: 12 },
+      modalSessionsHeader: { ...base, fontSize: 14, fontSizeMd: 13, fontSizeSm: 12, bold: true },
+      modalSessionName: { ...base, fontSize: 13, fontSizeMd: 12, fontSizeSm: 12, bold: true },
+      modalSessionDateTime: { ...base, fontSize: 12, fontSizeMd: 11, fontSizeSm: 11 },
     };
   }
 
@@ -705,6 +747,88 @@ export default class ExampleAgendaEditor extends HTMLElement {
 
     agendaBlock.appendChild(bsWrap);
 
+    // Session Type Styling (plenary vs focus)
+    const stWrap = document.createElement("div");
+    stWrap.className = "section";
+
+    const stHeading = document.createElement("h3");
+    stHeading.textContent = "Session Type Styling";
+    stWrap.appendChild(stHeading);
+
+    const stNote = document.createElement("div");
+    stNote.style.fontSize = "11px";
+    stNote.style.opacity = "0.7";
+    stNote.style.margin = "0 0 8px";
+    stNote.textContent =
+      'Off by default. When on, every card gets a top accent bar. Sessions with a "Focus session?" custom field set to "Yes" use the focus color (bar + gutter); all others use the plenary color.';
+    stWrap.appendChild(stNote);
+
+    // Master toggle — off by default so existing events are unchanged
+    stWrap.appendChild(
+      this._checkbox(
+        "Show session-type accent bar",
+        this._config.showAccentBar === true,
+        (v) => this._patch({ showAccentBar: v })
+      )
+    );
+    stWrap.appendChild(document.createElement("br"));
+    stWrap.appendChild(document.createElement("br"));
+
+    stWrap.appendChild(
+      this._colorRow(
+        "Plenary accent",
+        "plenaryAccent",
+        this._config.plenaryAccent || "#f7a325",
+        (v) => this._patch({ plenaryAccent: v })
+      )
+    );
+
+    stWrap.appendChild(
+      this._colorRow(
+        "Focus accent",
+        "focusAccent",
+        this._config.focusAccent || "#1a7f8e",
+        (v) => this._patch({ focusAccent: v })
+      )
+    );
+
+    stWrap.appendChild(
+      this._colorRow(
+        "Focus gutter text color",
+        "focusGutterText",
+        this._config.focusGutterText || "#e8f6f8",
+        (v) => this._patch({ focusGutterText: v })
+      )
+    );
+
+    // Legend toggle (default off — most events are single-track)
+    stWrap.appendChild(
+      this._checkbox(
+        "Show focus legend above agenda",
+        this._config.showFocusLegend === true,
+        (v) => this._patch({ showFocusLegend: v })
+      )
+    );
+    stWrap.appendChild(document.createElement("br"));
+    stWrap.appendChild(document.createElement("br"));
+
+    // Editable focus label (used in the legend)
+    stWrap.appendChild(this._label("Focus legend label"));
+    stWrap.appendChild(document.createElement("br"));
+    const focusLabelInput = document.createElement("input");
+    focusLabelInput.type = "text";
+    focusLabelInput.placeholder = "Focus";
+    focusLabelInput.value =
+      typeof this._config.focusLabel === "string"
+        ? this._config.focusLabel
+        : "Focus";
+    focusLabelInput.style.width = "100%";
+    focusLabelInput.onchange = () =>
+      this._patch({ focusLabel: focusLabelInput.value });
+    stWrap.appendChild(focusLabelInput);
+
+    agendaBlock.appendChild(stWrap);
+
 // Sticky offset = height of the Cvent header the nav should sit beneath
     const dnOffsetWrap = document.createElement("div");
     dnOffsetWrap.className = "row field";
@@ -913,7 +1037,8 @@ soSelect.onchange = () => {
     const borderWidthInput = document.createElement("input");
     borderWidthInput.type = "number";
     borderWidthInput.min = "0";
-    borderWidthInput.value = this._config.cardBorder?.width ?? 1;
+    borderWidthInput.step = "0.5";
+    borderWidthInput.value = this._config.cardBorder?.width ?? 0.5;
 
     borderWidthInput.oninput = () => {
       this._patch({
@@ -962,7 +1087,7 @@ soSelect.onchange = () => {
 
     const borderColorInput = document.createElement("input");
     borderColorInput.type = "color";
-    borderColorInput.value = this._config.cardBorder?.color || "#000000";
+    borderColorInput.value = this._config.cardBorder?.color || "#cccccc";
 
     borderColorInput.onchange = () => {
       this._patch({
