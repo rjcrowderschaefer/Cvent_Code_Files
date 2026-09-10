@@ -777,9 +777,9 @@ export default class extends HTMLElement {
 
   _renderConcurrentGrid(blk, theme, cfg, allSessions, getSpeakers, eventTimezone) {
     // --- Tunable geometry constants ---
-    const PX_PER_MIN = 3; // tile height per minute of duration
-    const MIN_H = 34; // floor so a very short tile can still show title + "show more"
-    const MAX_H = 320; // cap so a very long session doesn't dominate the grid
+    const PX_PER_MIN = 4; // tuned for a 30-60 min session norm (30min ~= content floor)
+    const MIN_H = 118; // floor: enough for title + start/end time + a speaker row
+    const MAX_H = 440; // cap (~110 min at 4px/min) so very long sessions don't dominate
     const ROW_GAP = 5; // visual gap below each tile (separates stacked tiles)
     const RAIL_W = 80; // left time-rail width (matches single-card gutter)
     const COL_GAP = 12; // gap between columns
@@ -1084,44 +1084,67 @@ export default class extends HTMLElement {
   }
 
   _buildFocusLegend(cfg) {
+    const lang = this._eventLang || "en";
+    const legendMobile =
+      (window.innerWidth || document.documentElement.clientWidth || 1920) <= 600;
+
+    const sentence = (label) =>
+      lang === "es"
+        ? `Indica una sesión de ${label}`
+        : lang === "pt"
+        ? `Indica uma sessão de ${label}`
+        : `Indicates a ${label} session`;
+
+    const makeItem = (color, label) => {
+      const item = document.createElement("div");
+      item.style.display = "flex";
+      item.style.alignItems = "center";
+      item.style.gap = "8px";
+      item.style.flexShrink = "0";
+
+      const swatch = document.createElement("span");
+      swatch.style.width = "16px";
+      swatch.style.height = "16px";
+      swatch.style.borderRadius = "4px";
+      swatch.style.background = color;
+      swatch.style.flexShrink = "0";
+      swatch.style.display = "inline-block";
+
+      const labelEl = document.createElement("span");
+      labelEl.textContent = sentence(label);
+      labelEl.style.fontSize = legendMobile ? "12px" : "14px";
+      labelEl.style.fontStyle = "italic";
+
+      item.append(swatch, labelEl);
+      return item;
+    };
+
+    // Container holding both legend items (plenary + focus), left-aligned so
+    // the swatches form a clean vertical line regardless of text length.
+    const wrap = document.createElement("div");
+    wrap.style.display = "flex";
+    wrap.style.flexDirection = "column";
+    wrap.style.alignItems = "flex-start";
+    wrap.style.gap = "4px";
+    wrap.style.flexShrink = "0";
+
+    // Plenary legend item
+    const plenaryColor = cfg.plenaryAccent || "#f7a325";
+    const plenaryLabel =
+      typeof cfg.plenaryLabel === "string" && cfg.plenaryLabel.trim()
+        ? cfg.plenaryLabel.trim()
+        : "plenary";
+    wrap.append(makeItem(plenaryColor, plenaryLabel));
+
+    // Focus legend item
     const focusColor = cfg.focusAccent || "#1a7f8e";
     const focusLabel =
       typeof cfg.focusLabel === "string" && cfg.focusLabel.trim()
         ? cfg.focusLabel.trim()
         : "Focus";
+    wrap.append(makeItem(focusColor, focusLabel));
 
-    const legend = document.createElement("div");
-    legend.style.display = "flex";
-    legend.style.alignItems = "center";
-    legend.style.gap = "8px";
-    legend.style.flexShrink = "0";
-
-    const swatch = document.createElement("span");
-    swatch.style.width = "16px";
-    swatch.style.height = "16px";
-    swatch.style.borderRadius = "4px";
-    swatch.style.background = focusColor;
-    swatch.style.flexShrink = "0";
-    swatch.style.display = "inline-block";
-
-    const labelEl = document.createElement("span");
-    // Localized sentence template (auto-detected event language). The [label]
-    // stays planner-editable; only the surrounding phrasing is translated.
-    const lang = this._eventLang || "en";
-    const legendText =
-      lang === "es"
-        ? `Indica una sesión de ${focusLabel}`
-        : lang === "pt"
-        ? `Indica uma sessão de ${focusLabel}`
-        : `Indicates a ${focusLabel} session`;
-    labelEl.textContent = legendText;
-    const legendMobile =
-      (window.innerWidth || document.documentElement.clientWidth || 1920) <= 600;
-    labelEl.style.fontSize = legendMobile ? "12px" : "14px";
-    labelEl.style.fontStyle = "italic";
-
-    legend.append(swatch, labelEl);
-    return legend;
+    return wrap;
   }
 
   _renderDayHeader(dayKey, theme, cfg) {

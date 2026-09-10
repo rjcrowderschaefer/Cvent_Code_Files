@@ -161,6 +161,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
       showAccentBar: false,
       showFocusLegend: false,
       focusLabel: "Focus",
+      plenaryLabel: "plenary",
       dateNav: {
         fontSize: 18,
         fontSizeMd: 16,
@@ -826,6 +827,22 @@ export default class ExampleAgendaEditor extends HTMLElement {
     focusLabelInput.onchange = () =>
       this._patch({ focusLabel: focusLabelInput.value });
     stWrap.appendChild(focusLabelInput);
+
+    // Editable plenary label (used in the legend)
+    stWrap.appendChild(document.createElement("br"));
+    stWrap.appendChild(this._label("Plenary legend label"));
+    stWrap.appendChild(document.createElement("br"));
+    const plenaryLabelInput = document.createElement("input");
+    plenaryLabelInput.type = "text";
+    plenaryLabelInput.placeholder = "plenary";
+    plenaryLabelInput.value =
+      typeof this._config.plenaryLabel === "string"
+        ? this._config.plenaryLabel
+        : "plenary";
+    plenaryLabelInput.style.width = "100%";
+    plenaryLabelInput.onchange = () =>
+      this._patch({ plenaryLabel: plenaryLabelInput.value });
+    stWrap.appendChild(plenaryLabelInput);
 
     agendaBlock.appendChild(stWrap);
 
