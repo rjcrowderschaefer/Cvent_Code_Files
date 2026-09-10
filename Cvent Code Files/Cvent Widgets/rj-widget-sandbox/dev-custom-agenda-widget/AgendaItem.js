@@ -20,6 +20,7 @@ export class AgendaItem extends HTMLElement {
     const cfg = this.config || {};
     const s = this.session || {};
 
+
     // Concurrent tile mode: render a compact, height-adaptive tile instead of
     // the full card. Everything below (the full-card path) is left untouched.
     if (cfg.tileMode === true) {
@@ -168,10 +169,48 @@ export class AgendaItem extends HTMLElement {
       .sessionMetaRow {
         display: flex;
         align-items: center;
-        column-gap: 15px;
+        column-gap: 10px;
         row-gap: 8px;
         flex-wrap: wrap;
         align-self: flex-start;
+      }
+
+      .sessionMetaPill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        text-transform: uppercase;
+        font-weight: 600;
+        border-radius: 12px;
+        padding: 4px 10px 4px 4px;
+      }
+      .sessionMetaIconChip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      .sessionTagRow {
+        display: flex;
+        flex-wrap: wrap;
+        column-gap: 8px;
+        row-gap: 6px;
+        align-self: flex-start;
+        margin-top: 8px;
+      }
+      .sessionTagPill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 9.5px;
+        font-weight: 500;
+        color: #555;
+        background: #f0f0ee;
+        border: 1px solid #e0e0dd;
+        border-radius: 11px;
+        padding: 3px 9px;
       }
 
       .speakersWrap {
@@ -694,50 +733,61 @@ export class AgendaItem extends HTMLElement {
       const metaRow = document.createElement("div");
       metaRow.classList.add("sessionMetaRow");
 
+      // Accent-tinted pills (Option C), colored by session type: focus accent
+      // for focus sessions, plenary accent otherwise. Matches the session modal.
+      const pillAccent = isFocus
+        ? focusAccent
+        : cfg.plenaryAccent || "#f7a325";
+      const pillTint = this._tintColor(pillAccent, 0.14);
+      // Pill text size matches the session description font size (responsive).
+      const descTypo = cfg.typography?.sessionDescription || {};
+      const vw =
+        window.innerWidth || document.documentElement.clientWidth || 1920;
+      const descSize =
+        (vw <= 600 && descTypo.fontSizeSm) ||
+        (vw <= 1024 && descTypo.fontSizeMd) ||
+        descTypo.fontSize ||
+        13;
+      // Pills are 10% smaller than the description text.
+      const pillSize = Math.round(descSize * 0.9 * 10) / 10;
+      const pillIconSize = Math.round(pillSize * 0.95);
+
+      const makeMetaPill = (iconType, label, typoKey) => {
+        const pill = document.createElement("div");
+        pill.classList.add("sessionMetaPill");
+        pill.style.background = pillTint;
+        pill.style.color = pillAccent;
+
+        // Icon sits in a solid-accent chip (white icon) so it stands out
+        // against the light tinted pill background.
+        const iconChip = document.createElement("span");
+        iconChip.classList.add("sessionMetaIconChip");
+        iconChip.style.background = pillAccent;
+        const chipSize = Math.round(pillSize * 1.5);
+        iconChip.style.width = `${chipSize}px`;
+        iconChip.style.height = `${chipSize}px`;
+        const icon = this._metaIconSvg(iconType, "#ffffff", pillIconSize);
+        if (icon) iconChip.append(icon);
+
+        const txt = document.createElement("span");
+        txt.textContent = label;
+
+        pill.append(iconChip, txt);
+        this.applyTypographyOverrides(
+          txt,
+          (cfg.typography && cfg.typography[typoKey]) || {},
+          true
+        );
+        txt.style.fontSize = `${pillSize}px`;
+        txt.style.fontWeight = "600"; // semi-bold, overriding any bold from config
+        return pill;
+      };
+
       if (locationName) {
-        const locationEl = document.createElement("div");
-        locationEl.classList.add("sessionLocation");
-
-        const locationIcon = document.createElement("img");
-        locationIcon.src =
-          "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/pix/840e234ada7e4fe585bf4ce841c2d3b5.png";
-        locationIcon.classList.add("sessionLocationIcon");
-
-        const locationText = document.createElement("span");
-        locationText.textContent = locationName;
-
-        locationEl.append(locationIcon, locationText);
-
-        this.applyTypographyOverrides(
-          locationEl,
-          (cfg.typography && cfg.typography.sessionLocation) || {},
-          true
-        );
-
-        metaRow.append(locationEl);
+        metaRow.append(makeMetaPill("location", locationName, "sessionLocation"));
       }
-
       if (categoryName) {
-        const categoryEl = document.createElement("div");
-        categoryEl.classList.add("sessionCategory");
-
-        const categoryIcon = document.createElement("img");
-        categoryIcon.src =
-          "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/pix/5379adb990964836bd3e0bfdf2c9ce44.png";
-        categoryIcon.classList.add("sessionCategoryIcon");
-
-        const categoryText = document.createElement("span");
-        categoryText.textContent = categoryName;
-
-        categoryEl.append(categoryIcon, categoryText);
-
-        this.applyTypographyOverrides(
-          categoryEl,
-          (cfg.typography && cfg.typography.sessionCategory) || {},
-          true
-        );
-
-        metaRow.append(categoryEl);
+        metaRow.append(makeMetaPill("category", categoryName, "sessionCategory"));
       }
       content.append(metaRow);
     }
@@ -813,6 +863,30 @@ export class AgendaItem extends HTMLElement {
       speakersWrap.dataset.count = speakers.length;
       content.append(speakersWrap);
     } 
+
+    // Tags row — up to 5 tags from the "Tags" MultiChoice custom field.
+    // Secondary neutral pills, at the BOTTOM (below speakers), left-aligned.
+    const tagsField = s.sessionCustomFields?.find(
+      (f) => f.name?.trim().toLowerCase() === "tags"
+    );
+    const tagValues = Array.isArray(tagsField?.value)
+      ? tagsField.value.filter((v) => typeof v === "string" && v.trim())
+      : [];
+    if (tagValues.length) {
+      const tagRow = document.createElement("div");
+      tagRow.classList.add("sessionTagRow");
+      tagValues.slice(0, 5).forEach((tag) => {
+        const pill = document.createElement("span");
+        pill.classList.add("sessionTagPill");
+        const icon = this._metaIconSvg("tag", "#777", 9);
+        const txt = document.createElement("span");
+        txt.textContent = tag.trim();
+        if (icon) pill.append(icon);
+        pill.append(txt);
+        tagRow.append(pill);
+      });
+      content.append(tagRow);
+    }
 
     // Assemble — accent bar (when enabled) spans full width on top
     if (accentOn) {
@@ -947,7 +1021,15 @@ export class AgendaItem extends HTMLElement {
         box-sizing:border-box;
       }
       .tbar { height:5px; flex-shrink:0; background:${accentColor}; }
-      .tbody { padding:8px 10px ${cfg.tileStack ? "12px" : "0"}; display:flex; flex-direction:column; gap:3px; min-height:0; flex:1; overflow:${cfg.tileStack ? "visible" : "hidden"}; }
+      .tbarTagged {
+        height:auto; display:flex; align-items:center; justify-content:flex-end;
+        padding:4px 10px;
+      }
+      .tbarTag {
+        display:inline-flex; align-items:center; gap:5px;
+        color:#ffffff; font-size:11px; font-weight:600; text-transform:uppercase;
+      }
+      .tbody { padding:8px 10px ${cfg.tileStack ? "12px" : "6px"}; display:flex; flex-direction:column; gap:3px; min-height:0; flex:1; overflow:${cfg.tileStack ? "visible" : "hidden"}; }
       .ttitle { ${titleCss} line-height:1.2; }
       .ttime { ${timeCss} }
       .tspeakers { display:flex; flex-direction:column; gap:6px; min-height:0; }
@@ -997,6 +1079,12 @@ export class AgendaItem extends HTMLElement {
       .smodalDesc { font-size:14px; line-height:1.5; color:#333; margin-bottom:16px; }
       .smodalTags { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
       .smodalTag { font-size:12px; border:0.5px solid #bbb; border-radius:12px; padding:3px 12px; }
+      .smodalMetaRow { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+      .smodalMeta { display:inline-flex; align-items:center; gap:5px; font-size:12.5px; text-transform:uppercase; font-weight:600; border-radius:12px; padding:4px 10px 4px 4px; }
+      .smodalMetaIconChip { display:inline-flex; align-items:center; justify-content:center; width:19px; height:19px; border-radius:50%; flex-shrink:0; }
+      .smodalMetaIcon { width:12px; height:12px; object-fit:contain; display:inline-block; }
+      .smodalTagRow { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+      .smodalTagPill { display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:500; color:#555; background:#f0f0ee; border:1px solid #e0e0dd; border-radius:11px; padding:3px 9px; }
       .smodalSpeakersHdr { font-size:15px; font-weight:700; margin:4px 0 10px; }
       .smodalSpeakers { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
       .smodalSpeaker { display:flex; gap:10px; cursor:pointer; align-items:flex-start; }
@@ -1039,6 +1127,27 @@ export class AgendaItem extends HTMLElement {
     });
     const bar = document.createElement("div");
     bar.classList.add("tbar");
+
+    // If this session has tags, expand the accent bar and show the first tag
+    // (tag icon + white uppercase text), right-aligned within the bar.
+    const tileTagsField = s.sessionCustomFields?.find(
+      (f) => f.name?.trim().toLowerCase() === "tags"
+    );
+    const tileTagValues = Array.isArray(tileTagsField?.value)
+      ? tileTagsField.value.filter((v) => typeof v === "string" && v.trim())
+      : [];
+    if (tileTagValues.length) {
+      bar.classList.add("tbarTagged");
+      const tagChip = document.createElement("span");
+      tagChip.classList.add("tbarTag");
+      const tagIcon = this._metaIconSvg("tag", "#ffffff", 10);
+      const tagTxt = document.createElement("span");
+      tagTxt.textContent = tileTagValues[0].trim();
+      if (tagIcon) tagChip.append(tagIcon);
+      tagChip.append(tagTxt);
+      bar.append(tagChip);
+    }
+
     const body = document.createElement("div");
     body.classList.add("tbody");
     card.append(bar, body);
@@ -1115,13 +1224,9 @@ export class AgendaItem extends HTMLElement {
       return;
     }
 
-    // Progressive fit AFTER layout. Priority: title (always) -> time ->
-    // description (truncated with ...show more) -> speakers. Each element is
-    // only kept if it FULLY fits. Nothing is ever shown half-cut.
-    //
-    // We measure against the tile's real available height rather than the flex
-    // body's scrollHeight (which a flex column with overflow:hidden reports
-    // unreliably, letting children be compressed instead of overflowing).
+    // Progressive fit AFTER layout. REQUIRED (always shown): title + time +
+    // speakers. The description fills any remaining space (capped at 6 lines,
+    // truncated with "… show more"). MIN_H guarantees room for the required set.
     requestAnimationFrame(() => {
       const BOTTOM_GAP = 10;
       const avail = () => body.clientHeight - BOTTOM_GAP;
@@ -1136,52 +1241,74 @@ export class AgendaItem extends HTMLElement {
       };
       const fits = () => contentH() <= avail();
 
-      if (!fits()) return; // even the title overflows
+      // Layout for ALL tiles: title + time at top, SPEAKERS PINNED TO THE
+      // BOTTOM, description fills the middle (truncated with "… show more").
+      if (timeText) body.append(timeEl);
 
-      // 1) Time — add only if it fully fits.
-      if (timeText) {
-        body.append(timeEl);
+      // Measure title+time+speakers. Shrink the title down to a 12px floor;
+      // if it still doesn't fit, clamp the title's line count (…) so
+      // title+time+speakers ALWAYS fit — no clipped speakers, no missing title.
+      if (speakers.length) body.append(speakersAvatars);
+      if (!fits()) {
+        const baseSize = parseFloat(getComputedStyle(titleEl).fontSize) || 14;
+        const floorSize = 12;
+        let size = baseSize;
+        while (size > floorSize && !fits()) {
+          size -= 0.5;
+          titleEl.style.fontSize = `${size}px`;
+        }
         if (!fits()) {
-          timeEl.remove();
-          return;
+          titleEl.style.display = "-webkit-box";
+          titleEl.style.webkitBoxOrient = "vertical";
+          titleEl.style.overflow = "hidden";
+          let lines = 3;
+          titleEl.style.webkitLineClamp = String(lines);
+          while (lines > 1 && !fits()) {
+            lines -= 1;
+            titleEl.style.webkitLineClamp = String(lines);
+          }
         }
       }
+      if (speakersAvatars.parentNode) speakersAvatars.remove();
 
-      // 2) Description — as many lines as fit, capped at 6, with "… show more".
-      //    Reserve room for the avatar cluster below (so avatars still appear on
-      //    tall tiles). The description never exceeds 6 lines.
-      const MAX_DESC_LINES = 6;
-      let descTruncated = false;
+      // Description fills the middle (no clip — truncate by whole words).
       if (descText) {
-        // Measure the avatar cluster height so we can reserve space for it.
-        let reserve = 0;
-        if (speakers.length) {
-          body.append(speakersAvatars);
-          reserve = speakersAvatars.offsetHeight + 3; // + gap
-          speakersAvatars.remove();
-        }
-
-        body.append(descEl);
+        descEl.style.overflow = "visible";
+        descEl.style.maxHeight = "none";
         descEl.textContent = descText;
+        body.append(descEl);
+      }
 
-        const lineH = parseFloat(getComputedStyle(descEl).lineHeight) || 16;
-        const maxByLines = Math.round(lineH * MAX_DESC_LINES) + 1;
+      // Speakers pinned to the bottom.
+      if (speakers.length) {
+        speakersAvatars.style.marginTop = "auto";
+        body.append(speakersAvatars);
+      }
+      console.log("TILE DBG |", s.name, "| speakersAvatars in DOM:", !!speakersAvatars.parentNode, "| avatarsH:", speakersAvatars.offsetHeight, "| avatar count:", speakersAvatars.children.length, "| firstAvatarH:", speakersAvatars.children[0]?.offsetHeight, "| contentH:", contentH(), "| avail:", avail());
 
-        // Description is acceptable if it's within the 6-line cap AND leaves
-        // room for the reserved avatar space below.
-        const descOk = () =>
-          descEl.offsetHeight <= maxByLines &&
-          contentH() + reserve <= avail();
-
-        if (!descOk()) {
+      // Truncate the description to the most whole words that fit above the
+      // pinned speakers. Full description shows with NO "show more" when it fits.
+      // Only when it overflows do we truncate (down to the speaker line) and add
+      // a styled "show more" (the whole tile opens the modal on click).
+      if (descText) {
+        const descFits = () => contentH() <= avail();
+        if (!descFits()) {
+          const SUFFIX = "… ";
           const words = descText.split(" ");
-          let lo = 1,
-            hi = words.length,
-            best = 0;
+          // Binary search the most words that fit WITH the "… show more" suffix.
+          const setTruncated = (n) => {
+            descEl.textContent = words.slice(0, n).join(" ") + SUFFIX;
+            const more = document.createElement("span");
+            more.textContent = "show more";
+            more.style.color = accentColor;
+            more.style.fontWeight = "600";
+            descEl.appendChild(more);
+          };
+          let lo = 1, hi = words.length, best = 0;
           while (lo <= hi) {
             const mid = (lo + hi) >> 1;
-            descEl.textContent = words.slice(0, mid).join(" ") + "… show more";
-            if (descOk()) {
+            setTruncated(mid);
+            if (descFits()) {
               best = mid;
               lo = mid + 1;
             } else {
@@ -1189,19 +1316,11 @@ export class AgendaItem extends HTMLElement {
             }
           }
           if (best > 0) {
-            descEl.textContent = words.slice(0, best).join(" ") + "… show more";
-            descTruncated = true;
+            setTruncated(best);
+            descEl.style.overflow = "hidden";
           } else {
             descEl.remove();
           }
-        }
-      }
-
-      // 3) Speakers — avatar cluster at the bottom if it fully fits.
-      if (speakers.length) {
-        body.append(speakersAvatars);
-        if (!fits()) {
-          speakersAvatars.remove();
         }
       }
     });
@@ -1271,27 +1390,56 @@ export class AgendaItem extends HTMLElement {
     bodyEl.classList.add("smodalBody");
 
     const descHtml = (s.description || "").trim();
+    let descEl = null;
     if (descHtml) {
-      const desc = document.createElement("div");
-      desc.classList.add("smodalDesc");
-      desc.innerHTML = descHtml;
-      bodyEl.append(desc);
+      descEl = document.createElement("div");
+      descEl.classList.add("smodalDesc");
+      descEl.innerHTML = descHtml;
     }
 
-    const tags = [];
-    if (s.location?.name?.trim()) tags.push(s.location.name.trim());
-    if (s.category?.name?.trim()) tags.push(s.category.name.trim());
-    if (tags.length) {
-      const tagWrap = document.createElement("div");
-      tagWrap.classList.add("smodalTags");
-      tags.forEach((tx) => {
-        const tag = document.createElement("span");
-        tag.classList.add("smodalTag");
-        tag.textContent = tx;
-        tagWrap.append(tag);
-      });
-      bodyEl.append(tagWrap);
+    // Location + category as accent-tinted pills (Option C). Color follows the
+    // session type: focus accent for focus sessions, plenary accent otherwise.
+    const locName = s.location?.name?.trim() || "";
+    const catName = s.category?.name?.trim() || "";
+    if (locName || catName) {
+      const accentOn = cfg.showAccentBar === true;
+      const isFocusSession = accentOn && cfg.isFocus === true;
+      const pillAccent = isFocusSession
+        ? cfg.focusAccent || "#1a7f8e"
+        : cfg.plenaryAccent || "#f7a325";
+      // Light tint background derived from the accent (12% over white).
+      const tint = this._tintColor(pillAccent, 0.14);
+
+      const metaRow = document.createElement("div");
+      metaRow.classList.add("smodalMetaRow");
+
+      const makePill = (iconType, label) => {
+        const pill = document.createElement("div");
+        pill.classList.add("smodalMeta");
+        pill.style.background = tint;
+        pill.style.color = pillAccent;
+        const iconChip = document.createElement("span");
+        iconChip.classList.add("smodalMetaIconChip");
+        iconChip.style.background = pillAccent;
+        const icon = this._metaIconSvg(iconType, "#ffffff", 11);
+        if (icon) iconChip.append(icon);
+        const txt = document.createElement("span");
+        txt.textContent = label;
+        pill.append(iconChip, txt);
+        return pill;
+      };
+
+      if (locName) {
+        metaRow.append(makePill("location", locName));
+      }
+      if (catName) {
+        metaRow.append(makePill("category", catName));
+      }
+      bodyEl.append(metaRow);
     }
+
+    // Description comes AFTER the meta pills.
+    if (descEl) bodyEl.append(descEl);
 
     const speakers = this.getSpeakersArray(s);
     if (speakers.length) {
@@ -1331,6 +1479,31 @@ export class AgendaItem extends HTMLElement {
         grid.append(row);
       });
       bodyEl.append(grid);
+    }
+
+    // Tags row (secondary pills) — at the BOTTOM, below the speaker list.
+    const mTagsField = s.sessionCustomFields?.find(
+      (f) => f.name?.trim().toLowerCase() === "tags"
+    );
+    const mTagValues = Array.isArray(mTagsField?.value)
+      ? mTagsField.value.filter((v) => typeof v === "string" && v.trim())
+      : [];
+    if (mTagValues.length) {
+      const tagRow = document.createElement("div");
+      tagRow.classList.add("smodalTagRow");
+      tagRow.style.marginTop = "16px";
+      tagRow.style.marginBottom = "0";
+      mTagValues.slice(0, 5).forEach((tag) => {
+        const pill = document.createElement("span");
+        pill.classList.add("smodalTagPill");
+        const icon = this._metaIconSvg("tag", "#777", 10);
+        const txt = document.createElement("span");
+        txt.textContent = tag.trim();
+        if (icon) pill.append(icon);
+        pill.append(txt);
+        tagRow.append(pill);
+      });
+      bodyEl.append(tagRow);
     }
 
     modal.append(head, bodyEl);
@@ -1398,7 +1571,6 @@ export class AgendaItem extends HTMLElement {
       textEl.classList.add("desc-mobile-clamp");
       // Detect overflow: scrollHeight > clientHeight when clamped.
       const overflowing = textEl.scrollHeight > textEl.clientHeight + 1;
-      console.log("MOBILE CLAMP |", "isMobile:", isMobile(), "| scrollH:", textEl.scrollHeight, "| clientH:", textEl.clientHeight, "| overflowing:", overflowing);
       toggle.textContent = "…show more";
       toggle.style.display = overflowing ? "" : "none";
     };
@@ -1417,6 +1589,43 @@ export class AgendaItem extends HTMLElement {
     window.addEventListener("resize", onR);
     this._mobileClampHandlers = this._mobileClampHandlers || [];
     this._mobileClampHandlers.push(onR);
+  }
+
+  // Inline SVG icons for meta pills (location, category, tags). Recolorable via
+  // the color arg. Returns an <svg> element.
+  _metaIconSvg(type, color, size = 12) {
+    const paths = {
+      location:
+        "M20 10c0 6-8 11-8 11s-8-5-8-11a8 8 0 0 1 16 0zM12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",
+      category:
+        "M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
+      tag:
+        "M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82zM7 7h.01",
+    };
+    const d = paths[type];
+    if (!d) return null;
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+    svg.style.width = `${size}px`;
+    svg.style.height = `${size}px`;
+    svg.style.flexShrink = "0";
+    svg.style.display = "block";
+    svg.style.fill = "none";
+    svg.style.stroke = color;
+    svg.style.strokeWidth = "2px";
+    svg.style.strokeLinecap = "round";
+    svg.style.strokeLinejoin = "round";
+    const path = document.createElementNS(ns, "path");
+    path.setAttribute("d", d);
+    path.style.fill = "none";
+    path.style.stroke = color;
+    path.style.strokeWidth = "2px";
+    path.style.strokeLinecap = "round";
+    path.style.strokeLinejoin = "round";
+    svg.appendChild(path);
+    return svg;
   }
 
   _breakIconSvg(type, size, color) {
@@ -1800,6 +2009,18 @@ export class AgendaItem extends HTMLElement {
   // Convert a bio to safe display HTML. Bios often come as plain text with
   // \r\n\r\n paragraph breaks (which innerHTML would collapse). If the bio
   // already contains block HTML, leave it; otherwise convert newlines.
+  // Mix a hex color with white to produce a light tint (amount = accent weight,
+  // e.g. 0.14 = 14% accent over white). Returns an rgb() string.
+  _tintColor(hex, amount) {
+    const h = (hex || "").replace("#", "");
+    if (h.length !== 6) return "#f2f2f0";
+    const r = parseInt(h.slice(0, 2), 16);
+    const g = parseInt(h.slice(2, 4), 16);
+    const b = parseInt(h.slice(4, 6), 16);
+    const mix = (c) => Math.round(255 + (c - 255) * amount);
+    return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
+  }
+
   _formatBioHtml(raw) {
     const bio = (raw || "").toString();
     if (!bio.trim()) return "";
@@ -2009,7 +2230,6 @@ export class AgendaItem extends HTMLElement {
     // Default "alphabetical" keeps existing behavior so published events are
     // unaffected unless a planner opts in.
     const mode = this.config?.speakerOrder || "alphabetical";
-    console.log("SPEAKER MODE |", session?.name, "| mode:", mode, "| order:", speakers.map(s => s.firstName).join(", "));
     if (mode === "sessionOrder") {
       return speakers;
     }
