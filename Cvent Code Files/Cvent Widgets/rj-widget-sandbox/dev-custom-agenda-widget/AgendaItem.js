@@ -401,6 +401,8 @@ export class AgendaItem extends HTMLElement {
       grid-column: 1 / -1; /* span both columns */
       grid-row: 2;
     }
+    .bio p { margin: 0 0 10px 0; }
+    .bio p:last-child { margin-bottom: 0; }
 
     /* Row 3: sessions header full width */
     .sessionsHeader { 
@@ -1013,6 +1015,8 @@ export class AgendaItem extends HTMLElement {
       .modalDetails { grid-column:2; grid-row:1; margin-top:20px; }
       .kv { margin:2px 0; }
       .bio { margin:5px 0 0 0; line-height:1.45; grid-column:1 / -1; grid-row:2; }
+      .bio p { margin:0 0 10px 0; }
+      .bio p:last-child { margin-bottom:0; }
       .sessionsHeader { margin-top:10px; grid-column:1 / -1; grid-row:3; }
       .sessionsList { margin:0 0 0 18px; padding:0; grid-column:1 / -1; grid-row:4; }
       .sessionsList li { margin:0; }
@@ -1793,6 +1797,26 @@ export class AgendaItem extends HTMLElement {
   // Populate a set of speaker refs (from _buildSpeakerBody or this.modal) with a
   // speaker's data: name/title/company/bio, "appears in" sessions, typography,
   // focus recolor, and lazy hydration. Shared by both speaker-view flows.
+  // Convert a bio to safe display HTML. Bios often come as plain text with
+  // \r\n\r\n paragraph breaks (which innerHTML would collapse). If the bio
+  // already contains block HTML, leave it; otherwise convert newlines.
+  _formatBioHtml(raw) {
+    const bio = (raw || "").toString();
+    if (!bio.trim()) return "";
+    // Already has block-level HTML? Trust it.
+    if (/<(p|br|div|ul|ol|li)\b/i.test(bio)) return bio;
+    // Plain text: split on 2+ newlines (with optional \r) into paragraphs,
+    // and turn remaining single newlines into <br>.
+    return bio
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n")
+      .split(/\n{2,}/)
+      .map((para) => para.trim())
+      .filter(Boolean)
+      .map((para) => `<p>${para.replace(/\n/g, "<br>")}</p>`)
+      .join("");
+  }
+
   _fillSpeakerRefs(refs, spRaw) {
     const cfg = this.config || {};
     const allSessions = Array.isArray(cfg.allSessions)
@@ -1818,7 +1842,7 @@ export class AgendaItem extends HTMLElement {
     refs.nameEl.textContent = fullName || "";
     refs.titleEl.textContent = jobTitle || "";
     refs.companyEl.textContent = company || "";
-    refs.bioEl.innerHTML = bio || "";
+    refs.bioEl.innerHTML = this._formatBioHtml(bio);
 
     // Typography (mirror applyModalTypography on these refs)
     this.applyTypographyOverrides(refs.nameEl, cfg.typography?.modalSpeakerName, true);
@@ -1911,7 +1935,7 @@ export class AgendaItem extends HTMLElement {
               refs.companyEl.style.display = "";
             }
             if (hBio && !bio) {
-              refs.bioEl.innerHTML = hBio;
+              refs.bioEl.innerHTML = this._formatBioHtml(hBio);
               refs.bioEl.style.display = "";
             }
           })
