@@ -2,5 +2,5 @@
   "product": "Event",
   "purpose": "Website",
   "essential": false,
-  "customElementName": "custom-agenda-widget"
+  "customElementName": "dev-custom-agenda-widget"
 }
