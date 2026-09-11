@@ -811,20 +811,8 @@ export default class extends HTMLElement {
     const groupStartMs = Math.min(
       ...sessions.map((s) => new Date(s.startDateTime).getTime())
     );
-    const durMin = (s) =>
-      (new Date(s.endDateTime).getTime() -
-        new Date(s.startDateTime).getTime()) /
-      60000;
-    // True time position of any timestamp (px from group start).
-    const timePos = (ms) =>
-      Math.round(((ms - groupStartMs) / 60000) * PX_PER_MIN);
-    // Tile top = exact start position. Tile height = exact duration, clamped.
-    // Because sessions sharing a column never overlap in time, exact-positioned
-    // tiles can never collide — no push logic needed.
-    const topOf = (s) => timePos(new Date(s.startDateTime).getTime());
-    // Full duration-based height (clamped), WITHOUT the row-gap trim.
-    const fullTileHeight = (s) =>
-      Math.max(MIN_H, Math.min(MAX_H, Math.round(durMin(s) * PX_PER_MIN)));
+    const startMsOf = (s) => new Date(s.startDateTime).getTime();
+    const endMsOf = (s) => new Date(s.endDateTime).getTime();
 
     // Determine the last tile in each column (it should NOT be gap-trimmed, so
     // it reaches its true end-time gridline).
@@ -832,9 +820,49 @@ export default class extends HTMLElement {
     for (let c = 0; c < colCount; c++) {
       const colSessions = sessions
         .filter((x) => colOf.get(x) === c)
-        .sort((a, b) => new Date(a.startDateTime) - new Date(b.startDateTime));
+        .sort((a, b) => startMsOf(a) - startMsOf(b));
       if (colSessions.length) lastInColumn.add(colSessions[colSessions.length - 1]);
     }
+
+    // Time -> px scale. Linear at PX_PER_MIN, but STRETCHED wherever a session
+    // would otherwise render shorter than MIN_H. Positioning tiles by pure time
+    // math while clamping their height up to MIN_H let a short (e.g. 20-min)
+    // tile bleed under the next tile in its column, which painted over the
+    // speaker avatars pinned to its bottom. Stretching the scale keeps every
+    // tile at least MIN_H tall AND collision-free; the rail labels still show
+    // the true times, the axis is just non-uniform around short sessions.
+    const boundaries = [
+      ...new Set(sessions.flatMap((s) => [startMsOf(s), endMsOf(s)])),
+    ].sort((a, b) => a - b);
+    const posOfMs = new Map();
+    boundaries.forEach((ms, i) => {
+      if (i === 0) {
+        posOfMs.set(ms, 0);
+        return;
+      }
+      const prevMs = boundaries[i - 1];
+      let pos =
+        posOfMs.get(prevMs) + Math.round(((ms - prevMs) / 60000) * PX_PER_MIN);
+      sessions.forEach((s) => {
+        if (endMsOf(s) !== ms) return;
+        const need = MIN_H + (lastInColumn.has(s) ? 0 : ROW_GAP);
+        pos = Math.max(pos, posOfMs.get(startMsOf(s)) + need);
+      });
+      posOfMs.set(ms, pos);
+    });
+    // True time position of any timestamp (px from group start).
+    const timePos = (ms) =>
+      posOfMs.has(ms)
+        ? posOfMs.get(ms)
+        : Math.round(((ms - groupStartMs) / 60000) * PX_PER_MIN);
+    // Tile top = exact start position. Tile height = the span between its start
+    // and end on the (stretched) scale, capped at MAX_H. Because sessions sharing
+    // a column never overlap in time and the scale guarantees >= MIN_H per
+    // session, tiles can never collide.
+    const topOf = (s) => timePos(startMsOf(s));
+    // Full span-based height (capped), WITHOUT the row-gap trim.
+    const fullTileHeight = (s) =>
+      Math.max(MIN_H, Math.min(MAX_H, timePos(endMsOf(s)) - timePos(startMsOf(s))));
 
     // Rendered height: last tile in a column keeps full height (aligns to end
     // gridline); others are trimmed by ROW_GAP for visual separation.

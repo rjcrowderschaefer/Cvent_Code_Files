@@ -5,11 +5,6 @@ Add detail to each item as it's picked up; move done items to the bottom.
 
 ## Open
 
-- [ ] **Remove debug logs before next promote** — `AgendaItem.js` (`TILE DBG |`),
-      `editor.js` (`SO DROPDOWN | value:`).
-- [ ] **~20-min concurrent tile drops speaker avatars** in one case. Suspected
-      avatar height vs. MIN_H measurement. Paused as "good enough"; revisit if a
-      planner reports it.
 - [ ] **Option A rail unification** — (details to be filled in)
 - [ ] **Compact-mode cutover + toggle removal** — compact typography is already
       the default scale; remove the legacy toggle once all live events are confirmed on it.
@@ -20,4 +15,11 @@ Add detail to each item as it's picked up; move done items to the bottom.
 
 ## Done
 
-(nothing yet under the branch workflow)
+- [x] 2026-09-11 Removed the last debug log (`SO DROPDOWN` in `editor.js`). All three files are clean.
+- [x] 2026-09-11 **Short concurrent tiles hid their speaker avatars.** Root cause was
+      not the avatar measurement: tiles were positioned by pure time math but
+      clamped up to MIN_H (118px), so a 20-min tile (80px of time) bled under the
+      next tile in its column, which painted over the avatars pinned to its bottom.
+      Fix in `widget.js` `_renderConcurrentGrid`: the time→px scale now stretches
+      wherever a session needs MIN_H, so tiles never overlap. The `TILE DBG` log
+      that was chasing this is removed.

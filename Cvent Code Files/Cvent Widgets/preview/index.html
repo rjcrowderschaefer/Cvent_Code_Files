@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agenda widget — local preview</title>
+<style>
+  body { margin: 0; font: 14px/1.4 system-ui, sans-serif; background: #f3f4f6; color: #17201c; }
+  #bar { display: flex; gap: 12px; align-items: center; padding: 8px 14px; background: #111; color: #eee; font-size: 13px; position: sticky; top: 0; z-index: 50; }
+  #bar b { color: #f7a325; }
+  #bar select, #bar button { font: inherit; padding: 3px 8px; }
+  #status { margin-left: auto; opacity: .75; }
+  #layout { display: grid; grid-template-columns: 360px 1fr; min-height: calc(100vh - 38px); }
+  #editor-pane { background: #fff; border-right: 1px solid #ddd; overflow: auto; height: calc(100vh - 38px); position: sticky; top: 38px; }
+  #stage-wrap { padding: 0 0 80px; }
+  /* Fake Cvent site header so the widget's sticky date-nav measurement has something to measure. */
+  #navigationContainer { height: 72px; background: #fff; border-bottom: 1px solid #e5e5e5; display: flex; align-items: center; padding: 0 32px; font-weight: 600; letter-spacing: .04em; }
+  #stage { max-width: 1200px; margin: 24px auto; background: #fff; padding: 24px; box-sizing: border-box; }
+  @media (max-width: 900px) { #layout { grid-template-columns: 1fr; } #editor-pane { position: static; height: auto; max-height: 40vh; } }
+</style>
+</head>
+<body>
+  <div id="bar">
+    <b>agenda preview</b>
+    <label>lang <select id="lang"><option value="en">en</option><option value="es">es</option><option value="pt-BR">pt-BR</option></select></label>
+    <label>width <select id="width"><option value="1200px">desktop 1200</option><option value="1024px">1024</option><option value="768px">tablet 768</option><option value="390px">mobile 390</option></select></label>
+    <button id="remount">re-render</button>
+    <button id="reset">reset config</button>
+    <span id="status">loading…</span>
+  </div>
+  <div id="layout">
+    <aside id="editor-pane"><div id="editor-host"></div></aside>
+    <main id="stage-wrap">
+      <div id="navigationContainer">FAKE CVENT HEADER (#navigationContainer)</div>
+      <div id="stage"><div id="widget-host"></div></div>
+    </main>
+  </div>
+  <script type="module" src="./harness.js"></script>
+</body>
+</html>

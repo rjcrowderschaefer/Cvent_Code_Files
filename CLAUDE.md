@@ -77,12 +77,11 @@ agenda with extensive custom features built over many iterations.
 
 ## Known open items / edge cases
 
-- A ~20-min concurrent tile can drop its speaker avatars in one case — root cause
-  was being diagnosed (avatar height vs. MIN_H measurement). Paused, "good enough".
-- Debug logs still present on `dev` (remove before promoting):
-  `AgendaItem.js` — the `TILE DBG |` line in the tile measurement code;
-  `editor.js` — the `SO DROPDOWN | value:` line in the speaker-order handler.
-  `widget.js` is clean.
+- No debug `console.log` calls remain in the three widget files (as of
+  2026-09-11). Keep it that way; `console.warn` error handlers are fine.
+- Concurrent grid time axis is intentionally NON-uniform: it stretches around
+  sessions shorter than MIN_H so short tiles keep their speaker row without
+  overlapping the next tile (fixed 2026-09-11; see AGENDA_WIDGET_TODO.md Done).
 - See `AGENDA_WIDGET_TODO.md` for the full backlog (Option A rail unification,
   compact-mode cutover + toggle removal, normal-card modal unification,
   grid↔stack resize re-render).
@@ -110,5 +109,8 @@ agenda with extensive custom features built over many iterations.
   committing. Widget edits happen on `dev` unless told otherwise; check the
   branch first (`git branch --show-current`).
 - Before shipping, run the **Pre-prod checklist** in the Playbook (§11).
+- The widget files use **CRLF line endings**. Preserve them when editing (a
+  rewrite that converts to LF shows up as a 2,500-line diff). Check with
+  `git diff --stat` before committing; only the lines you touched should appear.
 - If something "doesn't work," first suspect a stale Cvent upload (re-upload,
   incognito) before assuming the code is wrong.
