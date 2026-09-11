@@ -1,0 +1,13 @@
+{
+  "//": "Cvent custom widget config. 'purpose' is a SINGLE string, not an array.",
+  "//purpose-values": "Website | SessionRegistration | AllPages",
+  "//note": "getSessionStatus is only on SessionRegistration purpose; getEventDetails is unavailable on Website (use getEventInfo).",
+  "name": "my-custom-widget",
+  "displayName": "My Custom Widget",
+  "purpose": "Website",
+  "version": "1.0.0",
+  "entry": {
+    "widget": "widget.js",
+    "editor": "editor.js"
+  }
+}
