@@ -65,6 +65,9 @@ export class AgendaItem extends HTMLElement {
     // Modal header matches the session-type accent of the card it opened from
     // (plenary / focus / break). Not planner-configurable separately.
     const modalHeaderBg = typeAccent;
+    // Remembered so the modal (built later, on click) can flip its header text
+    // to white when the accent is dark.
+    this._modalHeaderBg = modalHeaderBg;
     const modalDivider = cfg.modalColors?.dividerColor ?? "#eeeeee";
     const modalContentBg = cfg.modalColors?.contentBg ?? "#ffffff";
 
@@ -2012,6 +2015,20 @@ export class AgendaItem extends HTMLElement {
   // already contains block HTML, leave it; otherwise convert newlines.
   // Mix a hex color with white to produce a light tint (amount = accent weight,
   // e.g. 0.14 = 14% accent over white). Returns an rgb() string.
+  // Perceived brightness (YIQ). Below the threshold the colour reads as dark
+  // and needs white text on top. #f7a325 (plenary orange) ~174 = light;
+  // #1a7f8e (focus teal) ~98 = dark; #e8eaed (break grey) ~233 = light.
+  _isDarkColor(color) {
+    const h = (color || "").trim().replace("#", "");
+    const hex = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+    if (hex.length !== 6) return false;
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+    if ([r, g, b].some((n) => Number.isNaN(n))) return false;
+    return (r * 299 + g * 587 + b * 114) / 1000 < 140;
+  }
+
   _tintColor(hex, amount) {
     const h = (hex || "").replace("#", "");
     if (h.length !== 6) return "#f2f2f0";
@@ -2186,10 +2203,19 @@ export class AgendaItem extends HTMLElement {
       spRaw
     );
 
-    // Focus recolor of the modal header (name recolor handled in filler).
+    // Header background is the session accent (set in the style block from
+    // this._modalHeaderBg). Apply the planner's modal-name typography to the
+    // title, then on a dark accent (e.g. the focus teal) flip the title and
+    // close button to white. Light accents (plenary orange, break grey) keep
+    // the configured colour.
     const cfg = this.config || {};
-    if (cfg.isFocus === true && cfg.showAccentBar === true) {
-      this.modal.header.style.background = cfg.focusAccent || "#1a7f8e";
+    this.applyTypographyOverrides(this.modal.title, cfg.typography?.modalName, true);
+    const closeBtn = this.modal.header.querySelector(".closeBtn");
+    if (this._isDarkColor(this._modalHeaderBg)) {
+      this.modal.title.style.color = "#ffffff";
+      if (closeBtn) closeBtn.style.color = "#ffffff";
+    } else if (closeBtn) {
+      closeBtn.style.color = "";
     }
 
     this.modal.backdrop.setAttribute("open", "");
