@@ -1,6 +1,6 @@
 /* last update: July 13 by RJCS */
 
-/* <<<<<<<<<< START OF DEFAULT CVENT CSS - NO NEED TO EDIT >>>>>>>>>> */
+/* === DEFAULT CVENT CSS - DO NOT EDIT === */
 
 .main-nav,
 .main-nav .website_navigation {
@@ -353,9 +353,9 @@
   }
 }
 
-/* <<<<<<<<<< END OF DEFAULT CVENT CSS - NO NEED TO EDIT >>>>>>>>>> */
+/* === END DEFAULT CVENT CSS === */
 
-/* <<<<<<<<<< START OF CUSTOM BLOOMBERG CSS FOR CVENT >>>>>>>>>> */
+/* === CUSTOM BLOOMBERG CSS === */
 
 .font-color-white {
   color: #ffffff !important;
@@ -367,7 +367,7 @@
 
 /* ///////START NAVIGATION/////// */
 
-/* START: Code that manages the sticky nav bar when scrolling - NO UPDATE */
+/* START: sticky nav on scroll - no update */
 div.scroll {
   position: fixed;
   top: 0;
@@ -391,17 +391,17 @@ div.scroll {
 .cus_nav img {
   transition: .5s;
 }
-/* END: Code that manages the sticky nav bar when scrolling - NO UPDATE */
+/* END: sticky nav */
 
-/* START: Keeps nav items 70px right of nav logo img for breakpoints > 1023px wide - NO UPDATE */
+/* START: nav items 70px right of logo, >1023px - no update */
 @media only screen and (min-width: 1024px) {
   [class*="WebsiteNavigator__navigation"] {
     margin-left: 70px;
   }
 }
-/* END: Keeps nav items 70px right of nav logo img for breakpoints > 1023px wide - NO UPDATE */
+/* END: nav item offset */
 
-/* START: Add primary nav bar underline color for hover and selected states */
+/* START: nav underline, hover + selected */
 [class*="WebsiteNavigator__menuItem"] > div:hover,
 [class*="WebsiteNavigator__menuItem"]
   > div[class^="WebsiteNavigator__selected"] {
@@ -409,12 +409,12 @@ div.scroll {
   font-weight: 500 !important;
   opacity: 1;
 }
-/* END: Add primary nav bar underline color for hover and selected states */
+/* END: nav underline */
 
-/* START: Resize nav logo img for breakpoints < 601px wide (mobile) */
+/* START: nav logo size, mobile <601px */
 @media screen and (max-width: 600px) {
   div[data-cvent-id="widget-content-WebsiteNavigator"] img {
-    width: 40% !important; /* << STEP 2: Controls % width of logo from original desktop size */
+    width: 40% !important; /* << STEP 2: % of original desktop logo width */
     height: auto !important;
     padding-top: 10px !important;
   }
@@ -436,17 +436,17 @@ div.scroll {
     line-height: 1;
   }
 }
-/* END: Resize nav logo img for breakpoints < 601px wide */
+/* END: mobile nav logo */
 
-/* START: Resize nav logo img for breakpoints > 601px wide and < 1024px wide (tablet) */
+/* START: nav logo size, tablet 601-1024px */
 @media screen and (min-width: 601px) and (max-width: 1024px) {
   div[data-cvent-id="widget-content-WebsiteNavigator"] img {
-    width: 60% !important; /* << STEP 3: Controls % width of logo from original desktop size */
+    width: 60% !important; /* << STEP 3: % of original desktop logo width */
     height: auto !important;
     padding-top: 10px !important;
   }
 }
-/* END: Resize nav logo img for breakpoints > 601px wide and < 1024px wide */
+/* END: tablet nav logo */
 /* //////END NAVIGATION////// */
 
 /* //////START HERO & PAGE HEADER MOBILE STYLING - NO UPDATE////// */
@@ -533,27 +533,26 @@ div.scroll {
     padding-left: 0px !important;
   }
 
-  /* 1. Make the overall identity confirmation form span its full column */
+  /* 1. Form spans its full column */
   .identity-confirmation {
     width: 100% !important;
   }
 
-  /* 2. Make each EventStandardContactFieldText widget full width */
+  /* 2. Each field widget full width */
   .identity-confirmation
     [data-cvent-id="widget-content-EventStandardContactFieldText"] {
     width: 100% !important;
     max-width: none !important;
   }
 
-  /* 3. Remove width constraints from the Cvent input containers
-       â€“ use prefix matching so hashes can change safely */
+  /* 3. Drop width constraints on Cvent input containers (prefix match) */
   .identity-confirmation [class*="Forms__inputContainerGuestSide___"],
   .identity-confirmation [class*="Forms__textboxContainer___"] {
     width: 100% !important;
     max-width: none !important;
   }
 
-  /* 4. Make EVERY text input in this form fill its container */
+  /* 4. All text inputs fill their container */
   .identity-confirmation input[data-cvent-id="input"] {
     width: 100% !important;
     box-sizing: border-box !important;
@@ -564,7 +563,7 @@ div.scroll {
 
 /* //////START COUNT DOWN CLOCK////// */
 
-/* START: Adjust countdown clock component colors & font-size */
+/* START: countdown clock colors + size */
 [class*="Countdown-Circle-structure__digit"] {
   color: #FF9E24 !important;
   font-size: 2rem !important;
@@ -585,11 +584,11 @@ div.scroll {
     font-size: 1rem !important;
   }
 }
-/* END: Adjust countdown clock component colors & font-size */
+/* END: countdown clock */
 /* ///////END COUNT DOWN CLOCK/////// */
 
 /* ///////START FOOTER/////// */
-/* Controls color of links in the site footer */
+/* Footer link color */
 .site-footer a {
   color: black;
   text-decoration: none;
@@ -598,7 +597,7 @@ div.scroll {
 
 /* ///////START SPEAKER WIDGET LAYOUT/////// */
 
-/* START: Speaker widget & card styling */
+/* START: speaker cards */
 [data-cvent-id="speakers-speakersContainer"] {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -672,19 +671,19 @@ div.scroll {
   text-align: center;
   padding: 0px;
 }
-/* END: Speaker widget & card styling */
+/* END: speaker cards */
 /* ///////END SPEAKER WIDGET LAYOUT/////// */
 
 /* ///////START REGISTRATION LAYOUT/////// */
 
-/* START: Hide the reg type option for Organic reg path -- still assigns reg path on the back end */
+/* Hide reg type for Organic path; still assigns on the back end */
 div[data-cvent-id="widget-content-RegistrationType"] p {
   display: none !important;
 }
 /* ///////END REGISTRATION LAYOUT/////// */
 
 /* /////// START GLOBAL REGISTRATION BUTTON VISIBILITY /////// */
-/* Ensures the registration button area is never hidden by default Cvent behaviors or page logic */
+/* Keeps the reg button area from being hidden by default Cvent behavior */
 [class*="WebsiteNavigator__rightContent"],
 [class*="WebsiteNavigator__registrationAction"],
 [data-cvent-id="website-navigation-registration-action"] {
@@ -693,13 +692,13 @@ div[data-cvent-id="widget-content-RegistrationType"] p {
   opacity: 1 !important;
 }
 
-/* Specifically target the button inside the nav across all viewports */
+/* Target the nav button across all viewports */
 [role="navigation"] button[type="button"],
 [class*="WebsiteNavigator__rightContent"] .button {
   display: block !important;
 }
 
-/* Ensure mobile nav group handles the visible button properly */
+/* Mobile nav group */
 @media only screen and (max-width: 600px) {
   [class*="WebsiteNavigator__group"] {
     display: flex !important;
@@ -707,13 +706,13 @@ div[data-cvent-id="widget-content-RegistrationType"] p {
 }
 /* /////// END GLOBAL REGISTRATION BUTTON VISIBILITY /////// */
 
-/* <<<<<<<<<< END OF CUSTOM BLOOMBERG CSS FOR CVENT >>>>>>>>>> */
+/* === END CUSTOM BLOOMBERG CSS === */
 
 .location-target {
   height: 1px;
 }
 
-/* START: Equal-height cards - keeps card content aligned and button rows pinned to the bottom */
+/* START: equal-height cards, button row pinned to bottom */
 .equal-height-cards [data-element-type="FlexRow"] {
   align-items: stretch;
 }
@@ -742,8 +741,8 @@ div[data-cvent-id="widget-content-RegistrationType"] p {
   margin-top: auto;
 }
 
-/* Stack the three cards at 700px and below (Cvent's default stacks them ~480px) */
-/* 501â€“700px: stack one per row at ~70% width, left-aligned */
+/* Stack cards at <=700px (Cvent defaults to ~480px) */
+/* 501-700px: one per row at ~70% width, left-aligned */
 @media (max-width: 700px) {
   .equal-height-cards [data-element-type="FlexRow"] {
     flex-wrap: wrap;
@@ -785,7 +784,7 @@ div[data-cvent-id="widget-content-RegistrationType"] p {
 
 input[data-cvent-id="input"] {
   border: 1px solid #C9C7BE !important;
-  border-radius: 8px !important;
+  border-radius: 0px !important;
 }
 
 input[data-cvent-id="input"]:focus {
@@ -826,15 +825,7 @@ input[data-cvent-id="input"]:focus {
   transform: none !important;
 }
 
-input[data-cvent-id="input"] {
-  border-radius: 0px !important;
-}
-
 /* START 2nd page reg styling */
-
-.left-align-fields [data-element-type="FlexRow"] {
-  justify-content: flex-start !important;
-}
 
 .left-align-fields [class*="Grid__offset_1"][class*="Grid__push_1"] {
   margin-left: 0 !important;
@@ -870,12 +861,6 @@ input[data-cvent-id="input"] {
 }
 /* END 2nd page reg styling */
 
-@media (min-width: 1200px) {
-  .left-align-fields input[data-cvent-id="input"] {
-    width: 60% !important;
-  }
-}
-
 .left-align-fields input[data-cvent-id="input"]::placeholder {
   color: #888680;
   font-style: italic;
@@ -890,30 +875,30 @@ input[data-cvent-id="input"] {
 }
 
 .close-modal {
-    /* Layout & Alignment */
+    /* Layout */
     align-self: flex-end !important;
-    margin-bottom: 20px !important; /* Slightly more air for hierarchy */
+    margin-bottom: 20px !important;
     display: flex !important;
     align-items: center !important;
     gap: 8px !important;
 
-    /* Aesthetics: Thin & Sharp */
+    /* Aesthetics */
     color: rgba(255, 255, 255, 0.8) !important;
-    background: rgba(255, 255, 255, 0.03) !important; /* Ghost-like default state */
+    background: rgba(255, 255, 255, 0.03) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    padding: 6px 12px !important; /* Slimmer profile */
-    border-radius: 4px !important; /* Sharper corners for a technical feel */
+    padding: 6px 12px !important;
+    border-radius: 4px !important;
 
-    /* Typography: Institutional style */
+    /* Typography */
     font-family: 'Inter', -apple-system, sans-serif !important;
-    font-size: 10px !important; /* Smaller is more 'pro' */
+    font-size: 10px !important;
     font-weight: 500 !important;
-    letter-spacing: 0.15em !important; /* High tracking = luxury/premium */
+    letter-spacing: 0.15em !important;
     text-transform: uppercase !important;
 
     /* Interaction */
     cursor: pointer !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important; /* Smooth, weighted easing */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     outline: none !important;
 }
 
@@ -921,13 +906,12 @@ input[data-cvent-id="input"] {
     color: #ffffff !important;
     background: rgba(255, 255, 255, 0.08) !important;
     border-color: rgba(255, 255, 255, 0.3) !important;
-    /* Subtle horizontal shift instead of a bounce */
     padding-left: 14px !important;
     padding-right: 10px !important;
 }
 
 .close-modal:active {
-    transform: scale(0.97) !important; /* Tactile feedback */
+    transform: scale(0.97) !important;
     background: rgba(255, 255, 255, 0.12) !important;
 }
 
@@ -937,7 +921,7 @@ div[data-color-style-scheme="mood-background"]:first-of-type {
   z-index: 10;
 }
 
-/* Base state of the modal (Hidden and transparent) */
+/* Modal base state */
 .modal-overlay {
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -950,13 +934,13 @@ div[data-color-style-scheme="mood-background"]:first-of-type {
   z-index: 9999; /* Ensure it stays on top */
 }
 
-/* Base state of the content inside (Slightly slid down) */
+/* Modal content base state */
 .modal-content {
   transform: translateY(-20px);
   transition: transform 0.3s ease;
 }
 
-/* Active state (Fades in and slides into place) */
+/* Modal active state */
 .modal-overlay.active {
   opacity: 1;
 }
@@ -1052,21 +1036,17 @@ div[data-color-style-scheme="mood-background"]:first-of-type {
   transform: translateX(3px);
 }
 
-/* ---------------------------------------------------------------------- */
-/* Floating CTA shell                                                     */
-/* ---------------------------------------------------------------------- */
+/* Floating CTA shell */
 
 .bbg-contact-spacer {
-  /* Reserves room at the bottom of the page so content doesn't sit behind
-     the fixed button. Tune to roughly the button's height + bottom offset. */
+  /* Keeps content off the fixed button: button height + bottom offset */
   height: 96px;
 }
 
 .bbg-contact-button {
   position: fixed !important;
-  /* Bottom-right on medium/large screens, pinned to the right edge of a
-     1200px content container (not the raw viewport edge). Change the
-     "1200px" below to match your Cvent template's actual content width. */
+  /* Pinned to the right edge of a 1200px content container, not the raw
+     viewport edge. Change 1200px to match your template's content width. */
   right: max(24px, calc((100vw - 1200px) / 2)) !important;
   left: auto !important;
   bottom: clamp(24px, 4vh, 48px);
@@ -1079,9 +1059,9 @@ div[data-color-style-scheme="mood-background"]:first-of-type {
   gap: 16px;
 
   width: min(520px, calc(100vw - 40px));
-  max-width: 440px; /* caps the pill's size, same as your original */
+  max-width: 440px;
   box-sizing: border-box;
-  padding: 14px 44px 14px 18px !important; /* extra right padding clears the minimize toggle */
+  padding: 14px 44px 14px 18px !important; /* right pad clears the toggle */
 
   background: rgba(0, 98, 221, 0.92) !important;
   border: 1px solid rgba(255, 255, 255, 0.18) !important;
@@ -1121,26 +1101,23 @@ div[data-color-style-scheme="mood-background"]:first-of-type {
   outline: none;
 }
 
-/* --- Minimize control ---------------------------------------------------
-   These two elements are appended directly to <body> by JS, independent of
-   the real .bbg-contact-button (which Cvent/React renders and owns). They
-   are NOT children of that button, so a React re-render can't remove them.
-   ------------------------------------------------------------------------ */
+/* Minimize control: appended to <body> by JS, NOT as children of
+   .bbg-contact-button, so a React re-render can't remove them. */
 
 .bbg-contact-minimize-toggle {
-  position: fixed; /* top/left set dynamically by JS to track the real button */
+  position: fixed; /* top/left set by JS to track the button */
   width: 26px;
   height: 26px;
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: #ffffff; /* solid, high-contrast so it's never mistaken for invisible */
+  background: #ffffff;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 41; /* above .bbg-contact-button's z-index: 40 */
+  z-index: 41; /* above the button (40) */
   transition: background 180ms ease, transform 180ms ease;
 }
 
@@ -1150,7 +1127,7 @@ div[data-color-style-scheme="mood-background"]:first-of-type {
   width: 12px;
   height: 2px;
   border-radius: 1px;
-  background: #0062dd; /* matches button blue, reads clearly on white */
+  background: #0062dd;
 }
 
 .bbg-contact-minimize-toggle:hover {
@@ -1158,10 +1135,8 @@ div[data-color-style-scheme="mood-background"]:first-of-type {
   transform: scale(1.08);
 }
 
-/* The "Have questions?" pill: same fixed position as .bbg-contact-button so
-   it lines up exactly in its place, but a higher z-index so it visually
-   covers the real button while minimized (no need to hide/alter the real
-   button at all). */
+/* "Have questions?" pill: same fixed position as .bbg-contact-button, higher
+   z-index so it covers the real button while minimized. */
 .bbg-contact-minimize-pill {
   position: fixed;
   right: max(24px, calc((100vw - 1200px) / 2));
@@ -1207,7 +1182,7 @@ div[data-color-style-scheme="mood-background"]:first-of-type {
   }
 }
 
-/* --- Breakpoints ------------------------------------------------------ */
+/* Breakpoints */
 
 @media (max-width: 640px) {
   .bbg-contact-button {
@@ -1234,9 +1209,7 @@ div[data-color-style-scheme="mood-background"]:first-of-type {
   }
 }
 
-/* ---------------------------------------------------------------------- */
-/* Demo modal                                                             */
-/* ---------------------------------------------------------------------- */
+/* Demo modal */
 
 .bbg-demo-overlay {
   position: fixed;
@@ -1352,8 +1325,8 @@ div[data-color-style-scheme="mood-background"]:first-of-type {
     border-color 0.15s ease-in-out;
 }
 
-/* Doubled class = specificity (0,3,0), beats Cvent's hashed .css-xxxxxx:hover (0,2,0).
-   The .hover class is Cvent's editor preview hook. */
+/* Doubled class = (0,3,0), beats Cvent's hashed :hover (0,2,0).
+   .hover is Cvent's editor preview hook. */
 .btn-hover-amber.btn-hover-amber:hover,
 .btn-hover-amber.btn-hover-amber:focus-visible,
 .btn-hover-amber.btn-hover-amber.hover {
@@ -1362,8 +1335,7 @@ div[data-color-style-scheme="mood-background"]:first-of-type {
   color: #000000 !important;
 }
 
-/* Catch inner text nodes that carry their own color (e.g. .font-color-white),
-   since inheritance alone loses to any direct declaration on a child. */
+/* Catches inner text nodes with their own color (e.g. .font-color-white) */
 .btn-hover-amber.btn-hover-amber:hover *,
 .btn-hover-amber.btn-hover-amber:focus-visible *,
 .btn-hover-amber.btn-hover-amber.hover * {
@@ -1371,3 +1343,23 @@ div[data-color-style-scheme="mood-background"]:first-of-type {
 }
 
 /* END: Button hover */
+
+.cancel-hide {
+  display: none !important;
+}
+
+/* BBG NYCW reg form â€” paste block below the line. 2.5KB. */
+.left-align-fields [data-cvent-id=containerChild]{display:flex;flex-wrap:wrap;align-items:flex-start;column-gap:12px;row-gap:20px}
+.left-align-fields [data-cvent-id=containerChild]>div{flex:1 1 calc(50% - 6px);min-width:0;margin:0!important}
+.left-align-fields [data-cvent-id=containerChild]>div:has(button,textarea,input[type=checkbox],input[type=radio]){flex-basis:100%}
+.left-align-fields [data-cvent-id=containerChild]>div:has(button) div{padding:0!important;width:100%!important}
+.left-align-fields :is([class*=Grid__column],[class*=Forms__],[class*=TextField__],[class*=ButtonGroup],ul,.js-name,.js-email,div[class=""]){width:100%!important;max-width:none!important;flex-basis:100%!important;margin:0!important;left:0!important;padding:0!important;display:block!important}
+.left-align-fields li{display:inline-block!important;width:auto!important;margin:0!important;padding:0!important;list-style:none!important}
+.left-align-fields li:has(.cancel-hide){display:none!important}
+.left-align-fields label{display:block!important;font-size:11px!important;font-weight:700!important;line-height:1.4!important;letter-spacing:.12em!important;text-transform:uppercase!important;color:rgba(255,255,255,.76)!important;margin:0 0 7px!important;padding:0!important}
+.left-align-fields input[data-cvent-id=input]{width:100%!important;font-size:15px!important;padding:15px 16px!important;color:#fff!important;background:rgba(255,255,255,.06)!important;border:0!important;border-radius:2px!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.38)!important}
+.left-align-fields input[data-cvent-id=input]:focus{background:rgba(255,255,255,.1)!important;box-shadow:inset 0 0 0 1px #F7A325!important;outline:2px solid #6FA0FF!important;outline-offset:2px!important}
+.left-align-fields input:-webkit-autofill{-webkit-text-fill-color:#fff!important;-webkit-box-shadow:inset 0 0 0 1px rgba(255,255,255,.38),inset 0 0 0 1000px #1A1A1B!important}
+.left-align-fields [class*=LinearNavigator__button]{display:inline-block!important;width:auto!important;min-width:0!important;font-size:14px!important;font-weight:700!important;min-height:48px!important;padding:15px 28px!important;color:#0B0B0C!important;background:#F7A325!important;border:0!important;border-radius:2px!important}
+.left-align-fields [class*=LinearNavigator__button]:hover{background:#E8951B!important}
+@media(max-width:640px){.left-align-fields [data-cvent-id=containerChild]>div{flex-basis:100%}}

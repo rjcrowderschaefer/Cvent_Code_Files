@@ -18,6 +18,10 @@ const THEME = {
 async function main() {
   const status = $("status");
   const bust = `?v=${Date.now()}`; // defeat module caching on every reload
+  // widget.js imports "./AgendaItem.js" with a fixed specifier, so it can't be
+  // cache-busted from here. Re-fetch it with cache:"reload" first: that refreshes
+  // the HTTP cache entry the module loader is about to read.
+  await fetch(`${WIDGET_DIR}/AgendaItem.js`, { cache: "reload" });
   const [{ default: Widget }, { default: Editor }, dump] = await Promise.all([
     import(`${WIDGET_DIR}/widget.js${bust}`),
     import(`${WIDGET_DIR}/editor.js${bust}`),
