@@ -15,8 +15,8 @@ python3 -m http.server 8765 --directory "Cvent Code Files/Cvent Widgets"
 
 then open <http://localhost:8765/preview/>. (ES modules won't load from `file://`,
 hence the server.) In DevTools, tick **Disable cache** while the panel is open so
-edits to `AgendaItem.js` are picked up on reload; `widget.js`/`editor.js` are
-cache-busted by the harness already.
+edits are picked up on reload. (The harness already cache-busts all three widget files,
+so this is belt-and-suspenders.)
 
 Claude Code: `.claude/launch.json` at the repo root defines the same server as
 `agenda-preview`.
