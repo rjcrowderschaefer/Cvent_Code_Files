@@ -1303,17 +1303,8 @@ export class AgendaItem extends HTMLElement {
         img.src =
           (sp?.profilePictureUri || "").trim() ||
           "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/pix/2ee8c4642e97488abc1852d9166b179b.png";
-        const info = document.createElement("div");
-        const nm = document.createElement("div");
-        nm.classList.add("smodalSpeakerName");
-        nm.textContent = `${sp?.firstName || ""} ${sp?.lastName || ""}`.trim();
-        const meta = document.createElement("div");
-        meta.classList.add("smodalSpeakerMeta");
-        const jt = (sp?.title || sp?.designation || sp?.jobTitle || "").trim();
-        const co = (sp?.company || sp?.organization || "").trim();
-        meta.textContent = [jt, co].filter(Boolean).join(" · ");
-        info.append(nm, meta);
-        row.append(img, info);
+        // Same name/title/company block as the standalone card speaker line.
+        row.append(img, this._buildSpeakerInfo(sp).info);
         const go = () => this._renderSpeakerView(sp);
         row.addEventListener("click", go);
         row.addEventListener("keydown", (e) => {
@@ -1538,6 +1529,46 @@ export class AgendaItem extends HTMLElement {
     // 0) unwrap if you were passed { speaker, role }
     const sp = spRaw && spRaw.speaker ? spRaw.speaker : spRaw;
 
+    const firstName = (sp?.firstName || "").trim();
+    const lastName = (sp?.lastName || "").trim();
+    const pic = (sp?.profilePictureUri || "").trim();
+
+    const line = document.createElement("div");
+    line.classList.add("speakerLine");
+    line.setAttribute("role", "button");
+    line.setAttribute("tabindex", "0");
+    const sid = sp?.id || sp?.speakerId || "";
+    if (sid) line.dataset.speakerId = sid;
+    line.addEventListener("click", () => this.openModalForSpeaker(sp));
+    line.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        this.openModalForSpeaker(sp);
+      }
+    });
+
+    const img = document.createElement("img");
+    img.src =
+      pic ||
+      "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/pix/2ee8c4642e97488abc1852d9166b179b.png";
+    img.alt = `${firstName} ${lastName}`.trim() || "Speaker";
+    img.classList.add("avatar");
+
+    line.append(img, this._buildSpeakerInfo(sp).info);
+
+    return line;
+  }
+
+  // Name / title / company column for a speaker, styled EXACTLY like the
+  // standalone card's speaker line (theme paragraph base + speakerName /
+  // speakerTitle / speakerCompany typography, focus recolour on the name) and
+  // lazily hydrated with title/company via getSpeakers when the session object
+  // doesn't carry them. Used by the card speaker line AND the session modal's
+  // speaker rows so the two always match.
+  _buildSpeakerInfo(spRaw) {
+    const t = this.theme || {};
+    const cfg = this.config || {};
+    const sp = spRaw && spRaw.speaker ? spRaw.speaker : spRaw;
     const sid = sp?.id || sp?.speakerId || "";
     const firstName = (sp?.firstName || "").trim();
     const lastName = (sp?.lastName || "").trim();
@@ -1563,28 +1594,6 @@ export class AgendaItem extends HTMLElement {
     )
       .toString()
       .trim();
-
-    const pic = (sp?.profilePictureUri || "").trim();
-
-    const line = document.createElement("div");
-    line.classList.add("speakerLine");
-    line.setAttribute("role", "button");
-    line.setAttribute("tabindex", "0");
-    if (sid) line.dataset.speakerId = sid;
-    line.addEventListener("click", () => this.openModalForSpeaker(sp));
-    line.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        this.openModalForSpeaker(sp);
-      }
-    });
-
-    const img = document.createElement("img");
-    img.src =
-      pic ||
-      "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/pix/2ee8c4642e97488abc1852d9166b179b.png";
-    img.alt = `${firstName} ${lastName}`.trim() || "Speaker";
-    img.classList.add("avatar");
 
     const info = document.createElement("div");
     info.classList.add("info");
@@ -1637,7 +1646,6 @@ export class AgendaItem extends HTMLElement {
 
     meta.append(titleSpan, companySpan);
     info.append(nameSpan, meta);
-    line.append(img, info);
 
     // 2) Lazy hydration- if missing, fetch from SDK and patch DOM
     const getSpeakersFn =
@@ -1708,7 +1716,8 @@ export class AgendaItem extends HTMLElement {
       if (!sid) console.warn("Speaker has no id/speakerId; cannot hydrate", sp);
     }
 
-    return line;
+
+    return { info, nameSpan, titleSpan, companySpan };
   }
 
   // Build the reusable speaker-detail body (avatar, name/title/company, bio,
@@ -1795,8 +1804,8 @@ export class AgendaItem extends HTMLElement {
       .smodalSpeakers { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
       .smodalSpeaker { display:flex; gap:10px; cursor:pointer; align-items:flex-start; }
       .smodalSpeaker img { width:44px; height:44px; border-radius:4px; object-fit:cover; flex-shrink:0; background:#ddd; }
-      .smodalSpeakerName { font-size:13px; font-weight:600; }
-      .smodalSpeakerMeta { font-size:12px; color:#666; line-height:1.3; }
+      .smodalSpeaker .info { display:flex; flex-direction:column; justify-content:flex-start; line-height:1.2; min-width:0; }
+      .smodalSpeaker .speakerTitle, .smodalSpeaker .speakerCompany { white-space:normal; overflow:visible; word-break:break-word; }
       .smodalBack {
         appearance:none; border:none; background:transparent; cursor:pointer;
         font-size:13px; font-weight:600; color:#555; padding:0; text-decoration:underline;
