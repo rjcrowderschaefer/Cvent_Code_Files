@@ -503,24 +503,36 @@ export default class extends HTMLElement {
         }
         isFirstHeader = false;
 
-        // Split into blocks: singles render as today; concurrent groups render
-        // as a time grid. Non-overlapping sessions are completely unchanged.
-        const blocks = this._buildDayBlocks(daySessions);
-        blocks.forEach((blk) => {
-          if (blk.type === "single") {
+        // Concurrent tiles are opt-in. When OFF (default), render every session
+        // in a single column in start-time order (classic layout). When ON,
+        // overlapping sessions form side-by-side tile groups.
+        if (cfg.concurrentTiles === true) {
+          const blocks = this._buildDayBlocks(daySessions);
+          blocks.forEach((blk) => {
+            if (blk.type === "single") {
+              container.appendChild(
+                this._renderItem(
+                  blk.session, theme, cfg, openSessions, getSpeakers, eventTimezone
+                )
+              );
+            } else {
+              container.appendChild(
+                this._renderConcurrentGroup(
+                  blk, theme, cfg, openSessions, getSpeakers, eventTimezone
+                )
+              );
+            }
+          });
+        } else {
+          // Single-column classic: every session as a normal card, in order.
+          daySessions.forEach((s) => {
             container.appendChild(
               this._renderItem(
-                blk.session, theme, cfg, openSessions, getSpeakers, eventTimezone
+                s, theme, cfg, openSessions, getSpeakers, eventTimezone
               )
             );
-          } else {
-            container.appendChild(
-              this._renderConcurrentGroup(
-                blk, theme, cfg, openSessions, getSpeakers, eventTimezone
-              )
-            );
-          }
-        });
+          });
+        }
       }
 
       // --- Scroll-spy (only when nav is shown) ---
@@ -1062,25 +1074,35 @@ export default class extends HTMLElement {
     return "en-US";
   }
 
+  // Capitalize the first letter (for header polish in es/pt where weekday/month
+  // are lowercase by grammar, but a header reads better sentence-cased).
+  _capFirst(str) {
+    return str ? str.charAt(0).toUpperCase() + str.slice(1) : str;
+  }
+
   _formatDayKeyLabel(key) {
     if (key === "Unknown") return "Unknown Date";
     const [y, m, d] = key.split("-").map(Number);
     const date = new Date(y, m - 1, d);
-    return date.toLocaleDateString(this._dateLocale(), {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-    });
+    return this._capFirst(
+      date.toLocaleDateString(this._dateLocale(), {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      })
+    );
   }
 
   _formatDayKeyLabelShort(key) {
     if (key === "Unknown") return "Unknown Date";
     const [y, m, d] = key.split("-").map(Number);
     const date = new Date(y, m - 1, d);
-    return date.toLocaleDateString(this._dateLocale(), {
-      month: "long",
-      day: "numeric",
-    });
+    return this._capFirst(
+      date.toLocaleDateString(this._dateLocale(), {
+        month: "long",
+        day: "numeric",
+      })
+    );
   }
 
   _buildFocusLegend(cfg) {
