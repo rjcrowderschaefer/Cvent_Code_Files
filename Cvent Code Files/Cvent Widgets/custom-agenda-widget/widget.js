@@ -1145,12 +1145,15 @@ export default class extends HTMLElement {
     const legendMobile =
       (window.innerWidth || document.documentElement.clientWidth || 1920) <= 600;
 
+    // Legend text is simply "[label] sessions" (planner-editable label; first
+    // letter capitalised so a lowercase default like "plenary" still reads as
+    // a heading). es/pt lead with the noun instead.
     const sentence = (label) =>
       lang === "es"
-        ? `Indica una sesión de ${label}`
+        ? `Sesiones ${label}`
         : lang === "pt"
-        ? `Indica uma sessão de ${label}`
-        : `Indicates a ${label} session`;
+        ? `Sessões ${label}`
+        : `${this._capFirst(label)} sessions`;
 
     const makeItem = (color, label) => {
       const item = document.createElement("div");
