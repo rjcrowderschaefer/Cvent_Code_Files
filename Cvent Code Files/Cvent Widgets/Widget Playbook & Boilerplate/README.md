@@ -70,17 +70,17 @@ registered under different names.
 Develop:   git checkout dev  → edit → upload to the Cvent SANDBOX widget → test in incognito
 Save:      git add . && git commit -m "..." && git push origin dev
 Inspect:   git diff main dev        (what prod will gain; afterwards only config.json names should differ)
-Promote:   git checkout main
-           git merge --no-ff --no-commit dev
-           git checkout HEAD -- "Cvent Code Files/Cvent Widgets/custom-agenda-widget/config.json"   # keep prod name
-           git commit -m "Promote dev to prod: <what changed>"
+Promote:   git checkout main && ./promote.sh "Promote dev to prod: <what changed>"
+           (merges dev, restores prod customElementName(s), refuses to commit a dev- name)
            git push origin main
 Deploy:    upload main's files to the Cvent PROD widget; verify via Sources that both widget + component files are live
 ```
 
-Promoting a widget that does not exist on `main` yet (e.g. `custom-featured-speakers`):
-after the merge, drop the `dev-` prefix from its `config.json` `customElementName`
-by hand before committing.
+`promote.sh` (repo root) is the promote step. It runs `git merge --no-ff --no-commit dev`,
+restores `main`'s `config.json` for every widget that already exists on `main`, strips the
+`dev-` prefix for widgets new to `main` (e.g. `custom-featured-speakers`), and aborts the
+merge if any `dev-` name would land on `main`. Manual equivalent, if you ever need it:
+`git merge --no-ff --no-commit dev`, then `git checkout HEAD -- <widget>/config.json`, then commit.
 
 Safety net from the migration: the tag `backup-before-branch-migration` (also on
 GitHub) and `~/Cvent_Code_Files_backup_2026-09-11.zip` hold the old folder
