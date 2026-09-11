@@ -1284,7 +1284,6 @@ export class AgendaItem extends HTMLElement {
         speakersAvatars.style.marginTop = "auto";
         body.append(speakersAvatars);
       }
-      console.log("TILE DBG |", s.name, "| speakersAvatars in DOM:", !!speakersAvatars.parentNode, "| avatarsH:", speakersAvatars.offsetHeight, "| avatar count:", speakersAvatars.children.length, "| firstAvatarH:", speakersAvatars.children[0]?.offsetHeight, "| contentH:", contentH(), "| avail:", avail());
 
       // Truncate the description to the most whole words that fit above the
       // pinned speakers. Full description shows with NO "show more" when it fits.

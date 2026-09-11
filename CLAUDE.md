@@ -77,12 +77,12 @@ agenda with extensive custom features built over many iterations.
 
 ## Known open items / edge cases
 
-- A ~20-min concurrent tile can drop its speaker avatars in one case — root cause
-  was being diagnosed (avatar height vs. MIN_H measurement). Paused, "good enough".
-- Debug logs still present on `dev` (remove before promoting):
-  `AgendaItem.js` — the `TILE DBG |` line in the tile measurement code;
+- Debug log still present on `dev` (remove before promoting):
   `editor.js` — the `SO DROPDOWN | value:` line in the speaker-order handler.
-  `widget.js` is clean.
+  `widget.js` and `AgendaItem.js` are clean.
+- Concurrent grid time axis is intentionally NON-uniform: it stretches around
+  sessions shorter than MIN_H so short tiles keep their speaker row without
+  overlapping the next tile (fixed 2026-09-11; see AGENDA_WIDGET_TODO.md Done).
 - See `AGENDA_WIDGET_TODO.md` for the full backlog (Option A rail unification,
   compact-mode cutover + toggle removal, normal-card modal unification,
   grid↔stack resize re-render).
