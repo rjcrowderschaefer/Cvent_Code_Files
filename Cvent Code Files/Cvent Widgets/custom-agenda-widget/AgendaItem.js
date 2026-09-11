@@ -46,6 +46,8 @@ export class AgendaItem extends HTMLElement {
       ? focusAccent
       : plenaryAccent;
 
+    this._typeAccent = typeAccent; // used by the shared modal's accent rule
+
     // Gutter color priority: break > focus > plenary/default.
     // Focus sessions recolor the gutter to the focus accent (with light text).
     const gutterBg = isBreak
@@ -629,7 +631,8 @@ export class AgendaItem extends HTMLElement {
         ? s.category.name.trim()
         : "";
 
-    if (locationName || categoryName) {
+    const cardTags = this._sessionTags(s);
+    if (locationName || categoryName || cardTags.length) {
       const metaRow = document.createElement("div");
       metaRow.classList.add("sessionMetaRow");
 
@@ -689,6 +692,10 @@ export class AgendaItem extends HTMLElement {
       if (categoryName) {
         metaRow.append(makeMetaPill("category", categoryName, "sessionCategory"));
       }
+      // Tags: outlined, secondary, after location/category in the same row.
+      cardTags.forEach((tag) =>
+        metaRow.append(this._tagPill(tag, pillAccent, pillSize, "sessionTagPill"))
+      );
       content.append(metaRow);
     }
 
@@ -764,30 +771,6 @@ export class AgendaItem extends HTMLElement {
       content.append(speakersWrap);
     } 
 
-    // Tags row — up to 5 tags from the "Tags" MultiChoice custom field.
-    // Secondary neutral pills, at the BOTTOM (below speakers), left-aligned.
-    const tagsField = s.sessionCustomFields?.find(
-      (f) => f.name?.trim().toLowerCase() === "tags"
-    );
-    const tagValues = Array.isArray(tagsField?.value)
-      ? tagsField.value.filter((v) => typeof v === "string" && v.trim())
-      : [];
-    if (tagValues.length) {
-      const tagRow = document.createElement("div");
-      tagRow.classList.add("sessionTagRow");
-      tagValues.slice(0, 5).forEach((tag) => {
-        const pill = document.createElement("span");
-        pill.classList.add("sessionTagPill");
-        const icon = this._metaIconSvg("tag", "#777", 9);
-        const txt = document.createElement("span");
-        txt.textContent = tag.trim();
-        if (icon) pill.append(icon);
-        pill.append(txt);
-        tagRow.append(pill);
-      });
-      content.append(tagRow);
-    }
-
     // Assemble — accent bar (when enabled) spans full width on top
     if (accentOn) {
       accentBar.style.gridColumn = "1 / -1";
@@ -821,6 +804,7 @@ export class AgendaItem extends HTMLElement {
       : isFocus
       ? focusAccent
       : plenaryAccent;
+    this._typeAccent = accentColor; // used by the shared modal's accent rule
 
     // Tile background matches the standalone card's cardBg logic so both use the
     // same editor "Card Bg" setting (break sessions use their own break card bg).
@@ -967,20 +951,22 @@ export class AgendaItem extends HTMLElement {
     bar.classList.add("tbar");
 
     // If this session has tags, expand the accent bar and show the first tag
-    // (tag icon + white uppercase text), right-aligned within the bar.
-    const tileTagsField = s.sessionCustomFields?.find(
-      (f) => f.name?.trim().toLowerCase() === "tags"
-    );
-    const tileTagValues = Array.isArray(tileTagsField?.value)
-      ? tileTagsField.value.filter((v) => typeof v === "string" && v.trim())
-      : [];
+    // (tag icon + white uppercase text) plus a "+N" count when there are more,
+    // right-aligned within the bar. Tiles are too narrow for several tags; the
+    // modal lists them all.
+    const tileTagValues = this._sessionTags(s);
     if (tileTagValues.length) {
       bar.classList.add("tbarTagged");
       const tagChip = document.createElement("span");
       tagChip.classList.add("tbarTag");
       const tagIcon = this._metaIconSvg("tag", "#ffffff", 10);
       const tagTxt = document.createElement("span");
-      tagTxt.textContent = tileTagValues[0].trim();
+      tagTxt.textContent =
+        tileTagValues[0] +
+        (tileTagValues.length > 1 ? ` +${tileTagValues.length - 1}` : "");
+      if (tileTagValues.length > 1) {
+        tagChip.title = tileTagValues.join(", ");
+      }
       if (tagIcon) tagChip.append(tagIcon);
       tagChip.append(tagTxt);
       bar.append(tagChip);
@@ -1244,7 +1230,8 @@ export class AgendaItem extends HTMLElement {
     // session type: focus accent for focus sessions, plenary accent otherwise.
     const locName = s.location?.name?.trim() || "";
     const catName = s.category?.name?.trim() || "";
-    if (locName || catName) {
+    const modalTags = this._sessionTags(s);
+    if (locName || catName || modalTags.length) {
       const accentOn = cfg.showAccentBar === true;
       const isFocusSession = accentOn && cfg.isFocus === true;
       const pillAccent = isFocusSession
@@ -1278,6 +1265,9 @@ export class AgendaItem extends HTMLElement {
       if (catName) {
         metaRow.append(makePill("category", catName));
       }
+      modalTags.forEach((tag) =>
+        metaRow.append(this._tagPill(tag, pillAccent, 12.5, "smodalTagPill"))
+      );
       bodyEl.append(metaRow);
     }
 
@@ -1315,32 +1305,7 @@ export class AgendaItem extends HTMLElement {
       bodyEl.append(grid);
     }
 
-    // Tags row (secondary pills) — at the BOTTOM, below the speaker list.
-    const mTagsField = s.sessionCustomFields?.find(
-      (f) => f.name?.trim().toLowerCase() === "tags"
-    );
-    const mTagValues = Array.isArray(mTagsField?.value)
-      ? mTagsField.value.filter((v) => typeof v === "string" && v.trim())
-      : [];
-    if (mTagValues.length) {
-      const tagRow = document.createElement("div");
-      tagRow.classList.add("smodalTagRow");
-      tagRow.style.marginTop = "16px";
-      tagRow.style.marginBottom = "0";
-      mTagValues.slice(0, 5).forEach((tag) => {
-        const pill = document.createElement("span");
-        pill.classList.add("smodalTagPill");
-        const icon = this._metaIconSvg("tag", "#777", 10);
-        const txt = document.createElement("span");
-        txt.textContent = tag.trim();
-        if (icon) pill.append(icon);
-        pill.append(txt);
-        tagRow.append(pill);
-      });
-      bodyEl.append(tagRow);
-    }
-
-    modal.append(head, bodyEl);
+    modal.append(head, this._modalAccentRule(), bodyEl);
     close.focus();
   }
 
@@ -1362,7 +1327,18 @@ export class AgendaItem extends HTMLElement {
       back.addEventListener("click", () => this._renderSessionView());
       head.append(back);
     } else {
-      head.style.justifyContent = "flex-end";
+      // Opened straight from a card: show which session this speaker belongs
+      // to, muted, in the slot the back link occupies in the tile flow.
+      const ctx = document.createElement("div");
+      ctx.classList.add("smodalContext");
+      const eyebrow = document.createElement("div");
+      eyebrow.classList.add("smodalContextEyebrow");
+      eyebrow.textContent = "Speaker";
+      const sessionName = document.createElement("div");
+      sessionName.classList.add("smodalContextSession");
+      sessionName.textContent = this.session?.name || "";
+      ctx.append(eyebrow, sessionName);
+      head.append(ctx);
     }
     const close = document.createElement("button");
     close.classList.add("smodalClose");
@@ -1378,7 +1354,7 @@ export class AgendaItem extends HTMLElement {
     const refs = this._buildSpeakerBody();
     this._fillSpeakerRefs(refs, sp);
 
-    modal.append(head, refs.body);
+    modal.append(head, this._modalAccentRule(), refs.body);
     (back || close).focus();
   }
 
@@ -1764,6 +1740,63 @@ export class AgendaItem extends HTMLElement {
   // already contains block HTML, leave it; otherwise convert newlines.
   // Mix a hex color with white to produce a light tint (amount = accent weight,
   // e.g. 0.14 = 14% accent over white). Returns an rgb() string.
+  // Tags from the "Tags" MultiChoice custom field, trimmed, deduped
+  // case-insensitively, and with any tag that merely repeats the category name
+  // dropped (it would show twice in the meta row otherwise).
+  _sessionTags(s, max = 5) {
+    const field = s?.sessionCustomFields?.find(
+      (f) => f.name?.trim().toLowerCase() === "tags"
+    );
+    const raw = Array.isArray(field?.value) ? field.value : [];
+    const cat = (s?.category?.name || "").trim().toLowerCase();
+    const seen = new Set();
+    const out = [];
+    raw.forEach((v) => {
+      if (typeof v !== "string") return;
+      const tag = v.trim();
+      const key = tag.toLowerCase();
+      if (!tag || seen.has(key) || key === cat) return;
+      seen.add(key);
+      out.push(tag);
+    });
+    return out.slice(0, max);
+  }
+
+  // Outlined tag pill that sits in the meta row next to the filled location /
+  // category pills: same height, accent-coloured border + text, no fill, so it
+  // reads as secondary.
+  _tagPill(label, accent, fontSize, className) {
+    const pill = document.createElement("span");
+    pill.classList.add(className);
+    pill.style.display = "inline-flex";
+    pill.style.alignItems = "center";
+    pill.style.gap = "5px";
+    pill.style.boxSizing = "border-box";
+    pill.style.padding = "4px 10px";
+    pill.style.borderRadius = "12px";
+    pill.style.border = `1px solid ${accent}`;
+    pill.style.color = accent;
+    pill.style.background = "transparent";
+    pill.style.fontSize = `${fontSize}px`;
+    pill.style.fontWeight = "600";
+    pill.style.textTransform = "uppercase";
+    pill.style.lineHeight = "1.2";
+    const icon = this._metaIconSvg("tag", accent, Math.round(fontSize * 0.85));
+    const txt = document.createElement("span");
+    txt.textContent = label;
+    if (icon) pill.append(icon);
+    pill.append(txt);
+    return pill;
+  }
+
+  // 3px rule under the modal header in the session-type accent colour.
+  _modalAccentRule() {
+    const rule = document.createElement("div");
+    rule.classList.add("smodalAccentRule");
+    rule.style.background = this._typeAccent || "#f7a325";
+    return rule;
+  }
+
   // CSS for the single modal shell + speaker body. Injected into BOTH the
   // standalone-card style block and the tile style block so whichever render
   // path opens the modal has the styles it needs (see Playbook §5).
@@ -1798,8 +1831,6 @@ export class AgendaItem extends HTMLElement {
       .smodalMeta { display:inline-flex; align-items:center; gap:5px; font-size:12.5px; text-transform:uppercase; font-weight:600; border-radius:12px; padding:4px 10px 4px 4px; }
       .smodalMetaIconChip { display:inline-flex; align-items:center; justify-content:center; width:19px; height:19px; border-radius:50%; flex-shrink:0; }
       .smodalMetaIcon { width:12px; height:12px; object-fit:contain; display:inline-block; }
-      .smodalTagRow { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
-      .smodalTagPill { display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:500; color:#555; background:#f0f0ee; border:1px solid #e0e0dd; border-radius:11px; padding:3px 9px; }
       .smodalSpeakersHdr { font-size:15px; font-weight:700; margin:4px 0 10px; }
       .smodalSpeakers { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
       .smodalSpeaker { display:flex; gap:10px; cursor:pointer; align-items:flex-start; }
@@ -1815,7 +1846,11 @@ export class AgendaItem extends HTMLElement {
         grid-auto-rows:auto; column-gap:14px; row-gap:2px; background:${contentBg};
       }
       .modalAvatar { width:125px; height:125px; object-fit:cover; border-radius:4px; grid-column:1; grid-row:1; }
-      .modalDetails { grid-column:2; grid-row:1; margin-top:20px; }
+      .modalDetails { grid-column:2; grid-row:1; align-self:center; min-width:0; }
+      .smodalAccentRule { height:3px; flex-shrink:0; }
+      .smodalContext { min-width:0; }
+      .smodalContextEyebrow { font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#888; }
+      .smodalContextSession { font-size:14px; font-weight:600; color:#444; line-height:1.3; margin-top:2px; }
       .kv { margin:2px 0; }
       .bio { margin:5px 0 0 0; line-height:1.45; grid-column:1 / -1; grid-row:2; }
       .bio p { margin:0 0 10px 0; }
