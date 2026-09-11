@@ -1189,13 +1189,6 @@ soSelect.onchange = () => {
     const h3ModalColors = document.createElement("h3");
     h3ModalColors.textContent = "Modal Colors";
     modalBlock.append(h3ModalColors);
-    const modalNote = document.createElement("div");
-    modalNote.style.fontSize = "11px";
-    modalNote.style.opacity = "0.7";
-    modalNote.style.margin = "0 0 6px";
-    modalNote.textContent =
-      "The modal header uses the session's accent colour (plenary / focus / break), matching the card it opened from.";
-    modalBlock.append(modalNote);
 
     modalBlock.append(
       this._colorRow(
@@ -1234,7 +1227,6 @@ soSelect.onchange = () => {
     modalBlock.append(typoModal);
 
     const MODAL_TYPO_KEYS = [
-      ["modalName", "Modal Name (top header)"],
       ["modalSpeakerName", "Modal Speaker Name"],
       ["modalSpeakerTitle", "Modal Speaker Title"],
       ["modalSpeakerCompany", "Modal Speaker Company"],

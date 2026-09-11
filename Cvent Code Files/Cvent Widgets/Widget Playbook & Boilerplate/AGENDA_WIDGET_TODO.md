@@ -8,13 +8,17 @@ Add detail to each item as it's picked up; move done items to the bottom.
 - [ ] **Option A rail unification** — (details to be filled in)
 - [ ] **Compact-mode cutover + toggle removal** — compact typography is already
       the default scale; remove the legacy toggle once all live events are confirmed on it.
-- [ ] **Normal-card modal unification** — share modal CSS/markup between the
-      full-card and tile render paths (see Playbook §5 shadow-root CSS gotcha).
 - [ ] **Grid ↔ stack resize re-render** — concurrent tile grid should re-lay out
       on viewport resize instead of requiring a reload.
 
 ## Done
 
+- [x] 2026-09-11 **Normal-card modal unification.** One modal shell (`.sbackdrop`/`.smodal`)
+      now serves the tile session view, its speaker view, and the speaker opened from a
+      standalone card (close-only header, no back link). CSS lives in
+      `AgendaItem._sharedModalCss()` and is injected into BOTH render paths. The old
+      `buildModal()` / accent-coloured header modal is gone; the "Modal Name (top header)"
+      typography control was removed with it.
 - [x] 2026-09-11 Removed the last debug log (`SO DROPDOWN` in `editor.js`). All three files are clean.
 - [x] 2026-09-11 **Short concurrent tiles hid their speaker avatars.** Root cause was
       not the avatar measurement: tiles were positioned by pure time math but
