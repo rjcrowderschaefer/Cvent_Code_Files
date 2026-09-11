@@ -110,5 +110,8 @@ agenda with extensive custom features built over many iterations.
   committing. Widget edits happen on `dev` unless told otherwise; check the
   branch first (`git branch --show-current`).
 - Before shipping, run the **Pre-prod checklist** in the Playbook (§11).
+- The widget files use **CRLF line endings**. Preserve them when editing (a
+  rewrite that converts to LF shows up as a 2,500-line diff). Check with
+  `git diff --stat` before committing; only the lines you touched should appear.
 - If something "doesn't work," first suspect a stale Cvent upload (re-upload,
   incognito) before assuming the code is wrong.
