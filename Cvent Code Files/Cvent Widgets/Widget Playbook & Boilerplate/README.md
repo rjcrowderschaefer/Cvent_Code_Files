@@ -50,3 +50,38 @@ logic. Copy the folder, rename, and build on top.
 ### The one habit that saves the most time
 **Test in Incognito, on the published front end.** Most "it's broken" moments are
 stale cached files, not code. See Playbook §0 and §10.
+
+## 3. Branch workflow (prod vs sandbox)
+
+Since Sep 2026 this repo uses **branches, not folders**, to separate environments.
+
+| Branch | Cvent environment | Widget folders (under `Cvent Code Files/Cvent Widgets/`) |
+|--------|-------------------|-----------------------------------------------------------|
+| `main` | **Prod**          | `custom-agenda-widget/` |
+| `dev`  | **Sandbox**       | `custom-agenda-widget/`, `custom-featured-speakers/` (sandbox-only so far) |
+
+Same paths and filenames on both branches. The one intentional, permanent
+difference is `customElementName` in each `config.json`: on `dev` it carries the
+`dev-` prefix (`dev-custom-agenda-widget`), on `main` it does not
+(`custom-agenda-widget`), because the Cvent Sandbox and Prod widgets are
+registered under different names.
+
+```
+Develop:   git checkout dev  → edit → upload to the Cvent SANDBOX widget → test in incognito
+Save:      git add . && git commit -m "..." && git push origin dev
+Inspect:   git diff main dev        (what prod will gain; afterwards only config.json names should differ)
+Promote:   git checkout main
+           git merge --no-ff --no-commit dev
+           git checkout HEAD -- "Cvent Code Files/Cvent Widgets/custom-agenda-widget/config.json"   # keep prod name
+           git commit -m "Promote dev to prod: <what changed>"
+           git push origin main
+Deploy:    upload main's files to the Cvent PROD widget; verify via Sources that both widget + component files are live
+```
+
+Promoting a widget that does not exist on `main` yet (e.g. `custom-featured-speakers`):
+after the merge, drop the `dev-` prefix from its `config.json` `customElementName`
+by hand before committing.
+
+Safety net from the migration: the tag `backup-before-branch-migration` (also on
+GitHub) and `~/Cvent_Code_Files_backup_2026-09-11.zip` hold the old folder
+layout. Background: `MIGRATION_folders_to_branches.md`.
