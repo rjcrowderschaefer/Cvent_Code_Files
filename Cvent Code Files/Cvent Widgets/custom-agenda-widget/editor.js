@@ -931,7 +931,6 @@ export default class ExampleAgendaEditor extends HTMLElement {
       soSelect.appendChild(o);
     });
 soSelect.onchange = () => {
-      console.log("SO DROPDOWN | value:", soSelect.value);
       this._patch({ speakerOrder: soSelect.value });
     };
 

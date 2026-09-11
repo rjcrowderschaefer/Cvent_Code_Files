@@ -5,7 +5,6 @@ Add detail to each item as it's picked up; move done items to the bottom.
 
 ## Open
 
-- [ ] **Remove debug log before next promote** — `editor.js` (`SO DROPDOWN | value:`).
 - [ ] **Option A rail unification** — (details to be filled in)
 - [ ] **Compact-mode cutover + toggle removal** — compact typography is already
       the default scale; remove the legacy toggle once all live events are confirmed on it.
@@ -16,6 +15,7 @@ Add detail to each item as it's picked up; move done items to the bottom.
 
 ## Done
 
+- [x] 2026-09-11 Removed the last debug log (`SO DROPDOWN` in `editor.js`). All three files are clean.
 - [x] 2026-09-11 **Short concurrent tiles hid their speaker avatars.** Root cause was
       not the avatar measurement: tiles were positioned by pure time math but
       clamped up to MIN_H (118px), so a 20-min tile (80px of time) bled under the

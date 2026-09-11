@@ -77,9 +77,8 @@ agenda with extensive custom features built over many iterations.
 
 ## Known open items / edge cases
 
-- Debug log still present on `dev` (remove before promoting):
-  `editor.js` — the `SO DROPDOWN | value:` line in the speaker-order handler.
-  `widget.js` and `AgendaItem.js` are clean.
+- No debug `console.log` calls remain in the three widget files (as of
+  2026-09-11). Keep it that way; `console.warn` error handlers are fine.
 - Concurrent grid time axis is intentionally NON-uniform: it stretches around
   sessions shorter than MIN_H so short tiles keep their speaker row without
   overlapping the next tile (fixed 2026-09-11; see AGENDA_WIDGET_TODO.md Done).
