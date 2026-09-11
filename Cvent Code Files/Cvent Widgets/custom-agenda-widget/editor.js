@@ -155,6 +155,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
       groupByDay: true,
       speakerOrder: "alphabetical",
       hideDateNav: false,
+      concurrentTiles: false,
       plenaryAccent: "#f7a325",
       focusAccent: "#1a7f8e",
       focusGutterText: "#e8f6f8",
@@ -943,6 +944,25 @@ soSelect.onchange = () => {
         this._patch({ hideDateNav: v })
       )
     );
+
+    // Concurrent session tiles — when ON, overlapping sessions render as
+    // side-by-side tiles in a time grid. When OFF (default), all sessions render
+    // in a single column regardless of overlap (the classic layout).
+    agendaBlock.append(document.createElement("br"));
+    agendaBlock.append(
+      this._checkbox(
+        "Enable concurrent session tiles",
+        !!this._config.concurrentTiles,
+        (v) => this._patch({ concurrentTiles: v })
+      )
+    );
+    const concurrentNote = document.createElement("div");
+    concurrentNote.style.fontSize = "11px";
+    concurrentNote.style.opacity = "0.7";
+    concurrentNote.style.margin = "4px 0 0";
+    concurrentNote.textContent =
+      "Off = every session in a single column (classic). On = overlapping sessions shown as side-by-side tiles.";
+    agendaBlock.append(concurrentNote);
 
     // Description Display Options (Radio Button Group)
     const descFieldset = document.createElement("fieldset");
