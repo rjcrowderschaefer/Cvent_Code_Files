@@ -62,7 +62,6 @@ export default class extends HTMLElement {
   }
 
   onConfigurationUpdate(newConfig) {
-    console.log("CONFIG UPDATE | speakerOrder:", newConfig?.speakerOrder);
     this.configuration = newConfig || {};
     // re-render into the current container
     const container = this.shadowRoot?.firstElementChild;
@@ -188,13 +187,21 @@ export default class extends HTMLElement {
       let rawTz = eventInfo?.timezone;
       if (rawTz && TZ_NORMALIZE[rawTz]) rawTz = TZ_NORMALIZE[rawTz];
       if (rawTz) eventTimezone = rawTz;
-      // Detect language from the default locale (e.g. "es-MX" -> "es").
+      // Detect the CURRENTLY SELECTED display language from <html lang>, which
+      // Cvent updates when the attendee uses the language selector. Fall back to
+      // the event's default locale if html lang isn't a recognized language.
+      const mapLang = (code) => {
+        const c = (code || "").toLowerCase();
+        if (c.startsWith("es")) return "es";
+        if (c.startsWith("pt")) return "pt";
+        if (c.startsWith("en")) return "en";
+        return null;
+      };
+      const htmlLang = mapLang(document.documentElement.lang);
       const locales = eventInfo?.locales || [];
       const def = locales.find((l) => l.isDefault) || locales[0];
-      const code = (def?.cultureCode || "").toLowerCase();
-      if (code.startsWith("es")) eventLang = "es";
-      else if (code.startsWith("pt")) eventLang = "pt";
-      else eventLang = "en";
+      const defaultLang = mapLang(def?.cultureCode);
+      eventLang = htmlLang || defaultLang || "en";
     } catch (e) {
       console.warn("getEventInfo error:", e);
     }
