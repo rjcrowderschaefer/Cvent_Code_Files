@@ -185,7 +185,6 @@ export default class ExampleAgendaEditor extends HTMLElement {
       },
       showMoreColor: "#f7a325",
       modalColors: {
-        headerBg: "#f7a325",
         dividerColor: "#555555",
         contentBg: "#ffffff",
       },
@@ -473,13 +472,25 @@ export default class ExampleAgendaEditor extends HTMLElement {
     this.shadowRoot.append(panel);
 
     // ============================
-    // AGENDA & CARD CONTROLS
+    // SECTIONS (collapsible; only the first is open by default)
     // ============================
+    // Config keys are unchanged; this is purely how controls are grouped.
 
-    const agendaDetails = this._details("Agenda & Card Controls");
-    const agendaBlock = document.createElement("div");
-    agendaBlock.className = "block";
-    agendaDetails.append(agendaBlock);
+    const makeSection = (title, open) => {
+      const details = this._details(title, open);
+      const block = document.createElement("div");
+      block.className = "block";
+      details.append(block);
+      return { details, block };
+    };
+    const secHeader = makeSection("Agenda Header", true);
+    const secLayout = makeSection("Layout & Ordering", false);
+    const secDateNav = makeSection("Date Navigation", false);
+    const secCards = makeSection("Card Colors & Border", false);
+    const secTypes = makeSection("Session Types (Plenary / Focus)", false);
+    const secBreaks = makeSection("Break Sessions", false);
+    const secTypoAgenda = makeSection("Typography (Agenda)", false);
+    const secModal = makeSection("Speaker Modal", false);
 
     // Header text
     const headerWrap = document.createElement("div");
@@ -500,7 +511,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
     };
 
     headerWrap.appendChild(headerInput);
-    agendaBlock.appendChild(headerWrap);
+    secHeader.block.appendChild(headerWrap);
 
     // Subheader text
     const subheaderWrap = document.createElement("div");
@@ -521,7 +532,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
     };
 
     subheaderWrap.appendChild(subheaderInput);
-    agendaBlock.appendChild(subheaderWrap);
+    secHeader.block.appendChild(subheaderWrap);
 
 // Timezone label controls
     const tzWrap = document.createElement("div");
@@ -557,15 +568,11 @@ export default class ExampleAgendaEditor extends HTMLElement {
     tzInput.onchange = () => this._patch({ timezoneAbbr: tzInput.value });
 
     tzWrap.appendChild(tzInput);
-    agendaBlock.appendChild(tzWrap);
+    secHeader.block.appendChild(tzWrap);
 
 // Date Navigation controls
     const dnWrap = document.createElement("div");
     dnWrap.className = "section";
-
-    const dnHeading = document.createElement("h3");
-    dnHeading.textContent = "Date Navigation";
-    dnWrap.appendChild(dnHeading);
 
     const dn = this._config.dateNav || {};
 
@@ -638,10 +645,6 @@ export default class ExampleAgendaEditor extends HTMLElement {
     // Break Session Styling
     const bsWrap = document.createElement("div");
     bsWrap.className = "section";
-
-    const bsHeading = document.createElement("h3");
-    bsHeading.textContent = "Break Session Styling";
-    bsWrap.appendChild(bsHeading);
 
     const bsNote = document.createElement("div");
     bsNote.style.fontSize = "11px";
@@ -747,15 +750,11 @@ export default class ExampleAgendaEditor extends HTMLElement {
       )
     );
 
-    agendaBlock.appendChild(bsWrap);
+    secBreaks.block.appendChild(bsWrap);
 
     // Session Type Styling (plenary vs focus)
     const stWrap = document.createElement("div");
     stWrap.className = "section";
-
-    const stHeading = document.createElement("h3");
-    stHeading.textContent = "Session Type Styling";
-    stWrap.appendChild(stHeading);
 
     const stNote = document.createElement("div");
     stNote.style.fontSize = "11px";
@@ -845,7 +844,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
       this._patch({ plenaryLabel: plenaryLabelInput.value });
     stWrap.appendChild(plenaryLabelInput);
 
-    agendaBlock.appendChild(stWrap);
+    secTypes.block.appendChild(stWrap);
 
 // Sticky offset = height of the Cvent header the nav should sit beneath
     const dnOffsetWrap = document.createElement("div");
@@ -879,7 +878,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
       )
     );
 
-    agendaBlock.appendChild(dnWrap);
+    secDateNav.block.appendChild(dnWrap);
 
     // Sort dropdown
     const sortWrap = document.createElement("div");
@@ -901,10 +900,10 @@ export default class ExampleAgendaEditor extends HTMLElement {
     });
     sort.onchange = () => this._patch({ sort: sort.value });
     sortWrap.append(sort);
-    agendaBlock.append(sortWrap);
+    secLayout.block.append(sortWrap);
 
     // Group by day checkbox stays
-    agendaBlock.append(
+    secLayout.block.append(
       this._checkbox("Group by day", !!this._config.groupByDay, (v) =>
         this._patch({ groupByDay: v })
       )
@@ -935,20 +934,24 @@ soSelect.onchange = () => {
     };
 
     soWrap.appendChild(soSelect);
-    agendaBlock.appendChild(soWrap);
+    secLayout.block.appendChild(soWrap);
 
-    // Hide the sticky date navigation (checked = hidden)
-    agendaBlock.append(
+    // Hide the sticky date navigation (checked = hidden). First thing in the
+    // Date Navigation section, above the sizing/colour controls.
+    const hideNavWrap = document.createElement("div");
+    hideNavWrap.className = "field";
+    hideNavWrap.append(
       this._checkbox("Hide date nav bar", !!this._config.hideDateNav, (v) =>
         this._patch({ hideDateNav: v })
       )
     );
+    secDateNav.block.prepend(hideNavWrap);
 
     // Concurrent session tiles — when ON, overlapping sessions render as
     // side-by-side tiles in a time grid. When OFF (default), all sessions render
     // in a single column regardless of overlap (the classic layout).
-    agendaBlock.append(document.createElement("br"));
-    agendaBlock.append(
+    secLayout.block.append(document.createElement("br"));
+    secLayout.block.append(
       this._checkbox(
         "Enable concurrent session tiles",
         !!this._config.concurrentTiles,
@@ -961,7 +964,7 @@ soSelect.onchange = () => {
     concurrentNote.style.margin = "4px 0 0";
     concurrentNote.textContent =
       "Off = every session in a single column (classic). On = overlapping sessions shown as side-by-side tiles.";
-    agendaBlock.append(concurrentNote);
+    secLayout.block.append(concurrentNote);
 
     // Description Display Options (Radio Button Group)
     const descFieldset = document.createElement("fieldset");
@@ -1036,10 +1039,10 @@ soSelect.onchange = () => {
     );
 
     // Add to panel
-    agendaBlock.append(descFieldset);
+    secLayout.block.append(descFieldset);
 
     // Colors
-    agendaBlock.append(
+    secCards.block.append(
       this._colorRow(
         "Time Column Bg",
         "gutterBg",
@@ -1048,7 +1051,7 @@ soSelect.onchange = () => {
       )
     );
 
-    agendaBlock.append(
+    secCards.block.append(
       this._colorRow(
         "Card Bg",
         "cardBg",
@@ -1139,9 +1142,9 @@ soSelect.onchange = () => {
     // assemble
     borderFieldset.append(borderWidthWrap, borderStyleWrap, borderColorWrap);
 
-    agendaBlock.append(borderFieldset);
+    secCards.block.append(borderFieldset);
 
-    agendaBlock.append(
+    secCards.block.append(
       this._colorRow(
         "Show More Color",
         "showMoreColor",
@@ -1151,13 +1154,9 @@ soSelect.onchange = () => {
     );
 
     // Typography (Agenda)
-    const h3Agenda = document.createElement("h3");
-    h3Agenda.textContent = "Typography (Agenda)";
-    agendaBlock.append(h3Agenda);
-
     const typoAgenda = document.createElement("div");
     typoAgenda.className = "grid";
-    agendaBlock.append(typoAgenda);
+    secTypoAgenda.block.append(typoAgenda);
 
     const AGENDA_TYPO_KEYS = [
       ["agendaHeader", "Agenda Header"],
@@ -1177,16 +1176,11 @@ soSelect.onchange = () => {
       typoAgenda.append(this._typographyBlock(key, label));
     });
 
-    panel.append(agendaDetails);
-
     // ============================
-    // MODAL CONTROLS (always visible)
+    // SPEAKER MODAL
     // ============================
 
-    const modalDetails = this._details("Speaker Modal Controls");
-    const modalBlock = document.createElement("div");
-    modalBlock.className = "block";
-    modalDetails.append(modalBlock);
+    const modalBlock = secModal.block;
 
     // -------------------------
     // Modal Color Controls
@@ -1195,18 +1189,13 @@ soSelect.onchange = () => {
     const h3ModalColors = document.createElement("h3");
     h3ModalColors.textContent = "Modal Colors";
     modalBlock.append(h3ModalColors);
-
-    modalBlock.append(
-      this._colorRow(
-        "Header background",
-        "modalHeaderBg",
-        this._config.modalColors?.headerBg || "#ffffff",
-        (v) =>
-          this._patch({
-            modalColors: { ...this._config.modalColors, headerBg: v },
-          })
-      )
-    );
+    const modalNote = document.createElement("div");
+    modalNote.style.fontSize = "11px";
+    modalNote.style.opacity = "0.7";
+    modalNote.style.margin = "0 0 6px";
+    modalNote.textContent =
+      "The modal header uses the session's accent colour (plenary / focus / break), matching the card it opened from.";
+    modalBlock.append(modalNote);
 
     modalBlock.append(
       this._colorRow(
@@ -1236,6 +1225,10 @@ soSelect.onchange = () => {
     // Modal Typography
     // -------------------------
 
+    const h3ModalTypo = document.createElement("h3");
+    h3ModalTypo.textContent = "Modal Typography";
+    modalBlock.append(h3ModalTypo);
+
     const typoModal = document.createElement("div");
     typoModal.className = "grid";
     modalBlock.append(typoModal);
@@ -1255,7 +1248,16 @@ soSelect.onchange = () => {
       typoModal.append(this._typographyBlock(key, label));
     });
 
-    panel.append(modalDetails);
+    [
+      secHeader,
+      secLayout,
+      secDateNav,
+      secCards,
+      secTypes,
+      secBreaks,
+      secTypoAgenda,
+      secModal,
+    ].forEach((s) => panel.append(s.details));
   }
 
   // ===========================================================

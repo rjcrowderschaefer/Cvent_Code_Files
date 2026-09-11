@@ -62,7 +62,9 @@ export class AgendaItem extends HTMLElement {
       cfg?.typography?.sessionDescription?.color ||
       "#0066cc";
 
-    const modalHeaderBg = cfg.modalColors?.headerBg ?? "#ffffff";
+    // Modal header matches the session-type accent of the card it opened from
+    // (plenary / focus / break). Not planner-configurable separately.
+    const modalHeaderBg = typeAccent;
     const modalDivider = cfg.modalColors?.dividerColor ?? "#eeeeee";
     const modalContentBg = cfg.modalColors?.contentBg ?? "#ffffff";
 
