@@ -26,7 +26,7 @@ git rev-parse --verify --quiet dev >/dev/null || die "no local dev branch found.
 [ -z "$(git rev-list main..dev)" ] && { echo "main already contains everything on dev. Nothing to promote."; exit 0; }
 
 echo "Merging dev into main (no commit yet)..."
-if ! git merge --no-ff --no-commit dev; then
+if ! git --no-pager merge --no-ff --no-commit dev; then
   git merge --abort 2>/dev/null || true
   die "merge conflict. Resolve by hand: git merge --no-ff --no-commit dev, fix files, then follow the README promote steps."
 fi
@@ -61,6 +61,6 @@ echo
 echo "Promoted. Merge commit: $(git rev-parse --short HEAD)"
 echo
 echo "Remaining differences between main and dev (should be config.json names only):"
-git diff main dev --stat -- "$WIDGETS" || true
+git --no-pager diff main dev --stat -- "$WIDGETS" || true
 echo
 echo "Next:  git push origin main   then upload main's widget files to Cvent PROD (widget + component files, verify via Sources)."
