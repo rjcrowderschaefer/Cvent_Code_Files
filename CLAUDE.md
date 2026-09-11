@@ -1,0 +1,114 @@
+# CLAUDE.md — Cvent_Code_Files
+
+Auto-read by Claude Code at the start of every session. It carries the context,
+rules, and current state for the Cvent custom widgets so work continues
+seamlessly. **Read the referenced docs before making changes.**
+
+---
+
+## Repo layout
+
+```
+Cvent Code Files/
+├── Cvent Widgets/
+│   ├── custom-agenda-widget/        ← THE agenda widget (widget.js, AgendaItem.js, editor.js, config.json)
+│   ├── custom-featured-speakers/    ← dev branch only so far (not yet promoted to prod)
+│   └── Widget Playbook & Boilerplate/
+│       ├── CVENT_WIDGET_PLAYBOOK.md ← gotchas, SDK limits, patterns (REQUIRED READING)
+│       ├── AGENDA_WIDGET_TODO.md    ← backlog / deferred items for the agenda widget
+│       ├── README.md                ← boilerplate guide + §3 branch workflow
+│       ├── MIGRATION_folders_to_branches.md
+│       └── widget.js / ITEM.js / editor.js / config.json  (boilerplate scaffold, not a live widget)
+├── BLE-Events/, code-snippets/, css-files/   ← event CSS and snippets, not environment-tracked
+promote.sh                            ← the dev → main promotion script (see Workflow)
+```
+
+## What the main project is
+
+A Cvent Flex **custom agenda widget** (`custom-agenda-widget/`, four files:
+`widget.js`, `AgendaItem.js`, `editor.js`, `config.json`). It renders an event
+agenda with extensive custom features built over many iterations.
+
+## Required reading (in this repo, under `Cvent Code Files/Cvent Widgets/Widget Playbook & Boilerplate/`)
+
+- **`CVENT_WIDGET_PLAYBOOK.md`** — every SDK limitation, gotcha, and proven
+  pattern. READ THIS before touching timezone, language, custom-field, shadow-DOM,
+  or editor code. It will save you from re-discovering hard-won lessons.
+- **`AGENDA_WIDGET_TODO.md`** — backlog and deferred items.
+- **`README.md` §3** — git branch workflow (dev → main via `promote.sh`).
+
+## Golden rules (from the Playbook — do not violate)
+
+1. **Test in Incognito on the PUBLISHED front end.** Cvent/CDN cache stale files;
+   most "it's broken" moments are stale files, not code.
+2. **Editor preview ≠ published front end.** Publish after uploading.
+3. **widget.js ↔ AgendaItem.js handshake:** both files must be current together.
+   `widget.js` sets props (`el.session`, `el.config` incl. `tileMode`, etc.)
+   before append; `AgendaItem.js` reads them in `connectedCallback`.
+4. **Gate new/behavioral features behind a toggle that defaults OFF**, so existing
+   events are unchanged until a planner opts in (pattern used for: accent bar,
+   hide date nav, focus legend, compact styling, concurrent tiles).
+5. **Strip debug `console.log` before prod** (keep `console.warn` error handlers).
+6. **Custom-field name matching is case-insensitive + trimmed** (exact match has
+   bitten us repeatedly).
+
+## Key implementation facts (so you don't relearn them)
+
+- **Timezone:** session times are UTC; always format with an explicit `timeZone`
+  from `getEventInfo().timezone`. Day-grouping also uses the event zone. Cvent
+  maps "London" → `Atlantic/Reykjavik` (DST-stripped) — normalize to
+  `Europe/London`. See `_tzNormalize` / TZ_NORMALIZE in widget.js.
+- **Language:** the runtime selector lives in `document.documentElement.lang`
+  (NOT the event default). Detect there, fall back to event default, then EN.
+  Localized: legend, focus eyebrow, date headers (capitalize first letter for
+  es/pt). Supported: en, es, pt.
+- **Native session tags are NOT SDK-exposed** — we use a `Tags` MultiChoice
+  custom field instead. Focus/Break/etc. also use custom fields.
+- **Concurrent tiles** are opt-in (`concurrentTiles` toggle, default off). When
+  on, overlapping sessions render as a time grid (4px/min, MIN_H 118, MAX_H 440);
+  plenary-left/focus-right for same start times; tiles pin speakers to bottom,
+  title shrinks to 12px then clamps, description fills the middle with "show more".
+  When off, single-column classic layout.
+- **Compact typography** is the default scale now (title 17/desc 13/speaker 14 px
+  on desktop).
+- **Bios** come as `\r\n\r\n` plain text — convert to `<p>` before innerHTML.
+- **Speaker order** follows Cvent's raw array (drag-and-drop) order; opt-in
+  alphabetical toggle exists.
+
+## Known open items / edge cases
+
+- A ~20-min concurrent tile can drop its speaker avatars in one case — root cause
+  was being diagnosed (avatar height vs. MIN_H measurement). Paused, "good enough".
+- Debug logs still present on `dev` (remove before promoting):
+  `AgendaItem.js` — the `TILE DBG |` line in the tile measurement code;
+  `editor.js` — the `SO DROPDOWN | value:` line in the speaker-order handler.
+  `widget.js` is clean.
+- See `AGENDA_WIDGET_TODO.md` for the full backlog (Option A rail unification,
+  compact-mode cutover + toggle removal, normal-card modal unification,
+  grid↔stack resize re-render).
+
+## Workflow (this repo uses branches, not folders — since Sep 2026)
+
+- `dev` branch = Cvent **Sandbox** widget; `main` branch = Cvent **Prod** widget.
+- Same file paths on both branches. The ONLY intentional permanent difference is
+  `customElementName` in `config.json`: `dev-custom-agenda-widget` on `dev`,
+  `custom-agenda-widget` on `main` (Cvent registers Sandbox and Prod under
+  different names). Never "fix" that difference.
+- Develop on `dev`: edit → `git add . && git commit && git push origin dev` →
+  upload the files from `custom-agenda-widget/` to the Cvent Sandbox widget →
+  test in incognito.
+- Promote: `git checkout main && ./promote.sh "Promote dev to prod: <what>"` then
+  `git push origin main`, then upload `main`'s files to the Cvent Prod widget.
+  `promote.sh` does the merge, restores prod config names, and refuses to commit
+  a `dev-` name. Do NOT use a plain `git merge dev` on main.
+- Uploading to Cvent is always manual. Nothing in git touches live widgets.
+- Safety net: tag `backup-before-branch-migration` + `~/Cvent_Code_Files_backup_2026-09-11.zip`.
+
+## How to work with me here
+
+- When I edit files, I edit the real repo files directly — review the diff before
+  committing. Widget edits happen on `dev` unless told otherwise; check the
+  branch first (`git branch --show-current`).
+- Before shipping, run the **Pre-prod checklist** in the Playbook (§11).
+- If something "doesn't work," first suspect a stale Cvent upload (re-upload,
+  incognito) before assuming the code is wrong.
