@@ -168,9 +168,20 @@ export default class extends HTMLElement {
         .agendaLegendEditorial { display:flex !important; flex-direction:row !important; flex-wrap:wrap; align-items:center !important; gap:6px 18px !important; }
         .agendaDayLeft { display:flex; align-items:baseline; flex-wrap:wrap; gap:6px 14px; min-width:0; }
         .agendaDayRight { display:flex; align-items:center; flex-wrap:wrap; justify-content:flex-end; gap:6px 18px; min-width:0; margin-left:auto; }
+        @media (max-width: 600px) {
+          /* Align with the cards' 15px side inset on phones and tighten the rhythm. */
+          .agendaMasthead { width: calc(100% - 30px) !important; margin-top: 4px !important; }
+          .agendaEyebrow { font-size: 10px; letter-spacing: .1em; margin-bottom: 6px; }
+          .agendaRule { margin: 10px 0 8px; }
+          .agendaSubEditorial { font-size: 15px !important; }
+          .dayHeaderRow { width: calc(100% - 30px) !important; flex-direction: column !important; align-items: flex-start !important; gap: 6px !important; }
+          .agendaDayRight { margin-left: 0; justify-content: flex-start; }
+          .agendaLegendEditorial { gap: 4px 14px !important; }
+        }
       `;
       container.appendChild(mastStyle);
 
+      headerWrap.classList.add("agendaMasthead");
       headerWrap.style.gap = "0";
       headerWrap.style.margin = "8px auto 0 auto";
 
@@ -358,10 +369,10 @@ export default class extends HTMLElement {
         dnStyle.textContent = editorial
           ? `
         .dateNav {
-          display:flex; flex-wrap:nowrap; gap:6px; overflow-x:auto;
+          display:flex; flex-wrap:nowrap; align-items:stretch; gap:4px; overflow-x:auto;
           scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;
           scrollbar-width:none;
-          width: calc(100% - 40px); max-width: 1210px; margin: 18px auto 0;
+          width: calc(100% - 40px); max-width: 1210px; margin: 16px auto 0;
           padding: 4px; box-sizing: border-box;
           background: ${dn.navBg && dn.navBg.toLowerCase() !== "#ffffff" ? dn.navBg : "#f3f4f6"};
           border-radius: 14px;
@@ -384,13 +395,24 @@ export default class extends HTMLElement {
           color: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,.12);
         }
         .dateNav button.active .navDow, .dateNav button.active .navMon { opacity: 1; }
+        /* "All days": a compact single-line chip, vertically centred, then a hairline. */
+        .dateNav .navAll {
+          flex-direction: row; align-self: center; min-width: 0;
+          padding: 9px 12px; border-radius: 10px;
+          font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+          white-space: nowrap;
+        }
+        .dateNav .navDivider { flex: 0 0 1px; align-self: stretch; margin: 8px 4px; background: rgba(0,0,0,.12); }
         @media (max-width: 1024px) {
           .dateNav .navDay { font-size: ${dn.fontSizeMd ?? 16}px; }
         }
         @media (max-width: 600px) {
-          .dateNav { width: 100%; max-width: 100%; border-radius: 0; padding: 4px 12px; }
-          .dateNav button { min-width: 60px; padding: 7px 10px; }
+          .dateNav { width: calc(100% - 30px); margin-top: 14px; padding: 4px; border-radius: 12px; }
+          .dateNav button { min-width: 54px; padding: 6px 9px; }
+          .dateNav .navDow { font-size: 9px; }
           .dateNav .navDay { font-size: ${dn.fontSizeSm ?? 15}px; }
+          .dateNav .navMon { font-size: 10px; }
+          .dateNav .navAll { padding: 8px 10px; font-size: 10px; }
         }
         `
           : `
@@ -451,25 +473,19 @@ export default class extends HTMLElement {
           const allLink = document.createElement("button");
           allLink.type = "button";
           const allLabel = this._allDaysLabel();
-          if (editorial) {
-            // Two lines, centred in the pill (no weekday slot on this tab).
-            allLink.style.justifyContent = "center";
-            const day = document.createElement("span");
-            day.className = "navDay";
-            day.textContent = allLabel.big;
-            const mon = document.createElement("span");
-            mon.className = "navMon";
-            mon.textContent = allLabel.small;
-            allLink.append(day, mon);
-            allLink.setAttribute("aria-label", allLabel.full);
-          } else {
-            allLink.textContent = allLabel.full;
-          }
+          allLink.textContent = allLabel.full;
+          if (editorial) allLink.classList.add("navAll");
           allLink.addEventListener("click", () => {
             if (showDay) showDay(ALL_DAYS);
           });
           navLinks[ALL_DAYS] = allLink;
           dateNav.appendChild(allLink);
+          if (editorial) {
+            const divider = document.createElement("span");
+            divider.className = "navDivider";
+            divider.setAttribute("aria-hidden", "true");
+            dateNav.appendChild(divider);
+          }
         }
 
         dayKeys.forEach((dayKey) => {
