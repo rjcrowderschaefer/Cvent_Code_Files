@@ -72,6 +72,14 @@ agenda with extensive custom features built over many iterations.
 - **Compact typography** is the default scale now (title 17/desc 13/speaker 14 px
   on desktop).
 - **Bios** come as `\r\n\r\n` plain text — convert to `<p>` before innerHTML.
+- **Accent-derived colours** (2026-09-12): the time column, speaker names,
+  "show more", and the active date tab all take the Plenary accent (or the
+  Focus accent on focus sessions). `gutterBg`, `showMoreColor`,
+  `dateNav.underlineColor` and `typography.speakerName.color` are no longer
+  read; their editor controls are gone. Don't re-add per-element colours.
+- **Editor "New Features" section** (second in the panel) holds every opt-in
+  toggle: Header style + Eyebrow text, Date nav behaviour, accent bar, focus
+  legend, concurrent tiles. Session Types keeps only the colours and labels.
 - **Header style** is a planner choice: `headerStyle` = `classic` (default, the
   original look) or `editorial` (eyebrow + accent rule + muted subheader, legend
   inline under the masthead, pill date tabs, day headers with a session count
@@ -80,6 +88,14 @@ agenda with extensive custom features built over many iterations.
 - **Renders are sequenced** (`_renderSeq` in widget.js): a render still awaiting
   session data bails out if a newer config update has cleared the container.
   Without this, two quick config updates doubled the agenda.
+- **Date nav behaviour** is a planner choice: `dateNavMode` = `jump` (default:
+  all days listed, click scrolls to the day) or `filter` (one day shown at a
+  filter on top of the full list: all days show by default, an "All days" tab
+  leads the nav, a day tab narrows to that day, clicking the active day again
+  or "All days" clears it; each day is a `.daySection`, the choice is
+  remembered across re-renders in `_activeDayKey`; legend / start rule show
+  on the first VISIBLE day only). Filter is the answer to "why scroll back up
+  to pick a day" — do not reintroduce sticky positioning for that.
 - **Date nav is NOT sticky** (removed 2026-09-12). It is a plain row of day
   links; the only Cvent-header measurement left is at click time so a day jump
   lands below the pinned site header. Do not reintroduce sticky positioning.

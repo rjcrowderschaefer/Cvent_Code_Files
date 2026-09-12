@@ -25,6 +25,19 @@ export default class extends HTMLElement {
   }
 
   async connectedCallback() {
+    // Cvent's language selector updates <html lang> in place. Re-render when
+    // the resolved language changes so every label (date tabs, "All days",
+    // legend, counts, day headers) follows the attendee's choice immediately.
+    if (typeof MutationObserver !== "undefined" && !this._langObserver) {
+      this._langObserver = new MutationObserver(() => {
+        const next = this._mapLang(document.documentElement.lang);
+        if (next && next !== this._eventLang) this.onConfigurationUpdate(this.configuration);
+      });
+      this._langObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["lang"],
+      });
+    }
     // container like Cvent’s example
     const container = document.createElement("div");
     container.style.display = "flex";
@@ -50,6 +63,10 @@ export default class extends HTMLElement {
 
   disconnectedCallback() {
     if (this._onResize) window.removeEventListener("resize", this._onResize);
+    if (this._langObserver) {
+      this._langObserver.disconnect();
+      this._langObserver = null;
+    }
     this._typoBindings = [];
   }
 
@@ -148,10 +165,23 @@ export default class extends HTMLElement {
         .agendaTitleEditorial.isBold { font-weight:700 !important; }
         .agendaRule { width:40px; height:3px; border-radius:2px; margin:14px 0 12px; }
         .agendaSubEditorial { max-width:640px; line-height:1.45; }
-        .agendaLegendEditorial { display:flex !important; flex-direction:row !important; flex-wrap:wrap; gap:6px 18px !important; margin-top:14px; }
+        .agendaLegendEditorial { display:flex !important; flex-direction:row !important; flex-wrap:wrap; align-items:center !important; gap:6px 18px !important; }
+        .agendaDayLeft { display:flex; align-items:baseline; flex-wrap:wrap; gap:6px 14px; min-width:0; }
+        .agendaDayRight { display:flex; align-items:center; flex-wrap:wrap; justify-content:flex-end; gap:6px 18px; min-width:0; margin-left:auto; }
+        @media (max-width: 600px) {
+          /* Align with the cards' 15px side inset on phones and tighten the rhythm. */
+          .agendaMasthead { width: calc(100% - 30px) !important; margin-top: 4px !important; }
+          .agendaEyebrow { font-size: 10px; letter-spacing: .1em; margin-bottom: 6px; }
+          .agendaRule { margin: 10px 0 8px; }
+          .agendaSubEditorial { font-size: 15px !important; }
+          .dayHeaderRow { width: calc(100% - 30px) !important; flex-direction: column !important; align-items: flex-start !important; gap: 6px !important; }
+          .agendaDayRight { margin-left: 0; justify-content: flex-start; }
+          .agendaLegendEditorial { gap: 4px 14px !important; }
+        }
       `;
       container.appendChild(mastStyle);
 
+      headerWrap.classList.add("agendaMasthead");
       headerWrap.style.gap = "0";
       headerWrap.style.margin = "8px auto 0 auto";
 
@@ -172,12 +202,7 @@ export default class extends HTMLElement {
       if (!cfg.typography?.agendaSubheader?.color) subheaderEl.style.color = "#666";
 
       headerWrap.append(eyebrow, headerEl, rule, subheaderEl);
-
-      if (cfg.showAccentBar === true && cfg.showFocusLegend === true) {
-        const legend = this._buildFocusLegend(cfg);
-        legend.classList.add("agendaLegendEditorial");
-        headerWrap.append(legend);
-      }
+      // (Legend sits on the first day-header row, right side, next to the count.)
     } else {
       headerWrap.append(headerEl, subheaderEl);
     }
@@ -226,13 +251,7 @@ export default class extends HTMLElement {
       // Detect the CURRENTLY SELECTED display language from <html lang>, which
       // Cvent updates when the attendee uses the language selector. Fall back to
       // the event's default locale if html lang isn't a recognized language.
-      const mapLang = (code) => {
-        const c = (code || "").toLowerCase();
-        if (c.startsWith("es")) return "es";
-        if (c.startsWith("pt")) return "pt";
-        if (c.startsWith("en")) return "en";
-        return null;
-      };
+      const mapLang = (code) => this._mapLang(code);
       const htmlLang = mapLang(document.documentElement.lang);
       const locales = eventInfo?.locales || [];
       const def = locales.find((l) => l.isDefault) || locales[0];
@@ -327,10 +346,17 @@ export default class extends HTMLElement {
       // Clicking a day scrolls its header just below Cvent's own site header.
       const showDateNav = cfg.hideDateNav !== true;
       const dn = cfg.dateNav || {};
+      // "filter": the nav shows ONE day at a time (no scrolling back up to pick
+      // another day). "jump" (default): all days listed, links scroll to them.
+      const filterMode =
+        cfg.dateNavMode === "filter" && showDateNav && dayKeys.length > 1;
+      const ALL_DAYS = "__all__"; // filter-mode key for "no filter"
 
       const dayHeaderRefs = {};
+      const daySections = {};
       const navLinks = {};
       let dateNav = null;
+      let showDay = null; // assigned after the day sections exist (filter mode)
 
       const setActiveDay = (activeKey) => {
         Object.entries(navLinks).forEach(([key, link]) => {
@@ -343,10 +369,10 @@ export default class extends HTMLElement {
         dnStyle.textContent = editorial
           ? `
         .dateNav {
-          display:flex; flex-wrap:nowrap; gap:6px; overflow-x:auto;
+          display:flex; flex-wrap:nowrap; align-items:stretch; gap:4px; overflow-x:auto;
           scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;
           scrollbar-width:none;
-          width: calc(100% - 40px); max-width: 1210px; margin: 18px auto 0;
+          width: calc(100% - 40px); max-width: 1210px; margin: 16px auto 0;
           padding: 4px; box-sizing: border-box;
           background: ${dn.navBg && dn.navBg.toLowerCase() !== "#ffffff" ? dn.navBg : "#f3f4f6"};
           border-radius: 14px;
@@ -365,17 +391,28 @@ export default class extends HTMLElement {
         .dateNav .navDay { font-size:${dn.fontSize ?? 18}px; font-weight:700; line-height:1.1; }
         .dateNav .navMon { font-size:11px; font-weight:500; opacity:.85; }
         .dateNav button.active {
-          background: ${dn.underlineColor || cfg.plenaryAccent || "#f7a325"};
+          background: ${cfg.plenaryAccent || "#f7a325"};
           color: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,.12);
         }
         .dateNav button.active .navDow, .dateNav button.active .navMon { opacity: 1; }
+        /* "All days": a compact single-line chip, vertically centred, then a hairline. */
+        .dateNav .navAll {
+          flex-direction: row; align-self: center; min-width: 0;
+          padding: 9px 12px; border-radius: 10px;
+          font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+          white-space: nowrap;
+        }
+        .dateNav .navDivider { flex: 0 0 1px; align-self: stretch; margin: 8px 4px; background: rgba(0,0,0,.12); }
         @media (max-width: 1024px) {
           .dateNav .navDay { font-size: ${dn.fontSizeMd ?? 16}px; }
         }
         @media (max-width: 600px) {
-          .dateNav { width: 100%; max-width: 100%; border-radius: 0; padding: 4px 12px; }
-          .dateNav button { min-width: 60px; padding: 7px 10px; }
+          .dateNav { width: calc(100% - 30px); margin-top: 14px; padding: 4px; border-radius: 12px; }
+          .dateNav button { min-width: 54px; padding: 6px 9px; }
+          .dateNav .navDow { font-size: 9px; }
           .dateNav .navDay { font-size: ${dn.fontSizeSm ?? 15}px; }
+          .dateNav .navMon { font-size: 10px; }
+          .dateNav .navAll { padding: 8px 10px; font-size: 10px; }
         }
         `
           : `
@@ -394,7 +431,7 @@ export default class extends HTMLElement {
         .dateNav button.active {
           color: ${dn.activeColor || "#000000"}; font-weight: 700;
           text-decoration: underline;
-          text-decoration-color: ${dn.underlineColor || "#f7a325"};
+          text-decoration-color: ${cfg.plenaryAccent || "#f7a325"};
           text-underline-offset: 4px;
         }
         .navLabelShort { display: none; }
@@ -431,6 +468,26 @@ export default class extends HTMLElement {
           return 0;
         };
 
+        if (filterMode) {
+          // "All days" tab: clears the filter. Active by default.
+          const allLink = document.createElement("button");
+          allLink.type = "button";
+          const allLabel = this._allDaysLabel();
+          allLink.textContent = allLabel.full;
+          if (editorial) allLink.classList.add("navAll");
+          allLink.addEventListener("click", () => {
+            if (showDay) showDay(ALL_DAYS);
+          });
+          navLinks[ALL_DAYS] = allLink;
+          dateNav.appendChild(allLink);
+          if (editorial) {
+            const divider = document.createElement("span");
+            divider.className = "navDivider";
+            divider.setAttribute("aria-hidden", "true");
+            dateNav.appendChild(divider);
+          }
+        }
+
         dayKeys.forEach((dayKey) => {
           const link = document.createElement("button");
           link.type = "button";
@@ -462,6 +519,11 @@ export default class extends HTMLElement {
           }
 
           link.addEventListener("click", () => {
+            if (filterMode) {
+              // Clicking the active day again clears the filter.
+              if (showDay) showDay(this._activeDayKey === dayKey ? ALL_DAYS : dayKey);
+              return;
+            }
             setActiveDay(dayKey);
             const target = dayHeaderRefs[dayKey];
             if (!target) return;
@@ -494,16 +556,32 @@ export default class extends HTMLElement {
         cfg.showAccentBar === true && cfg.showFocusLegend === true;
       let isFirstHeader = true;
       for (const [dayKey, daySessions] of groups) {
+        // One section per day so filter mode can show/hide whole days.
+        const section = document.createElement("div");
+        section.classList.add("daySection");
+        section.dataset.dayKey = dayKey;
+        // Same layout as the container itself so cards keep their spacing and
+        // the concurrent grid's last rail label doesn't bleed into the next card.
+        section.style.display = "flex";
+        section.style.flexDirection = "column";
+        section.style.gap = "12px";
+        section.style.width = "100%";
+        daySections[dayKey] = section;
+
+        // In filter mode every day is rendered as if it were the first (each
+        // is the only one visible), so the legend / start rule go on all of them.
+        const treatAsFirst = isFirstHeader || filterMode;
         const header = this._renderDayHeader(dayKey, theme, cfg, {
           count: daySessions.length,
-          isFirst: isFirstHeader,
+          isFirst: treatAsFirst,
+          showLegend: treatAsFirst && legendEnabled,
         });
         header.dataset.dayKey = dayKey;
         dayHeaderRefs[dayKey] = header;
 
         // On the first day header, place it in a row with the focus legend
         // right-aligned so the legend aligns vertically with the date.
-        if (isFirstHeader && legendEnabled && !editorial) {
+        if (treatAsFirst && legendEnabled && !editorial) {
           const isMobile =
             (window.innerWidth || document.documentElement.clientWidth || 1920) <=
             600;
@@ -524,22 +602,25 @@ export default class extends HTMLElement {
           header.style.maxWidth = "none";
           header.style.margin = "0";
 
-          row.append(header, this._buildFocusLegend(cfg));
-          container.appendChild(row);
+          const dayLegend = this._buildFocusLegend(cfg);
+          dayLegend.classList.add("dayLegend");
+          row.append(header, dayLegend);
+          section.appendChild(row);
         } else {
-          container.appendChild(header);
+          section.appendChild(header);
         }
 
         // Thin divider under the FIRST date/legend to mark where the agenda
         // begins (classic only; editorial day headers carry their own rule).
-        if (isFirstHeader && !editorial) {
+        if (treatAsFirst && !editorial) {
           const startLine = document.createElement("div");
+          startLine.classList.add("dayStartLine");
           startLine.style.width = "calc(100% - 40px)";
           startLine.style.maxWidth = "1210px";
           startLine.style.margin = "6px auto 2px auto";
           startLine.style.borderTop = "1px solid #d9d9d9";
           startLine.style.boxSizing = "border-box";
-          container.appendChild(startLine);
+          section.appendChild(startLine);
         }
         isFirstHeader = false;
 
@@ -550,13 +631,13 @@ export default class extends HTMLElement {
           const blocks = this._buildDayBlocks(daySessions);
           blocks.forEach((blk) => {
             if (blk.type === "single") {
-              container.appendChild(
+              section.appendChild(
                 this._renderItem(
                   blk.session, theme, cfg, openSessions, getSpeakers, eventTimezone
                 )
               );
             } else {
-              container.appendChild(
+              section.appendChild(
                 this._renderConcurrentGroup(
                   blk, theme, cfg, openSessions, getSpeakers, eventTimezone
                 )
@@ -566,17 +647,48 @@ export default class extends HTMLElement {
         } else {
           // Single-column classic: every session as a normal card, in order.
           daySessions.forEach((s) => {
-            container.appendChild(
+            section.appendChild(
               this._renderItem(
                 s, theme, cfg, openSessions, getSpeakers, eventTimezone
               )
             );
           });
         }
+        container.appendChild(section);
       }
 
-      // Highlight the first day by default; clicks move the highlight.
-      if (showDateNav && dayKeys.length) setActiveDay(dayKeys[0]);
+      if (filterMode) {
+        showDay = (key) => {
+          this._activeDayKey = key;
+          let firstVisible = true;
+          dayKeys.forEach((k) => {
+            const sec = daySections[k];
+            const visible = key === ALL_DAYS || k === key;
+            // "flex" (not ""): the section's own layout is inline flex/column.
+            sec.style.display = visible ? "flex" : "none";
+            if (!visible) return;
+            // Every day carries a legend + start rule (any of them can be the
+            // only one visible); show them on the FIRST visible day only.
+            sec.querySelectorAll(".dayLegend, .dayStartLine").forEach((n) => {
+              if (n.dataset.disp === undefined) n.dataset.disp = n.style.display;
+              n.style.display = firstVisible ? n.dataset.disp : "none";
+            });
+            const row = sec.querySelector(".dayHeaderRow");
+            if (row) row.style.marginTop = firstVisible ? "22px" : "32px";
+            firstVisible = false;
+          });
+          setActiveDay(key);
+        };
+        const remembered = this._activeDayKey;
+        showDay(
+          remembered === ALL_DAYS || dayKeys.includes(remembered)
+            ? remembered
+            : ALL_DAYS
+        );
+      } else if (showDateNav && dayKeys.length) {
+        // Highlight the first day by default; clicks move the highlight.
+        setActiveDay(dayKeys[0]);
+      }
     }
   }
 
@@ -1004,7 +1116,10 @@ export default class extends HTMLElement {
     const grid = document.createElement("div");
     grid.classList.add("concurrentGrid");
     grid.style.position = "relative";
-    grid.style.height = `${gridHeight}px`;
+    // + room for the last rail label, which is centred on the final gridline and
+    // otherwise hangs below the grid (clipped in hosts like the Cvent editor).
+    const LABEL_PAD = 12;
+    grid.style.height = `${gridHeight + LABEL_PAD}px`;
 
     const colWidthPct = 100 / colCount;
     sessions.forEach((s) => {
@@ -1104,6 +1219,15 @@ export default class extends HTMLElement {
   }
 
   // Map the detected event language to a full locale for date formatting.
+  // "es-MX" / "pt-BR" / "en-GB" -> "es" / "pt" / "en"; unknown -> null.
+  _mapLang(code) {
+    const c = (code || "").toLowerCase();
+    if (c.startsWith("es")) return "es";
+    if (c.startsWith("pt")) return "pt";
+    if (c.startsWith("en")) return "en";
+    return null;
+  }
+
   _dateLocale() {
     const lang = this._eventLang || "en";
     if (lang === "es") return "es";
@@ -1209,7 +1333,12 @@ export default class extends HTMLElement {
     return wrap;
   }
 
-  _renderDayHeader(dayKey, theme, cfg, { count = 0, isFirst = false } = {}) {
+  _renderDayHeader(
+    dayKey,
+    theme,
+    cfg,
+    { count = 0, isFirst = false, showLegend = false } = {}
+  ) {
     const el = document.createElement("div");
     el.textContent = this._formatDayKeyLabel(dayKey);
 
@@ -1248,9 +1377,10 @@ export default class extends HTMLElement {
       const row = document.createElement("div");
       Object.assign(row.style, {
         display: "flex",
-        alignItems: "baseline",
+        alignItems: "center",
+        flexWrap: "wrap",
         justifyContent: "space-between",
-        gap: "12px",
+        gap: "8px 12px",
         width: "calc(100% - 40px)",
         maxWidth: "1210px",
         margin: `${isFirst ? 22 : 32}px auto 0 auto`,
@@ -1269,7 +1399,19 @@ export default class extends HTMLElement {
       countEl.style.color = "#8a8a8a";
       countEl.style.flexShrink = "0";
       countEl.textContent = this._sessionCountLabel(count);
-      row.append(el, countEl);
+      // Left: date + count together. Right: focus legend (when enabled).
+      const left = document.createElement("div");
+      left.classList.add("agendaDayLeft");
+      left.append(el, countEl);
+      const right = document.createElement("div");
+      right.classList.add("agendaDayRight");
+      if (showLegend) {
+        const legend = this._buildFocusLegend(cfg);
+        legend.classList.add("agendaLegendEditorial", "dayLegend");
+        right.append(legend);
+      }
+      row.classList.add("dayHeaderRow");
+      row.append(left, right);
       return row;
     }
     return el;
@@ -1326,6 +1468,14 @@ export default class extends HTMLElement {
       };
       raf = requestAnimationFrame(step);
     });
+  }
+
+  // "All days" tab wording (filter mode), localised to the runtime language.
+  _allDaysLabel() {
+    const lang = this._eventLang || "en";
+    if (lang === "es") return { full: "Todos los días", big: "Todos", small: "los días" };
+    if (lang === "pt") return { full: "Todos os dias", big: "Todos", small: "os dias" };
+    return { full: "All days", big: "All", small: "days" };
   }
 
   // "5 sessions" / "1 session", localised to the runtime language.
