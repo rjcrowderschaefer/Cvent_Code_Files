@@ -72,6 +72,11 @@ agenda with extensive custom features built over many iterations.
 - **Compact typography** is the default scale now (title 17/desc 13/speaker 14 px
   on desktop).
 - **Bios** come as `\r\n\r\n` plain text — convert to `<p>` before innerHTML.
+- **One modal.** Session and speaker details use a single shell (`_ensureSessionModal`
+  → `_renderSessionView` / `_renderSpeakerView`). Standalone cards open the speaker
+  view directly with `openModalForSpeaker` (close only); tiles go session → speaker
+  with a back link. Modal CSS comes from `_sharedModalCss(cfg)` and must be injected
+  into every render path's `<style>` (Playbook §5). Do not add a second modal.
 - **Speaker order** follows Cvent's raw array (drag-and-drop) order; opt-in
   alphabetical toggle exists.
 

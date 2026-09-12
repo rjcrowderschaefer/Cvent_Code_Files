@@ -46,6 +46,8 @@ export class AgendaItem extends HTMLElement {
       ? focusAccent
       : plenaryAccent;
 
+    this._typeAccent = typeAccent; // used by the shared modal's accent rule
+
     // Gutter color priority: break > focus > plenary/default.
     // Focus sessions recolor the gutter to the focus accent (with light text).
     const gutterBg = isBreak
@@ -62,9 +64,8 @@ export class AgendaItem extends HTMLElement {
       cfg?.typography?.sessionDescription?.color ||
       "#0066cc";
 
-    const modalHeaderBg = cfg.modalColors?.headerBg ?? "#ffffff";
-    const modalDivider = cfg.modalColors?.dividerColor ?? "#eeeeee";
-    const modalContentBg = cfg.modalColors?.contentBg ?? "#ffffff";
+    // Modal header matches the session-type accent of the card it opened from
+    // (plenary / focus / break). Not planner-configurable separately.
 
     const style = document.createElement("style");
     style.textContent = `
@@ -368,103 +369,8 @@ export class AgendaItem extends HTMLElement {
         word-break: break-word;
       }
 
-      /* ===== Modal ===== */
-      .backdrop {
-        position: fixed; inset: 0;
-        background: rgba(0,0,0,.45);
-        display: none;
-        place-items: center;
-        z-index: 999999;
-      }
-      .backdrop[open] { 
-        display: grid; 
-      }
-
-      .modal {
-        width: min(720px, 92vw);
-        max-height: 90vh;
-        overflow: auto;
-        background: #fff; /* container background */
-        border-radius: 12px;
-        box-shadow: 0 10px 30px rgba(0,0,0,.25);
-      }
-
-      .modalHeader {
-        display:flex; align-items:center;
-        justify-content:space-between;
-        padding: 12px 16px;
-        background: ${modalHeaderBg};
-        border-bottom: 1px solid ${modalDivider};
-      }
-
-      .modalTitle { /* styled via cfg.typography.modalName */ }
-      .closeBtn {
-        appearance: none; border: none; background: transparent;
-        font-size: 20px; cursor: pointer; line-height: 1;
-      }
-
-      .modalBody {
-      padding: 16px;
-      display: grid;
-      grid-template-columns: 125px 1fr;
-      grid-auto-rows: auto;
-      column-gap: 14px;
-      row-gap: 2px;
-      background: ${modalContentBg};
-    }
-
-    /* Row 1, col 1: avatar */
-    .modalAvatar {
-      width: 125px;
-      height: 125px;
-      object-fit: cover;
-      grid-column: 1;
-      grid-row: 1;
-    }
-
-    /* Row 1, col 2: name/title/company */
-    .modalDetails {
-      grid-column: 2;
-      grid-row: 1;
-      margin-top: 20px;
-    }
-
-    .kv { 
-      margin: 2px 0; 
-    }
-
-    /* Row 2: bio, full width starting under avatar */
-    .bio {
-      margin: 5px 0 0 0;
-      line-height: 1.45;
-      grid-column: 1 / -1; /* span both columns */
-      grid-row: 2;
-    }
-    .bio p { margin: 0 0 10px 0; }
-    .bio p:last-child { margin-bottom: 0; }
-
-    /* Row 3: sessions header full width */
-    .sessionsHeader { 
-      margin-top: 10px;
-      grid-column: 1 / -1;
-      grid-row: 3;
-    }
-
-    /* Row 4: sessions list full width */
-    .sessionsList { 
-      margin: 0 0 0 18px;
-      padding: 0;
-      grid-column: 1 / -1;
-      grid-row: 4;
-    }
-
-    .sessionsList li {
-      margin: 0 0;
-    }
-
-    .modalBody > div > div:first-child {
-      display: none !important;
-      }
+      /* ===== Modal (shared with the tile session/speaker modal) ===== */
+      ${this._sharedModalCss(cfg)}
 
       @media (max-width: 1024px) {
   .card {
@@ -508,10 +414,6 @@ export class AgendaItem extends HTMLElement {
 
   .comma-node {
     display: none;
-  }
-
-  .modalBody > div.modalDetails > div:first-child {
-    display: none !important;
   }
 
   .sessionsList li {
@@ -729,7 +631,8 @@ export class AgendaItem extends HTMLElement {
         ? s.category.name.trim()
         : "";
 
-    if (locationName || categoryName) {
+    const cardTags = this._sessionTags(s);
+    if (locationName || categoryName || cardTags.length) {
       const metaRow = document.createElement("div");
       metaRow.classList.add("sessionMetaRow");
 
@@ -789,6 +692,10 @@ export class AgendaItem extends HTMLElement {
       if (categoryName) {
         metaRow.append(makeMetaPill("category", categoryName, "sessionCategory"));
       }
+      // Tags: outlined, secondary, after location/category in the same row.
+      cardTags.forEach((tag) =>
+        metaRow.append(this._tagPill(tag, pillAccent, pillSize, "sessionTagPill"))
+      );
       content.append(metaRow);
     }
 
@@ -864,30 +771,6 @@ export class AgendaItem extends HTMLElement {
       content.append(speakersWrap);
     } 
 
-    // Tags row — up to 5 tags from the "Tags" MultiChoice custom field.
-    // Secondary neutral pills, at the BOTTOM (below speakers), left-aligned.
-    const tagsField = s.sessionCustomFields?.find(
-      (f) => f.name?.trim().toLowerCase() === "tags"
-    );
-    const tagValues = Array.isArray(tagsField?.value)
-      ? tagsField.value.filter((v) => typeof v === "string" && v.trim())
-      : [];
-    if (tagValues.length) {
-      const tagRow = document.createElement("div");
-      tagRow.classList.add("sessionTagRow");
-      tagValues.slice(0, 5).forEach((tag) => {
-        const pill = document.createElement("span");
-        pill.classList.add("sessionTagPill");
-        const icon = this._metaIconSvg("tag", "#777", 9);
-        const txt = document.createElement("span");
-        txt.textContent = tag.trim();
-        if (icon) pill.append(icon);
-        pill.append(txt);
-        tagRow.append(pill);
-      });
-      content.append(tagRow);
-    }
-
     // Assemble — accent bar (when enabled) spans full width on top
     if (accentOn) {
       accentBar.style.gridColumn = "1 / -1";
@@ -896,19 +779,8 @@ export class AgendaItem extends HTMLElement {
       card.append(gutter, content);
     }
 
-    // Modal element (single, reused). Focus tinting is applied in
-    // openModalForSpeaker (after typography) so it isn't overridden.
-    this.modal = this.buildModal();
-    this.shadowRoot.append(this.modal.backdrop);
-
-    // Keyboard escape
-    this.shadowRoot.addEventListener(
-      "keydown",
-      (e) => {
-        if (e.key === "Escape") this.closeModal();
-      },
-      { capture: true }
-    );
+    // Speaker clicks open the shared session/speaker modal (see
+    // openModalForSpeaker); it is created lazily on first use.
 
     // Reapply responsive typography on resize
     this._onResize = () => this.reapplyTypography();
@@ -932,6 +804,7 @@ export class AgendaItem extends HTMLElement {
       : isFocus
       ? focusAccent
       : plenaryAccent;
+    this._typeAccent = accentColor; // used by the shared modal's accent rule
 
     // Tile background matches the standalone card's cardBg logic so both use the
     // same editor "Card Bg" setting (break sessions use their own break card bg).
@@ -1056,58 +929,7 @@ export class AgendaItem extends HTMLElement {
         font-size:12px; font-weight:600; color:${accentColor};
         background:none; border:none; padding:4px 0 0 0; text-decoration:underline;
       }
-      .sbackdrop {
-        position:fixed; inset:0; background:rgba(0,0,0,.45);
-        display:none; place-items:center; z-index:999999;
-      }
-      .sbackdrop[open] { display:grid; }
-      .smodal {
-        width:min(680px,92vw); max-height:88vh; overflow:auto;
-        background:#fff; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.25);
-      }
-      .smodalHead {
-        display:flex; align-items:flex-start; justify-content:space-between;
-        gap:12px; padding:16px 18px; border-bottom:1px solid #eee;
-      }
-      .smodalTitle { font-size:20px; font-weight:700; line-height:1.25; }
-      .smodalTime { font-size:13px; color:#666; margin-top:4px; }
-      .smodalClose {
-        appearance:none; border:none; background:transparent; font-size:22px;
-        cursor:pointer; line-height:1; flex-shrink:0;
-      }
-      .smodalBody { padding:16px 18px; }
-      .smodalDesc { font-size:14px; line-height:1.5; color:#333; margin-bottom:16px; }
-      .smodalTags { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
-      .smodalTag { font-size:12px; border:0.5px solid #bbb; border-radius:12px; padding:3px 12px; }
-      .smodalMetaRow { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
-      .smodalMeta { display:inline-flex; align-items:center; gap:5px; font-size:12.5px; text-transform:uppercase; font-weight:600; border-radius:12px; padding:4px 10px 4px 4px; }
-      .smodalMetaIconChip { display:inline-flex; align-items:center; justify-content:center; width:19px; height:19px; border-radius:50%; flex-shrink:0; }
-      .smodalMetaIcon { width:12px; height:12px; object-fit:contain; display:inline-block; }
-      .smodalTagRow { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
-      .smodalTagPill { display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:500; color:#555; background:#f0f0ee; border:1px solid #e0e0dd; border-radius:11px; padding:3px 9px; }
-      .smodalSpeakersHdr { font-size:15px; font-weight:700; margin:4px 0 10px; }
-      .smodalSpeakers { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
-      .smodalSpeaker { display:flex; gap:10px; cursor:pointer; align-items:flex-start; }
-      .smodalSpeaker img { width:44px; height:44px; border-radius:4px; object-fit:cover; flex-shrink:0; background:#ddd; }
-      .smodalSpeakerName { font-size:13px; font-weight:600; }
-      .smodalSpeakerMeta { font-size:12px; color:#666; line-height:1.3; }
-      .smodalBack {
-        appearance:none; border:none; background:transparent; cursor:pointer;
-        font-size:13px; font-weight:600; color:#555; padding:0; text-decoration:underline;
-      }
-      .modalBody {
-        padding:16px; display:grid; grid-template-columns:125px 1fr;
-        grid-auto-rows:auto; column-gap:14px; row-gap:2px; background:#fff;
-      }
-      .modalAvatar { width:125px; height:125px; object-fit:cover; border-radius:4px; grid-column:1; grid-row:1; }
-      .modalDetails { grid-column:2; grid-row:1; margin-top:20px; }
-      .kv { margin:2px 0; }
-      .bio { margin:5px 0 0 0; line-height:1.45; grid-column:1 / -1; grid-row:2; }
-      .bio p { margin:0 0 10px 0; }
-      .bio p:last-child { margin-bottom:0; }
-      .sessionsHeader { margin-top:10px; grid-column:1 / -1; grid-row:3; }
-      .sessionsList { margin:0 0 0 18px; padding:0; grid-column:1 / -1; grid-row:4; }
-      .sessionsList li { margin:0; }
+      ${this._sharedModalCss(cfg)}
     `;
     this.shadowRoot.append(style);
 
@@ -1129,20 +951,22 @@ export class AgendaItem extends HTMLElement {
     bar.classList.add("tbar");
 
     // If this session has tags, expand the accent bar and show the first tag
-    // (tag icon + white uppercase text), right-aligned within the bar.
-    const tileTagsField = s.sessionCustomFields?.find(
-      (f) => f.name?.trim().toLowerCase() === "tags"
-    );
-    const tileTagValues = Array.isArray(tileTagsField?.value)
-      ? tileTagsField.value.filter((v) => typeof v === "string" && v.trim())
-      : [];
+    // (tag icon + white uppercase text) plus a "+N" count when there are more,
+    // right-aligned within the bar. Tiles are too narrow for several tags; the
+    // modal lists them all.
+    const tileTagValues = this._sessionTags(s);
     if (tileTagValues.length) {
       bar.classList.add("tbarTagged");
       const tagChip = document.createElement("span");
       tagChip.classList.add("tbarTag");
       const tagIcon = this._metaIconSvg("tag", "#ffffff", 10);
       const tagTxt = document.createElement("span");
-      tagTxt.textContent = tileTagValues[0].trim();
+      tagTxt.textContent =
+        tileTagValues[0] +
+        (tileTagValues.length > 1 ? ` +${tileTagValues.length - 1}` : "");
+      if (tileTagValues.length > 1) {
+        tagChip.title = tileTagValues.join(", ");
+      }
       if (tagIcon) tagChip.append(tagIcon);
       tagChip.append(tagTxt);
       bar.append(tagChip);
@@ -1327,22 +1151,28 @@ export class AgendaItem extends HTMLElement {
 
   // Shared modal: shows session detail, or a speaker's detail with a
   // "Back to session details" button. Same window, swapped content.
+  // The ONE modal shell used everywhere: the tile's session view, the speaker
+  // view reached from it, and the speaker view opened from a standalone card.
+  _ensureSessionModal() {
+    if (this._sessionModal) return this._sessionModal;
+    const backdrop = document.createElement("div");
+    backdrop.classList.add("sbackdrop");
+    backdrop.addEventListener("click", (e) => {
+      if (e.target === backdrop) backdrop.removeAttribute("open");
+    });
+    const modal = document.createElement("div");
+    modal.classList.add("smodal");
+    backdrop.appendChild(modal);
+    this.shadowRoot.appendChild(backdrop);
+    this._sessionModal = { backdrop, modal };
+    this.shadowRoot.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") backdrop.removeAttribute("open");
+    });
+    return this._sessionModal;
+  }
+
   _openSessionModal(s, cfg, tz) {
-    if (!this._sessionModal) {
-      const backdrop = document.createElement("div");
-      backdrop.classList.add("sbackdrop");
-      backdrop.addEventListener("click", (e) => {
-        if (e.target === backdrop) backdrop.removeAttribute("open");
-      });
-      const modal = document.createElement("div");
-      modal.classList.add("smodal");
-      backdrop.appendChild(modal);
-      this.shadowRoot.appendChild(backdrop);
-      this._sessionModal = { backdrop, modal };
-      this.shadowRoot.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") backdrop.removeAttribute("open");
-      });
-    }
+    this._ensureSessionModal();
     this._sessionCtx = { s, cfg, tz };
     this._renderSessionView();
     this._sessionModal.backdrop.setAttribute("open", "");
@@ -1400,7 +1230,8 @@ export class AgendaItem extends HTMLElement {
     // session type: focus accent for focus sessions, plenary accent otherwise.
     const locName = s.location?.name?.trim() || "";
     const catName = s.category?.name?.trim() || "";
-    if (locName || catName) {
+    const modalTags = this._sessionTags(s);
+    if (locName || catName || modalTags.length) {
       const accentOn = cfg.showAccentBar === true;
       const isFocusSession = accentOn && cfg.isFocus === true;
       const pillAccent = isFocusSession
@@ -1434,6 +1265,9 @@ export class AgendaItem extends HTMLElement {
       if (catName) {
         metaRow.append(makePill("category", catName));
       }
+      modalTags.forEach((tag) =>
+        metaRow.append(this._tagPill(tag, pillAccent, 12.5, "smodalTagPill"))
+      );
       bodyEl.append(metaRow);
     }
 
@@ -1459,17 +1293,8 @@ export class AgendaItem extends HTMLElement {
         img.src =
           (sp?.profilePictureUri || "").trim() ||
           "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/pix/2ee8c4642e97488abc1852d9166b179b.png";
-        const info = document.createElement("div");
-        const nm = document.createElement("div");
-        nm.classList.add("smodalSpeakerName");
-        nm.textContent = `${sp?.firstName || ""} ${sp?.lastName || ""}`.trim();
-        const meta = document.createElement("div");
-        meta.classList.add("smodalSpeakerMeta");
-        const jt = (sp?.title || sp?.designation || sp?.jobTitle || "").trim();
-        const co = (sp?.company || sp?.organization || "").trim();
-        meta.textContent = [jt, co].filter(Boolean).join(" · ");
-        info.append(nm, meta);
-        row.append(img, info);
+        // Same name/title/company block as the standalone card speaker line.
+        row.append(img, this._buildSpeakerInfo(sp).info);
         const go = () => this._renderSpeakerView(sp);
         row.addEventListener("click", go);
         row.addEventListener("keydown", (e) => {
@@ -1480,46 +1305,41 @@ export class AgendaItem extends HTMLElement {
       bodyEl.append(grid);
     }
 
-    // Tags row (secondary pills) — at the BOTTOM, below the speaker list.
-    const mTagsField = s.sessionCustomFields?.find(
-      (f) => f.name?.trim().toLowerCase() === "tags"
-    );
-    const mTagValues = Array.isArray(mTagsField?.value)
-      ? mTagsField.value.filter((v) => typeof v === "string" && v.trim())
-      : [];
-    if (mTagValues.length) {
-      const tagRow = document.createElement("div");
-      tagRow.classList.add("smodalTagRow");
-      tagRow.style.marginTop = "16px";
-      tagRow.style.marginBottom = "0";
-      mTagValues.slice(0, 5).forEach((tag) => {
-        const pill = document.createElement("span");
-        pill.classList.add("smodalTagPill");
-        const icon = this._metaIconSvg("tag", "#777", 10);
-        const txt = document.createElement("span");
-        txt.textContent = tag.trim();
-        if (icon) pill.append(icon);
-        pill.append(txt);
-        tagRow.append(pill);
-      });
-      bodyEl.append(tagRow);
-    }
-
-    modal.append(head, bodyEl);
+    modal.append(head, this._modalAccentRule(), bodyEl);
     close.focus();
   }
 
-  _renderSpeakerView(sp) {
+  // showBack: true when reached from the session view (tiles), false when a
+  // standalone card opened the speaker directly (the card already shows the
+  // session details, so there is nothing to go back to).
+  _renderSpeakerView(sp, { showBack = true } = {}) {
     const { modal } = this._sessionModal;
     modal.innerHTML = "";
 
-    // Header: back button + close
+    // Header: optional back link + close
     const head = document.createElement("div");
     head.classList.add("smodalHead");
-    const back = document.createElement("button");
-    back.classList.add("smodalBack");
-    back.textContent = "← Back to session details";
-    back.addEventListener("click", () => this._renderSessionView());
+    let back = null;
+    if (showBack && this._sessionCtx) {
+      back = document.createElement("button");
+      back.classList.add("smodalBack");
+      back.textContent = "← Back to session details";
+      back.addEventListener("click", () => this._renderSessionView());
+      head.append(back);
+    } else {
+      // Opened straight from a card: show which session this speaker belongs
+      // to, muted, in the slot the back link occupies in the tile flow.
+      const ctx = document.createElement("div");
+      ctx.classList.add("smodalContext");
+      const eyebrow = document.createElement("div");
+      eyebrow.classList.add("smodalContextEyebrow");
+      eyebrow.textContent = "Speaker";
+      const sessionName = document.createElement("div");
+      sessionName.classList.add("smodalContextSession");
+      sessionName.textContent = this.session?.name || "";
+      ctx.append(eyebrow, sessionName);
+      head.append(ctx);
+    }
     const close = document.createElement("button");
     close.classList.add("smodalClose");
     close.setAttribute("aria-label", "Close");
@@ -1527,15 +1347,15 @@ export class AgendaItem extends HTMLElement {
     close.addEventListener("click", () =>
       this._sessionModal.backdrop.removeAttribute("open")
     );
-    head.append(back, close);
+    head.append(close);
 
     // Body: identical markup/classes to the standalone speaker modal, populated
     // by the SAME shared filler so both views look the same.
     const refs = this._buildSpeakerBody();
     this._fillSpeakerRefs(refs, sp);
 
-    modal.append(head, refs.body);
-    back.focus();
+    modal.append(head, this._modalAccentRule(), refs.body);
+    (back || close).focus();
   }
 
   // Apply a mobile-only 4-line description clamp with an inline show more/less
@@ -1685,6 +1505,46 @@ export class AgendaItem extends HTMLElement {
     // 0) unwrap if you were passed { speaker, role }
     const sp = spRaw && spRaw.speaker ? spRaw.speaker : spRaw;
 
+    const firstName = (sp?.firstName || "").trim();
+    const lastName = (sp?.lastName || "").trim();
+    const pic = (sp?.profilePictureUri || "").trim();
+
+    const line = document.createElement("div");
+    line.classList.add("speakerLine");
+    line.setAttribute("role", "button");
+    line.setAttribute("tabindex", "0");
+    const sid = sp?.id || sp?.speakerId || "";
+    if (sid) line.dataset.speakerId = sid;
+    line.addEventListener("click", () => this.openModalForSpeaker(sp));
+    line.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        this.openModalForSpeaker(sp);
+      }
+    });
+
+    const img = document.createElement("img");
+    img.src =
+      pic ||
+      "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/pix/2ee8c4642e97488abc1852d9166b179b.png";
+    img.alt = `${firstName} ${lastName}`.trim() || "Speaker";
+    img.classList.add("avatar");
+
+    line.append(img, this._buildSpeakerInfo(sp).info);
+
+    return line;
+  }
+
+  // Name / title / company column for a speaker, styled EXACTLY like the
+  // standalone card's speaker line (theme paragraph base + speakerName /
+  // speakerTitle / speakerCompany typography, focus recolour on the name) and
+  // lazily hydrated with title/company via getSpeakers when the session object
+  // doesn't carry them. Used by the card speaker line AND the session modal's
+  // speaker rows so the two always match.
+  _buildSpeakerInfo(spRaw) {
+    const t = this.theme || {};
+    const cfg = this.config || {};
+    const sp = spRaw && spRaw.speaker ? spRaw.speaker : spRaw;
     const sid = sp?.id || sp?.speakerId || "";
     const firstName = (sp?.firstName || "").trim();
     const lastName = (sp?.lastName || "").trim();
@@ -1710,28 +1570,6 @@ export class AgendaItem extends HTMLElement {
     )
       .toString()
       .trim();
-
-    const pic = (sp?.profilePictureUri || "").trim();
-
-    const line = document.createElement("div");
-    line.classList.add("speakerLine");
-    line.setAttribute("role", "button");
-    line.setAttribute("tabindex", "0");
-    if (sid) line.dataset.speakerId = sid;
-    line.addEventListener("click", () => this.openModalForSpeaker(sp));
-    line.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        this.openModalForSpeaker(sp);
-      }
-    });
-
-    const img = document.createElement("img");
-    img.src =
-      pic ||
-      "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/pix/2ee8c4642e97488abc1852d9166b179b.png";
-    img.alt = `${firstName} ${lastName}`.trim() || "Speaker";
-    img.classList.add("avatar");
 
     const info = document.createElement("div");
     info.classList.add("info");
@@ -1784,7 +1622,6 @@ export class AgendaItem extends HTMLElement {
 
     meta.append(titleSpan, companySpan);
     info.append(nameSpan, meta);
-    line.append(img, info);
 
     // 2) Lazy hydration- if missing, fetch from SDK and patch DOM
     const getSpeakersFn =
@@ -1855,115 +1692,8 @@ export class AgendaItem extends HTMLElement {
       if (!sid) console.warn("Speaker has no id/speakerId; cannot hydrate", sp);
     }
 
-    return line;
-  }
 
-  buildModal() {
-    const backdrop = document.createElement("div");
-    backdrop.classList.add("backdrop");
-    backdrop.addEventListener("click", (e) => {
-      if (e.target === backdrop) this.closeModal();
-    });
-
-    const modal = document.createElement("div");
-    modal.classList.add("modal");
-    backdrop.appendChild(modal);
-
-    const header = document.createElement("div");
-    header.classList.add("modalHeader");
-
-    const title = document.createElement("div");
-    title.classList.add("modalTitle");
-    header.appendChild(title);
-
-    const close = document.createElement("button");
-    close.classList.add("closeBtn");
-    close.setAttribute("aria-label", "Close");
-    close.textContent = "×";
-    close.addEventListener("click", () => this.closeModal());
-    header.appendChild(close);
-
-    const body = document.createElement("div");
-    body.classList.add("modalBody");
-
-    // left: avatar
-    const avatar = document.createElement("img");
-    avatar.classList.add("modalAvatar");
-    avatar.alt = "Speaker photo";
-
-    // right: name/title/company
-    const details = document.createElement("div");
-    details.classList.add("modalDetails"); // ← add a class for targeting
-
-    const nameEl = document.createElement("div");
-    const titleEl = document.createElement("div");
-    titleEl.classList.add("kv");
-    const companyEl = document.createElement("div");
-    companyEl.classList.add("kv");
-
-    const bioEl = document.createElement("div");
-    bioEl.classList.add("bio");
-
-    const sessionsHdr = document.createElement("div");
-    sessionsHdr.classList.add("sessionsHeader");
-    sessionsHdr.textContent = "Sessions";
-
-    const sessionsUl = document.createElement("ul");
-    sessionsUl.classList.add("sessionsList");
-
-    // Only keep name/title/company in the right column
-    details.append(nameEl, titleEl, companyEl);
-
-    // Bio + sessions become *separate* grid items
-    body.append(avatar, details, bioEl, sessionsHdr, sessionsUl);
-
-    modal.append(header, body);
-
-    return {
-      backdrop,
-      header,
-      title,
-      avatar,
-      nameEl,
-      titleEl,
-      companyEl,
-      bioEl,
-      sessionsHdr,
-      sessionsUl,
-    };
-  }
-
-  applyModalTypography(cfg) {
-    this.applyTypographyOverrides(
-      this.modal.title,
-      cfg.typography?.modalName,
-      true
-    );
-    this.applyTypographyOverrides(
-      this.modal.nameEl,
-      cfg.typography?.modalSpeakerName,
-      true
-    );
-    this.applyTypographyOverrides(
-      this.modal.titleEl,
-      cfg.typography?.modalSpeakerTitle,
-      true
-    );
-    this.applyTypographyOverrides(
-      this.modal.companyEl,
-      cfg.typography?.modalSpeakerCompany,
-      true
-    );
-    this.applyTypographyOverrides(
-      this.modal.bioEl,
-      cfg.typography?.modalSpeakerBio,
-      true
-    );
-    this.applyTypographyOverrides(
-      this.modal.sessionsHdr,
-      cfg.typography?.modalSessionsHeader,
-      true
-    );
+    return { info, nameSpan, titleSpan, companySpan };
   }
 
   // Build the reusable speaker-detail body (avatar, name/title/company, bio,
@@ -2010,6 +1740,127 @@ export class AgendaItem extends HTMLElement {
   // already contains block HTML, leave it; otherwise convert newlines.
   // Mix a hex color with white to produce a light tint (amount = accent weight,
   // e.g. 0.14 = 14% accent over white). Returns an rgb() string.
+  // Tags from the "Tags" MultiChoice custom field, trimmed, deduped
+  // case-insensitively, and with any tag that merely repeats the category name
+  // dropped (it would show twice in the meta row otherwise).
+  _sessionTags(s, max = 5) {
+    const field = s?.sessionCustomFields?.find(
+      (f) => f.name?.trim().toLowerCase() === "tags"
+    );
+    const raw = Array.isArray(field?.value) ? field.value : [];
+    const cat = (s?.category?.name || "").trim().toLowerCase();
+    const seen = new Set();
+    const out = [];
+    raw.forEach((v) => {
+      if (typeof v !== "string") return;
+      const tag = v.trim();
+      const key = tag.toLowerCase();
+      if (!tag || seen.has(key) || key === cat) return;
+      seen.add(key);
+      out.push(tag);
+    });
+    return out.slice(0, max);
+  }
+
+  // Outlined tag pill that sits in the meta row next to the filled location /
+  // category pills: same height, accent-coloured border + text, no fill, so it
+  // reads as secondary.
+  _tagPill(label, accent, fontSize, className) {
+    const pill = document.createElement("span");
+    pill.classList.add(className);
+    pill.style.display = "inline-flex";
+    pill.style.alignItems = "center";
+    pill.style.gap = "5px";
+    pill.style.boxSizing = "border-box";
+    pill.style.padding = "4px 10px";
+    pill.style.borderRadius = "12px";
+    pill.style.border = `1px solid ${accent}`;
+    pill.style.color = accent;
+    pill.style.background = "transparent";
+    pill.style.fontSize = `${fontSize}px`;
+    pill.style.fontWeight = "600";
+    pill.style.textTransform = "uppercase";
+    pill.style.lineHeight = "1.2";
+    const icon = this._metaIconSvg("tag", accent, Math.round(fontSize * 0.85));
+    const txt = document.createElement("span");
+    txt.textContent = label;
+    if (icon) pill.append(icon);
+    pill.append(txt);
+    return pill;
+  }
+
+  // 3px rule under the modal header in the session-type accent colour.
+  _modalAccentRule() {
+    const rule = document.createElement("div");
+    rule.classList.add("smodalAccentRule");
+    rule.style.background = this._typeAccent || "#f7a325";
+    return rule;
+  }
+
+  // CSS for the single modal shell + speaker body. Injected into BOTH the
+  // standalone-card style block and the tile style block so whichever render
+  // path opens the modal has the styles it needs (see Playbook §5).
+  _sharedModalCss(cfg) {
+    const divider = cfg?.modalColors?.dividerColor || "#eeeeee";
+    const contentBg = cfg?.modalColors?.contentBg || "#ffffff";
+    return `
+      .sbackdrop {
+        position:fixed; inset:0; background:rgba(0,0,0,.45);
+        display:none; place-items:center; z-index:999999;
+      }
+      .sbackdrop[open] { display:grid; }
+      .smodal {
+        width:min(680px,92vw); max-height:88vh; overflow:auto;
+        background:#fff; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.25);
+      }
+      .smodalHead {
+        display:flex; align-items:flex-start; justify-content:space-between;
+        gap:12px; padding:16px 18px; border-bottom:1px solid ${divider};
+      }
+      .smodalTitle { font-size:20px; font-weight:700; line-height:1.25; }
+      .smodalTime { font-size:13px; color:#666; margin-top:4px; }
+      .smodalClose {
+        appearance:none; border:none; background:transparent; font-size:22px;
+        cursor:pointer; line-height:1; flex-shrink:0;
+      }
+      .smodalBody { padding:16px 18px; }
+      .smodalDesc { font-size:14px; line-height:1.5; color:#333; margin-bottom:16px; }
+      .smodalTags { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+      .smodalTag { font-size:12px; border:0.5px solid #bbb; border-radius:12px; padding:3px 12px; }
+      .smodalMetaRow { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+      .smodalMeta { display:inline-flex; align-items:center; gap:5px; font-size:12.5px; text-transform:uppercase; font-weight:600; border-radius:12px; padding:4px 10px 4px 4px; }
+      .smodalMetaIconChip { display:inline-flex; align-items:center; justify-content:center; width:19px; height:19px; border-radius:50%; flex-shrink:0; }
+      .smodalMetaIcon { width:12px; height:12px; object-fit:contain; display:inline-block; }
+      .smodalSpeakersHdr { font-size:15px; font-weight:700; margin:4px 0 10px; }
+      .smodalSpeakers { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+      .smodalSpeaker { display:flex; gap:10px; cursor:pointer; align-items:flex-start; }
+      .smodalSpeaker img { width:44px; height:44px; border-radius:4px; object-fit:cover; flex-shrink:0; background:#ddd; }
+      .smodalSpeaker .info { display:flex; flex-direction:column; justify-content:flex-start; line-height:1.2; min-width:0; }
+      .smodalSpeaker .speakerTitle, .smodalSpeaker .speakerCompany { white-space:normal; overflow:visible; word-break:break-word; }
+      .smodalBack {
+        appearance:none; border:none; background:transparent; cursor:pointer;
+        font-size:13px; font-weight:600; color:#555; padding:0; text-decoration:underline;
+      }
+      .modalBody {
+        padding:16px; display:grid; grid-template-columns:125px 1fr;
+        grid-auto-rows:auto; column-gap:14px; row-gap:2px; background:${contentBg};
+      }
+      .modalAvatar { width:125px; height:125px; object-fit:cover; border-radius:4px; grid-column:1; grid-row:1; }
+      .modalDetails { grid-column:2; grid-row:1; align-self:center; min-width:0; }
+      .smodalAccentRule { height:3px; flex-shrink:0; }
+      .smodalContext { min-width:0; }
+      .smodalContextEyebrow { font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#888; }
+      .smodalContextSession { font-size:14px; font-weight:600; color:#444; line-height:1.3; margin-top:2px; }
+      .kv { margin:2px 0; }
+      .bio { margin:5px 0 0 0; line-height:1.45; grid-column:1 / -1; grid-row:2; }
+      .bio p { margin:0 0 10px 0; }
+      .bio p:last-child { margin-bottom:0; }
+      .sessionsHeader { margin-top:10px; grid-column:1 / -1; grid-row:3; }
+      .sessionsList { margin:0 0 0 18px; padding:0; grid-column:1 / -1; grid-row:4; }
+      .sessionsList li { margin:0; }
+    `;
+  }
+
   _tintColor(hex, amount) {
     const h = (hex || "").replace("#", "");
     if (h.length !== 6) return "#f2f2f0";
@@ -2064,7 +1915,7 @@ export class AgendaItem extends HTMLElement {
     refs.companyEl.textContent = company || "";
     refs.bioEl.innerHTML = this._formatBioHtml(bio);
 
-    // Typography (mirror applyModalTypography on these refs)
+    // Typography
     this.applyTypographyOverrides(refs.nameEl, cfg.typography?.modalSpeakerName, true);
     this.applyTypographyOverrides(refs.titleEl, cfg.typography?.modalSpeakerTitle, true);
     this.applyTypographyOverrides(refs.companyEl, cfg.typography?.modalSpeakerCompany, true);
@@ -2164,44 +2015,17 @@ export class AgendaItem extends HTMLElement {
     }
   }
 
+  // Speaker opened directly from a standalone card: same shell, same speaker
+  // body, no back link.
   openModalForSpeaker(spRaw) {
-    if (!this.modal) {
-      this.modal = this.buildModal();
-      this.shadowRoot.append(this.modal.backdrop);
-    }
-    // Populate the standalone modal's refs via the shared filler.
-    this._fillSpeakerRefs(
-      {
-        title: this.modal.title,
-        avatar: this.modal.avatar,
-        nameEl: this.modal.nameEl,
-        titleEl: this.modal.titleEl,
-        companyEl: this.modal.companyEl,
-        bioEl: this.modal.bioEl,
-        sessionsHdr: this.modal.sessionsHdr,
-        sessionsUl: this.modal.sessionsUl,
-      },
-      spRaw
-    );
-
-    // Focus recolor of the modal header (name recolor handled in filler).
-    const cfg = this.config || {};
-    if (cfg.isFocus === true && cfg.showAccentBar === true) {
-      this.modal.header.style.background = cfg.focusAccent || "#1a7f8e";
-    }
-
-    this.modal.backdrop.setAttribute("open", "");
-    this.modal.backdrop.querySelector(".closeBtn")?.focus();
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("cvent-speaker-modal-open"));
-    }
+    const sp = spRaw && spRaw.speaker ? spRaw.speaker : spRaw;
+    const { backdrop } = this._ensureSessionModal();
+    this._renderSpeakerView(sp, { showBack: false });
+    backdrop.setAttribute("open", "");
   }
 
   closeModal() {
-    this.modal?.backdrop?.removeAttribute("open");
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("cvent-speaker-modal-close"));
-    }
+    this._sessionModal?.backdrop?.removeAttribute("open");
   }
 
   reapplyTypography() {
