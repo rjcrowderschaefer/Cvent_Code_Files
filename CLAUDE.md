@@ -99,6 +99,13 @@ agenda with extensive custom features built over many iterations.
 - **Date nav is NOT sticky** (removed 2026-09-12). It is a plain row of day
   links; the only Cvent-header measurement left is at click time so a day jump
   lands below the pinned site header. Do not reintroduce sticky positioning.
+- **Speaker modal look** (2026-09-12): accent line across the top, floating
+  circular close (from a card) or back-link head bar (from a tile), body =
+  photo | role eyebrow ("Speaker"/"Moderator", detected from category/title/
+  company incl. a "(Moderator)" company suffix, re-evaluated after hydration)
+  + big name + muted title + accent-tinted company pill, hairline, bio, then
+  the SESSIONS list (keep it). Modal accent is plenary/focus, never break grey
+  (`_modalAccent`).
 - **One modal.** Session and speaker details use a single shell (`_ensureSessionModal`
   → `_renderSessionView` / `_renderSpeakerView`). Standalone cards open the speaker
   view directly with `openModalForSpeaker` (close only); tiles go session → speaker
