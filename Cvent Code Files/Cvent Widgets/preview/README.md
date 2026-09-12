@@ -1,9 +1,13 @@
 # Local preview for the agenda widget
 
 Runs the real `custom-agenda-widget/widget.js`, `AgendaItem.js` and `editor.js`
-in a plain browser page against a mock Cvent SDK fed by `data/agenda-dump.json`
-(a real dump captured from the sandbox). Editor on the left, widget on the right,
-config changes re-render live. Nothing here is uploaded to Cvent.
+against a mock Cvent SDK fed by `data/agenda-dump.json` (a real dump captured
+from the sandbox). Editor on the left (`index.html` + `harness.js`); the widget
+on the right lives INSIDE a device-sized iframe (`frame.html` + `frame.js`), so
+the breakpoint selector changes the widget's actual viewport: media queries,
+`window.innerWidth` checks and the fixed-position modals all resolve within the
+frame, exactly as they would on that device. Config changes re-render live.
+Nothing here is uploaded to Cvent.
 
 ## Run
 
