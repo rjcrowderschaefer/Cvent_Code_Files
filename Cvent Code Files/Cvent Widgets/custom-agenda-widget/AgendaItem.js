@@ -54,15 +54,13 @@ export class AgendaItem extends HTMLElement {
       ? breakGutterBg
       : isFocus
       ? focusAccent
-      : cfg.gutterBg || t.palette?.accent || "#e8eef9";
+      : plenaryAccent; // time column follows the plenary accent
     const cardBg = isBreak
       ? bs.cardBg || "#f7f7f5"
       : cfg.cardBg || t.palette?.secondary || "#ffffff";
 
-    const showMoreColor =
-      cfg.showMoreColor ||
-      cfg?.typography?.sessionDescription?.color ||
-      "#0066cc";
+    // "show more" follows the session-type accent.
+    const showMoreColor = isFocus ? focusAccent : plenaryAccent;
 
     // Modal header matches the session-type accent of the card it opened from
     // (plenary / focus / break). Not planner-configurable separately.
@@ -862,11 +860,9 @@ export class AgendaItem extends HTMLElement {
     const timeCss = bodyThemeCss + cssFor("sessionTime", "11px") + timeColorCss;
     const descCss = bodyThemeCss + cssFor("sessionDescription", "12px");
     const spkNameBase = bodyThemeCss + cssFor("speakerName", "12px");
-    // Focus sessions: speaker names use the focus accent (overrides the
-    // configured speakerName color), matching the standalone focus behavior.
-    const spkNameCss = isFocus
-      ? spkNameBase + `color:${focusAccent};`
-      : spkNameBase;
+    // Speaker names follow the session-type accent (focus / plenary), not a
+    // separately configured colour.
+    const spkNameCss = spkNameBase + `color:${isFocus ? focusAccent : plenaryAccent};`;
     const spkTitleCss = bodyThemeCss + cssFor("speakerTitle", "11px");
     const spkCompanyCss = bodyThemeCss + cssFor("speakerCompany", "11px");
 
@@ -1604,18 +1600,18 @@ export class AgendaItem extends HTMLElement {
     nameSpan.classList.add("speakerName");
     nameSpan.textContent = `${firstName} ${lastName}`.trim();
     this.applyThemeStyle(nameSpan, t.paragraph);
-    // On focus cards, speaker names use the focus accent. Apply untracked so a
-    // resize typography re-apply can't stomp it, then set the color after.
+    // Speaker names follow the session-type accent (focus / plenary). The
+    // colour is baked into the tracked override so a resize re-apply keeps it.
     const nameIsFocus =
       cfg.showAccentBar === true && cfg.isFocus === true;
+    const nameAccent = nameIsFocus
+      ? cfg.focusAccent || "#1a7f8e"
+      : cfg.plenaryAccent || "#f7a325";
     this.applyTypographyOverrides(
       nameSpan,
-      cfg.typography?.speakerName,
-      !nameIsFocus
+      { ...(cfg.typography?.speakerName || {}), color: nameAccent },
+      true
     );
-    if (nameIsFocus) {
-      nameSpan.style.color = cfg.focusAccent || "#1a7f8e";
-    }
 
     const meta = document.createElement("div");
     meta.classList.add("speakerMeta");

@@ -72,6 +72,13 @@ agenda with extensive custom features built over many iterations.
 - **Compact typography** is the default scale now (title 17/desc 13/speaker 14 px
   on desktop).
 - **Bios** come as `\r\n\r\n` plain text — convert to `<p>` before innerHTML.
+- **Accent-derived colours** (2026-09-12): the time column, speaker names,
+  "show more", and the active date tab all take the Plenary accent (or the
+  Focus accent on focus sessions). `gutterBg`, `showMoreColor`,
+  `dateNav.underlineColor` and `typography.speakerName.color` are no longer
+  read; their editor controls are gone. Don't re-add per-element colours.
+- **Editor "New Features" section** (second in the panel) holds the opt-in
+  controls added recently: Header style + Eyebrow text, Date nav behaviour.
 - **Header style** is a planner choice: `headerStyle` = `classic` (default, the
   original look) or `editorial` (eyebrow + accent rule + muted subheader, legend
   inline under the masthead, pill date tabs, day headers with a session count

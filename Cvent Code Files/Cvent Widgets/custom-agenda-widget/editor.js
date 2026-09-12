@@ -172,20 +172,17 @@ export default class ExampleAgendaEditor extends HTMLElement {
         fontSizeSm: 14,
         activeColor: "#000000",
         inactiveColor: "#999999",
-        underlineColor: "#f7a325",
         navBg: "#ffffff",
       },
       showTimezone: true,
       showDescription: true,
       showDescriptionLimited: false,
-      gutterBg: "#f7a325",
       cardBg: "#ffffff",
       cardBorder: {
         width: 0.5,
         style: "solid",
         color: "#cccccc",
       },
-      showMoreColor: "#f7a325",
       modalColors: {
         dividerColor: "#555555",
         contentBg: "#ffffff",
@@ -486,6 +483,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
       return { details, block };
     };
     const secHeader = makeSection("Agenda Header", true);
+    const secNew = makeSection("New Features", true);
     const secLayout = makeSection("Layout & Ordering", false);
     const secDateNav = makeSection("Date Navigation", false);
     const secCards = makeSection("Card Colors & Border", false);
@@ -573,7 +571,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
     eyebrowInput.style.width = "100%";
     eyebrowInput.onchange = () => this._patch({ headerEyebrow: eyebrowInput.value });
     hsWrap.appendChild(eyebrowInput);
-    secHeader.block.appendChild(hsWrap);
+    secNew.block.appendChild(hsWrap);
 
 // Timezone label controls
     const tzWrap = document.createElement("div");
@@ -668,17 +666,6 @@ export default class ExampleAgendaEditor extends HTMLElement {
         (v) =>
           this._patch({
             dateNav: { ...(this._config.dateNav || {}), inactiveColor: v },
-          })
-      )
-    );
-    dnWrap.appendChild(
-      this._colorRow(
-        "Underline color",
-        "dnUnderlineColor",
-        dn.underlineColor || "#f7a325",
-        (v) =>
-          this._patch({
-            dateNav: { ...(this._config.dateNav || {}), underlineColor: v },
           })
       )
     );
@@ -834,6 +821,13 @@ export default class ExampleAgendaEditor extends HTMLElement {
       )
     );
 
+    const accentNote = document.createElement("div");
+    accentNote.style.fontSize = "11px";
+    accentNote.style.opacity = "0.7";
+    accentNote.style.margin = "2px 0 8px";
+    accentNote.textContent =
+      "The Plenary / Focus accents also colour: the time column, speaker names, \u201cshow more\u201d, and the active date tab.";
+    stWrap.appendChild(accentNote);
     stWrap.appendChild(
       this._colorRow(
         "Focus gutter text color",
@@ -966,10 +960,13 @@ soSelect.onchange = () => {
         this._patch({ hideDateNav: v })
       )
     );
+    secDateNav.block.prepend(hideNavWrap);
+    // Date nav behaviour lives in "New Features".
+    const dnModeWrap = document.createElement("div");
+    dnModeWrap.className = "section";
     // Behaviour of a day click: scroll to it, or show only that day.
-    hideNavWrap.appendChild(document.createElement("br"));
-    hideNavWrap.appendChild(this._label("Date nav behavior"));
-    hideNavWrap.appendChild(document.createElement("br"));
+    dnModeWrap.appendChild(this._label("Date nav behavior"));
+    dnModeWrap.appendChild(document.createElement("br"));
     const dnMode = document.createElement("select");
     [
       ["jump", "Jump — all days listed, click scrolls to the day"],
@@ -983,8 +980,8 @@ soSelect.onchange = () => {
     dnMode.value = this._config.dateNavMode === "filter" ? "filter" : "jump";
     dnMode.style.width = "100%";
     dnMode.onchange = () => this._patch({ dateNavMode: dnMode.value });
-    hideNavWrap.appendChild(dnMode);
-    secDateNav.block.prepend(hideNavWrap);
+    dnModeWrap.appendChild(dnMode);
+    secNew.block.appendChild(dnModeWrap);
 
     // Concurrent session tiles — when ON, overlapping sessions render as
     // side-by-side tiles in a time grid. When OFF (default), all sessions render
@@ -1080,16 +1077,6 @@ soSelect.onchange = () => {
     // Add to panel
     secLayout.block.append(descFieldset);
 
-    // Colors
-    secCards.block.append(
-      this._colorRow(
-        "Time Column Bg",
-        "gutterBg",
-        this._config.gutterBg || "#e8eef9",
-        (v) => this._patch({ gutterBg: v })
-      )
-    );
-
     secCards.block.append(
       this._colorRow(
         "Card Bg",
@@ -1183,14 +1170,6 @@ soSelect.onchange = () => {
 
     secCards.block.append(borderFieldset);
 
-    secCards.block.append(
-      this._colorRow(
-        "Show More Color",
-        "showMoreColor",
-        this._config.showMoreColor || "#0066cc",
-        (v) => this._patch({ showMoreColor: v })
-      )
-    );
 
     // Typography (Agenda)
     const typoAgenda = document.createElement("div");
@@ -1212,7 +1191,11 @@ soSelect.onchange = () => {
     ];
 
     AGENDA_TYPO_KEYS.forEach(([key, label]) => {
-      typoAgenda.append(this._typographyBlock(key, label));
+      const opts =
+        key === "speakerName"
+          ? { noColor: true, colorNote: "Colour follows the Plenary / Focus accent (Session Types)." }
+          : {};
+      typoAgenda.append(this._typographyBlock(key, label, opts));
     });
 
     // ============================
@@ -1281,6 +1264,7 @@ soSelect.onchange = () => {
 
     [
       secHeader,
+      secNew,
       secLayout,
       secDateNav,
       secCards,
@@ -1359,7 +1343,7 @@ soSelect.onchange = () => {
   // TYPOGRAPHY BLOCK
   // ===========================================================
 
-  _typographyBlock(key, label) {
+  _typographyBlock(key, label, { noColor = false, colorNote = "" } = {}) {
     const defaults = this._makeDefaultTypography();
     const current =
       (this._config.typography && this._config.typography[key]) || {};
@@ -1496,8 +1480,16 @@ soSelect.onchange = () => {
       });
     };
 
-    rowColor.append(colorWrap, hexWrap);
-    fs.append(rowColor);
+    if (noColor) {
+      const note = document.createElement("div");
+      note.style.fontSize = "11px";
+      note.style.opacity = "0.7";
+      note.textContent = colorNote || "Colour follows the accent.";
+      fs.append(note);
+    } else {
+      rowColor.append(colorWrap, hexWrap);
+      fs.append(rowColor);
+    }
 
     // ---------------------------
     // Bold / Italic / Underline

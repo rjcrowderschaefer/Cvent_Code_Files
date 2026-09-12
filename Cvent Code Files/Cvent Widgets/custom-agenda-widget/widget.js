@@ -391,7 +391,7 @@ export default class extends HTMLElement {
         .dateNav .navDay { font-size:${dn.fontSize ?? 18}px; font-weight:700; line-height:1.1; }
         .dateNav .navMon { font-size:11px; font-weight:500; opacity:.85; }
         .dateNav button.active {
-          background: ${dn.underlineColor || cfg.plenaryAccent || "#f7a325"};
+          background: ${cfg.plenaryAccent || "#f7a325"};
           color: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,.12);
         }
         .dateNav button.active .navDow, .dateNav button.active .navMon { opacity: 1; }
@@ -431,7 +431,7 @@ export default class extends HTMLElement {
         .dateNav button.active {
           color: ${dn.activeColor || "#000000"}; font-weight: 700;
           text-decoration: underline;
-          text-decoration-color: ${dn.underlineColor || "#f7a325"};
+          text-decoration-color: ${cfg.plenaryAccent || "#f7a325"};
           text-underline-offset: 4px;
         }
         .navLabelShort { display: none; }
@@ -1116,7 +1116,10 @@ export default class extends HTMLElement {
     const grid = document.createElement("div");
     grid.classList.add("concurrentGrid");
     grid.style.position = "relative";
-    grid.style.height = `${gridHeight}px`;
+    // + room for the last rail label, which is centred on the final gridline and
+    // otherwise hangs below the grid (clipped in hosts like the Cvent editor).
+    const LABEL_PAD = 12;
+    grid.style.height = `${gridHeight + LABEL_PAD}px`;
 
     const colWidthPct = 100 / colCount;
     sessions.forEach((s) => {
