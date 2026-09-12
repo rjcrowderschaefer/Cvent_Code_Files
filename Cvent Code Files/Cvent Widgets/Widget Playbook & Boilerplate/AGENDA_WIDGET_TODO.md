@@ -13,6 +13,11 @@ Add detail to each item as it's picked up; move done items to the bottom.
 
 ## Done
 
+- [x] 2026-09-12 **Sticky date nav removed.** The date nav is now a plain row under
+      the subheader; clicking a day still scrolls its header below Cvent's site
+      header (measured live at click time). Gone: sticky positioning, the header
+      measurement on scroll/resize, the scroll-spy, and the "Sticky offset" editor
+      control. `dateNav.stickyOffset` in saved configs is ignored.
 - [x] 2026-09-11 **Normal-card modal unification.** One modal shell (`.sbackdrop`/`.smodal`)
       now serves the tile session view, its speaker view, and the speaker opened from a
       standalone card (close-only header, no back link). CSS lives in

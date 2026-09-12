@@ -46,18 +46,6 @@ export default class extends HTMLElement {
 
   disconnectedCallback() {
     if (this._onResize) window.removeEventListener("resize", this._onResize);
-    if (this._navResizeHandler) {
-      window.removeEventListener("resize", this._navResizeHandler);
-      this._navResizeHandler = null;
-    }
-    if (this._navScrollHandler) {
-      window.removeEventListener("scroll", this._navScrollHandler);
-      this._navScrollHandler = null;
-    }
-    if (this._dateNavObserver) {
-      this._dateNavObserver.disconnect();
-      this._dateNavObserver = null;
-    }
     this._typoBindings = [];
   }
 
@@ -92,11 +80,6 @@ export default class extends HTMLElement {
   async _renderInto(container) {
     const cfg = this.configuration || {};
     const theme = this.theme || {};
-
-    if (this._dateNavObserver) {
-      this._dateNavObserver.disconnect();
-      this._dateNavObserver = null;
-    }
 
     // Agenda header + subheader
 
@@ -282,30 +265,14 @@ export default class extends HTMLElement {
       const groups = this._groupSessionsByDay(sorted, eventTimezone);
       const dayKeys = [...groups.keys()];
 
+      // Date nav: a plain (non-sticky) row of day links under the subheader.
+      // Clicking a day scrolls its header just below Cvent's own site header.
       const showDateNav = cfg.hideDateNav !== true;
-      if (!showDateNav) {
-        if (this._navResizeHandler) {
-          window.removeEventListener("resize", this._navResizeHandler);
-          this._navResizeHandler = null;
-        }
-        if (this._navScrollHandler) {
-          window.removeEventListener("scroll", this._navScrollHandler);
-          this._navScrollHandler = null;
-        }
-        if (this._dateNavObserver) {
-          this._dateNavObserver.disconnect();
-          this._dateNavObserver = null;
-        }
-      }
-
       const dn = cfg.dateNav || {};
-      const cventOffset = Number(dn.stickyOffset) || 0;
 
       const dayHeaderRefs = {};
       const navLinks = {};
-      let triggerOffset = cventOffset;
       let dateNav = null;
-      let measureCventHeader = () => cventOffset;
 
       const setActiveDay = (activeKey) => {
         Object.entries(navLinks).forEach(([key, link]) => {
@@ -319,7 +286,7 @@ export default class extends HTMLElement {
         .dateNav {
           display: flex; flex-wrap: wrap; gap: 16px;
           width: calc(100% - 40px); max-width: 1210px; margin: 0 auto;
-          box-sizing: border-box; position: sticky; z-index: 50;
+          box-sizing: border-box;
           background: ${dn.navBg || "#ffffff"}; padding: 8px 0;
         }
         .dateNav button {
@@ -354,7 +321,9 @@ export default class extends HTMLElement {
         dateNav = document.createElement("div");
         dateNav.classList.add("dateNav");
 
-        measureCventHeader = () => {
+        // Bottom edge of Cvent's (pinned) site header, so a day jump doesn't
+        // land underneath it. Measured live at click time (Playbook §9).
+        const measureCventHeader = () => {
           const selectors = ["#navigationContainer", ".cus_nav"];
           for (const sel of selectors) {
             const el = document.querySelector(sel);
@@ -363,19 +332,8 @@ export default class extends HTMLElement {
               if (r.height > 0) return Math.max(0, Math.round(r.bottom));
             }
           }
-          return cventOffset;
+          return 0;
         };
-
-        // Detect the live front-end header. If it's absent (e.g. the Site
-        // Designer preview), sticky positioning has no correct anchor and looks
-        // misplaced — so render the nav statically in that context instead.
-        const hasLiveHeader = ["#navigationContainer", ".cus_nav"].some((sel) => {
-          const el = document.querySelector(sel);
-          return el && el.getBoundingClientRect().height > 0;
-        });
-        if (!hasLiveHeader) {
-          dateNav.style.position = "static";
-        }
 
         dayKeys.forEach((dayKey) => {
           const link = document.createElement("button");
@@ -393,19 +351,11 @@ export default class extends HTMLElement {
 
           link.addEventListener("click", () => {
             setActiveDay(dayKey);
-            this._navClickLock = dayKey;
-            clearTimeout(this._navClickTimer);
-            this._navClickTimer = setTimeout(() => {
-              this._navClickLock = null;
-            }, 700);
-
             const target = dayHeaderRefs[dayKey];
             if (!target) return;
 
             const scrollToTarget = (smooth) => {
-              const cventBottom = measureCventHeader();
-              const navH = dateNav.offsetHeight || 0;
-              const totalOffset = cventBottom + navH + 12;
+              const totalOffset = measureCventHeader() + 12;
               const top =
                 target.getBoundingClientRect().top +
                 window.pageYOffset -
@@ -414,10 +364,10 @@ export default class extends HTMLElement {
             };
 
             scrollToTarget(true);
+            // Re-check after the smooth scroll settles (lazy images can shift
+            // layout) and snap if we drifted.
             setTimeout(() => {
-              const cventBottom = measureCventHeader();
-              const navH = dateNav.offsetHeight || 0;
-              const totalOffset = cventBottom + navH + 12;
+              const totalOffset = measureCventHeader() + 12;
               const drift = Math.abs(
                 target.getBoundingClientRect().top - totalOffset
               );
@@ -430,33 +380,6 @@ export default class extends HTMLElement {
         });
 
         container.appendChild(dateNav);
-
-        const applyStickyOffset = () => {
-          dateNav.style.top = `${measureCventHeader()}px`;
-        };
-        applyStickyOffset();
-
-        if (this._navResizeHandler) {
-          window.removeEventListener("resize", this._navResizeHandler);
-        }
-        let resizeRAF = null;
-        this._navResizeHandler = () => {
-          if (resizeRAF) cancelAnimationFrame(resizeRAF);
-          resizeRAF = requestAnimationFrame(applyStickyOffset);
-        };
-        window.addEventListener("resize", this._navResizeHandler);
-
-        if (this._navScrollHandler) {
-          window.removeEventListener("scroll", this._navScrollHandler);
-        }
-        let scrollRAF = null;
-        this._navScrollHandler = () => {
-          if (scrollRAF) cancelAnimationFrame(scrollRAF);
-          scrollRAF = requestAnimationFrame(applyStickyOffset);
-        };
-        window.addEventListener("scroll", this._navScrollHandler, {
-          passive: true,
-        });
       }
 
       // --- Render headers + sessions (always, nav or not) ---
@@ -542,39 +465,8 @@ export default class extends HTMLElement {
         }
       }
 
-      // --- Scroll-spy (only when nav is shown) ---
-      if (showDateNav) {
-        if (dayKeys.length) setActiveDay(dayKeys[0]);
-
-        requestAnimationFrame(() => {
-          const navH = dateNav.offsetHeight || 0;
-          triggerOffset = cventOffset + navH;
-          const headerEls = Object.values(dayHeaderRefs);
-
-          const update = () => {
-            if (this._navClickLock) {
-              setActiveDay(this._navClickLock);
-              return;
-            }
-            let activeKey = dayKeys[0];
-            headerEls.forEach((h) => {
-              if (h.getBoundingClientRect().top - triggerOffset <= 4) {
-                activeKey = h.dataset.dayKey;
-              }
-            });
-            if (activeKey) setActiveDay(activeKey);
-          };
-
-          const io = new IntersectionObserver(update, {
-            root: null,
-            rootMargin: `-${triggerOffset}px 0px 0px 0px`,
-            threshold: [0, 1],
-          });
-          headerEls.forEach((h) => io.observe(h));
-          this._dateNavObserver = io;
-          update();
-        });
-      }
+      // Highlight the first day by default; clicks move the highlight.
+      if (showDateNav && dayKeys.length) setActiveDay(dayKeys[0]);
     }
   }
 

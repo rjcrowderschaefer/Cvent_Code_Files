@@ -170,7 +170,6 @@ export default class ExampleAgendaEditor extends HTMLElement {
         activeColor: "#000000",
         inactiveColor: "#999999",
         underlineColor: "#f7a325",
-        stickyOffset: 0,
         navBg: "#ffffff",
       },
       showTimezone: true,
@@ -845,26 +844,6 @@ export default class ExampleAgendaEditor extends HTMLElement {
     stWrap.appendChild(plenaryLabelInput);
 
     secTypes.block.appendChild(stWrap);
-
-// Sticky offset = height of the Cvent header the nav should sit beneath
-    const dnOffsetWrap = document.createElement("div");
-    dnOffsetWrap.className = "row field";
-    const dnOffsetLabel = this._label("Sticky offset below Cvent header (px)");
-    const dnOffsetInput = document.createElement("input");
-    dnOffsetInput.type = "number";
-    dnOffsetInput.min = "0";
-    dnOffsetInput.value = dn.stickyOffset ?? 0;
-    const commitOffset = () => {
-      const raw = dnOffsetInput.value.trim();
-      const val = raw === "" ? 0 : Math.max(0, Number(raw) || 0);
-      this._patch({
-        dateNav: { ...(this._config.dateNav || {}), stickyOffset: val },
-      });
-    };
-    dnOffsetInput.onchange = commitOffset;
-    dnOffsetInput.onblur = commitOffset;
-    dnOffsetWrap.append(dnOffsetLabel, dnOffsetInput);
-    dnWrap.appendChild(dnOffsetWrap);
 
     dnWrap.appendChild(
       this._colorRow(

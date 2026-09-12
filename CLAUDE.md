@@ -72,6 +72,9 @@ agenda with extensive custom features built over many iterations.
 - **Compact typography** is the default scale now (title 17/desc 13/speaker 14 px
   on desktop).
 - **Bios** come as `\r\n\r\n` plain text — convert to `<p>` before innerHTML.
+- **Date nav is NOT sticky** (removed 2026-09-12). It is a plain row of day
+  links; the only Cvent-header measurement left is at click time so a day jump
+  lands below the pinned site header. Do not reintroduce sticky positioning.
 - **One modal.** Session and speaker details use a single shell (`_ensureSessionModal`
   → `_renderSessionView` / `_renderSpeakerView`). Standalone cards open the speaker
   view directly with `openModalForSpeaker` (close only); tiles go session → speaker
