@@ -466,25 +466,20 @@ export default class extends HTMLElement {
             const target = dayHeaderRefs[dayKey];
             if (!target) return;
 
-            const scrollToTarget = (smooth) => {
-              const totalOffset = measureCventHeader() + 12;
-              const top =
-                target.getBoundingClientRect().top +
-                window.pageYOffset -
-                totalOffset;
-              window.scrollTo({ top, behavior: smooth ? "smooth" : "auto" });
-            };
+            const targetTop = () =>
+              target.getBoundingClientRect().top +
+              window.pageYOffset -
+              (measureCventHeader() + 12);
 
-            scrollToTarget(true);
-            // Re-check after the smooth scroll settles (lazy images can shift
-            // layout) and snap if we drifted.
-            setTimeout(() => {
-              const totalOffset = measureCventHeader() + 12;
-              const drift = Math.abs(
-                target.getBoundingClientRect().top - totalOffset
-              );
-              if (drift > 4) scrollToTarget(false);
-            }, 650);
+            // Eased scroll that runs to completion, then a gentle second pass
+            // if lazy images shifted the layout underneath us. (The previous
+            // version cut the native smooth scroll off after a fixed 650ms and
+            // jumped, which read as a snap on longer distances.)
+            this._smoothScrollTo(targetTop()).then((completed) => {
+              if (!completed) return; // user took over scrolling
+              const drift = Math.abs(target.getBoundingClientRect().top - (measureCventHeader() + 12));
+              if (drift > 4) this._smoothScrollTo(targetTop(), { duration: 260 });
+            });
           });
 
           navLinks[dayKey] = link;
@@ -1278,6 +1273,59 @@ export default class extends HTMLElement {
       return row;
     }
     return el;
+  }
+
+  // Animate window scroll to `top` with an ease-in-out curve. Duration scales
+  // with distance (min/max clamped) so short hops feel quick and long ones
+  // don't rush. Cancels if the user wheels/touches mid-flight. Resolves true
+  // when it ran to completion, false if interrupted. Honours reduced motion.
+  _smoothScrollTo(top, { duration } = {}) {
+    const startY = window.pageYOffset;
+    const maxY = Math.max(0, (document.documentElement.scrollHeight || 0) - window.innerHeight);
+    const endY = Math.max(0, Math.min(top, maxY));
+    const dist = endY - startY;
+    const reduce =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (Math.abs(dist) < 2) return Promise.resolve(true);
+    if (reduce) {
+      window.scrollTo(0, endY);
+      return Promise.resolve(true);
+    }
+    const ms = duration ?? Math.max(450, Math.min(950, Math.abs(dist) * 0.45));
+    const ease = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+
+    // Cancel any in-flight animation from a previous click.
+    if (this._scrollAnim) this._scrollAnim.cancel();
+
+    return new Promise((resolve) => {
+      let raf = null;
+      let cancelled = false;
+      const t0 = performance.now();
+      const stop = (completed) => {
+        if (raf) cancelAnimationFrame(raf);
+        window.removeEventListener("wheel", onUser);
+        window.removeEventListener("touchstart", onUser);
+        window.removeEventListener("keydown", onUser);
+        if (this._scrollAnim === anim) this._scrollAnim = null;
+        resolve(completed);
+      };
+      const onUser = () => { cancelled = true; stop(false); };
+      const anim = { cancel: () => { cancelled = true; stop(false); } };
+      this._scrollAnim = anim;
+      window.addEventListener("wheel", onUser, { passive: true });
+      window.addEventListener("touchstart", onUser, { passive: true });
+      window.addEventListener("keydown", onUser);
+
+      const step = (now) => {
+        if (cancelled) return;
+        const p = Math.min(1, (now - t0) / ms);
+        window.scrollTo(0, startY + dist * ease(p));
+        if (p < 1) raf = requestAnimationFrame(step);
+        else stop(true);
+      };
+      raf = requestAnimationFrame(step);
+    });
   }
 
   // "5 sessions" / "1 session", localised to the runtime language.
