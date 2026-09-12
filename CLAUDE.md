@@ -77,8 +77,9 @@ agenda with extensive custom features built over many iterations.
   Focus accent on focus sessions). `gutterBg`, `showMoreColor`,
   `dateNav.underlineColor` and `typography.speakerName.color` are no longer
   read; their editor controls are gone. Don't re-add per-element colours.
-- **Editor "New Features" section** (second in the panel) holds the opt-in
-  controls added recently: Header style + Eyebrow text, Date nav behaviour.
+- **Editor "New Features" section** (second in the panel) holds every opt-in
+  toggle: Header style + Eyebrow text, Date nav behaviour, accent bar, focus
+  legend, concurrent tiles. Session Types keeps only the colours and labels.
 - **Header style** is a planner choice: `headerStyle` = `classic` (default, the
   original look) or `editorial` (eyebrow + accent rule + muted subheader, legend
   inline under the masthead, pill date tabs, day headers with a session count

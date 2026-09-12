@@ -491,6 +491,9 @@ export default class ExampleAgendaEditor extends HTMLElement {
     const secBreaks = makeSection("Break Sessions", false);
     const secTypoAgenda = makeSection("Typography (Agenda)", false);
     const secModal = makeSection("Speaker Modal", false);
+    // Opt-in feature toggles (all default OFF) collected in "New Features".
+    const featWrap = document.createElement("div");
+    featWrap.className = "section";
 
     // Header text
     const headerWrap = document.createElement("div");
@@ -784,24 +787,21 @@ export default class ExampleAgendaEditor extends HTMLElement {
     const stWrap = document.createElement("div");
     stWrap.className = "section";
 
-    const stNote = document.createElement("div");
-    stNote.style.fontSize = "11px";
-    stNote.style.opacity = "0.7";
-    stNote.style.margin = "0 0 8px";
-    stNote.textContent =
-      'Off by default. When on, every card gets a top accent bar. Sessions with a "Focus session?" custom field set to "Yes" use the focus color (bar + gutter); all others use the plenary color.';
-    stWrap.appendChild(stNote);
-
     // Master toggle — off by default so existing events are unchanged
-    stWrap.appendChild(
+    featWrap.appendChild(
       this._checkbox(
         "Show session-type accent bar",
         this._config.showAccentBar === true,
         (v) => this._patch({ showAccentBar: v })
       )
     );
-    stWrap.appendChild(document.createElement("br"));
-    stWrap.appendChild(document.createElement("br"));
+    const stNote = document.createElement("div");
+    stNote.style.fontSize = "11px";
+    stNote.style.opacity = "0.7";
+    stNote.style.margin = "4px 0 10px";
+    stNote.textContent =
+      'Off by default. When on, every card gets a top accent bar. Sessions with a "Focus session?" custom field set to "Yes" use the focus colour (bar + gutter); all others use the plenary colour. Colours are set under Session Types.';
+    featWrap.appendChild(stNote);
 
     stWrap.appendChild(
       this._colorRow(
@@ -838,15 +838,15 @@ export default class ExampleAgendaEditor extends HTMLElement {
     );
 
     // Legend toggle (default off — most events are single-track)
-    stWrap.appendChild(
+    featWrap.appendChild(
       this._checkbox(
-        "Show focus legend above agenda",
+        "Show focus legend (needs the accent bar on)",
         this._config.showFocusLegend === true,
         (v) => this._patch({ showFocusLegend: v })
       )
     );
-    stWrap.appendChild(document.createElement("br"));
-    stWrap.appendChild(document.createElement("br"));
+    featWrap.appendChild(document.createElement("br"));
+    featWrap.appendChild(document.createElement("br"));
 
     // Editable focus label (used in the legend)
     stWrap.appendChild(this._label("Focus legend label"));
@@ -986,8 +986,7 @@ soSelect.onchange = () => {
     // Concurrent session tiles — when ON, overlapping sessions render as
     // side-by-side tiles in a time grid. When OFF (default), all sessions render
     // in a single column regardless of overlap (the classic layout).
-    secLayout.block.append(document.createElement("br"));
-    secLayout.block.append(
+    featWrap.append(
       this._checkbox(
         "Enable concurrent session tiles",
         !!this._config.concurrentTiles,
@@ -1000,7 +999,8 @@ soSelect.onchange = () => {
     concurrentNote.style.margin = "4px 0 0";
     concurrentNote.textContent =
       "Off = every session in a single column (classic). On = overlapping sessions shown as side-by-side tiles.";
-    secLayout.block.append(concurrentNote);
+    featWrap.append(concurrentNote);
+    secNew.block.appendChild(featWrap);
 
     // Description Display Options (Radio Button Group)
     const descFieldset = document.createElement("fieldset");
