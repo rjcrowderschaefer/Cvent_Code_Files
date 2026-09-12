@@ -328,6 +328,7 @@ export default class extends HTMLElement {
       // another day). "jump" (default): all days listed, links scroll to them.
       const filterMode =
         cfg.dateNavMode === "filter" && showDateNav && dayKeys.length > 1;
+      const ALL_DAYS = "__all__"; // filter-mode key for "no filter"
 
       const dayHeaderRefs = {};
       const daySections = {};
@@ -434,6 +435,33 @@ export default class extends HTMLElement {
           return 0;
         };
 
+        if (filterMode) {
+          // "All days" tab: clears the filter. Active by default.
+          const allLink = document.createElement("button");
+          allLink.type = "button";
+          const allLabel = this._allDaysLabel();
+          if (editorial) {
+            const dow = document.createElement("span");
+            dow.className = "navDow";
+            dow.textContent = "\u00a0";
+            const day = document.createElement("span");
+            day.className = "navDay";
+            day.textContent = allLabel.big;
+            const mon = document.createElement("span");
+            mon.className = "navMon";
+            mon.textContent = allLabel.small;
+            allLink.append(dow, day, mon);
+            allLink.setAttribute("aria-label", allLabel.full);
+          } else {
+            allLink.textContent = allLabel.full;
+          }
+          allLink.addEventListener("click", () => {
+            if (showDay) showDay(ALL_DAYS);
+          });
+          navLinks[ALL_DAYS] = allLink;
+          dateNav.appendChild(allLink);
+        }
+
         dayKeys.forEach((dayKey) => {
           const link = document.createElement("button");
           link.type = "button";
@@ -466,7 +494,8 @@ export default class extends HTMLElement {
 
           link.addEventListener("click", () => {
             if (filterMode) {
-              if (showDay) showDay(dayKey);
+              // Clicking the active day again clears the filter.
+              if (showDay) showDay(this._activeDayKey === dayKey ? ALL_DAYS : dayKey);
               return;
             }
             setActiveDay(dayKey);
@@ -547,7 +576,9 @@ export default class extends HTMLElement {
           header.style.maxWidth = "none";
           header.style.margin = "0";
 
-          row.append(header, this._buildFocusLegend(cfg));
+          const dayLegend = this._buildFocusLegend(cfg);
+          dayLegend.classList.add("dayLegend");
+          row.append(header, dayLegend);
           section.appendChild(row);
         } else {
           section.appendChild(header);
@@ -557,6 +588,7 @@ export default class extends HTMLElement {
         // begins (classic only; editorial day headers carry their own rule).
         if (treatAsFirst && !editorial) {
           const startLine = document.createElement("div");
+          startLine.classList.add("dayStartLine");
           startLine.style.width = "calc(100% - 40px)";
           startLine.style.maxWidth = "1210px";
           startLine.style.margin = "6px auto 2px auto";
@@ -602,14 +634,31 @@ export default class extends HTMLElement {
       if (filterMode) {
         showDay = (key) => {
           this._activeDayKey = key;
-          Object.entries(daySections).forEach(([k, sec]) => {
+          let firstVisible = true;
+          dayKeys.forEach((k) => {
+            const sec = daySections[k];
+            const visible = key === ALL_DAYS || k === key;
             // "flex" (not ""): the section's own layout is inline flex/column.
-            sec.style.display = k === key ? "flex" : "none";
+            sec.style.display = visible ? "flex" : "none";
+            if (!visible) return;
+            // Every day carries a legend + start rule (any of them can be the
+            // only one visible); show them on the FIRST visible day only.
+            sec.querySelectorAll(".dayLegend, .dayStartLine").forEach((n) => {
+              if (n.dataset.disp === undefined) n.dataset.disp = n.style.display;
+              n.style.display = firstVisible ? n.dataset.disp : "none";
+            });
+            const row = sec.querySelector(".dayHeaderRow");
+            if (row) row.style.marginTop = firstVisible ? "22px" : "32px";
+            firstVisible = false;
           });
           setActiveDay(key);
         };
         const remembered = this._activeDayKey;
-        showDay(dayKeys.includes(remembered) ? remembered : dayKeys[0]);
+        showDay(
+          remembered === ALL_DAYS || dayKeys.includes(remembered)
+            ? remembered
+            : ALL_DAYS
+        );
       } else if (showDateNav && dayKeys.length) {
         // Highlight the first day by default; clicks move the highlight.
         setActiveDay(dayKeys[0]);
@@ -1320,9 +1369,10 @@ export default class extends HTMLElement {
       right.classList.add("agendaDayRight");
       if (showLegend) {
         const legend = this._buildFocusLegend(cfg);
-        legend.classList.add("agendaLegendEditorial");
+        legend.classList.add("agendaLegendEditorial", "dayLegend");
         right.append(legend);
       }
+      row.classList.add("dayHeaderRow");
       row.append(left, right);
       return row;
     }
@@ -1380,6 +1430,14 @@ export default class extends HTMLElement {
       };
       raf = requestAnimationFrame(step);
     });
+  }
+
+  // "All days" tab wording (filter mode), localised to the runtime language.
+  _allDaysLabel() {
+    const lang = this._eventLang || "en";
+    if (lang === "es") return { full: "Todos los días", big: "Todos", small: "los días" };
+    if (lang === "pt") return { full: "Todos os dias", big: "Todos", small: "os dias" };
+    return { full: "All days", big: "All", small: "days" };
   }
 
   // "5 sessions" / "1 session", localised to the runtime language.

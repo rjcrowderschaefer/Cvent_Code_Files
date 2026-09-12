@@ -973,7 +973,7 @@ soSelect.onchange = () => {
     const dnMode = document.createElement("select");
     [
       ["jump", "Jump — all days listed, click scrolls to the day"],
-      ["filter", "Filter — show one day at a time"],
+      ["filter", "Filter — all days shown; a day tab narrows to that day, 'All days' clears"],
     ].forEach(([v, label]) => {
       const o = document.createElement("option");
       o.value = v;

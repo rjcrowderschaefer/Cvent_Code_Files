@@ -82,9 +82,12 @@ agenda with extensive custom features built over many iterations.
   Without this, two quick config updates doubled the agenda.
 - **Date nav behaviour** is a planner choice: `dateNavMode` = `jump` (default:
   all days listed, click scrolls to the day) or `filter` (one day shown at a
-  time; each day is wrapped in a `.daySection`, the chosen day is remembered
-  across re-renders in `_activeDayKey`). Filter is the answer to "why scroll
-  back up to pick a day" — do not reintroduce sticky positioning for that.
+  filter on top of the full list: all days show by default, an "All days" tab
+  leads the nav, a day tab narrows to that day, clicking the active day again
+  or "All days" clears it; each day is a `.daySection`, the choice is
+  remembered across re-renders in `_activeDayKey`; legend / start rule show
+  on the first VISIBLE day only). Filter is the answer to "why scroll back up
+  to pick a day" — do not reintroduce sticky positioning for that.
 - **Date nav is NOT sticky** (removed 2026-09-12). It is a plain row of day
   links; the only Cvent-header measurement left is at click time so a day jump
   lands below the pinned site header. Do not reintroduce sticky positioning.
