@@ -157,6 +157,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
       groupByDay: true,
       speakerOrder: "alphabetical",
       hideDateNav: false,
+      dateNavMode: "jump",
       concurrentTiles: false,
       plenaryAccent: "#f7a325",
       focusAccent: "#1a7f8e",
@@ -965,6 +966,24 @@ soSelect.onchange = () => {
         this._patch({ hideDateNav: v })
       )
     );
+    // Behaviour of a day click: scroll to it, or show only that day.
+    hideNavWrap.appendChild(document.createElement("br"));
+    hideNavWrap.appendChild(this._label("Date nav behavior"));
+    hideNavWrap.appendChild(document.createElement("br"));
+    const dnMode = document.createElement("select");
+    [
+      ["jump", "Jump — all days listed, click scrolls to the day"],
+      ["filter", "Filter — show one day at a time"],
+    ].forEach(([v, label]) => {
+      const o = document.createElement("option");
+      o.value = v;
+      o.textContent = label;
+      dnMode.appendChild(o);
+    });
+    dnMode.value = this._config.dateNavMode === "filter" ? "filter" : "jump";
+    dnMode.style.width = "100%";
+    dnMode.onchange = () => this._patch({ dateNavMode: dnMode.value });
+    hideNavWrap.appendChild(dnMode);
     secDateNav.block.prepend(hideNavWrap);
 
     // Concurrent session tiles — when ON, overlapping sessions render as

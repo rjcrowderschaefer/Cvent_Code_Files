@@ -149,7 +149,8 @@ export default class extends HTMLElement {
         .agendaRule { width:40px; height:3px; border-radius:2px; margin:14px 0 12px; }
         .agendaSubEditorial { max-width:640px; line-height:1.45; }
         .agendaLegendEditorial { display:flex !important; flex-direction:row !important; flex-wrap:wrap; align-items:center !important; gap:6px 18px !important; }
-        .agendaDayRight { display:flex; align-items:center; flex-wrap:wrap; justify-content:flex-end; gap:6px 18px; min-width:0; }
+        .agendaDayLeft { display:flex; align-items:baseline; flex-wrap:wrap; gap:6px 14px; min-width:0; }
+        .agendaDayRight { display:flex; align-items:center; flex-wrap:wrap; justify-content:flex-end; gap:6px 18px; min-width:0; margin-left:auto; }
       `;
       container.appendChild(mastStyle);
 
@@ -323,10 +324,16 @@ export default class extends HTMLElement {
       // Clicking a day scrolls its header just below Cvent's own site header.
       const showDateNav = cfg.hideDateNav !== true;
       const dn = cfg.dateNav || {};
+      // "filter": the nav shows ONE day at a time (no scrolling back up to pick
+      // another day). "jump" (default): all days listed, links scroll to them.
+      const filterMode =
+        cfg.dateNavMode === "filter" && showDateNav && dayKeys.length > 1;
 
       const dayHeaderRefs = {};
+      const daySections = {};
       const navLinks = {};
       let dateNav = null;
+      let showDay = null; // assigned after the day sections exist (filter mode)
 
       const setActiveDay = (activeKey) => {
         Object.entries(navLinks).forEach(([key, link]) => {
@@ -458,6 +465,10 @@ export default class extends HTMLElement {
           }
 
           link.addEventListener("click", () => {
+            if (filterMode) {
+              if (showDay) showDay(dayKey);
+              return;
+            }
             setActiveDay(dayKey);
             const target = dayHeaderRefs[dayKey];
             if (!target) return;
@@ -490,16 +501,26 @@ export default class extends HTMLElement {
         cfg.showAccentBar === true && cfg.showFocusLegend === true;
       let isFirstHeader = true;
       for (const [dayKey, daySessions] of groups) {
+        // One section per day so filter mode can show/hide whole days.
+        const section = document.createElement("div");
+        section.classList.add("daySection");
+        section.dataset.dayKey = dayKey;
+        daySections[dayKey] = section;
+
+        // In filter mode every day is rendered as if it were the first (each
+        // is the only one visible), so the legend / start rule go on all of them.
+        const treatAsFirst = isFirstHeader || filterMode;
         const header = this._renderDayHeader(dayKey, theme, cfg, {
           count: daySessions.length,
-          isFirst: isFirstHeader,
+          isFirst: treatAsFirst,
+          showLegend: treatAsFirst && legendEnabled,
         });
         header.dataset.dayKey = dayKey;
         dayHeaderRefs[dayKey] = header;
 
         // On the first day header, place it in a row with the focus legend
         // right-aligned so the legend aligns vertically with the date.
-        if (isFirstHeader && legendEnabled && !editorial) {
+        if (treatAsFirst && legendEnabled && !editorial) {
           const isMobile =
             (window.innerWidth || document.documentElement.clientWidth || 1920) <=
             600;
@@ -521,21 +542,21 @@ export default class extends HTMLElement {
           header.style.margin = "0";
 
           row.append(header, this._buildFocusLegend(cfg));
-          container.appendChild(row);
+          section.appendChild(row);
         } else {
-          container.appendChild(header);
+          section.appendChild(header);
         }
 
         // Thin divider under the FIRST date/legend to mark where the agenda
         // begins (classic only; editorial day headers carry their own rule).
-        if (isFirstHeader && !editorial) {
+        if (treatAsFirst && !editorial) {
           const startLine = document.createElement("div");
           startLine.style.width = "calc(100% - 40px)";
           startLine.style.maxWidth = "1210px";
           startLine.style.margin = "6px auto 2px auto";
           startLine.style.borderTop = "1px solid #d9d9d9";
           startLine.style.boxSizing = "border-box";
-          container.appendChild(startLine);
+          section.appendChild(startLine);
         }
         isFirstHeader = false;
 
@@ -546,13 +567,13 @@ export default class extends HTMLElement {
           const blocks = this._buildDayBlocks(daySessions);
           blocks.forEach((blk) => {
             if (blk.type === "single") {
-              container.appendChild(
+              section.appendChild(
                 this._renderItem(
                   blk.session, theme, cfg, openSessions, getSpeakers, eventTimezone
                 )
               );
             } else {
-              container.appendChild(
+              section.appendChild(
                 this._renderConcurrentGroup(
                   blk, theme, cfg, openSessions, getSpeakers, eventTimezone
                 )
@@ -562,17 +583,30 @@ export default class extends HTMLElement {
         } else {
           // Single-column classic: every session as a normal card, in order.
           daySessions.forEach((s) => {
-            container.appendChild(
+            section.appendChild(
               this._renderItem(
                 s, theme, cfg, openSessions, getSpeakers, eventTimezone
               )
             );
           });
         }
+        container.appendChild(section);
       }
 
-      // Highlight the first day by default; clicks move the highlight.
-      if (showDateNav && dayKeys.length) setActiveDay(dayKeys[0]);
+      if (filterMode) {
+        showDay = (key) => {
+          this._activeDayKey = key;
+          Object.entries(daySections).forEach(([k, sec]) => {
+            sec.style.display = k === key ? "" : "none";
+          });
+          setActiveDay(key);
+        };
+        const remembered = this._activeDayKey;
+        showDay(dayKeys.includes(remembered) ? remembered : dayKeys[0]);
+      } else if (showDateNav && dayKeys.length) {
+        // Highlight the first day by default; clicks move the highlight.
+        setActiveDay(dayKeys[0]);
+      }
     }
   }
 
@@ -1205,7 +1239,12 @@ export default class extends HTMLElement {
     return wrap;
   }
 
-  _renderDayHeader(dayKey, theme, cfg, { count = 0, isFirst = false } = {}) {
+  _renderDayHeader(
+    dayKey,
+    theme,
+    cfg,
+    { count = 0, isFirst = false, showLegend = false } = {}
+  ) {
     const el = document.createElement("div");
     el.textContent = this._formatDayKeyLabel(dayKey);
 
@@ -1266,16 +1305,18 @@ export default class extends HTMLElement {
       countEl.style.color = "#8a8a8a";
       countEl.style.flexShrink = "0";
       countEl.textContent = this._sessionCountLabel(count);
-      // Right-hand group: focus legend (first day only, when enabled) + count.
+      // Left: date + count together. Right: focus legend (when enabled).
+      const left = document.createElement("div");
+      left.classList.add("agendaDayLeft");
+      left.append(el, countEl);
       const right = document.createElement("div");
       right.classList.add("agendaDayRight");
-      if (isFirst && cfg.showAccentBar === true && cfg.showFocusLegend === true) {
+      if (showLegend) {
         const legend = this._buildFocusLegend(cfg);
         legend.classList.add("agendaLegendEditorial");
         right.append(legend);
       }
-      right.append(countEl);
-      row.append(el, right);
+      row.append(left, right);
       return row;
     }
     return el;
