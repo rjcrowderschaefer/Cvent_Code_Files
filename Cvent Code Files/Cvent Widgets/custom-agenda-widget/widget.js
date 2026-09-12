@@ -18,6 +18,10 @@ export default class extends HTMLElement {
     // keep bindings for responsive typography (optional)
     this._typoBindings = [];
     this._onResize = null;
+    // Render sequence: a render that is still awaiting session data must not
+    // append into a container a newer render has since cleared (two config
+    // updates in quick succession used to produce a doubled agenda).
+    this._renderSeq = 0;
   }
 
   async connectedCallback() {
@@ -46,18 +50,6 @@ export default class extends HTMLElement {
 
   disconnectedCallback() {
     if (this._onResize) window.removeEventListener("resize", this._onResize);
-    if (this._navResizeHandler) {
-      window.removeEventListener("resize", this._navResizeHandler);
-      this._navResizeHandler = null;
-    }
-    if (this._navScrollHandler) {
-      window.removeEventListener("scroll", this._navScrollHandler);
-      this._navScrollHandler = null;
-    }
-    if (this._dateNavObserver) {
-      this._dateNavObserver.disconnect();
-      this._dateNavObserver = null;
-    }
     this._typoBindings = [];
   }
 
@@ -92,11 +84,8 @@ export default class extends HTMLElement {
   async _renderInto(container) {
     const cfg = this.configuration || {};
     const theme = this.theme || {};
-
-    if (this._dateNavObserver) {
-      this._dateNavObserver.disconnect();
-      this._dateNavObserver = null;
-    }
+    const seq = ++this._renderSeq;
+    const stale = () => seq !== this._renderSeq;
 
     // Agenda header + subheader
 
@@ -144,7 +133,54 @@ export default class extends HTMLElement {
     if (!subheaderEl.style.fontSize) subheaderEl.style.fontSize = "18px";
     if (!subheaderEl.style.color) subheaderEl.style.color = "#444";
 
-    headerWrap.append(headerEl, subheaderEl);
+    // "Editorial" header style (opt-in; default "classic" leaves existing
+    // events untouched): eyebrow + title + short accent rule + muted subheader,
+    // legend inline under the masthead, pill-tab date nav, day headers with a
+    // session count and hairline.
+    const editorial = cfg.headerStyle === "editorial";
+    this._editorial = editorial;
+    this._eyebrowEl = null;
+    if (editorial) {
+      const mastStyle = document.createElement("style");
+      mastStyle.textContent = `
+        .agendaEyebrow { font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#8a8a8a; margin-bottom:10px; min-height:1em; }
+        .agendaTitleEditorial { font-weight:600 !important; letter-spacing:-0.01em; line-height:1.1; }
+        .agendaTitleEditorial.isBold { font-weight:700 !important; }
+        .agendaRule { width:40px; height:3px; border-radius:2px; margin:14px 0 12px; }
+        .agendaSubEditorial { max-width:640px; line-height:1.45; }
+        .agendaLegendEditorial { display:flex !important; flex-direction:row !important; flex-wrap:wrap; gap:6px 18px !important; margin-top:14px; }
+      `;
+      container.appendChild(mastStyle);
+
+      headerWrap.style.gap = "0";
+      headerWrap.style.margin = "8px auto 0 auto";
+
+      const eyebrow = document.createElement("div");
+      eyebrow.classList.add("agendaEyebrow");
+      eyebrow.textContent = (cfg.headerEyebrow || "").trim();
+      this._eyebrowEl = eyebrow; // filled with the event date range if blank
+
+      headerEl.classList.add("agendaTitleEditorial");
+      if (cfg.typography?.agendaHeader?.bold === true) headerEl.classList.add("isBold");
+      if (!cfg.typography?.agendaHeader?.fontSize) headerEl.style.fontSize = "40px";
+
+      const rule = document.createElement("div");
+      rule.classList.add("agendaRule");
+      rule.style.background = cfg.plenaryAccent || "#f7a325";
+
+      subheaderEl.classList.add("agendaSubEditorial");
+      if (!cfg.typography?.agendaSubheader?.color) subheaderEl.style.color = "#666";
+
+      headerWrap.append(eyebrow, headerEl, rule, subheaderEl);
+
+      if (cfg.showAccentBar === true && cfg.showFocusLegend === true) {
+        const legend = this._buildFocusLegend(cfg);
+        legend.classList.add("agendaLegendEditorial");
+        headerWrap.append(legend);
+      }
+    } else {
+      headerWrap.append(headerEl, subheaderEl);
+    }
     container.appendChild(headerWrap);
 
     // (Focus legend is rendered inline with the first date header row below,
@@ -229,6 +265,7 @@ export default class extends HTMLElement {
     } catch (e) {
       console.warn("[widget.js] Iterating session generator failed:", e);
     }
+    if (stale()) return; // a newer render owns the container now
 
     // Visibility is controlled solely by the "Hide from main agenda?" custom
     // field. Registration status (isOpenForRegistration) is intentionally
@@ -282,30 +319,18 @@ export default class extends HTMLElement {
       const groups = this._groupSessionsByDay(sorted, eventTimezone);
       const dayKeys = [...groups.keys()];
 
-      const showDateNav = cfg.hideDateNav !== true;
-      if (!showDateNav) {
-        if (this._navResizeHandler) {
-          window.removeEventListener("resize", this._navResizeHandler);
-          this._navResizeHandler = null;
-        }
-        if (this._navScrollHandler) {
-          window.removeEventListener("scroll", this._navScrollHandler);
-          this._navScrollHandler = null;
-        }
-        if (this._dateNavObserver) {
-          this._dateNavObserver.disconnect();
-          this._dateNavObserver = null;
-        }
+      if (this._eyebrowEl && !this._eyebrowEl.textContent && dayKeys.length) {
+        this._eyebrowEl.textContent = this._formatDayRange(dayKeys);
       }
 
+      // Date nav: a plain (non-sticky) row of day links under the subheader.
+      // Clicking a day scrolls its header just below Cvent's own site header.
+      const showDateNav = cfg.hideDateNav !== true;
       const dn = cfg.dateNav || {};
-      const cventOffset = Number(dn.stickyOffset) || 0;
 
       const dayHeaderRefs = {};
       const navLinks = {};
-      let triggerOffset = cventOffset;
       let dateNav = null;
-      let measureCventHeader = () => cventOffset;
 
       const setActiveDay = (activeKey) => {
         Object.entries(navLinks).forEach(([key, link]) => {
@@ -315,11 +340,49 @@ export default class extends HTMLElement {
 
       if (showDateNav) {
         const dnStyle = document.createElement("style");
-        dnStyle.textContent = `
+        dnStyle.textContent = editorial
+          ? `
+        .dateNav {
+          display:flex; flex-wrap:nowrap; gap:6px; overflow-x:auto;
+          scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;
+          scrollbar-width:none;
+          width: calc(100% - 40px); max-width: 1210px; margin: 18px auto 0;
+          padding: 4px; box-sizing: border-box;
+          background: ${dn.navBg && dn.navBg.toLowerCase() !== "#ffffff" ? dn.navBg : "#f3f4f6"};
+          border-radius: 14px;
+        }
+        .dateNav::-webkit-scrollbar { display:none; }
+        .dateNav button {
+          flex: 0 0 auto; scroll-snap-align:start;
+          display:flex; flex-direction:column; align-items:center; gap:1px;
+          min-width: 68px; padding: 8px 14px; border:none; border-radius:10px;
+          background: transparent; cursor:pointer; font-family: inherit;
+          color: ${dn.inactiveColor || "#6b6b6b"};
+          transition: background .15s ease, color .15s ease;
+        }
+        .dateNav button:hover { background: rgba(0,0,0,.05); }
+        .dateNav .navDow { font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; opacity:.85; }
+        .dateNav .navDay { font-size:${dn.fontSize ?? 18}px; font-weight:700; line-height:1.1; }
+        .dateNav .navMon { font-size:11px; font-weight:500; opacity:.85; }
+        .dateNav button.active {
+          background: ${dn.underlineColor || cfg.plenaryAccent || "#f7a325"};
+          color: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,.12);
+        }
+        .dateNav button.active .navDow, .dateNav button.active .navMon { opacity: 1; }
+        @media (max-width: 1024px) {
+          .dateNav .navDay { font-size: ${dn.fontSizeMd ?? 16}px; }
+        }
+        @media (max-width: 600px) {
+          .dateNav { width: 100%; max-width: 100%; border-radius: 0; padding: 4px 12px; }
+          .dateNav button { min-width: 60px; padding: 7px 10px; }
+          .dateNav .navDay { font-size: ${dn.fontSizeSm ?? 15}px; }
+        }
+        `
+          : `
         .dateNav {
           display: flex; flex-wrap: wrap; gap: 16px;
           width: calc(100% - 40px); max-width: 1210px; margin: 0 auto;
-          box-sizing: border-box; position: sticky; z-index: 50;
+          box-sizing: border-box;
           background: ${dn.navBg || "#ffffff"}; padding: 8px 0;
         }
         .dateNav button {
@@ -354,7 +417,9 @@ export default class extends HTMLElement {
         dateNav = document.createElement("div");
         dateNav.classList.add("dateNav");
 
-        measureCventHeader = () => {
+        // Bottom edge of Cvent's (pinned) site header, so a day jump doesn't
+        // land underneath it. Measured live at click time (Playbook §9).
+        const measureCventHeader = () => {
           const selectors = ["#navigationContainer", ".cus_nav"];
           for (const sel of selectors) {
             const el = document.querySelector(sel);
@@ -363,66 +428,58 @@ export default class extends HTMLElement {
               if (r.height > 0) return Math.max(0, Math.round(r.bottom));
             }
           }
-          return cventOffset;
+          return 0;
         };
-
-        // Detect the live front-end header. If it's absent (e.g. the Site
-        // Designer preview), sticky positioning has no correct anchor and looks
-        // misplaced — so render the nav statically in that context instead.
-        const hasLiveHeader = ["#navigationContainer", ".cus_nav"].some((sel) => {
-          const el = document.querySelector(sel);
-          return el && el.getBoundingClientRect().height > 0;
-        });
-        if (!hasLiveHeader) {
-          dateNav.style.position = "static";
-        }
 
         dayKeys.forEach((dayKey) => {
           const link = document.createElement("button");
           link.type = "button";
 
-          const fullLabel = document.createElement("span");
-          fullLabel.className = "navLabelFull";
-          fullLabel.textContent = this._formatDayKeyLabel(dayKey);
+          if (editorial) {
+            // Weekday / day number / month stacked in a pill tab.
+            const parts = this._dayKeyParts(dayKey);
+            const dow = document.createElement("span");
+            dow.className = "navDow";
+            dow.textContent = parts.weekday;
+            const day = document.createElement("span");
+            day.className = "navDay";
+            day.textContent = parts.day;
+            const mon = document.createElement("span");
+            mon.className = "navMon";
+            mon.textContent = parts.month;
+            link.append(dow, day, mon);
+            link.setAttribute("aria-label", this._formatDayKeyLabel(dayKey));
+          } else {
+            const fullLabel = document.createElement("span");
+            fullLabel.className = "navLabelFull";
+            fullLabel.textContent = this._formatDayKeyLabel(dayKey);
 
-          const shortLabel = document.createElement("span");
-          shortLabel.className = "navLabelShort";
-          shortLabel.textContent = this._formatDayKeyLabelShort(dayKey);
+            const shortLabel = document.createElement("span");
+            shortLabel.className = "navLabelShort";
+            shortLabel.textContent = this._formatDayKeyLabelShort(dayKey);
 
-          link.append(fullLabel, shortLabel);
+            link.append(fullLabel, shortLabel);
+          }
 
           link.addEventListener("click", () => {
             setActiveDay(dayKey);
-            this._navClickLock = dayKey;
-            clearTimeout(this._navClickTimer);
-            this._navClickTimer = setTimeout(() => {
-              this._navClickLock = null;
-            }, 700);
-
             const target = dayHeaderRefs[dayKey];
             if (!target) return;
 
-            const scrollToTarget = (smooth) => {
-              const cventBottom = measureCventHeader();
-              const navH = dateNav.offsetHeight || 0;
-              const totalOffset = cventBottom + navH + 12;
-              const top =
-                target.getBoundingClientRect().top +
-                window.pageYOffset -
-                totalOffset;
-              window.scrollTo({ top, behavior: smooth ? "smooth" : "auto" });
-            };
+            const targetTop = () =>
+              target.getBoundingClientRect().top +
+              window.pageYOffset -
+              (measureCventHeader() + 12);
 
-            scrollToTarget(true);
-            setTimeout(() => {
-              const cventBottom = measureCventHeader();
-              const navH = dateNav.offsetHeight || 0;
-              const totalOffset = cventBottom + navH + 12;
-              const drift = Math.abs(
-                target.getBoundingClientRect().top - totalOffset
-              );
-              if (drift > 4) scrollToTarget(false);
-            }, 650);
+            // Eased scroll that runs to completion, then a gentle second pass
+            // if lazy images shifted the layout underneath us. (The previous
+            // version cut the native smooth scroll off after a fixed 650ms and
+            // jumped, which read as a snap on longer distances.)
+            this._smoothScrollTo(targetTop()).then((completed) => {
+              if (!completed) return; // user took over scrolling
+              const drift = Math.abs(target.getBoundingClientRect().top - (measureCventHeader() + 12));
+              if (drift > 4) this._smoothScrollTo(targetTop(), { duration: 260 });
+            });
           });
 
           navLinks[dayKey] = link;
@@ -430,33 +487,6 @@ export default class extends HTMLElement {
         });
 
         container.appendChild(dateNav);
-
-        const applyStickyOffset = () => {
-          dateNav.style.top = `${measureCventHeader()}px`;
-        };
-        applyStickyOffset();
-
-        if (this._navResizeHandler) {
-          window.removeEventListener("resize", this._navResizeHandler);
-        }
-        let resizeRAF = null;
-        this._navResizeHandler = () => {
-          if (resizeRAF) cancelAnimationFrame(resizeRAF);
-          resizeRAF = requestAnimationFrame(applyStickyOffset);
-        };
-        window.addEventListener("resize", this._navResizeHandler);
-
-        if (this._navScrollHandler) {
-          window.removeEventListener("scroll", this._navScrollHandler);
-        }
-        let scrollRAF = null;
-        this._navScrollHandler = () => {
-          if (scrollRAF) cancelAnimationFrame(scrollRAF);
-          scrollRAF = requestAnimationFrame(applyStickyOffset);
-        };
-        window.addEventListener("scroll", this._navScrollHandler, {
-          passive: true,
-        });
       }
 
       // --- Render headers + sessions (always, nav or not) ---
@@ -464,13 +494,16 @@ export default class extends HTMLElement {
         cfg.showAccentBar === true && cfg.showFocusLegend === true;
       let isFirstHeader = true;
       for (const [dayKey, daySessions] of groups) {
-        const header = this._renderDayHeader(dayKey, theme, cfg);
+        const header = this._renderDayHeader(dayKey, theme, cfg, {
+          count: daySessions.length,
+          isFirst: isFirstHeader,
+        });
         header.dataset.dayKey = dayKey;
         dayHeaderRefs[dayKey] = header;
 
         // On the first day header, place it in a row with the focus legend
         // right-aligned so the legend aligns vertically with the date.
-        if (isFirstHeader && legendEnabled) {
+        if (isFirstHeader && legendEnabled && !editorial) {
           const isMobile =
             (window.innerWidth || document.documentElement.clientWidth || 1920) <=
             600;
@@ -498,8 +531,8 @@ export default class extends HTMLElement {
         }
 
         // Thin divider under the FIRST date/legend to mark where the agenda
-        // begins.
-        if (isFirstHeader) {
+        // begins (classic only; editorial day headers carry their own rule).
+        if (isFirstHeader && !editorial) {
           const startLine = document.createElement("div");
           startLine.style.width = "calc(100% - 40px)";
           startLine.style.maxWidth = "1210px";
@@ -542,39 +575,8 @@ export default class extends HTMLElement {
         }
       }
 
-      // --- Scroll-spy (only when nav is shown) ---
-      if (showDateNav) {
-        if (dayKeys.length) setActiveDay(dayKeys[0]);
-
-        requestAnimationFrame(() => {
-          const navH = dateNav.offsetHeight || 0;
-          triggerOffset = cventOffset + navH;
-          const headerEls = Object.values(dayHeaderRefs);
-
-          const update = () => {
-            if (this._navClickLock) {
-              setActiveDay(this._navClickLock);
-              return;
-            }
-            let activeKey = dayKeys[0];
-            headerEls.forEach((h) => {
-              if (h.getBoundingClientRect().top - triggerOffset <= 4) {
-                activeKey = h.dataset.dayKey;
-              }
-            });
-            if (activeKey) setActiveDay(activeKey);
-          };
-
-          const io = new IntersectionObserver(update, {
-            root: null,
-            rootMargin: `-${triggerOffset}px 0px 0px 0px`,
-            threshold: [0, 1],
-          });
-          headerEls.forEach((h) => io.observe(h));
-          this._dateNavObserver = io;
-          update();
-        });
-      }
+      // Highlight the first day by default; clicks move the highlight.
+      if (showDateNav && dayKeys.length) setActiveDay(dayKeys[0]);
     }
   }
 
@@ -1207,7 +1209,7 @@ export default class extends HTMLElement {
     return wrap;
   }
 
-  _renderDayHeader(dayKey, theme, cfg) {
+  _renderDayHeader(dayKey, theme, cfg, { count = 0, isFirst = false } = {}) {
     const el = document.createElement("div");
     el.textContent = this._formatDayKeyLabel(dayKey);
 
@@ -1239,7 +1241,131 @@ export default class extends HTMLElement {
 
     // minimal typography override support
     this._applyTypographyOverrides(el, cfg?.typography?.eventDate, true);
+
+    if (this._editorial) {
+      // Editorial: date left, session count right, hairline under EVERY day,
+      // and real breathing room above each day so days read as chapters.
+      const row = document.createElement("div");
+      Object.assign(row.style, {
+        display: "flex",
+        alignItems: "baseline",
+        justifyContent: "space-between",
+        gap: "12px",
+        width: "calc(100% - 40px)",
+        maxWidth: "1210px",
+        margin: `${isFirst ? 22 : 32}px auto 0 auto`,
+        paddingBottom: "8px",
+        borderBottom: "1px solid #dcdcdc",
+        boxSizing: "border-box",
+      });
+      el.style.width = "auto";
+      el.style.maxWidth = "none";
+      el.style.margin = "0";
+      const countEl = document.createElement("div");
+      countEl.style.fontSize = "12px";
+      countEl.style.fontWeight = "600";
+      countEl.style.letterSpacing = ".06em";
+      countEl.style.textTransform = "uppercase";
+      countEl.style.color = "#8a8a8a";
+      countEl.style.flexShrink = "0";
+      countEl.textContent = this._sessionCountLabel(count);
+      row.append(el, countEl);
+      return row;
+    }
     return el;
+  }
+
+  // Animate window scroll to `top` with an ease-in-out curve. Duration scales
+  // with distance (min/max clamped) so short hops feel quick and long ones
+  // don't rush. Cancels if the user wheels/touches mid-flight. Resolves true
+  // when it ran to completion, false if interrupted. Honours reduced motion.
+  _smoothScrollTo(top, { duration } = {}) {
+    const startY = window.pageYOffset;
+    const maxY = Math.max(0, (document.documentElement.scrollHeight || 0) - window.innerHeight);
+    const endY = Math.max(0, Math.min(top, maxY));
+    const dist = endY - startY;
+    const reduce =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (Math.abs(dist) < 2) return Promise.resolve(true);
+    if (reduce) {
+      window.scrollTo(0, endY);
+      return Promise.resolve(true);
+    }
+    const ms = duration ?? Math.max(450, Math.min(950, Math.abs(dist) * 0.45));
+    const ease = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+
+    // Cancel any in-flight animation from a previous click.
+    if (this._scrollAnim) this._scrollAnim.cancel();
+
+    return new Promise((resolve) => {
+      let raf = null;
+      let cancelled = false;
+      const t0 = performance.now();
+      const stop = (completed) => {
+        if (raf) cancelAnimationFrame(raf);
+        window.removeEventListener("wheel", onUser);
+        window.removeEventListener("touchstart", onUser);
+        window.removeEventListener("keydown", onUser);
+        if (this._scrollAnim === anim) this._scrollAnim = null;
+        resolve(completed);
+      };
+      const onUser = () => { cancelled = true; stop(false); };
+      const anim = { cancel: () => { cancelled = true; stop(false); } };
+      this._scrollAnim = anim;
+      window.addEventListener("wheel", onUser, { passive: true });
+      window.addEventListener("touchstart", onUser, { passive: true });
+      window.addEventListener("keydown", onUser);
+
+      const step = (now) => {
+        if (cancelled) return;
+        const p = Math.min(1, (now - t0) / ms);
+        window.scrollTo(0, startY + dist * ease(p));
+        if (p < 1) raf = requestAnimationFrame(step);
+        else stop(true);
+      };
+      raf = requestAnimationFrame(step);
+    });
+  }
+
+  // "5 sessions" / "1 session", localised to the runtime language.
+  _sessionCountLabel(n) {
+    const lang = this._eventLang || "en";
+    const one = n === 1;
+    if (lang === "es") return `${n} ${one ? "sesión" : "sesiones"}`;
+    if (lang === "pt") return `${n} ${one ? "sessão" : "sessões"}`;
+    return `${n} ${one ? "session" : "sessions"}`;
+  }
+
+  // Weekday / day / month pieces for the editorial date-nav tabs.
+  _dayKeyParts(key) {
+    if (key === "Unknown") return { weekday: "", day: "?", month: "" };
+    const [y, m, d] = key.split("-").map(Number);
+    const date = new Date(y, m - 1, d);
+    const loc = this._dateLocale();
+    const strip = (s) => s.replace(/\.$/, ""); // es/pt abbreviate with a dot
+    return {
+      weekday: strip(date.toLocaleDateString(loc, { weekday: "short" })),
+      day: String(d),
+      month: strip(date.toLocaleDateString(loc, { month: "short" })),
+    };
+  }
+
+  // "Jun 16 – Dec 31, 2026" style range for the editorial eyebrow.
+  _formatDayRange(dayKeys) {
+    const keys = dayKeys.filter((k) => k !== "Unknown");
+    if (!keys.length) return "";
+    const toDate = (k) => { const [y, m, d] = k.split("-").map(Number); return new Date(y, m - 1, d); };
+    const first = toDate(keys[0]);
+    const last = toDate(keys[keys.length - 1]);
+    const loc = this._dateLocale();
+    const fmt = (dt, withYear) =>
+      this._capFirst(dt.toLocaleDateString(loc, withYear
+        ? { month: "short", day: "numeric", year: "numeric" }
+        : { month: "short", day: "numeric" }));
+    if (keys.length === 1) return fmt(first, true);
+    const sameYear = first.getFullYear() === last.getFullYear();
+    return `${fmt(first, !sameYear)} – ${fmt(last, true)}`;
   }
 
   // === Typography helpers ===

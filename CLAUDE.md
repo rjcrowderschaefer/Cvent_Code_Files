@@ -72,6 +72,17 @@ agenda with extensive custom features built over many iterations.
 - **Compact typography** is the default scale now (title 17/desc 13/speaker 14 px
   on desktop).
 - **Bios** come as `\r\n\r\n` plain text — convert to `<p>` before innerHTML.
+- **Header style** is a planner choice: `headerStyle` = `classic` (default, the
+  original look) or `editorial` (eyebrow + accent rule + muted subheader, legend
+  inline under the masthead, pill date tabs, day headers with a session count
+  and hairline). `headerEyebrow` overrides the auto event-date-range eyebrow.
+  Added 2026-09-12 as an opt-in preview; keep classic the default.
+- **Renders are sequenced** (`_renderSeq` in widget.js): a render still awaiting
+  session data bails out if a newer config update has cleared the container.
+  Without this, two quick config updates doubled the agenda.
+- **Date nav is NOT sticky** (removed 2026-09-12). It is a plain row of day
+  links; the only Cvent-header measurement left is at click time so a day jump
+  lands below the pinned site header. Do not reintroduce sticky positioning.
 - **One modal.** Session and speaker details use a single shell (`_ensureSessionModal`
   → `_renderSessionView` / `_renderSpeakerView`). Standalone cards open the speaker
   view directly with `openModalForSpeaker` (close only); tiles go session → speaker

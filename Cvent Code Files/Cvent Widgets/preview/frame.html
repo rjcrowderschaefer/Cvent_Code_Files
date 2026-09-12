@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>widget frame</title>
+<style>
+  /* This document IS the breakpoint: the parent sizes the iframe, so media
+     queries, window.innerWidth and position:fixed all resolve to this frame. */
+  body { margin: 0; font: 14px/1.4 system-ui, sans-serif; background: #fff; color: #17201c; }
+  /* Fake Cvent site header so the widget's header measurement has something to
+     find. Pinned like Cvent's real header so day-jumps land beneath it. */
+  #navigationContainer { position: sticky; top: 0; z-index: 10; height: 56px; background: #fff; border-bottom: 1px solid #e5e5e5; display: flex; align-items: center; padding: 0 20px; font-weight: 600; font-size: 12px; letter-spacing: .04em; color: #666; }
+  #stage { padding: 16px 0 80px; }
+</style>
+</head>
+<body>
+  <div id="navigationContainer">FAKE CVENT HEADER</div>
+  <div id="stage"><div id="widget-host"></div></div>
+  <script type="module">import(`./frame.js?v=${Date.now()}`);</script>
+</body>
+</html>
