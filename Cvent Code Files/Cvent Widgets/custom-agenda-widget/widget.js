@@ -25,6 +25,19 @@ export default class extends HTMLElement {
   }
 
   async connectedCallback() {
+    // Cvent's language selector updates <html lang> in place. Re-render when
+    // the resolved language changes so every label (date tabs, "All days",
+    // legend, counts, day headers) follows the attendee's choice immediately.
+    if (typeof MutationObserver !== "undefined" && !this._langObserver) {
+      this._langObserver = new MutationObserver(() => {
+        const next = this._mapLang(document.documentElement.lang);
+        if (next && next !== this._eventLang) this.onConfigurationUpdate(this.configuration);
+      });
+      this._langObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["lang"],
+      });
+    }
     // container like Cvent’s example
     const container = document.createElement("div");
     container.style.display = "flex";
@@ -50,6 +63,10 @@ export default class extends HTMLElement {
 
   disconnectedCallback() {
     if (this._onResize) window.removeEventListener("resize", this._onResize);
+    if (this._langObserver) {
+      this._langObserver.disconnect();
+      this._langObserver = null;
+    }
     this._typoBindings = [];
   }
 
@@ -223,13 +240,7 @@ export default class extends HTMLElement {
       // Detect the CURRENTLY SELECTED display language from <html lang>, which
       // Cvent updates when the attendee uses the language selector. Fall back to
       // the event's default locale if html lang isn't a recognized language.
-      const mapLang = (code) => {
-        const c = (code || "").toLowerCase();
-        if (c.startsWith("es")) return "es";
-        if (c.startsWith("pt")) return "pt";
-        if (c.startsWith("en")) return "en";
-        return null;
-      };
+      const mapLang = (code) => this._mapLang(code);
       const htmlLang = mapLang(document.documentElement.lang);
       const locales = eventInfo?.locales || [];
       const def = locales.find((l) => l.isDefault) || locales[0];
@@ -441,16 +452,15 @@ export default class extends HTMLElement {
           allLink.type = "button";
           const allLabel = this._allDaysLabel();
           if (editorial) {
-            const dow = document.createElement("span");
-            dow.className = "navDow";
-            dow.textContent = "\u00a0";
+            // Two lines, centred in the pill (no weekday slot on this tab).
+            allLink.style.justifyContent = "center";
             const day = document.createElement("span");
             day.className = "navDay";
             day.textContent = allLabel.big;
             const mon = document.createElement("span");
             mon.className = "navMon";
             mon.textContent = allLabel.small;
-            allLink.append(dow, day, mon);
+            allLink.append(day, mon);
             allLink.setAttribute("aria-label", allLabel.full);
           } else {
             allLink.textContent = allLabel.full;
@@ -1190,6 +1200,15 @@ export default class extends HTMLElement {
   }
 
   // Map the detected event language to a full locale for date formatting.
+  // "es-MX" / "pt-BR" / "en-GB" -> "es" / "pt" / "en"; unknown -> null.
+  _mapLang(code) {
+    const c = (code || "").toLowerCase();
+    if (c.startsWith("es")) return "es";
+    if (c.startsWith("pt")) return "pt";
+    if (c.startsWith("en")) return "en";
+    return null;
+  }
+
   _dateLocale() {
     const lang = this._eventLang || "en";
     if (lang === "es") return "es";
