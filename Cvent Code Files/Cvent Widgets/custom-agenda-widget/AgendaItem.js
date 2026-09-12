@@ -1735,7 +1735,7 @@ export class AgendaItem extends HTMLElement {
     const titleEl = document.createElement("div");
     titleEl.classList.add("kv", "modalTitleLine");
     const companyEl = document.createElement("div");
-    companyEl.classList.add("modalCompanyPill");
+    companyEl.classList.add("kv", "modalCompanyLine");
     details.append(roleEl, nameEl, titleEl, companyEl);
 
     const divider = document.createElement("div");
@@ -1875,10 +1875,7 @@ export class AgendaItem extends HTMLElement {
       .modalRole { font-size:11px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; margin-bottom:8px; }
       .modalName { font-size:26px; font-weight:800; line-height:1.15; letter-spacing:-0.01em; }
       .modalTitleLine { font-size:17px; color:#555; margin-top:6px; line-height:1.3; }
-      .modalCompanyPill {
-        display:inline-block; margin-top:14px; padding:7px 12px; border-radius:6px;
-        font-size:12px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; line-height:1.2;
-      }
+      .modalCompanyLine { font-size:15px; color:#222; margin-top:4px; line-height:1.3; }
       .kv { margin:2px 0; }
       .modalDivider { grid-column:1 / -1; grid-row:2; height:1px; background:${divider}; margin:24px 0 20px; }
       .bio { grid-column:1 / -1; grid-row:3; font-size:15px; line-height:1.6; color:#333; }
@@ -1983,12 +1980,7 @@ export class AgendaItem extends HTMLElement {
     if (!titleTypo.color || /^#0{6}$/i.test(titleTypo.color)) titleTypo.color = "#555555";
     this.applyTypographyOverrides(refs.nameEl, cfg.typography?.modalSpeakerName, true);
     this.applyTypographyOverrides(refs.titleEl, titleTypo, true);
-    this.applyTypographyOverrides(
-      refs.companyEl,
-      { ...(cfg.typography?.modalSpeakerCompany || {}), color: accent, bold: true },
-      true
-    );
-    refs.companyEl.style.background = this._tintColor(accent, 0.12);
+    this.applyTypographyOverrides(refs.companyEl, cfg.typography?.modalSpeakerCompany, true);
     if (refs.roleEl) refs.roleEl.style.color = accent;
     this.applyTypographyOverrides(refs.bioEl, cfg.typography?.modalSpeakerBio, true);
     this.applyTypographyOverrides(refs.sessionsHdr, cfg.typography?.modalSessionsHeader, true);
