@@ -150,6 +150,8 @@ export default class ExampleAgendaEditor extends HTMLElement {
     return {
       headerText: "Agenda",
       subheaderText: "Here's what's scheduled for the event",
+      headerStyle: "classic",
+      headerEyebrow: "",
       sort: "dateTimeAsc",
       maxResults: 100,
       groupByDay: true,
@@ -532,6 +534,45 @@ export default class ExampleAgendaEditor extends HTMLElement {
 
     subheaderWrap.appendChild(subheaderInput);
     secHeader.block.appendChild(subheaderWrap);
+
+    // Header style (opt-in "Editorial" look; "Classic" keeps existing events unchanged)
+    const hsWrap = document.createElement("div");
+    hsWrap.className = "section";
+    hsWrap.appendChild(this._label("Header style"));
+    hsWrap.appendChild(document.createElement("br"));
+    const hsSelect = document.createElement("select");
+    [
+      ["classic", "Classic (current look)"],
+      ["editorial", "Editorial — eyebrow, accent rule, pill date tabs, day counts"],
+    ].forEach(([v, label]) => {
+      const o = document.createElement("option");
+      o.value = v;
+      o.textContent = label;
+      hsSelect.appendChild(o);
+    });
+    hsSelect.value = this._config.headerStyle === "editorial" ? "editorial" : "classic";
+    hsSelect.style.width = "100%";
+    hsSelect.onchange = () => this._patch({ headerStyle: hsSelect.value });
+    hsWrap.appendChild(hsSelect);
+
+    const hsNote = document.createElement("div");
+    hsNote.style.fontSize = "11px";
+    hsNote.style.opacity = "0.7";
+    hsNote.style.margin = "4px 0 8px";
+    hsNote.textContent =
+      "Editorial uses the plenary accent for the rule and active date tab, and the Date Navigation colours/sizes for the tabs.";
+    hsWrap.appendChild(hsNote);
+
+    hsWrap.appendChild(this._label("Eyebrow text (Editorial only; blank = event date range)"));
+    hsWrap.appendChild(document.createElement("br"));
+    const eyebrowInput = document.createElement("input");
+    eyebrowInput.type = "text";
+    eyebrowInput.placeholder = "e.g. Jun 16 – Jun 18, 2026";
+    eyebrowInput.value = typeof this._config.headerEyebrow === "string" ? this._config.headerEyebrow : "";
+    eyebrowInput.style.width = "100%";
+    eyebrowInput.onchange = () => this._patch({ headerEyebrow: eyebrowInput.value });
+    hsWrap.appendChild(eyebrowInput);
+    secHeader.block.appendChild(hsWrap);
 
 // Timezone label controls
     const tzWrap = document.createElement("div");
