@@ -148,7 +148,8 @@ export default class extends HTMLElement {
         .agendaTitleEditorial.isBold { font-weight:700 !important; }
         .agendaRule { width:40px; height:3px; border-radius:2px; margin:14px 0 12px; }
         .agendaSubEditorial { max-width:640px; line-height:1.45; }
-        .agendaLegendEditorial { display:flex !important; flex-direction:row !important; flex-wrap:wrap; gap:6px 18px !important; margin-top:14px; }
+        .agendaLegendEditorial { display:flex !important; flex-direction:row !important; flex-wrap:wrap; align-items:center !important; gap:6px 18px !important; }
+        .agendaDayRight { display:flex; align-items:center; flex-wrap:wrap; justify-content:flex-end; gap:6px 18px; min-width:0; }
       `;
       container.appendChild(mastStyle);
 
@@ -172,12 +173,7 @@ export default class extends HTMLElement {
       if (!cfg.typography?.agendaSubheader?.color) subheaderEl.style.color = "#666";
 
       headerWrap.append(eyebrow, headerEl, rule, subheaderEl);
-
-      if (cfg.showAccentBar === true && cfg.showFocusLegend === true) {
-        const legend = this._buildFocusLegend(cfg);
-        legend.classList.add("agendaLegendEditorial");
-        headerWrap.append(legend);
-      }
+      // (Legend sits on the first day-header row, right side, next to the count.)
     } else {
       headerWrap.append(headerEl, subheaderEl);
     }
@@ -1248,9 +1244,10 @@ export default class extends HTMLElement {
       const row = document.createElement("div");
       Object.assign(row.style, {
         display: "flex",
-        alignItems: "baseline",
+        alignItems: "center",
+        flexWrap: "wrap",
         justifyContent: "space-between",
-        gap: "12px",
+        gap: "8px 12px",
         width: "calc(100% - 40px)",
         maxWidth: "1210px",
         margin: `${isFirst ? 22 : 32}px auto 0 auto`,
@@ -1269,7 +1266,16 @@ export default class extends HTMLElement {
       countEl.style.color = "#8a8a8a";
       countEl.style.flexShrink = "0";
       countEl.textContent = this._sessionCountLabel(count);
-      row.append(el, countEl);
+      // Right-hand group: focus legend (first day only, when enabled) + count.
+      const right = document.createElement("div");
+      right.classList.add("agendaDayRight");
+      if (isFirst && cfg.showAccentBar === true && cfg.showFocusLegend === true) {
+        const legend = this._buildFocusLegend(cfg);
+        legend.classList.add("agendaLegendEditorial");
+        right.append(legend);
+      }
+      right.append(countEl);
+      row.append(el, right);
       return row;
     }
     return el;
