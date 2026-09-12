@@ -1051,7 +1051,7 @@ export class AgendaItem extends HTMLElement {
     // Progressive fit AFTER layout. REQUIRED (always shown): title + time +
     // speakers. The description fills any remaining space (capped at 6 lines,
     // truncated with "… show more"). MIN_H guarantees room for the required set.
-    requestAnimationFrame(() => {
+    const fit = () => {
       const BOTTOM_GAP = 10;
       const avail = () => body.clientHeight - BOTTOM_GAP;
       const contentH = () => {
@@ -1146,6 +1146,32 @@ export class AgendaItem extends HTMLElement {
           }
         }
       }
+    };
+    // Measuring inside a hidden ancestor (a filtered-out day) yields zeros and
+    // would shrink the title to the floor and drop the description. Wait for
+    // layout instead.
+    this._runWhenVisible(fit);
+  }
+
+  // Run a measurement-dependent step only once this element actually has
+  // layout (not inside a display:none ancestor). Uses ResizeObserver, which
+  // fires when the element goes from 0 to a real size.
+  _runWhenVisible(fn) {
+    const hasLayout = () => this.getBoundingClientRect().height > 0;
+    // Decide at run time, not at scheduling time: a tile can be appended while
+    // its day is visible and then hidden (filter mode picks the active day
+    // synchronously after the render loop) before this frame fires.
+    requestAnimationFrame(() => {
+      if (hasLayout() || typeof ResizeObserver === "undefined") {
+        fn();
+        return;
+      }
+      const ro = new ResizeObserver(() => {
+        if (!hasLayout()) return;
+        ro.disconnect();
+        requestAnimationFrame(fn);
+      });
+      ro.observe(this);
     });
   }
 

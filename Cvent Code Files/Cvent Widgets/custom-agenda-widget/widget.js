@@ -505,6 +505,12 @@ export default class extends HTMLElement {
         const section = document.createElement("div");
         section.classList.add("daySection");
         section.dataset.dayKey = dayKey;
+        // Same layout as the container itself so cards keep their spacing and
+        // the concurrent grid's last rail label doesn't bleed into the next card.
+        section.style.display = "flex";
+        section.style.flexDirection = "column";
+        section.style.gap = "12px";
+        section.style.width = "100%";
         daySections[dayKey] = section;
 
         // In filter mode every day is rendered as if it were the first (each
@@ -597,7 +603,8 @@ export default class extends HTMLElement {
         showDay = (key) => {
           this._activeDayKey = key;
           Object.entries(daySections).forEach(([k, sec]) => {
-            sec.style.display = k === key ? "" : "none";
+            // "flex" (not ""): the section's own layout is inline flex/column.
+            sec.style.display = k === key ? "flex" : "none";
           });
           setActiveDay(key);
         };
