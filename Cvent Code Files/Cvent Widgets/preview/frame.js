@@ -11,6 +11,7 @@ let Widget = null;
 let sdk = null;
 let widget = null;
 let dumpInfo = null;
+let loadedDump = null;
 
 async function load() {
   const bust = `?v=${Date.now()}`;
@@ -26,6 +27,7 @@ async function load() {
   window.getSpeakers = sdk.getSpeakers;
   const ev = dump.eventInfo || {};
   dumpInfo = { sessions: dump.sessions?.length ?? 0, timezone: ev.timezone || "?", title: ev.title || ev.name || ev.code || "" };
+  loadedDump = dump; // the mock SDK reads these objects live, so edits + re-mount show up
 }
 
 function mount(cfg) {
@@ -44,4 +46,6 @@ window.__preview = {
   update(cfg) { if (widget) widget.onConfigurationUpdate(cfg || {}); else mount(cfg); },
   setLang(lang) { document.documentElement.lang = lang; },
   info() { return dumpInfo; },
+  // Test hook: the loaded dump (mutate a session, then mount() to see it).
+  data() { return loadedDump; },
 };

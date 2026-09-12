@@ -18,6 +18,9 @@ Add detail to each item as it's picked up; move done items to the bottom.
 
 ## Done
 
+- [x] 2026-09-12 **Short concurrent sessions.** Strip / compact / full tile tiers by
+      duration (<=15 / 16–29 / >=30 min) with matching height floors, so a 5-minute
+      item no longer occupies a 30-minute tile or stretches the axis five-fold.
 - [x] 2026-09-12 **Doubled agenda on rapid config updates** fixed with a render
       sequence guard in `widget.js` (`_renderSeq`).
 - [x] 2026-09-12 **Sticky date nav removed.** The date nav is now a plain row under

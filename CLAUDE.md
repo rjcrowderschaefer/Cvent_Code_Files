@@ -64,6 +64,11 @@ agenda with extensive custom features built over many iterations.
   es/pt). Supported: en, es, pt.
 - **Native session tags are NOT SDK-exposed** — we use a `Tags` MultiChoice
   custom field instead. Focus/Break/etc. also use custom fields.
+- **Concurrent tile tiers by duration** (2026-09-12): <=15 min = "strip" (48px,
+  one row: title · time · up to 3 tiny avatars, plain accent bar, no tags),
+  16–29 min = "compact" (104px, 14px title, time, avatar row, no description),
+  >=30 min = "full". `tierOf()` in widget.js sets `cfg.tileTier`; per-tier
+  floors feed the stretched time scale so short sessions barely distort it.
 - **Concurrent tiles** are opt-in (`concurrentTiles` toggle, default off). When
   on, overlapping sessions render as a time grid (4px/min, MIN_H 118, MAX_H 440);
   plenary-left/focus-right for same start times; tiles pin speakers to bottom,

@@ -912,6 +912,13 @@ export class AgendaItem extends HTMLElement {
       .tspeakerMeta { ${spkTitleCss} line-height:1.15; }
       .tavatars { display:flex; align-items:center; gap:4px; }
       .tavatars img, .tavatars .tmore { width:28px; height:28px; border-radius:4px; object-fit:cover; background:#ddd; }
+      /* "strip" tier (<= 15 min): one row — title · time · tiny avatars */
+      .tbody.tstrip { flex-direction:row; align-items:center; gap:10px; padding:0 10px; }
+      .tstrip .ttitle { flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .tstrip .ttime { flex:0 0 auto; white-space:nowrap; }
+      .tstrip .tavatars { flex:0 0 auto; gap:3px; }
+      .tstrip .tavatars img, .tstrip .tavatars .tmore { width:20px; height:20px; border-radius:3px; }
+      .tstrip .tavatars .tmore { font-size:9px; }
       .tavatars .tmore { display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:600; color:#555; background:#e6e6e6; }
       .tdesc { ${descCss} line-height:1.35; }
       .desc-mobile-clamp {
@@ -955,7 +962,9 @@ export class AgendaItem extends HTMLElement {
     // right-aligned within the bar. Tiles are too narrow for several tags; the
     // modal lists them all.
     const tileTagValues = this._sessionTags(s);
-    if (tileTagValues.length) {
+    // Strips are too short for a tag bar; they keep the 5px accent line only
+    // (tags are in the modal).
+    if (tileTagValues.length && cfg.tileTier !== "strip") {
       bar.classList.add("tbarTagged");
       const tagChip = document.createElement("span");
       tagChip.classList.add("tbarTag");
@@ -1013,7 +1022,7 @@ export class AgendaItem extends HTMLElement {
 
     const speakersAvatars = document.createElement("div");
     speakersAvatars.classList.add("tavatars");
-    const maxAvatars = 5;
+    const maxAvatars = cfg.tileTier === "strip" ? 3 : 5;
     speakers.slice(0, maxAvatars).forEach((sp) => {
       const wrapEl = sp && sp.speaker ? sp.speaker : sp;
       const img = document.createElement("img");
@@ -1029,10 +1038,31 @@ export class AgendaItem extends HTMLElement {
       speakersAvatars.append(more);
     }
 
-    // Description (stripped to plain text for the tile)
-    const descText = (s.description || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+    // Description (stripped to plain text for the tile). Compact and strip
+    // tiers omit it — the modal has it.
+    const descText =
+      cfg.tileTier === "compact" || cfg.tileTier === "strip"
+        ? ""
+        : (s.description || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
     const descEl = document.createElement("div");
     descEl.classList.add("tdesc");
+
+    // STRIP tier: a single row, no fitting pass. Title is one line with an
+    // ellipsis (never shrunk), time inline, up to three 20px avatars.
+    if (cfg.tileTier === "strip" && !cfg.tileStack) {
+      body.classList.add("tstrip");
+      titleEl.style.fontSize = "13px";
+      titleEl.style.fontWeight = "700";
+      titleEl.title = s.name || "";
+      if (timeText) body.append(timeEl);
+      if (speakers.length) body.append(speakersAvatars);
+      return;
+    }
+    // COMPACT tier: title capped at 14px so two lines + time + avatars fit
+    // the 104px floor without the fitting pass shrinking it.
+    if (cfg.tileTier === "compact" && !cfg.tileStack) {
+      titleEl.style.fontSize = "14px";
+    }
 
     // STACK MODE (mobile): content-height card. Show time, full description
     // (no truncation), and full speaker rows. No fixed-height fit needed.

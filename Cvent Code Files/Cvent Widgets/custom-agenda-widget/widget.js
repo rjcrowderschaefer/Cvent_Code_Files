@@ -911,7 +911,14 @@ export default class extends HTMLElement {
   _renderConcurrentGrid(blk, theme, cfg, allSessions, getSpeakers, eventTimezone) {
     // --- Tunable geometry constants ---
     const PX_PER_MIN = 4; // tuned for a 30-60 min session norm (30min ~= content floor)
-    const MIN_H = 118; // floor: enough for title + start/end time + a speaker row
+    const MIN_H = 118; // floor for FULL tiles: title + time + speaker row + some description
+    // Shorter sessions get shorter floors so the time axis barely stretches and
+    // a 5-minute item doesn't loom as large as a 30-minute one:
+    //   <= 15 min  -> "strip"   (one line: title · time · tiny avatars)
+    //   16–29 min  -> "compact" (title, time, avatar row; no description)
+    //   >= 30 min  -> "full"
+    const STRIP_H = 48;
+    const COMPACT_H = 104;
     const MAX_H = 440; // cap (~110 min at 4px/min) so very long sessions don't dominate
     const ROW_GAP = 5; // visual gap below each tile (separates stacked tiles)
     const RAIL_W = 80; // left time-rail width (matches single-card gutter)
@@ -927,6 +934,10 @@ export default class extends HTMLElement {
     );
     const startMsOf = (s) => new Date(s.startDateTime).getTime();
     const endMsOf = (s) => new Date(s.endDateTime).getTime();
+    const durMin = (s) => (endMsOf(s) - startMsOf(s)) / 60000;
+    const tierOf = (s) => (durMin(s) <= 15 ? "strip" : durMin(s) < 30 ? "compact" : "full");
+    const minHFor = (s) =>
+      tierOf(s) === "strip" ? STRIP_H : tierOf(s) === "compact" ? COMPACT_H : MIN_H;
 
     // Determine the last tile in each column (it should NOT be gap-trimmed, so
     // it reaches its true end-time gridline).
@@ -959,7 +970,7 @@ export default class extends HTMLElement {
         posOfMs.get(prevMs) + Math.round(((ms - prevMs) / 60000) * PX_PER_MIN);
       sessions.forEach((s) => {
         if (endMsOf(s) !== ms) return;
-        const need = MIN_H + (lastInColumn.has(s) ? 0 : ROW_GAP);
+        const need = minHFor(s) + (lastInColumn.has(s) ? 0 : ROW_GAP);
         pos = Math.max(pos, posOfMs.get(startMsOf(s)) + need);
       });
       posOfMs.set(ms, pos);
@@ -976,14 +987,14 @@ export default class extends HTMLElement {
     const topOf = (s) => timePos(startMsOf(s));
     // Full span-based height (capped), WITHOUT the row-gap trim.
     const fullTileHeight = (s) =>
-      Math.max(MIN_H, Math.min(MAX_H, timePos(endMsOf(s)) - timePos(startMsOf(s))));
+      Math.max(minHFor(s), Math.min(MAX_H, timePos(endMsOf(s)) - timePos(startMsOf(s))));
 
     // Rendered height: last tile in a column keeps full height (aligns to end
     // gridline); others are trimmed by ROW_GAP for visual separation.
     const tileHeight = (s) =>
       lastInColumn.has(s)
         ? fullTileHeight(s)
-        : Math.max(MIN_H, fullTileHeight(s) - ROW_GAP);
+        : Math.max(minHFor(s), fullTileHeight(s) - ROW_GAP);
 
     // Distinct times (starts + ends) for gridlines + rail labels.
     const distinctTimes = new Map(); // pos -> ms
@@ -1146,6 +1157,7 @@ export default class extends HTMLElement {
         ...this._detectSessionFields(s),
         eventLang: this._eventLang || "en",
         tileMode: true,
+        tileTier: tierOf(s),
         tileHeight: tileHeight(s),
       };
       el.style.display = "block";
