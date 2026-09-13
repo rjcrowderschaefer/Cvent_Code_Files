@@ -1286,6 +1286,10 @@ soSelect.onchange = () => {
         ["es", "Spanish (es)"],
         ["pt", "Portuguese (pt)"],
       ];
+      // Keep a handle on every translation input so the "English: …" hint can
+      // follow edits to the base text live (the panel doesn't rebuild on
+      // change; see _patch).
+      this._translationInputs = [];
       LANGS.forEach(([lang, langLabel]) => {
         const h3 = document.createElement("h3");
         h3.textContent = langLabel;
@@ -1299,12 +1303,8 @@ soSelect.onchange = () => {
           const input = document.createElement("input");
           input.type = "text";
           input.style.width = "100%";
-          const english =
-            typeof this._config[key] === "string" && this._config[key].trim()
-              ? this._config[key]
-              : dflt;
-          input.placeholder = english ? `English: ${english}` : "(blank = auto)";
           input.value = typeof current[key] === "string" ? current[key] : "";
+          this._translationInputs.push({ key, dflt, input });
           input.onchange = () => {
             const all = { ...(this._config.translations || {}) };
             all[lang] = { ...(all[lang] || {}), [key]: input.value };
@@ -1315,6 +1315,8 @@ soSelect.onchange = () => {
         });
       });
     }
+
+    this._refreshTranslationHints();
 
     [
       secHeader,
@@ -1647,6 +1649,18 @@ soSelect.onchange = () => {
   // STATE PATCHING
   // ===========================================================
 
+  // Placeholder on each translation field = the CURRENT English value of
+  // that text, so editing e.g. the focus label elsewhere updates the hint.
+  _refreshTranslationHints() {
+    (this._translationInputs || []).forEach(({ key, dflt, input }) => {
+      const base =
+        typeof this._config[key] === "string" && this._config[key].trim()
+          ? this._config[key].trim()
+          : dflt;
+      input.placeholder = base ? `English: ${base}` : "(blank = auto)";
+    });
+  }
+
   _patch(patch) {
     const merged = { ...this._config, ...patch };
 
@@ -1668,5 +1682,6 @@ soSelect.onchange = () => {
 
     this._config = merged;
     this.setConfiguration(this._config);
+    this._refreshTranslationHints();
   }
 }
