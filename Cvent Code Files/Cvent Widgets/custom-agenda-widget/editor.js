@@ -163,7 +163,6 @@ export default class ExampleAgendaEditor extends HTMLElement {
       showFilters: false,
       plenaryAccent: "#f7a325",
       focusAccent: "#1a7f8e",
-      focusGutterText: "#e8f6f8",
       showAccentBar: false,
       showFocusLegend: false,
       focusLabel: "Focus",
@@ -174,7 +173,6 @@ export default class ExampleAgendaEditor extends HTMLElement {
         fontSizeSm: 14,
         activeColor: "#000000",
         inactiveColor: "#999999",
-        navBg: "#ffffff",
       },
       showTimezone: true,
       showDescription: true,
@@ -185,10 +183,6 @@ export default class ExampleAgendaEditor extends HTMLElement {
         style: "solid",
         color: "#cccccc",
       },
-      modalColors: {
-        dividerColor: "#555555",
-        contentBg: "#ffffff",
-      },
       typography: this._makeCompactTypography(),
       breakStyle: {
         gutterBg: "#e8eaed",
@@ -197,7 +191,6 @@ export default class ExampleAgendaEditor extends HTMLElement {
         hideSpeakers: true,
         hideDescription: false,
         iconSize: 20,
-        iconColor: "",
       },
     };
   }
@@ -646,11 +639,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
       return wrap;
     };
 
-    dnSizes.append(
-      mkDnSize("Font size (px)", "fontSize"),
-      mkDnSize("≤1024px (px)", "fontSizeMd"),
-      mkDnSize("≤600px (px)", "fontSizeSm")
-    );
+    dnSizes.append(mkDnSize("Font size (px)", "fontSize"));
     dnWrap.appendChild(dnSizes);
 
     dnWrap.appendChild(
@@ -771,19 +760,6 @@ export default class ExampleAgendaEditor extends HTMLElement {
     bsIconSizeWrap.append(bsIconSizeLabel, bsIconSizeInput);
     bsWrap.appendChild(bsIconSizeWrap);
 
-    // Break icon color (defaults to the break time text color)
-    bsWrap.appendChild(
-      this._colorRow(
-        "Break icon color",
-        "breakIconColor",
-        bs.iconColor || bs.gutterText || "#5f5e5a",
-        (v) =>
-          this._patch({
-            breakStyle: { ...(this._config.breakStyle || {}), iconColor: v },
-          })
-      )
-    );
-
     secBreaks.block.appendChild(bsWrap);
 
     // Session Type Styling (plenary vs focus)
@@ -829,17 +805,8 @@ export default class ExampleAgendaEditor extends HTMLElement {
     accentNote.style.opacity = "0.7";
     accentNote.style.margin = "2px 0 8px";
     accentNote.textContent =
-      "The Plenary / Focus accents also colour: the time column, speaker names, \u201cshow more\u201d, and the active date tab.";
+      "The Plenary / Focus accents also colour: the time column (and its text), speaker names, \u201cshow more\u201d, and the active date tab.";
     stWrap.appendChild(accentNote);
-    stWrap.appendChild(
-      this._colorRow(
-        "Focus gutter text color",
-        "focusGutterText",
-        this._config.focusGutterText || "#e8f6f8",
-        (v) => this._patch({ focusGutterText: v })
-      )
-    );
-
     // Legend toggle (default off — most events are single-track)
     featWrap.appendChild(
       this._checkbox(
@@ -883,18 +850,6 @@ export default class ExampleAgendaEditor extends HTMLElement {
     stWrap.appendChild(plenaryLabelInput);
 
     secTypes.block.appendChild(stWrap);
-
-    dnWrap.appendChild(
-      this._colorRow(
-        "Nav background",
-        "dnNavBg",
-        dn.navBg || "#ffffff",
-        (v) =>
-          this._patch({
-            dateNav: { ...(this._config.dateNav || {}), navBg: v },
-          })
-      )
-    );
 
     secDateNav.block.appendChild(dnWrap);
 
@@ -1222,38 +1177,6 @@ soSelect.onchange = () => {
     const modalBlock = secModal.block;
 
     // -------------------------
-    // Modal Color Controls
-    // -------------------------
-
-    const h3ModalColors = document.createElement("h3");
-    h3ModalColors.textContent = "Modal Colors";
-    modalBlock.append(h3ModalColors);
-
-    modalBlock.append(
-      this._colorRow(
-        "Divider line",
-        "modalDivider",
-        this._config.modalColors?.dividerColor || "#eeeeee",
-        (v) =>
-          this._patch({
-            modalColors: { ...this._config.modalColors, dividerColor: v },
-          })
-      )
-    );
-
-    modalBlock.append(
-      this._colorRow(
-        "Content background",
-        "modalContentBg",
-        this._config.modalColors?.contentBg || "#ffffff",
-        (v) =>
-          this._patch({
-            modalColors: { ...this._config.modalColors, contentBg: v },
-          })
-      )
-    );
-
-    // -------------------------
     // Modal Typography
     // -------------------------
 
@@ -1486,11 +1409,8 @@ soSelect.onchange = () => {
       return wrap;
     };
 
-    rowSizes.append(
-      mkSize("Font size (px)", "fontSize"),
-      mkSize("≤1024px (px)", "fontSizeMd"),
-      mkSize("≤600px (px)", "fontSizeSm")
-    );
+    // One size field: tablet / phone sizes scale from the built-in defaults.
+    rowSizes.append(mkSize("Font size (px)", "fontSize"));
 
     fs.append(rowSizes);
 

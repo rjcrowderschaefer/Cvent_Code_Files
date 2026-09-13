@@ -515,7 +515,7 @@ export class AgendaItem extends HTMLElement {
       timeStartEl.style.color = bt;
       timeEndEl.style.color = bt;
     } else if (isFocus) {
-      const ft = cfg.focusGutterText || "#e8f6f8";
+      const ft = this._readableOn(focusAccent); // gutter text on the focus accent
       timeStartEl.style.color = ft;
       timeEndEl.style.color = ft;
     }
@@ -536,7 +536,7 @@ export class AgendaItem extends HTMLElement {
       if (isBreak) {
         tzEl.style.color = bs.gutterText || "#5f5e5a";
       } else if (isFocus) {
-        tzEl.style.color = cfg.focusGutterText || "#e8f6f8";
+        tzEl.style.color = this._readableOn(focusAccent);
       }
       gutter.append(tzEl);
     }
