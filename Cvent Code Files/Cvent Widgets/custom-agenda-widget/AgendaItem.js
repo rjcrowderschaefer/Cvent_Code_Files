@@ -548,12 +548,15 @@ export class AgendaItem extends HTMLElement {
     // Focus tag — small pill placed top-right ON THE SAME LINE as the title.
     let focusTag = null;
     if (isFocus) {
+      const lang = cfg.eventLang || "en";
+      const translated = ((cfg.translations || {})[lang] || {}).focusLabel;
       const focusLabel =
-        typeof cfg.focusLabel === "string" && cfg.focusLabel.trim()
+        typeof translated === "string" && translated.trim()
+          ? translated.trim()
+          : typeof cfg.focusLabel === "string" && cfg.focusLabel.trim()
           ? cfg.focusLabel.trim()
           : "Focus";
       focusTag = document.createElement("div");
-      const lang = cfg.eventLang || "en";
       focusTag.textContent =
         lang === "es"
           ? `sesión de ${focusLabel}`
@@ -691,17 +694,17 @@ export class AgendaItem extends HTMLElement {
 
         const toggle = document.createElement("div");
         toggle.classList.add("show-more-toggle");
-        toggle.textContent = "Show more";
+        toggle.textContent = this._capFirst(this._t("showMore"));
 
         let expanded = false;
         toggle.onclick = () => {
           expanded = !expanded;
           if (expanded) {
             text.classList.remove("desc-limited");
-            toggle.textContent = "Show less";
+            toggle.textContent = this._capFirst(this._t("showLess"));
           } else {
             text.classList.add("desc-limited");
-            toggle.textContent = "Show more";
+            toggle.textContent = this._capFirst(this._t("showMore"));
           }
         };
 
@@ -1127,7 +1130,7 @@ export class AgendaItem extends HTMLElement {
           const setTruncated = (n) => {
             descEl.textContent = words.slice(0, n).join(" ") + SUFFIX;
             const more = document.createElement("span");
-            more.textContent = "show more";
+            more.textContent = this._t("showMore");
             more.style.color = accentColor;
             more.style.fontWeight = "600";
             descEl.appendChild(more);
@@ -1240,7 +1243,7 @@ export class AgendaItem extends HTMLElement {
     headLeft.append(title, time);
     const close = document.createElement("button");
     close.classList.add("smodalClose");
-    close.setAttribute("aria-label", "Close");
+    close.setAttribute("aria-label", this._t("close"));
     close.textContent = "×";
     close.addEventListener("click", () =>
       this._sessionModal.backdrop.removeAttribute("open")
@@ -1298,7 +1301,7 @@ export class AgendaItem extends HTMLElement {
     if (speakers.length) {
       const hdr = document.createElement("div");
       hdr.classList.add("smodalSpeakersHdr");
-      hdr.textContent = speakers.length === 1 ? "Speaker" : "Speakers";
+      hdr.textContent = this._t(speakers.length === 1 ? "speaker" : "speakers");
       bodyEl.append(hdr);
 
       const grid = document.createElement("div");
@@ -1338,7 +1341,7 @@ export class AgendaItem extends HTMLElement {
 
     const close = document.createElement("button");
     close.classList.add("smodalClose");
-    close.setAttribute("aria-label", "Close");
+    close.setAttribute("aria-label", this._t("close"));
     close.textContent = "×";
     close.addEventListener("click", () =>
       this._sessionModal.backdrop.removeAttribute("open")
@@ -1354,7 +1357,7 @@ export class AgendaItem extends HTMLElement {
       head.classList.add("smodalHead");
       back = document.createElement("button");
       back.classList.add("smodalBack");
-      back.textContent = "← Back to session details";
+      back.textContent = this._t("backToSession");
       back.addEventListener("click", () => this._renderSessionView());
       head.append(back, close);
     } else {
@@ -1379,7 +1382,7 @@ export class AgendaItem extends HTMLElement {
 
     const toggle = document.createElement("div");
     toggle.classList.add("mobile-desc-toggle");
-    toggle.textContent = "…show more";
+    toggle.textContent = "\u2026" + this._t("showMore");
     toggle.style.display = "none";
 
     let expanded = false;
@@ -1394,14 +1397,14 @@ export class AgendaItem extends HTMLElement {
       // 4 lines (i.e., clamping actually hides something).
       if (expanded) {
         textEl.classList.remove("desc-mobile-clamp");
-        toggle.textContent = "show less";
+        toggle.textContent = this._t("showLess");
         toggle.style.display = "";
         return;
       }
       textEl.classList.add("desc-mobile-clamp");
       // Detect overflow: scrollHeight > clientHeight when clamped.
       const overflowing = textEl.scrollHeight > textEl.clientHeight + 1;
-      toggle.textContent = "…show more";
+      toggle.textContent = "\u2026" + this._t("showMore");
       toggle.style.display = overflowing ? "" : "none";
     };
 
@@ -1717,7 +1720,7 @@ export class AgendaItem extends HTMLElement {
 
     const avatar = document.createElement("img");
     avatar.classList.add("modalAvatar");
-    avatar.alt = "Speaker photo";
+    avatar.alt = this._t("speakerPhoto");
 
     const details = document.createElement("div");
     details.classList.add("modalDetails");
@@ -1739,7 +1742,7 @@ export class AgendaItem extends HTMLElement {
 
     const sessionsHdr = document.createElement("div");
     sessionsHdr.classList.add("sessionsHeader");
-    sessionsHdr.textContent = "Sessions";
+    sessionsHdr.textContent = this._t("sessions");
 
     const sessionsUl = document.createElement("ul");
     sessionsUl.classList.add("sessionsList");
@@ -1909,6 +1912,27 @@ export class AgendaItem extends HTMLElement {
     return { label, isModerator: isMod, company: isMod ? cleanCompany : (company || "").trim() };
   }
 
+  // ---- Fixed UI strings, by runtime language (en / es / pt; else English) ----
+  // Times are ALWAYS 12-hour (en-US) regardless of language, by decision;
+  // only dates and words follow the language.
+  _t(key) {
+    const T = {
+      en: { showMore: "show more", showLess: "show less", speaker: "Speaker", speakers: "Speakers", session: "Session", sessions: "Sessions", noOtherSessions: "No other sessions found.", backToSession: "\u2190 Back to session details", concurrentSessions: "Concurrent sessions", unknownDate: "Unknown Date", close: "Close", speakerPhoto: "Speaker photo" },
+      es: { showMore: "ver m\u00e1s", showLess: "ver menos", speaker: "Ponente", speakers: "Ponentes", session: "Sesi\u00f3n", sessions: "Sesiones", noOtherSessions: "No se encontraron otras sesiones.", backToSession: "\u2190 Volver a los detalles de la sesi\u00f3n", concurrentSessions: "Sesiones simult\u00e1neas", unknownDate: "Fecha desconocida", close: "Cerrar", speakerPhoto: "Foto del ponente" },
+      pt: { showMore: "ver mais", showLess: "ver menos", speaker: "Palestrante", speakers: "Palestrantes", session: "Sess\u00e3o", sessions: "Sess\u00f5es", noOtherSessions: "Nenhuma outra sess\u00e3o encontrada.", backToSession: "\u2190 Voltar aos detalhes da sess\u00e3o", concurrentSessions: "Sess\u00f5es simult\u00e2neas", unknownDate: "Data desconhecida", close: "Fechar", speakerPhoto: "Foto do palestrante" },
+    };
+    const lang = this.config?.eventLang || "en";
+    return (T[lang] || T.en)[key] ?? T.en[key] ?? key;
+  }
+  _capFirst(s) {
+    return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  }
+  // Locale for DATES (not times) in the modal's session list.
+  _dateLocale() {
+    const lang = this.config?.eventLang || "en";
+    return lang === "es" ? "es" : lang === "pt" ? "pt-BR" : "en-US";
+  }
+
   // ---- Contrast helpers -------------------------------------------------
   // Perceived brightness 0–255 (YIQ). Non-hex input -> mid value.
   _brightness(color) {
@@ -2070,7 +2094,7 @@ export class AgendaItem extends HTMLElement {
         : [];
       return list.some((x) => (x?.id || x?.speakerId) === speakerId);
     });
-    refs.sessionsHdr.textContent = appearsIn.length === 1 ? "Session" : "Sessions";
+    refs.sessionsHdr.textContent = this._t(appearsIn.length === 1 ? "session" : "sessions");
 
     refs.sessionsUl.innerHTML = "";
     const tz = cfg.eventTimezone || "America/New_York";
@@ -2085,7 +2109,7 @@ export class AgendaItem extends HTMLElement {
         const st = sess.startDateTime ? new Date(sess.startDateTime) : null;
         const et = sess.endDateTime ? new Date(sess.endDateTime) : null;
         const stTxt = st
-          ? st.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: tz })
+          ? `${st.toLocaleDateString(this._dateLocale(), { month: "short", day: "numeric", year: "numeric", timeZone: tz })}, ${st.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: tz })}`
           : "";
         const etTxt = et
           ? et.toLocaleString("en-US", { timeStyle: "short", timeZone: tz })
@@ -2109,7 +2133,7 @@ export class AgendaItem extends HTMLElement {
       });
     } else {
       const li = document.createElement("li");
-      li.textContent = "No other sessions found.";
+      li.textContent = this._t("noOtherSessions");
       refs.sessionsUl.appendChild(li);
     }
 

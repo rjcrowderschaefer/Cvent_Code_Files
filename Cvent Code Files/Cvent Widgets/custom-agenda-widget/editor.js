@@ -152,6 +152,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
       subheaderText: "Here's what's scheduled for the event",
       headerStyle: "classic",
       headerEyebrow: "",
+      translations: {},
       sort: "dateTimeAsc",
       maxResults: 100,
       groupByDay: true,
@@ -491,6 +492,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
     const secBreaks = makeSection("Break Sessions", false);
     const secTypoAgenda = makeSection("Typography (Agenda)", false);
     const secModal = makeSection("Speaker Modal", false);
+    const secTranslations = makeSection("Translations", false);
     // Opt-in feature toggles (all default OFF) collected in "New Features".
     const featWrap = document.createElement("div");
     featWrap.className = "section";
@@ -1262,6 +1264,60 @@ soSelect.onchange = () => {
       typoModal.append(this._typographyBlock(key, label));
     });
 
+    // ---- Translations: per-language overrides for the planner-typed text.
+    // Blank = fall back to the English value above.
+    {
+      const note = document.createElement("div");
+      note.style.fontSize = "11px";
+      note.style.opacity = "0.7";
+      note.style.margin = "0 0 10px";
+      note.textContent =
+        "Optional translations for the text you type elsewhere in this panel. Shown when the attendee's language selector matches. Leave a field blank to fall back to the English value.";
+      secTranslations.block.appendChild(note);
+
+      const FIELDS = [
+        ["headerText", "Header", "Agenda"],
+        ["subheaderText", "Subheader", "Here's what's scheduled for the event"],
+        ["headerEyebrow", "Eyebrow text (Editorial header)", ""],
+        ["plenaryLabel", "Plenary legend label", "plenary"],
+        ["focusLabel", "Focus legend label", "Focus"],
+      ];
+      const LANGS = [
+        ["es", "Spanish (es)"],
+        ["pt", "Portuguese (pt)"],
+      ];
+      // Keep a handle on every translation input so the "English: …" hint can
+      // follow edits to the base text live (the panel doesn't rebuild on
+      // change; see _patch).
+      this._translationInputs = [];
+      LANGS.forEach(([lang, langLabel]) => {
+        const h3 = document.createElement("h3");
+        h3.textContent = langLabel;
+        secTranslations.block.appendChild(h3);
+        const current = (this._config.translations || {})[lang] || {};
+        FIELDS.forEach(([key, label, dflt]) => {
+          const wrap = document.createElement("div");
+          wrap.className = "field";
+          wrap.appendChild(this._label(label));
+          wrap.appendChild(document.createElement("br"));
+          const input = document.createElement("input");
+          input.type = "text";
+          input.style.width = "100%";
+          input.value = typeof current[key] === "string" ? current[key] : "";
+          this._translationInputs.push({ key, dflt, input });
+          input.onchange = () => {
+            const all = { ...(this._config.translations || {}) };
+            all[lang] = { ...(all[lang] || {}), [key]: input.value };
+            this._patch({ translations: all });
+          };
+          wrap.appendChild(input);
+          secTranslations.block.appendChild(wrap);
+        });
+      });
+    }
+
+    this._refreshTranslationHints();
+
     [
       secHeader,
       secNew,
@@ -1272,6 +1328,7 @@ soSelect.onchange = () => {
       secBreaks,
       secTypoAgenda,
       secModal,
+      secTranslations,
     ].forEach((s) => panel.append(s.details));
   }
 
@@ -1592,6 +1649,18 @@ soSelect.onchange = () => {
   // STATE PATCHING
   // ===========================================================
 
+  // Placeholder on each translation field = the CURRENT English value of
+  // that text, so editing e.g. the focus label elsewhere updates the hint.
+  _refreshTranslationHints() {
+    (this._translationInputs || []).forEach(({ key, dflt, input }) => {
+      const base =
+        typeof this._config[key] === "string" && this._config[key].trim()
+          ? this._config[key].trim()
+          : dflt;
+      input.placeholder = base ? `English: ${base}` : "(blank = auto)";
+    });
+  }
+
   _patch(patch) {
     const merged = { ...this._config, ...patch };
 
@@ -1613,5 +1682,6 @@ soSelect.onchange = () => {
 
     this._config = merged;
     this.setConfiguration(this._config);
+    this._refreshTranslationHints();
   }
 }

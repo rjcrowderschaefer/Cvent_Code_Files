@@ -60,8 +60,20 @@ agenda with extensive custom features built over many iterations.
   `Europe/London`. See `_tzNormalize` / TZ_NORMALIZE in widget.js.
 - **Language:** the runtime selector lives in `document.documentElement.lang`
   (NOT the event default). Detect there, fall back to event default, then EN.
-  Localized: legend, focus eyebrow, date headers (capitalize first letter for
-  es/pt). Supported: en, es, pt.
+  Localized (en / es / pt, English fallback): date headers (first letter
+  capitalized for es/pt), date tabs + "All days", session counts, legend
+  template, focus tag, modal role eyebrow, and — via the `_t()` string tables
+  in widget.js and AgendaItem.js (keep the two in sync) — show more / show
+  less, Speakers, Sessions, "No other sessions found.", the back link,
+  "Concurrent sessions", "Unknown Date", the close aria-label and the avatar
+  alt. A MutationObserver on `<html lang>` re-renders on switch. Dates follow
+  the language; TIMES ARE ALWAYS 12-HOUR (en-US) in every language, by
+  decision. Planner-typed text (header, subheader, eyebrow, legend labels) can
+  be translated per event via `cfg.translations[lang][key]` (editor section
+  "Translations", last in the panel; es + pt); a blank/missing entry falls back
+  to the base value. Resolved by `_plannerText()` in widget.js (and inline for
+  the focus tag in AgendaItem.js); the masthead is re-texted via
+  `_applyPlannerText()` once the language is known.
 - **Native session tags are NOT SDK-exposed** — we use a `Tags` MultiChoice
   custom field instead. Focus/Break/etc. also use custom fields.
 - **Concurrent tile tiers by duration** (2026-09-12): <=15 min = "strip" (48px,

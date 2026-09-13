@@ -124,10 +124,12 @@ export default class extends HTMLElement {
 
     const headerEl = document.createElement("div");
     headerEl.textContent = headerText;
+    this._headerEl = headerEl; // re-texted once the language is known
     headerEl.style.margin = "0";
 
     const subheaderEl = document.createElement("div");
     subheaderEl.textContent = subheaderText;
+    this._subheaderEl = subheaderEl;
     subheaderEl.style.margin = "0";
 
     this._applyTypographyOverrides(
@@ -261,6 +263,9 @@ export default class extends HTMLElement {
       console.warn("getEventInfo error:", e);
     }
     this._eventLang = eventLang;
+    // Planner text may have a translation for this language; apply it now
+    // (the masthead was built before the language was known).
+    this._applyPlannerText();
 
     if (!gen) {
       console.warn("[widget.js] No session generator available.");
@@ -888,7 +893,7 @@ export default class extends HTMLElement {
     header.style.fontSize = "13px";
     header.style.fontWeight = "700";
     header.style.marginBottom = "10px";
-    header.textContent = `${fmt(groupStart)}–${fmt(groupEnd)} · Concurrent sessions`;
+    header.textContent = `${fmt(groupStart)}–${fmt(groupEnd)} · ${this._t("concurrentSessions")}`;
     wrap.appendChild(header);
 
     // Each session as a full-width, content-height compact TILE card (same
@@ -1266,7 +1271,7 @@ export default class extends HTMLElement {
   }
 
   _formatDayKeyLabel(key) {
-    if (key === "Unknown") return "Unknown Date";
+    if (key === "Unknown") return this._t("unknownDate");
     const [y, m, d] = key.split("-").map(Number);
     const date = new Date(y, m - 1, d);
     return this._capFirst(
@@ -1279,7 +1284,7 @@ export default class extends HTMLElement {
   }
 
   _formatDayKeyLabelShort(key) {
-    if (key === "Unknown") return "Unknown Date";
+    if (key === "Unknown") return this._t("unknownDate");
     const [y, m, d] = key.split("-").map(Number);
     const date = new Date(y, m - 1, d);
     return this._capFirst(
@@ -1340,18 +1345,12 @@ export default class extends HTMLElement {
 
     // Plenary legend item
     const plenaryColor = cfg.plenaryAccent || "#f7a325";
-    const plenaryLabel =
-      typeof cfg.plenaryLabel === "string" && cfg.plenaryLabel.trim()
-        ? cfg.plenaryLabel.trim()
-        : "plenary";
+    const plenaryLabel = this._plannerText("plenaryLabel", "plenary");
     wrap.append(makeItem(plenaryColor, plenaryLabel));
 
     // Focus legend item
     const focusColor = cfg.focusAccent || "#1a7f8e";
-    const focusLabel =
-      typeof cfg.focusLabel === "string" && cfg.focusLabel.trim()
-        ? cfg.focusLabel.trim()
-        : "Focus";
+    const focusLabel = this._plannerText("focusLabel", "Focus");
     wrap.append(makeItem(focusColor, focusLabel));
 
     return wrap;
@@ -1515,6 +1514,52 @@ export default class extends HTMLElement {
     if ((r * 299 + g * 587 + b * 114) / 1000 <= 175) return accent;
     const to2 = (n) => Math.round(n * 0.55).toString(16).padStart(2, "0");
     return `#${to2(r)}${to2(g)}${to2(b)}`;
+  }
+
+  // Planner-typed text (header, subheader, eyebrow, legend labels) with an
+  // optional per-language override from cfg.translations[lang][key]. A blank
+  // or missing translation falls back to the planner's base (English) value,
+  // then to the code default.
+  _plannerText(key, fallback = "") {
+    const cfg = this.configuration || {};
+    const lang = this._eventLang || "en";
+    const tr = (cfg.translations || {})[lang] || {};
+    const v = typeof tr[key] === "string" ? tr[key].trim() : "";
+    if (v) return v;
+    const base = typeof cfg[key] === "string" ? cfg[key].trim() : "";
+    return base || fallback;
+  }
+  _applyPlannerText() {
+    const cfg = this.configuration || {};
+    if (this._headerEl) {
+      this._headerEl.textContent = this._plannerText(
+        "headerText",
+        cfg.headerText !== undefined ? cfg.headerText : "Agenda"
+      );
+    }
+    if (this._subheaderEl) {
+      this._subheaderEl.textContent = this._plannerText(
+        "subheaderText",
+        cfg.subheaderText !== undefined ? cfg.subheaderText : "Here's what's on the schedule"
+      );
+    }
+    if (this._eyebrowEl) {
+      // Blank stays blank here so the auto date range can fill it later.
+      const v = this._plannerText("headerEyebrow", "");
+      if (v) this._eyebrowEl.textContent = v;
+    }
+  }
+
+  // Fixed UI strings, by runtime language (mirror of AgendaItem._t for the
+  // strings widget.js renders itself).
+  _t(key) {
+    const T = {
+      en: { showMore: "show more", showLess: "show less", speaker: "Speaker", speakers: "Speakers", session: "Session", sessions: "Sessions", noOtherSessions: "No other sessions found.", backToSession: "\u2190 Back to session details", concurrentSessions: "Concurrent sessions", unknownDate: "Unknown Date", close: "Close", speakerPhoto: "Speaker photo" },
+      es: { showMore: "ver m\u00e1s", showLess: "ver menos", speaker: "Ponente", speakers: "Ponentes", session: "Sesi\u00f3n", sessions: "Sesiones", noOtherSessions: "No se encontraron otras sesiones.", backToSession: "\u2190 Volver a los detalles de la sesi\u00f3n", concurrentSessions: "Sesiones simult\u00e1neas", unknownDate: "Fecha desconocida", close: "Cerrar", speakerPhoto: "Foto del ponente" },
+      pt: { showMore: "ver mais", showLess: "ver menos", speaker: "Palestrante", speakers: "Palestrantes", session: "Sess\u00e3o", sessions: "Sess\u00f5es", noOtherSessions: "Nenhuma outra sess\u00e3o encontrada.", backToSession: "\u2190 Voltar aos detalhes da sess\u00e3o", concurrentSessions: "Sess\u00f5es simult\u00e2neas", unknownDate: "Data desconhecida", close: "Fechar", speakerPhoto: "Foto do palestrante" },
+    };
+    const lang = this._eventLang || "en";
+    return (T[lang] || T.en)[key] ?? T.en[key] ?? key;
   }
 
   // "All days" tab wording (filter mode), localised to the runtime language.
