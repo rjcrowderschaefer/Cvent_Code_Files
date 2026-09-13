@@ -57,6 +57,16 @@ async function main() {
   currentConfig = editor._config || editor.config || currentConfig;
 
   api.setLang($("lang").value || "en");
+  // Synthetic 5/10/15/20-minute sessions for testing the short tile tiers.
+  let samples = false;
+  try { samples = localStorage.getItem("agenda-preview-samples") === "1"; } catch {}
+  $("samples").checked = samples;
+  api.setShortSamples(samples);
+  $("samples").onchange = (e) => {
+    try { localStorage.setItem("agenda-preview-samples", e.target.checked ? "1" : "0"); } catch {}
+    api.setShortSamples(e.target.checked);
+    api.mount(currentConfig);
+  };
   api.mount(currentConfig);
 
   // --- breakpoints -----------------------------------------------------------

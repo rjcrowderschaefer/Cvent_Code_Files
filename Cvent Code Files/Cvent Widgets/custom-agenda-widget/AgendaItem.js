@@ -914,8 +914,9 @@ export class AgendaItem extends HTMLElement {
       .tavatars img, .tavatars .tmore { width:28px; height:28px; border-radius:4px; object-fit:cover; background:#ddd; }
       /* "strip" tier (<= 15 min): one row — title · time · tiny avatars */
       .tbody.tstrip { flex-direction:row; align-items:center; gap:10px; padding:0 10px; }
-      .tstrip .ttitle { flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-      .tstrip .ttime { flex:0 0 auto; white-space:nowrap; }
+      .tstrip .tstripText { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:1px; }
+      .tstrip .ttitle { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.2; }
+      .tstrip .ttime { white-space:nowrap; line-height:1.2; }
       .tstrip .tavatars { flex:0 0 auto; gap:3px; }
       .tstrip .tavatars img, .tstrip .tavatars .tmore { width:20px; height:20px; border-radius:3px; }
       .tstrip .tavatars .tmore { font-size:9px; }
@@ -1022,7 +1023,7 @@ export class AgendaItem extends HTMLElement {
 
     const speakersAvatars = document.createElement("div");
     speakersAvatars.classList.add("tavatars");
-    const maxAvatars = cfg.tileTier === "strip" ? 3 : 5;
+    const maxAvatars = cfg.tileTier === "strip" ? 2 : 5;
     speakers.slice(0, maxAvatars).forEach((sp) => {
       const wrapEl = sp && sp.speaker ? sp.speaker : sp;
       const img = document.createElement("img");
@@ -1054,7 +1055,19 @@ export class AgendaItem extends HTMLElement {
       titleEl.style.fontSize = "13px";
       titleEl.style.fontWeight = "700";
       titleEl.title = s.name || "";
-      if (timeText) body.append(timeEl);
+      // Title over a compact time line on the left; avatars on the right. The
+      // two-line text block is what lets a narrow column keep a readable title.
+      const text = document.createElement("div");
+      text.classList.add("tstripText");
+      titleEl.remove();
+      text.append(titleEl);
+      if (timeText) {
+        // "11:05 AM–11:10 AM" -> "11:05–11:10 AM": one meridiem, less width.
+        timeEl.textContent = timeText.replace(/\s?(AM|PM)\s?([–-])\s?/i, "$2");
+        timeEl.style.fontSize = "11px";
+        text.append(timeEl);
+      }
+      body.append(text);
       if (speakers.length) body.append(speakersAvatars);
       return;
     }

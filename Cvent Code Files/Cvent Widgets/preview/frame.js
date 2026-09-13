@@ -48,4 +48,44 @@ window.__preview = {
   info() { return dumpInfo; },
   // Test hook: the loaded dump (mutate a session, then mount() to see it).
   data() { return loadedDump; },
+  // Add/remove three synthetic short sessions (5 / 10 / 15 min) concurrent with
+  // the June 16 test block, to exercise the strip / compact tile tiers.
+  setShortSamples(on) {
+    if (!loadedDump) return;
+    // Mutate IN PLACE: the mock SDK holds a reference to this array.
+    const list = loadedDump.sessions;
+    for (let i = list.length - 1; i >= 0; i--) if (list[i]._sample) list.splice(i, 1);
+    if (!on) return;
+    const donor = loadedDump.sessions.find((x) => /Concurrent test D/i.test(x.name)) || loadedDump.sessions[0];
+    const speakers = (donor?.speakers || []).slice(0, 2);
+    const mk = (id, name, startUtc, mins, tags) => ({
+      id: `sample-${id}`,
+      name,
+      code: "",
+      isIncludedSession: false,
+      startDateTime: startUtc,
+      endDateTime: new Date(new Date(startUtc).getTime() + mins * 60000).toISOString(),
+      description: "<p>Synthetic sample session added by the preview harness to test short concurrent tiles.</p>",
+      location: { id: "loc-sample", name: "Test Location", code: "Test Location" },
+      category: { id: "cat-sample", name: "Sample", description: "" },
+      speakers,
+      presentationType: "Session",
+      isOpenForRegistration: true,
+      isWaitlistEnabled: false,
+      displayPriority: 0,
+      isFeatured: false,
+      capacity: 0,
+      waitlistCapacity: 0,
+      sessionCustomFields: tags.length ? [{ id: "cf-tags", name: "Tags", type: "MultiChoice", value: tags }] : [],
+      associatedRegistrationTypes: [],
+      locale: "en-US",
+      _sample: true,
+    });
+    list.push(
+      mk("5", "TEST 5-min lightning talk with a deliberately long title to exercise the ellipsis", "2025-06-16T09:05:00.000Z", 5, ["Fuel"]),
+      mk("10", "TEST 10-min briefing", "2025-06-16T09:15:00.000Z", 10, []),
+      mk("15", "TEST 15-min Q&A", "2025-06-16T09:30:00.000Z", 15, ["Food"]),
+      mk("20", "TEST 20-min compact tile", "2025-06-16T09:00:00.000Z", 20, ["Farm"])
+    );
+  },
 };
