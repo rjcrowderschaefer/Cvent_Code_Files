@@ -130,8 +130,18 @@ sessionCustomFields[{id,name,type,value[]}], associatedRegistrationTypes, locale
   const capFirst = s => s ? s[0].toUpperCase() + s.slice(1) : s;
   ```
 - **Keep the fixed sentence template translated, but the editable label
-  translated by the planner.** e.g. legend = template("Indicates a [X] session"
-  / "Indica uma sessão de [X]") + a planner-editable `[X]` label.
+  translated by the planner.** e.g. legend = template("[X] sessions" /
+  "Sesiones [X]") + a planner-editable `[X]` label.
+- **Core languages every widget must account for:** English (en), Spanish
+  (es), Portuguese (pt), Japanese (ja), Chinese – Mandarin (zh), Korean (ko),
+  French (fr), German (de). Build the fixed-string table with a row per
+  language and English as the fallback; map each to a date locale (en-US, es,
+  pt-BR, ja-JP, zh-CN, ko-KR, fr-FR, de-DE). Times stay 12-hour in every
+  language. Source of truth for the agenda widget's strings:
+  `agenda-widget-translations.xlsx` next to this playbook.
+- **Planner-typed text needs its own translation path** (`translations[lang][key]`
+  in config + a "Translations" editor section), since Cvent's language
+  management tool is not exposed to custom widgets.
 
 ---
 
