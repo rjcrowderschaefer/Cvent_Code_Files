@@ -440,15 +440,8 @@ export default class extends HTMLElement {
           transform: translateX(-50%); border-radius: 2px;
           background: ${cfg.plenaryAccent || "#f7a325"};
         }
-        .dateNav .navAll.active { color: ${this._textAccent(cfg.plenaryAccent || "#f7a325")}; }
-        .dateNav .navAll.active::after { bottom: 4px; width: 14px; }
-        /* "All days": a compact single-line chip, vertically centred, then a hairline. */
-        .dateNav .navAll {
-          flex-direction: row; align-self: center; min-width: 0;
-          padding: 9px 12px 11px; border-radius: 10px;
-          font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
-          white-space: nowrap;
-        }
+        /* "All days": same footprint as a day tab (two lines, centred), then a hairline. */
+        .dateNav .navAll { justify-content: center; }
         .dateNav .navDivider { flex: 0 0 1px; align-self: stretch; margin: 8px 4px; background: rgba(0,0,0,.12); }
         @media (max-width: 1024px) {
           .dateNav .navDay { font-size: ${dn.fontSizeMd ?? 16}px; }
@@ -459,7 +452,6 @@ export default class extends HTMLElement {
           .dateNav .navDow { font-size: 9px; }
           .dateNav .navDay { font-size: ${dn.fontSizeSm ?? 15}px; }
           .dateNav .navMon { font-size: 10px; }
-          .dateNav .navAll { padding: 8px 10px; font-size: 10px; }
         }
         `
           : `
@@ -520,8 +512,21 @@ export default class extends HTMLElement {
           const allLink = document.createElement("button");
           allLink.type = "button";
           const allLabel = this._allDaysLabel();
-          allLink.textContent = allLabel.full;
-          if (editorial) allLink.classList.add("navAll");
+          if (editorial) {
+            // Two stacked lines ("All" / "days") so the tab matches the
+            // weekday / day / month tabs beside it; same active treatment.
+            allLink.classList.add("navAll");
+            const big = document.createElement("span");
+            big.className = "navDay";
+            big.textContent = allLabel.big;
+            const small = document.createElement("span");
+            small.className = "navMon";
+            small.textContent = allLabel.small;
+            allLink.append(big, small);
+            allLink.setAttribute("aria-label", allLabel.full);
+          } else {
+            allLink.textContent = allLabel.full;
+          }
           allLink.addEventListener("click", () => {
             if (showDay) showDay(ALL_DAYS);
           });
