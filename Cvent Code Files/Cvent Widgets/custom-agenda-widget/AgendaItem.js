@@ -1779,9 +1779,11 @@ export class AgendaItem extends HTMLElement {
     return out.slice(0, max);
   }
 
-  // Outlined tag pill that sits in the meta row next to the filled location /
-  // category pills: same height, accent-coloured border + text, no fill, so it
-  // reads as secondary.
+  // Tag pill in the meta row next to the filled location / category pills.
+  // Deliberately NEUTRAL (soft grey fill, dark grey text, grey glyph) so the
+  // row has two tiers: accent = where / what kind, grey = topics. Same height
+  // and type size as the accent pills. `accent` is accepted for call-site
+  // symmetry but not used for colour.
   _tagPill(label, accent, fontSize, className) {
     const pill = document.createElement("span");
     pill.classList.add(className);
@@ -1791,14 +1793,15 @@ export class AgendaItem extends HTMLElement {
     pill.style.boxSizing = "border-box";
     pill.style.padding = "4px 10px";
     pill.style.borderRadius = "12px";
-    pill.style.border = `1px solid ${this._textAccent(accent)}`;
-    pill.style.color = this._textAccent(accent);
-    pill.style.background = "transparent";
+    pill.style.border = "1px solid transparent";
+    pill.style.color = "#4a4a4a";
+    pill.style.background = "#eeeff2";
     pill.style.fontSize = `${fontSize}px`;
     pill.style.fontWeight = "600";
+    pill.style.letterSpacing = ".02em";
     pill.style.textTransform = "uppercase";
     pill.style.lineHeight = "1.2";
-    const icon = this._metaIconSvg("tag", this._textAccent(accent), Math.round(fontSize * 0.85));
+    const icon = this._metaIconSvg("tag", "#8a8a8a", Math.round(fontSize * 0.85));
     const txt = document.createElement("span");
     txt.textContent = label;
     if (icon) pill.append(icon);
