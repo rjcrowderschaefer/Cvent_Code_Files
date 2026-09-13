@@ -62,8 +62,8 @@ export class AgendaItem extends HTMLElement {
       ? bs.cardBg || "#f7f7f5"
       : cfg.cardBg || t.palette?.secondary || "#ffffff";
 
-    // "show more" follows the session-type accent.
-    const showMoreColor = isFocus ? focusAccent : plenaryAccent;
+    // "show more" follows the session-type accent (darkened if very pale).
+    const showMoreColor = this._textAccent(isFocus ? focusAccent : plenaryAccent);
 
     // Modal header matches the session-type accent of the card it opened from
     // (plenary / focus / break). Not planner-configurable separately.
@@ -637,55 +637,17 @@ export class AgendaItem extends HTMLElement {
       const metaRow = document.createElement("div");
       metaRow.classList.add("sessionMetaRow");
 
-      // Accent-tinted pills (Option C), colored by session type: focus accent
-      // for focus sessions, plenary accent otherwise. Matches the session modal.
+      // Accent-tinted pills coloured by session type (focus / plenary). Built
+      // by the same helper the session modal uses so the two rows match.
       const pillAccent = isFocus
         ? focusAccent
         : cfg.plenaryAccent || "#f7a325";
-      const pillTint = this._tintColor(pillAccent, 0.14);
-      // Pill text size matches the session description font size (responsive).
-      const descTypo = cfg.typography?.sessionDescription || {};
-      const vw =
-        window.innerWidth || document.documentElement.clientWidth || 1920;
-      const descSize =
-        (vw <= 600 && descTypo.fontSizeSm) ||
-        (vw <= 1024 && descTypo.fontSizeMd) ||
-        descTypo.fontSize ||
-        13;
-      // Pills are 10% smaller than the description text.
-      const pillSize = Math.round(descSize * 0.9 * 10) / 10;
-      const pillIconSize = Math.round(pillSize * 0.95);
-
-      const makeMetaPill = (iconType, label, typoKey) => {
-        const pill = document.createElement("div");
-        pill.classList.add("sessionMetaPill");
-        pill.style.background = pillTint;
-        pill.style.color = pillAccent;
-
-        // Icon sits in a solid-accent chip (white icon) so it stands out
-        // against the light tinted pill background.
-        const iconChip = document.createElement("span");
-        iconChip.classList.add("sessionMetaIconChip");
-        iconChip.style.background = pillAccent;
-        const chipSize = Math.round(pillSize * 1.5);
-        iconChip.style.width = `${chipSize}px`;
-        iconChip.style.height = `${chipSize}px`;
-        const icon = this._metaIconSvg(iconType, "#ffffff", pillIconSize);
-        if (icon) iconChip.append(icon);
-
-        const txt = document.createElement("span");
-        txt.textContent = label;
-
-        pill.append(iconChip, txt);
-        this.applyTypographyOverrides(
-          txt,
-          (cfg.typography && cfg.typography[typoKey]) || {},
-          true
-        );
-        txt.style.fontSize = `${pillSize}px`;
-        txt.style.fontWeight = "600"; // semi-bold, overriding any bold from config
-        return pill;
-      };
+      const pillSize = this._metaPillSize(cfg);
+      const makeMetaPill = (iconType, label, typoKey) =>
+        this._metaPill({
+          iconType, label, typoKey, accent: pillAccent,
+          pillClass: "sessionMetaPill", chipClass: "sessionMetaIconChip",
+        });
 
       if (locationName) {
         metaRow.append(makeMetaPill("location", locationName, "sessionLocation"));
@@ -866,7 +828,7 @@ export class AgendaItem extends HTMLElement {
     const spkNameBase = bodyThemeCss + cssFor("speakerName", "12px");
     // Speaker names follow the session-type accent (focus / plenary), not a
     // separately configured colour.
-    const spkNameCss = spkNameBase + `color:${isFocus ? focusAccent : plenaryAccent};`;
+    const spkNameCss = spkNameBase + `color:${this._textAccent(isFocus ? focusAccent : plenaryAccent)};`;
     const spkTitleCss = bodyThemeCss + cssFor("speakerTitle", "11px");
     const spkCompanyCss = bodyThemeCss + cssFor("speakerCompany", "11px");
 
@@ -900,7 +862,7 @@ export class AgendaItem extends HTMLElement {
       }
       .tbarTag {
         display:inline-flex; align-items:center; gap:5px;
-        color:#ffffff; font-size:11px; font-weight:600; text-transform:uppercase;
+        color:${this._readableOn(accentColor)}; font-size:11px; font-weight:600; text-transform:uppercase;
       }
       .tbody { padding:8px 10px ${cfg.tileStack ? "12px" : "6px"}; display:flex; flex-direction:column; gap:3px; min-height:0; flex:1; overflow:${cfg.tileStack ? "visible" : "hidden"}; }
       .ttitle { ${titleCss} line-height:1.2; }
@@ -912,6 +874,14 @@ export class AgendaItem extends HTMLElement {
       .tspeakerMeta { ${spkTitleCss} line-height:1.15; }
       .tavatars { display:flex; align-items:center; gap:4px; }
       .tavatars img, .tavatars .tmore { width:28px; height:28px; border-radius:4px; object-fit:cover; background:#ddd; }
+      /* "strip" tier (<= 15 min): one row — title · time · tiny avatars */
+      .tbody.tstrip { flex-direction:row; align-items:center; gap:10px; padding:0 10px; }
+      .tstrip .tstripText { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:1px; }
+      .tstrip .ttitle { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.2; }
+      .tstrip .ttime { white-space:nowrap; line-height:1.2; }
+      .tstrip .tavatars { flex:0 0 auto; gap:3px; }
+      .tstrip .tavatars img, .tstrip .tavatars .tmore { width:20px; height:20px; border-radius:3px; }
+      .tstrip .tavatars .tmore { font-size:9px; }
       .tavatars .tmore { display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:600; color:#555; background:#e6e6e6; }
       .tdesc { ${descCss} line-height:1.35; }
       .desc-mobile-clamp {
@@ -926,7 +896,7 @@ export class AgendaItem extends HTMLElement {
       }
       .tmoreBtn {
         margin-top:auto; align-self:flex-start; cursor:pointer;
-        font-size:12px; font-weight:600; color:${accentColor};
+        font-size:12px; font-weight:600; color:${this._textAccent(accentColor)};
         background:none; border:none; padding:4px 0 0 0; text-decoration:underline;
       }
       ${this._sharedModalCss(cfg)}
@@ -955,11 +925,13 @@ export class AgendaItem extends HTMLElement {
     // right-aligned within the bar. Tiles are too narrow for several tags; the
     // modal lists them all.
     const tileTagValues = this._sessionTags(s);
-    if (tileTagValues.length) {
+    // Strips are too short for a tag bar; they keep the 5px accent line only
+    // (tags are in the modal).
+    if (tileTagValues.length && cfg.tileTier !== "strip") {
       bar.classList.add("tbarTagged");
       const tagChip = document.createElement("span");
       tagChip.classList.add("tbarTag");
-      const tagIcon = this._metaIconSvg("tag", "#ffffff", 10);
+      const tagIcon = this._metaIconSvg("tag", this._readableOn(accentColor), 10);
       const tagTxt = document.createElement("span");
       tagTxt.textContent =
         tileTagValues[0] +
@@ -1013,7 +985,7 @@ export class AgendaItem extends HTMLElement {
 
     const speakersAvatars = document.createElement("div");
     speakersAvatars.classList.add("tavatars");
-    const maxAvatars = 5;
+    const maxAvatars = cfg.tileTier === "strip" ? 2 : 5;
     speakers.slice(0, maxAvatars).forEach((sp) => {
       const wrapEl = sp && sp.speaker ? sp.speaker : sp;
       const img = document.createElement("img");
@@ -1029,10 +1001,43 @@ export class AgendaItem extends HTMLElement {
       speakersAvatars.append(more);
     }
 
-    // Description (stripped to plain text for the tile)
-    const descText = (s.description || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+    // Description (stripped to plain text for the tile). Compact and strip
+    // tiers omit it — the modal has it.
+    const descText =
+      cfg.tileTier === "compact" || cfg.tileTier === "strip"
+        ? ""
+        : (s.description || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
     const descEl = document.createElement("div");
     descEl.classList.add("tdesc");
+
+    // STRIP tier: a single row, no fitting pass. Title is one line with an
+    // ellipsis (never shrunk), time inline, up to three 20px avatars.
+    if (cfg.tileTier === "strip" && !cfg.tileStack) {
+      body.classList.add("tstrip");
+      titleEl.style.fontSize = "13px";
+      titleEl.style.fontWeight = "700";
+      titleEl.title = s.name || "";
+      // Title over a compact time line on the left; avatars on the right. The
+      // two-line text block is what lets a narrow column keep a readable title.
+      const text = document.createElement("div");
+      text.classList.add("tstripText");
+      titleEl.remove();
+      text.append(titleEl);
+      if (timeText) {
+        // "11:05 AM–11:10 AM" -> "11:05–11:10 AM": one meridiem, less width.
+        timeEl.textContent = timeText.replace(/\s?(AM|PM)\s?([–-])\s?/i, "$2");
+        timeEl.style.fontSize = "11px";
+        text.append(timeEl);
+      }
+      body.append(text);
+      if (speakers.length) body.append(speakersAvatars);
+      return;
+    }
+    // COMPACT tier: title capped at 14px so two lines + time + avatars fit
+    // the 104px floor without the fitting pass shrinking it.
+    if (cfg.tileTier === "compact" && !cfg.tileStack) {
+      titleEl.style.fontSize = "14px";
+    }
 
     // STACK MODE (mobile): content-height card. Show time, full description
     // (no truncation), and full speaker rows. No fixed-height fit needed.
@@ -1264,36 +1269,24 @@ export class AgendaItem extends HTMLElement {
       const pillAccent = isFocusSession
         ? cfg.focusAccent || "#1a7f8e"
         : cfg.plenaryAccent || "#f7a325";
-      // Light tint background derived from the accent (12% over white).
-      const tint = this._tintColor(pillAccent, 0.14);
-
       const metaRow = document.createElement("div");
       metaRow.classList.add("smodalMetaRow");
 
-      const makePill = (iconType, label) => {
-        const pill = document.createElement("div");
-        pill.classList.add("smodalMeta");
-        pill.style.background = tint;
-        pill.style.color = pillAccent;
-        const iconChip = document.createElement("span");
-        iconChip.classList.add("smodalMetaIconChip");
-        iconChip.style.background = pillAccent;
-        const icon = this._metaIconSvg(iconType, "#ffffff", 11);
-        if (icon) iconChip.append(icon);
-        const txt = document.createElement("span");
-        txt.textContent = label;
-        pill.append(iconChip, txt);
-        return pill;
-      };
+      // Same builder + typography keys as the standalone card's pills.
+      const makePill = (iconType, label, typoKey) =>
+        this._metaPill({
+          iconType, label, typoKey, accent: pillAccent,
+          pillClass: "smodalMeta", chipClass: "smodalMetaIconChip",
+        });
 
       if (locName) {
-        metaRow.append(makePill("location", locName));
+        metaRow.append(makePill("location", locName, "sessionLocation"));
       }
       if (catName) {
-        metaRow.append(makePill("category", catName));
+        metaRow.append(makePill("category", catName, "sessionCategory"));
       }
       modalTags.forEach((tag) =>
-        metaRow.append(this._tagPill(tag, pillAccent, 12.5, "smodalTagPill"))
+        metaRow.append(this._tagPill(tag, pillAccent, this._metaPillSize(cfg), "smodalTagPill"))
       );
       bodyEl.append(metaRow);
     }
@@ -1600,9 +1593,9 @@ export class AgendaItem extends HTMLElement {
     // colour is baked into the tracked override so a resize re-apply keeps it.
     const nameIsFocus =
       cfg.showAccentBar === true && cfg.isFocus === true;
-    const nameAccent = nameIsFocus
-      ? cfg.focusAccent || "#1a7f8e"
-      : cfg.plenaryAccent || "#f7a325";
+    const nameAccent = this._textAccent(
+      nameIsFocus ? cfg.focusAccent || "#1a7f8e" : cfg.plenaryAccent || "#f7a325"
+    );
     this.applyTypographyOverrides(
       nameSpan,
       { ...(cfg.typography?.speakerName || {}), color: nameAccent },
@@ -1786,9 +1779,11 @@ export class AgendaItem extends HTMLElement {
     return out.slice(0, max);
   }
 
-  // Outlined tag pill that sits in the meta row next to the filled location /
-  // category pills: same height, accent-coloured border + text, no fill, so it
-  // reads as secondary.
+  // Tag pill in the meta row next to the filled location / category pills.
+  // Deliberately NEUTRAL (soft grey fill, dark grey text, grey glyph) so the
+  // row has two tiers: accent = where / what kind, grey = topics. Same height
+  // and type size as the accent pills. `accent` is accepted for call-site
+  // symmetry but not used for colour.
   _tagPill(label, accent, fontSize, className) {
     const pill = document.createElement("span");
     pill.classList.add(className);
@@ -1798,14 +1793,15 @@ export class AgendaItem extends HTMLElement {
     pill.style.boxSizing = "border-box";
     pill.style.padding = "4px 10px";
     pill.style.borderRadius = "12px";
-    pill.style.border = `1px solid ${accent}`;
-    pill.style.color = accent;
-    pill.style.background = "transparent";
+    pill.style.border = "1px solid transparent";
+    pill.style.color = "#4a4a4a";
+    pill.style.background = "#eeeff2";
     pill.style.fontSize = `${fontSize}px`;
     pill.style.fontWeight = "600";
+    pill.style.letterSpacing = ".02em";
     pill.style.textTransform = "uppercase";
     pill.style.lineHeight = "1.2";
-    const icon = this._metaIconSvg("tag", accent, Math.round(fontSize * 0.85));
+    const icon = this._metaIconSvg("tag", "#8a8a8a", Math.round(fontSize * 0.85));
     const txt = document.createElement("span");
     txt.textContent = label;
     if (icon) pill.append(icon);
@@ -1841,19 +1837,19 @@ export class AgendaItem extends HTMLElement {
       .smodalTime { font-size:13px; color:#666; margin-top:4px; }
       .smodalClose {
         appearance:none; width:40px; height:40px; border-radius:50%;
-        border:2px solid ${accent}; background:transparent; color:${accent};
+        border:2px solid ${this._textAccent(accent)}; background:transparent; color:${this._textAccent(accent)};
         font-size:22px; line-height:1; cursor:pointer; flex-shrink:0;
         display:inline-flex; align-items:center; justify-content:center;
         transition: background .15s ease, color .15s ease;
       }
-      .smodalClose:hover { background:${accent}; color:#fff; }
+      .smodalClose:hover { background:${accent}; color:${this._readableOn(accent)}; }
       .smodalCloseFloat { position:absolute; top:16px; right:16px; z-index:2; }
       .smodalBody { padding:16px 18px; }
       .smodalDesc { font-size:14px; line-height:1.5; color:#333; margin-bottom:16px; }
       .smodalTags { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
       .smodalTag { font-size:12px; border:0.5px solid #bbb; border-radius:12px; padding:3px 12px; }
       .smodalMetaRow { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
-      .smodalMeta { display:inline-flex; align-items:center; gap:5px; font-size:12.5px; text-transform:uppercase; font-weight:600; border-radius:12px; padding:4px 10px 4px 4px; }
+      .smodalMeta { display:inline-flex; align-items:center; gap:5px; text-transform:uppercase; font-weight:600; border-radius:12px; padding:4px 10px 4px 4px; }
       .smodalMetaIconChip { display:inline-flex; align-items:center; justify-content:center; width:19px; height:19px; border-radius:50%; flex-shrink:0; }
       .smodalMetaIcon { width:12px; height:12px; object-fit:contain; display:inline-block; }
       .smodalSpeakersHdr { font-size:15px; font-weight:700; margin:4px 0 10px; }
@@ -1911,6 +1907,76 @@ export class AgendaItem extends HTMLElement {
       : lang === "pt" ? (isMod ? "Moderador" : "Palestrante")
       : isMod ? "Moderator" : "Speaker";
     return { label, isModerator: isMod, company: isMod ? cleanCompany : (company || "").trim() };
+  }
+
+  // ---- Contrast helpers -------------------------------------------------
+  // Perceived brightness 0–255 (YIQ). Non-hex input -> mid value.
+  _brightness(color) {
+    const h = (color || "").trim().replace("#", "");
+    const hex = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+    if (hex.length !== 6) return 128;
+    const r = parseInt(hex.slice(0, 2), 16), g = parseInt(hex.slice(2, 4), 16), b = parseInt(hex.slice(4, 6), 16);
+    if ([r, g, b].some(Number.isNaN)) return 128;
+    return (r * 299 + g * 587 + b * 114) / 1000;
+  }
+  // Text colour to put ON a solid accent background: white on dark, near-black on light.
+  _readableOn(bg) {
+    return this._brightness(bg) < 150 ? "#ffffff" : "#111111";
+  }
+  // Accent used AS text (names, eyebrow, tags, "show more"): a very pale accent
+  // is darkened so it stays legible on white / on its own tint.
+  _textAccent(accent) {
+    const b = this._brightness(accent);
+    if (b <= 175) return accent;
+    const h = (accent || "").trim().replace("#", "");
+    const hex = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+    if (hex.length !== 6) return accent;
+    const mix = (c) => Math.round(parseInt(c, 16) * 0.55); // 45% toward black
+    const to2 = (n) => n.toString(16).padStart(2, "0");
+    return `#${to2(mix(hex.slice(0, 2)))}${to2(mix(hex.slice(2, 4)))}${to2(mix(hex.slice(4, 6)))}`;
+  }
+
+  // Pill text size derived from the session-description typography (90% of
+  // it, responsive), shared by the card and the session modal so the two
+  // meta rows match exactly.
+  _metaPillSize(cfg) {
+    const descTypo = cfg?.typography?.sessionDescription || {};
+    const vw = window.innerWidth || document.documentElement.clientWidth || 1920;
+    const descSize =
+      (vw <= 600 && descTypo.fontSizeSm) ||
+      (vw <= 1024 && descTypo.fontSizeMd) ||
+      descTypo.fontSize ||
+      13;
+    return Math.round(descSize * 0.9 * 10) / 10;
+  }
+
+  // ONE builder for the location / category pills on the standalone card and
+  // in the session modal: accent-tinted pill, solid-accent icon chip with a
+  // readable icon, text in the planner's sessionLocation / sessionCategory
+  // typography (size + weight normalised so the pill stays compact).
+  _metaPill({ iconType, label, typoKey, accent, pillClass, chipClass }) {
+    const cfg = this.config || {};
+    const pillSize = this._metaPillSize(cfg);
+    const pillIconSize = Math.round(pillSize * 0.95);
+    const pill = document.createElement("div");
+    pill.classList.add(pillClass);
+    pill.style.background = this._tintColor(accent, 0.14);
+    pill.style.color = this._textAccent(accent);
+    const iconChip = document.createElement("span");
+    iconChip.classList.add(chipClass);
+    iconChip.style.background = accent;
+    const chipSize = Math.round(pillSize * 1.5);
+    iconChip.style.width = `${chipSize}px`;
+    iconChip.style.height = `${chipSize}px`;
+    const icon = this._metaIconSvg(iconType, this._readableOn(accent), pillIconSize);
+    if (icon) iconChip.append(icon);
+    const txt = document.createElement("span");
+    txt.textContent = label;
+    pill.append(iconChip, txt);
+    this.applyTypographyOverrides(txt, (cfg.typography && cfg.typography[typoKey]) || {}, true);
+    txt.style.fontSize = `${pillSize}px`;
+    txt.style.fontWeight = "600";
+    return pill;
   }
 
   _tintColor(hex, amount) {
@@ -1981,7 +2047,7 @@ export class AgendaItem extends HTMLElement {
     this.applyTypographyOverrides(refs.nameEl, cfg.typography?.modalSpeakerName, true);
     this.applyTypographyOverrides(refs.titleEl, titleTypo, true);
     this.applyTypographyOverrides(refs.companyEl, cfg.typography?.modalSpeakerCompany, true);
-    if (refs.roleEl) refs.roleEl.style.color = accent;
+    if (refs.roleEl) refs.roleEl.style.color = this._textAccent(accent);
     this.applyTypographyOverrides(refs.bioEl, cfg.typography?.modalSpeakerBio, true);
     this.applyTypographyOverrides(refs.sessionsHdr, cfg.typography?.modalSessionsHeader, true);
 

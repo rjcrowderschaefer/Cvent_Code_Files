@@ -64,6 +64,11 @@ agenda with extensive custom features built over many iterations.
   es/pt). Supported: en, es, pt.
 - **Native session tags are NOT SDK-exposed** — we use a `Tags` MultiChoice
   custom field instead. Focus/Break/etc. also use custom fields.
+- **Concurrent tile tiers by duration** (2026-09-12): <=15 min = "strip" (48px,
+  one row: title · time · up to 3 tiny avatars, plain accent bar, no tags),
+  16–29 min = "compact" (104px, 14px title, time, avatar row, no description),
+  >=30 min = "full". `tierOf()` in widget.js sets `cfg.tileTier`; per-tier
+  floors feed the stretched time scale so short sessions barely distort it.
 - **Concurrent tiles** are opt-in (`concurrentTiles` toggle, default off). When
   on, overlapping sessions render as a time grid (4px/min, MIN_H 118, MAX_H 440);
   plenary-left/focus-right for same start times; tiles pin speakers to bottom,
@@ -72,6 +77,16 @@ agenda with extensive custom features built over many iterations.
 - **Compact typography** is the default scale now (title 17/desc 13/speaker 14 px
   on desktop).
 - **Bios** come as `\r\n\r\n` plain text — convert to `<p>` before innerHTML.
+- **Contrast helpers** (2026-09-13, AgendaItem.js): `_readableOn(bg)` picks
+  white or near-black text for anything sitting ON a solid accent (tile tag
+  bar, active date tab, close-button hover, pill icon chips);
+  `_textAccent(accent)` darkens a very pale accent when it is used AS text
+  (speaker names, tags, role eyebrow, "show more", close button). Use them
+  rather than hardcoding `#fff` on an accent. widget.js has its own
+  `_readableOn` for the date tabs.
+- **Meta pills** (location / category) on the card AND the session modal come
+  from one builder, `_metaPill()`, using the sessionLocation / sessionCategory
+  typography and a size derived from the description typography.
 - **Accent-derived colours** (2026-09-12): the time column, speaker names,
   "show more", and the active date tab all take the Plenary accent (or the
   Focus accent on focus sessions). `gutterBg`, `showMoreColor`,

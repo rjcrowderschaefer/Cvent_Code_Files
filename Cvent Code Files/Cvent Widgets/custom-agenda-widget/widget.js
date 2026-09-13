@@ -379,26 +379,38 @@ export default class extends HTMLElement {
         }
         .dateNav::-webkit-scrollbar { display:none; }
         .dateNav button {
+          position: relative;
           flex: 0 0 auto; scroll-snap-align:start;
           display:flex; flex-direction:column; align-items:center; gap:1px;
-          min-width: 68px; padding: 8px 14px; border:none; border-radius:10px;
+          min-width: 68px; padding: 8px 14px 10px; border:none; border-radius:10px;
           background: transparent; cursor:pointer; font-family: inherit;
           color: ${dn.inactiveColor || "#6b6b6b"};
-          transition: background .15s ease, color .15s ease;
+          transition: background .15s ease, color .15s ease, box-shadow .15s ease;
         }
-        .dateNav button:hover { background: rgba(0,0,0,.05); }
+        .dateNav button:hover { background: rgba(255,255,255,.55); }
         .dateNav .navDow { font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; opacity:.85; }
         .dateNav .navDay { font-size:${dn.fontSize ?? 18}px; font-weight:700; line-height:1.1; }
         .dateNav .navMon { font-size:11px; font-weight:500; opacity:.85; }
+        /* Active = a raised white segment (segmented-control style). The accent is
+           used sparingly: the day number and a short underline, not a solid fill. */
         .dateNav button.active {
-          background: ${cfg.plenaryAccent || "#f7a325"};
-          color: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,.12);
+          background: #ffffff;
+          color: ${dn.activeColor || "#111111"};
+          box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 3px 10px rgba(0,0,0,.10);
         }
         .dateNav button.active .navDow, .dateNav button.active .navMon { opacity: 1; }
+        .dateNav button.active .navDay { color: ${this._textAccent(cfg.plenaryAccent || "#f7a325")}; }
+        .dateNav button.active::after {
+          content: ""; position: absolute; left: 50%; bottom: 5px; width: 18px; height: 3px;
+          transform: translateX(-50%); border-radius: 2px;
+          background: ${cfg.plenaryAccent || "#f7a325"};
+        }
+        .dateNav .navAll.active { color: ${this._textAccent(cfg.plenaryAccent || "#f7a325")}; }
+        .dateNav .navAll.active::after { bottom: 4px; width: 14px; }
         /* "All days": a compact single-line chip, vertically centred, then a hairline. */
         .dateNav .navAll {
           flex-direction: row; align-self: center; min-width: 0;
-          padding: 9px 12px; border-radius: 10px;
+          padding: 9px 12px 11px; border-radius: 10px;
           font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
           white-space: nowrap;
         }
@@ -911,7 +923,14 @@ export default class extends HTMLElement {
   _renderConcurrentGrid(blk, theme, cfg, allSessions, getSpeakers, eventTimezone) {
     // --- Tunable geometry constants ---
     const PX_PER_MIN = 4; // tuned for a 30-60 min session norm (30min ~= content floor)
-    const MIN_H = 118; // floor: enough for title + start/end time + a speaker row
+    const MIN_H = 118; // floor for FULL tiles: title + time + speaker row + some description
+    // Shorter sessions get shorter floors so the time axis barely stretches and
+    // a 5-minute item doesn't loom as large as a 30-minute one:
+    //   <= 15 min  -> "strip"   (one line: title · time · tiny avatars)
+    //   16–29 min  -> "compact" (title, time, avatar row; no description)
+    //   >= 30 min  -> "full"
+    const STRIP_H = 48;
+    const COMPACT_H = 104;
     const MAX_H = 440; // cap (~110 min at 4px/min) so very long sessions don't dominate
     const ROW_GAP = 5; // visual gap below each tile (separates stacked tiles)
     const RAIL_W = 80; // left time-rail width (matches single-card gutter)
@@ -927,6 +946,10 @@ export default class extends HTMLElement {
     );
     const startMsOf = (s) => new Date(s.startDateTime).getTime();
     const endMsOf = (s) => new Date(s.endDateTime).getTime();
+    const durMin = (s) => (endMsOf(s) - startMsOf(s)) / 60000;
+    const tierOf = (s) => (durMin(s) <= 15 ? "strip" : durMin(s) < 30 ? "compact" : "full");
+    const minHFor = (s) =>
+      tierOf(s) === "strip" ? STRIP_H : tierOf(s) === "compact" ? COMPACT_H : MIN_H;
 
     // Determine the last tile in each column (it should NOT be gap-trimmed, so
     // it reaches its true end-time gridline).
@@ -959,7 +982,7 @@ export default class extends HTMLElement {
         posOfMs.get(prevMs) + Math.round(((ms - prevMs) / 60000) * PX_PER_MIN);
       sessions.forEach((s) => {
         if (endMsOf(s) !== ms) return;
-        const need = MIN_H + (lastInColumn.has(s) ? 0 : ROW_GAP);
+        const need = minHFor(s) + (lastInColumn.has(s) ? 0 : ROW_GAP);
         pos = Math.max(pos, posOfMs.get(startMsOf(s)) + need);
       });
       posOfMs.set(ms, pos);
@@ -976,14 +999,14 @@ export default class extends HTMLElement {
     const topOf = (s) => timePos(startMsOf(s));
     // Full span-based height (capped), WITHOUT the row-gap trim.
     const fullTileHeight = (s) =>
-      Math.max(MIN_H, Math.min(MAX_H, timePos(endMsOf(s)) - timePos(startMsOf(s))));
+      Math.max(minHFor(s), Math.min(MAX_H, timePos(endMsOf(s)) - timePos(startMsOf(s))));
 
     // Rendered height: last tile in a column keeps full height (aligns to end
     // gridline); others are trimmed by ROW_GAP for visual separation.
     const tileHeight = (s) =>
       lastInColumn.has(s)
         ? fullTileHeight(s)
-        : Math.max(MIN_H, fullTileHeight(s) - ROW_GAP);
+        : Math.max(minHFor(s), fullTileHeight(s) - ROW_GAP);
 
     // Distinct times (starts + ends) for gridlines + rail labels.
     const distinctTimes = new Map(); // pos -> ms
@@ -1146,6 +1169,7 @@ export default class extends HTMLElement {
         ...this._detectSessionFields(s),
         eventLang: this._eventLang || "en",
         tileMode: true,
+        tileTier: tierOf(s),
         tileHeight: tileHeight(s),
       };
       el.style.display = "block";
@@ -1468,6 +1492,29 @@ export default class extends HTMLElement {
       };
       raf = requestAnimationFrame(step);
     });
+  }
+
+  // Text colour to put ON a solid accent: white on dark accents, near-black on
+  // light ones (perceived brightness, YIQ).
+  _readableOn(color) {
+    const h = (color || "").trim().replace("#", "");
+    const hex = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+    if (hex.length !== 6) return "#ffffff";
+    const r = parseInt(hex.slice(0, 2), 16), g = parseInt(hex.slice(2, 4), 16), b = parseInt(hex.slice(4, 6), 16);
+    if ([r, g, b].some(Number.isNaN)) return "#ffffff";
+    return (r * 299 + g * 587 + b * 114) / 1000 < 150 ? "#ffffff" : "#111111";
+  }
+
+  // A very pale accent, darkened for use as text (mirror of AgendaItem._textAccent).
+  _textAccent(accent) {
+    const h = (accent || "").trim().replace("#", "");
+    const hex = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+    if (hex.length !== 6) return accent;
+    const r = parseInt(hex.slice(0, 2), 16), g = parseInt(hex.slice(2, 4), 16), b = parseInt(hex.slice(4, 6), 16);
+    if ([r, g, b].some(Number.isNaN)) return accent;
+    if ((r * 299 + g * 587 + b * 114) / 1000 <= 175) return accent;
+    const to2 = (n) => Math.round(n * 0.55).toString(16).padStart(2, "0");
+    return `#${to2(r)}${to2(g)}${to2(b)}`;
   }
 
   // "All days" tab wording (filter mode), localised to the runtime language.
