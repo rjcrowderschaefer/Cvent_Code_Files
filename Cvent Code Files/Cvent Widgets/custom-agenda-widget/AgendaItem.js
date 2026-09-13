@@ -548,12 +548,15 @@ export class AgendaItem extends HTMLElement {
     // Focus tag — small pill placed top-right ON THE SAME LINE as the title.
     let focusTag = null;
     if (isFocus) {
+      const lang = cfg.eventLang || "en";
+      const translated = ((cfg.translations || {})[lang] || {}).focusLabel;
       const focusLabel =
-        typeof cfg.focusLabel === "string" && cfg.focusLabel.trim()
+        typeof translated === "string" && translated.trim()
+          ? translated.trim()
+          : typeof cfg.focusLabel === "string" && cfg.focusLabel.trim()
           ? cfg.focusLabel.trim()
           : "Focus";
       focusTag = document.createElement("div");
-      const lang = cfg.eventLang || "en";
       focusTag.textContent =
         lang === "es"
           ? `sesión de ${focusLabel}`

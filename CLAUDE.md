@@ -68,8 +68,12 @@ agenda with extensive custom features built over many iterations.
   "Concurrent sessions", "Unknown Date", the close aria-label and the avatar
   alt. A MutationObserver on `<html lang>` re-renders on switch. Dates follow
   the language; TIMES ARE ALWAYS 12-HOUR (en-US) in every language, by
-  decision. Planner-typed text (header, subheader, eyebrow, legend labels) is
-  never translated.
+  decision. Planner-typed text (header, subheader, eyebrow, legend labels) can
+  be translated per event via `cfg.translations[lang][key]` (editor section
+  "Translations", last in the panel; es + pt); a blank/missing entry falls back
+  to the base value. Resolved by `_plannerText()` in widget.js (and inline for
+  the focus tag in AgendaItem.js); the masthead is re-texted via
+  `_applyPlannerText()` once the language is known.
 - **Native session tags are NOT SDK-exposed** — we use a `Tags` MultiChoice
   custom field instead. Focus/Break/etc. also use custom fields.
 - **Concurrent tile tiers by duration** (2026-09-12): <=15 min = "strip" (48px,
