@@ -60,6 +60,12 @@ agenda with extensive custom features built over many iterations.
   `Europe/London`. See `_tzNormalize` / TZ_NORMALIZE in widget.js.
 - **Language:** the runtime selector lives in `document.documentElement.lang`
   (NOT the event default). Detect there, fall back to event default, then EN.
+  CORE LANGUAGES to account for in every widget: en, es, pt, ja, zh, ko, fr,
+  de (English fallback). Shipped translations today: en / es / pt; the other
+  five are pending — see `agenda-widget-translations.xlsx` in the Playbook
+  folder (translator hand-off sheet) and add rows to the `_t()` tables,
+  `_allDaysLabel`, `_sessionCountLabel`, `_speakerRole`, the legend / focus-tag
+  templates and `_mapLang` / `_dateLocale` when they arrive.
   Localized (en / es / pt, English fallback): date headers (first letter
   capitalized for es/pt), date tabs + "All days", session counts, legend
   template, focus tag, modal role eyebrow, and — via the `_t()` string tables
