@@ -110,6 +110,20 @@ agenda with extensive custom features built over many iterations.
   Focus accent on focus sessions). `gutterBg`, `showMoreColor`,
   `dateNav.underlineColor` and `typography.speakerName.color` are no longer
   read; their editor controls are gone. Don't re-add per-element colours.
+- **Session filters** (2026-09-13, opt-in `showFilters`): a chip bar under the
+  date nav — Type (plenary / focus, using the planner labels), Location,
+  Category, Tags — each a checkbox menu; a facet appears only with 2+ values;
+  AND across facets, OR within; breaks hide when a Type is chosen. Nav tabs,
+  eyebrow and speaker "appears in" lists use ALL sessions; only rendered day
+  sections are filtered; an empty state with "Clear filters" shows when
+  nothing matches. Re-renders reuse a session cache (`_sessionCache`, keyed
+  by sort + page size) so filtering never refetches.
+- **Editor trimmed** (2026-09-13): typography blocks and the date nav expose ONE
+  font size (tablet / phone sizes come from the built-in `fontSizeMd` /
+  `fontSizeSm` defaults, still honoured if present in a saved config). Removed
+  controls: Nav background, Focus gutter text colour (now `_readableOn(focus
+  accent)`), Break icon colour (follows break time text colour), Modal
+  divider / content background (fixed). Don't re-add per-breakpoint fields.
 - **Editor "New Features" section** (second in the panel) holds every opt-in
   toggle: Header style + Eyebrow text, Date nav behaviour, accent bar, focus
   legend, concurrent tiles. Session Types keeps only the colours and labels.
