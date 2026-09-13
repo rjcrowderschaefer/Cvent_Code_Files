@@ -57,8 +57,13 @@ window.__preview = {
     for (let i = list.length - 1; i >= 0; i--) if (list[i]._sample) list.splice(i, 1);
     if (!on) return;
     const donor = loadedDump.sessions.find((x) => /Concurrent test D/i.test(x.name)) || loadedDump.sessions[0];
+    // Pool of speakers from the test block so samples can carry 1–4 of them.
+    const pool = [];
+    loadedDump.sessions.forEach((x) => (x.speakers || []).forEach((sp) => {
+      if (!pool.some((q) => q.id === sp.id)) pool.push(sp);
+    }));
     const speakers = (donor?.speakers || []).slice(0, 2);
-    const mk = (id, name, startUtc, mins, tags) => ({
+    const mk = (id, name, startUtc, mins, tags, spk = speakers) => ({
       id: `sample-${id}`,
       name,
       code: "",
@@ -68,7 +73,7 @@ window.__preview = {
       description: "<p>Synthetic sample session added by the preview harness to test short concurrent tiles.</p>",
       location: { id: "loc-sample", name: "Test Location", code: "Test Location" },
       category: { id: "cat-sample", name: "Sample", description: "" },
-      speakers,
+      speakers: spk,
       presentationType: "Session",
       isOpenForRegistration: true,
       isWaitlistEnabled: false,
@@ -82,10 +87,11 @@ window.__preview = {
       _sample: true,
     });
     list.push(
-      mk("5", "TEST 5-min lightning talk with a deliberately long title to exercise the ellipsis", "2025-06-16T09:05:00.000Z", 5, ["Fuel"]),
-      mk("10", "TEST 10-min briefing", "2025-06-16T09:15:00.000Z", 10, []),
-      mk("15", "TEST 15-min Q&A", "2025-06-16T09:30:00.000Z", 15, ["Food"]),
-      mk("20", "TEST 20-min compact tile", "2025-06-16T09:00:00.000Z", 20, ["Farm"])
+      mk("3", "TEST 3-min welcome", "2025-06-16T09:00:00.000Z", 3, [], pool.slice(0, 1)),
+      mk("5", "TEST 5-min lightning talk with a deliberately long title to exercise the ellipsis", "2025-06-16T09:05:00.000Z", 5, ["Fuel"], pool.slice(0, 4)),
+      mk("10", "TEST 10-min briefing", "2025-06-16T09:15:00.000Z", 10, [], pool.slice(0, 3)),
+      mk("15", "TEST 15-min Q&A", "2025-06-16T09:30:00.000Z", 15, ["Food"], pool.slice(0, 2)),
+      mk("20", "TEST 20-min compact tile", "2025-06-16T09:10:00.000Z", 20, ["Farm"], pool.slice(0, 6))
     );
   },
 };
