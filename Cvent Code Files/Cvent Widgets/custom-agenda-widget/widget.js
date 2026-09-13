@@ -379,26 +379,38 @@ export default class extends HTMLElement {
         }
         .dateNav::-webkit-scrollbar { display:none; }
         .dateNav button {
+          position: relative;
           flex: 0 0 auto; scroll-snap-align:start;
           display:flex; flex-direction:column; align-items:center; gap:1px;
-          min-width: 68px; padding: 8px 14px; border:none; border-radius:10px;
+          min-width: 68px; padding: 8px 14px 10px; border:none; border-radius:10px;
           background: transparent; cursor:pointer; font-family: inherit;
           color: ${dn.inactiveColor || "#6b6b6b"};
-          transition: background .15s ease, color .15s ease;
+          transition: background .15s ease, color .15s ease, box-shadow .15s ease;
         }
-        .dateNav button:hover { background: rgba(0,0,0,.05); }
+        .dateNav button:hover { background: rgba(255,255,255,.55); }
         .dateNav .navDow { font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; opacity:.85; }
         .dateNav .navDay { font-size:${dn.fontSize ?? 18}px; font-weight:700; line-height:1.1; }
         .dateNav .navMon { font-size:11px; font-weight:500; opacity:.85; }
+        /* Active = a raised white segment (segmented-control style). The accent is
+           used sparingly: the day number and a short underline, not a solid fill. */
         .dateNav button.active {
-          background: ${cfg.plenaryAccent || "#f7a325"};
-          color: ${this._readableOn(cfg.plenaryAccent || "#f7a325")}; box-shadow: 0 2px 6px rgba(0,0,0,.12);
+          background: #ffffff;
+          color: ${dn.activeColor || "#111111"};
+          box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 3px 10px rgba(0,0,0,.10);
         }
         .dateNav button.active .navDow, .dateNav button.active .navMon { opacity: 1; }
+        .dateNav button.active .navDay { color: ${this._textAccent(cfg.plenaryAccent || "#f7a325")}; }
+        .dateNav button.active::after {
+          content: ""; position: absolute; left: 50%; bottom: 5px; width: 18px; height: 3px;
+          transform: translateX(-50%); border-radius: 2px;
+          background: ${cfg.plenaryAccent || "#f7a325"};
+        }
+        .dateNav .navAll.active { color: ${this._textAccent(cfg.plenaryAccent || "#f7a325")}; }
+        .dateNav .navAll.active::after { bottom: 4px; width: 14px; }
         /* "All days": a compact single-line chip, vertically centred, then a hairline. */
         .dateNav .navAll {
           flex-direction: row; align-self: center; min-width: 0;
-          padding: 9px 12px; border-radius: 10px;
+          padding: 9px 12px 11px; border-radius: 10px;
           font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
           white-space: nowrap;
         }
@@ -1491,6 +1503,18 @@ export default class extends HTMLElement {
     const r = parseInt(hex.slice(0, 2), 16), g = parseInt(hex.slice(2, 4), 16), b = parseInt(hex.slice(4, 6), 16);
     if ([r, g, b].some(Number.isNaN)) return "#ffffff";
     return (r * 299 + g * 587 + b * 114) / 1000 < 150 ? "#ffffff" : "#111111";
+  }
+
+  // A very pale accent, darkened for use as text (mirror of AgendaItem._textAccent).
+  _textAccent(accent) {
+    const h = (accent || "").trim().replace("#", "");
+    const hex = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+    if (hex.length !== 6) return accent;
+    const r = parseInt(hex.slice(0, 2), 16), g = parseInt(hex.slice(2, 4), 16), b = parseInt(hex.slice(4, 6), 16);
+    if ([r, g, b].some(Number.isNaN)) return accent;
+    if ((r * 299 + g * 587 + b * 114) / 1000 <= 175) return accent;
+    const to2 = (n) => Math.round(n * 0.55).toString(16).padStart(2, "0");
+    return `#${to2(r)}${to2(g)}${to2(b)}`;
   }
 
   // "All days" tab wording (filter mode), localised to the runtime language.
