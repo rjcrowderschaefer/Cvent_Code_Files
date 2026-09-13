@@ -22,6 +22,10 @@ export default class extends HTMLElement {
     // append into a container a newer render has since cleared (two config
     // updates in quick succession used to produce a doubled agenda).
     this._renderSeq = 0;
+    // Opt-in session filters (type / location / category / tags): a Set of
+    // selected values per facet. Empty set = facet not filtering.
+    this._filters = { type: new Set(), location: new Set(), category: new Set(), tags: new Set() };
+    this._openFacet = null;
   }
 
   async connectedCallback() {
@@ -66,6 +70,10 @@ export default class extends HTMLElement {
     if (this._langObserver) {
       this._langObserver.disconnect();
       this._langObserver = null;
+    }
+    if (this._docClick) {
+      document.removeEventListener("click", this._docClick, true);
+      this._docClick = null;
     }
     this._typoBindings = [];
   }
@@ -267,27 +275,37 @@ export default class extends HTMLElement {
     // (the masthead was built before the language was known).
     this._applyPlannerText();
 
-    if (!gen) {
+    // Session data doesn't change with config or filters, so re-renders reuse
+    // the last fetch (keyed by sort + page size). A page reload refetches.
+    const cacheKey = `${sort}|${pageSize}`;
+    const cached =
+      this._sessionCache && this._sessionCache.key === cacheKey
+        ? this._sessionCache.sessions
+        : null;
+    if (!gen && !cached) {
       console.warn("[widget.js] No session generator available.");
       return; // keep placeholder
     }
 
-    const sessions = [];
-    try {
-      for await (const page of gen) {
-        // Support both shapes: arrays OR { sessions: [...] }
-        const batch = Array.isArray(page)
-          ? page
-          : Array.isArray(page?.sessions)
-          ? page.sessions
-          : Array.isArray(page?.records)
-          ? page.records
-          : [];
-        if (batch.length) sessions.push(...batch);
-        if (sessions.length >= pageSize) break;
+    const sessions = cached ? [...cached] : [];
+    if (!cached) {
+      try {
+        for await (const page of gen) {
+          // Support both shapes: arrays OR { sessions: [...] }
+          const batch = Array.isArray(page)
+            ? page
+            : Array.isArray(page?.sessions)
+            ? page.sessions
+            : Array.isArray(page?.records)
+            ? page.records
+            : [];
+          if (batch.length) sessions.push(...batch);
+          if (sessions.length >= pageSize) break;
+        }
+      } catch (e) {
+        console.warn("[widget.js] Iterating session generator failed:", e);
       }
-    } catch (e) {
-      console.warn("[widget.js] Iterating session generator failed:", e);
+      this._sessionCache = { key: cacheKey, sessions: [...sessions] };
     }
     if (stale()) return; // a newer render owns the container now
 
@@ -305,8 +323,14 @@ export default class extends HTMLElement {
       container.removeChild(placeholder);
     }
 
+    // ---- Session filters (opt-in): type / location / category / tags ----
+    // The nav, eyebrow and "appears in" lists use ALL open sessions; only the
+    // rendered day sections use the filtered list.
+    const filtersOn = cfg.showFilters === true && openSessions.length > 0;
+    const filtered = filtersOn ? this._applySessionFilters(openSessions) : openSessions;
+
     // Client-side fallback sort (matches your original)
-    const sorted = [...openSessions].sort((a, b) => {
+    const sortSessions = (list) => [...list].sort((a, b) => {
       const aName = (a?.name || "").toLowerCase();
       const bName = (b?.name || "").toLowerCase();
       const aStart = a?.startDateTime ? new Date(a.startDateTime).getTime() : 0;
@@ -323,6 +347,8 @@ export default class extends HTMLElement {
           return aStart - bStart;
       }
     });
+    const sortedAll = sortSessions(openSessions);
+    const sorted = filtersOn ? sortSessions(filtered) : sortedAll;
 
     // Resolve getSpeakers once per render
     const getSpeakers = this._resolveGetSpeakers();
@@ -334,6 +360,7 @@ export default class extends HTMLElement {
 
     // Render
     if (cfg.groupByDay === false) {
+      if (filtersOn) container.appendChild(this._buildFilterBar(openSessions, cfg));
       sorted.forEach((s) =>
         container.appendChild(
           this._renderItem(s, theme, cfg, openSessions, getSpeakers, eventTimezone)
@@ -341,7 +368,10 @@ export default class extends HTMLElement {
       );
     } else {
       const groups = this._groupSessionsByDay(sorted, eventTimezone);
-      const dayKeys = [...groups.keys()];
+      // Nav tabs + eyebrow come from ALL days so they stay put while filters
+      // narrow which days actually render a section.
+      const groupsAll = filtersOn ? this._groupSessionsByDay(sortedAll, eventTimezone) : groups;
+      const dayKeys = [...groupsAll.keys()];
 
       if (this._eyebrowEl && !this._eyebrowEl.textContent && dayKeys.length) {
         this._eyebrowEl.textContent = this._formatDayRange(dayKeys);
@@ -568,6 +598,8 @@ export default class extends HTMLElement {
         container.appendChild(dateNav);
       }
 
+      if (filtersOn) container.appendChild(this._buildFilterBar(openSessions, cfg));
+
       // --- Render headers + sessions (always, nav or not) ---
       const legendEnabled =
         cfg.showAccentBar === true && cfg.showFocusLegend === true;
@@ -674,12 +706,36 @@ export default class extends HTMLElement {
         container.appendChild(section);
       }
 
+      // Empty state when filters leave nothing to show (in the current day view).
+      const emptyEl = document.createElement("div");
+      emptyEl.classList.add("agendaEmpty");
+      emptyEl.style.display = "none";
+      if (filtersOn) {
+        const msg = document.createElement("div");
+        msg.textContent = this._t("noMatches");
+        emptyEl.appendChild(msg);
+        if (this._filtersActive()) {
+          const clr = document.createElement("button");
+          clr.type = "button";
+          clr.classList.add("filterClear");
+          clr.textContent = this._t("clearFilters");
+          clr.addEventListener("click", () => this._clearFilters());
+          emptyEl.appendChild(clr);
+        }
+      }
+      container.appendChild(emptyEl);
+      const updateEmpty = () => {
+        const anyVisible = Object.values(daySections).some((sec) => sec.style.display !== "none");
+        emptyEl.style.display = !anyVisible && filtersOn ? "" : "none";
+      };
+
       if (filterMode) {
         showDay = (key) => {
           this._activeDayKey = key;
           let firstVisible = true;
           dayKeys.forEach((k) => {
             const sec = daySections[k];
+            if (!sec) return; // day filtered out entirely
             const visible = key === ALL_DAYS || k === key;
             // "flex" (not ""): the section's own layout is inline flex/column.
             sec.style.display = visible ? "flex" : "none";
@@ -695,6 +751,7 @@ export default class extends HTMLElement {
             firstVisible = false;
           });
           setActiveDay(key);
+          updateEmpty();
         };
         const remembered = this._activeDayKey;
         showDay(
@@ -702,11 +759,221 @@ export default class extends HTMLElement {
             ? remembered
             : ALL_DAYS
         );
-      } else if (showDateNav && dayKeys.length) {
-        // Highlight the first day by default; clicks move the highlight.
-        setActiveDay(dayKeys[0]);
+      } else {
+        if (showDateNav && dayKeys.length) {
+          // Highlight the first day by default; clicks move the highlight.
+          setActiveDay(dayKeys[0]);
+        }
+        updateEmpty();
       }
     }
+  }
+
+  // ===========================================================
+  // SESSION FILTERS (opt-in): type / location / category / tags
+  // ===========================================================
+
+  _sessionTagsOf(s) {
+    const field = s?.sessionCustomFields?.find((f) => f.name?.trim().toLowerCase() === "tags");
+    const raw = Array.isArray(field?.value) ? field.value : [];
+    const seen = new Set();
+    const out = [];
+    raw.forEach((v) => {
+      if (typeof v !== "string") return;
+      const tag = v.trim();
+      if (!tag || seen.has(tag.toLowerCase())) return;
+      seen.add(tag.toLowerCase());
+      out.push(tag);
+    });
+    return out;
+  }
+
+  _sessionTypeOf(s) {
+    const f = this._detectSessionFields(s);
+    return f.isBreak ? "break" : f.isFocus ? "focus" : "plenary";
+  }
+
+  // Distinct facet values across the given sessions (sorted, case-insensitive).
+  _sessionFacets(sessions) {
+    const uniq = (vals) => {
+      const m = new Map();
+      vals.forEach((v) => { const k = (v || "").trim(); if (k && !m.has(k.toLowerCase())) m.set(k.toLowerCase(), k); });
+      return [...m.values()].sort((a, b) => a.localeCompare(b));
+    };
+    const types = new Set(sessions.map((s) => this._sessionTypeOf(s)).filter((x) => x !== "break"));
+    const typeLabel = (k) =>
+      k === "focus"
+        ? this._plannerText("focusLabel", "Focus")
+        : this._capFirst(this._plannerText("plenaryLabel", "plenary"));
+    return {
+      type: ["plenary", "focus"].filter((k) => types.has(k)).map((k) => ({ value: k, label: typeLabel(k) })),
+      location: uniq(sessions.map((s) => s?.location?.name)).map((v) => ({ value: v, label: v })),
+      category: uniq(sessions.map((s) => s?.category?.name)).map((v) => ({ value: v, label: v })),
+      tags: uniq(sessions.flatMap((s) => this._sessionTagsOf(s))).map((v) => ({ value: v, label: v })),
+    };
+  }
+
+  _filtersActive() {
+    return Object.values(this._filters || {}).some((set) => set.size > 0);
+  }
+
+  // AND across facets, OR within a facet. Breaks are hidden when a TYPE filter
+  // is active (they are neither plenary nor focus).
+  _applySessionFilters(list) {
+    const F = this._filters;
+    const has = (set, v) => [...set].some((x) => x.toLowerCase() === (v || "").trim().toLowerCase());
+    return list.filter((s) => {
+      if (F.type.size) {
+        const ty = this._sessionTypeOf(s);
+        if (ty === "break" || !F.type.has(ty)) return false;
+      }
+      if (F.location.size && !has(F.location, s?.location?.name)) return false;
+      if (F.category.size && !has(F.category, s?.category?.name)) return false;
+      if (F.tags.size && !this._sessionTagsOf(s).some((tg) => has(F.tags, tg))) return false;
+      return true;
+    });
+  }
+
+  _clearFilters() {
+    Object.values(this._filters).forEach((set) => set.clear());
+    this._openFacet = null;
+    this._rerender();
+  }
+
+  // Re-render from the session cache (no refetch).
+  _rerender() {
+    this.onConfigurationUpdate(this.configuration);
+  }
+
+  _rgba(hex, a) {
+    const h = (hex || "").trim().replace("#", "");
+    const x = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+    if (x.length !== 6) return `rgba(0,0,0,${a})`;
+    const r = parseInt(x.slice(0, 2), 16), g = parseInt(x.slice(2, 4), 16), b = parseInt(x.slice(4, 6), 16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+
+  // The filter bar: one chip per facet that has 2+ values, each opening a
+  // checkbox menu; a "Clear filters" link when anything is active.
+  _buildFilterBar(sessions, cfg) {
+    const accent = cfg.plenaryAccent || "#f7a325";
+    const accentText = this._textAccent(accent);
+    const facets = this._sessionFacets(sessions);
+    const wrap = document.createElement("div");
+    wrap.classList.add("filterBar");
+
+    const style = document.createElement("style");
+    style.textContent = `
+      .filterBar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; width:calc(100% - 40px); max-width:1210px; margin:12px auto 0; box-sizing:border-box; }
+      .filterFacet { position:relative; }
+      .filterBtn {
+        appearance:none; display:inline-flex; align-items:center; gap:6px;
+        padding:7px 12px; border-radius:999px; border:1px solid #d0d5dd; background:#fff;
+        color:#333; font-family:inherit; font-size:12px; font-weight:600; line-height:1.2;
+        letter-spacing:.02em; cursor:pointer; transition:border-color .15s, background .15s, color .15s;
+      }
+      .filterBtn:hover { border-color:#9aa0a6; }
+      .filterBtn .caret { font-size:9px; opacity:.6; }
+      .filterBtn.active { border-color:${accentText}; color:${accentText}; background:${this._rgba(accent, 0.12)}; }
+      .filterBtn .count { font-size:10px; font-weight:700; background:${accent}; color:${this._readableOn(accent)}; border-radius:999px; padding:1px 6px; line-height:1.4; }
+      .filterMenu {
+        position:absolute; top:calc(100% + 6px); left:0; z-index:60; min-width:220px; max-width:320px;
+        max-height:280px; overflow:auto; background:#fff; border:1px solid #e3e5ea; border-radius:10px;
+        box-shadow:0 8px 24px rgba(0,0,0,.12); padding:6px; box-sizing:border-box;
+      }
+      .filterMenu label { display:flex; align-items:center; gap:8px; padding:7px 8px; border-radius:6px; font-size:13px; color:#222; cursor:pointer; }
+      .filterMenu label:hover { background:#f3f4f6; }
+      .filterMenu input { accent-color:${accent}; margin:0; }
+      .filterClear { appearance:none; border:none; background:transparent; color:#666; font-family:inherit; font-size:12px; font-weight:600; text-decoration:underline; cursor:pointer; padding:6px 4px; }
+      .agendaEmpty { width:calc(100% - 40px); max-width:1210px; margin:28px auto; text-align:center; color:#666; font-size:15px; display:flex; flex-direction:column; align-items:center; gap:6px; box-sizing:border-box; }
+      @media (max-width:600px) { .filterBar { width:calc(100% - 30px); gap:6px; } .filterBtn { padding:6px 10px; font-size:11px; } .agendaEmpty { width:calc(100% - 30px); } }
+    `;
+    wrap.appendChild(style);
+
+    const closeAll = () => wrap.querySelectorAll(".filterMenu").forEach((m) => (m.hidden = true));
+    if (!this._docClick) {
+      this._docClick = (e) => {
+        const path = e.composedPath ? e.composedPath() : [];
+        if (!path.some((n) => n && n.classList && n.classList.contains("filterFacet"))) {
+          this._openFacet = null;
+          closeAll();
+        }
+      };
+      document.addEventListener("click", this._docClick, true);
+    }
+
+    const FACETS = [
+      ["type", this._t("filterType")],
+      ["location", this._t("filterLocation")],
+      ["category", this._t("filterCategory")],
+      ["tags", this._t("filterTags")],
+    ];
+    FACETS.forEach(([key, label]) => {
+      const values = facets[key];
+      if (!values || values.length < 2) return; // nothing to choose between
+      const selected = this._filters[key];
+      const facet = document.createElement("div");
+      facet.classList.add("filterFacet");
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.classList.add("filterBtn");
+      if (selected.size) btn.classList.add("active");
+      btn.setAttribute("aria-haspopup", "true");
+      const txt = document.createElement("span");
+      txt.textContent = label;
+      btn.appendChild(txt);
+      if (selected.size) {
+        const count = document.createElement("span");
+        count.classList.add("count");
+        count.textContent = String(selected.size);
+        btn.appendChild(count);
+      }
+      const caret = document.createElement("span");
+      caret.classList.add("caret");
+      caret.textContent = "\u25BC";
+      btn.appendChild(caret);
+
+      const menu = document.createElement("div");
+      menu.classList.add("filterMenu");
+      menu.hidden = this._openFacet !== key;
+      btn.setAttribute("aria-expanded", menu.hidden ? "false" : "true");
+      values.forEach(({ value, label: vLabel }) => {
+        const row = document.createElement("label");
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.checked = [...selected].some((x) => x.toLowerCase() === value.toLowerCase());
+        cb.addEventListener("change", () => {
+          if (cb.checked) selected.add(value);
+          else [...selected].forEach((x) => { if (x.toLowerCase() === value.toLowerCase()) selected.delete(x); });
+          this._openFacet = key; // keep this menu open across the re-render
+          this._rerender();
+        });
+        const span = document.createElement("span");
+        span.textContent = vLabel;
+        row.append(cb, span);
+        menu.appendChild(row);
+      });
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const open = menu.hidden;
+        closeAll();
+        menu.hidden = !open;
+        this._openFacet = open ? key : null;
+        btn.setAttribute("aria-expanded", open ? "true" : "false");
+      });
+      facet.append(btn, menu);
+      wrap.appendChild(facet);
+    });
+
+    if (this._filtersActive()) {
+      const clr = document.createElement("button");
+      clr.type = "button";
+      clr.classList.add("filterClear");
+      clr.textContent = this._t("clearFilters");
+      clr.addEventListener("click", () => this._clearFilters());
+      wrap.appendChild(clr);
+    }
+    return wrap;
   }
 
   // ===========================================================
@@ -1554,9 +1821,9 @@ export default class extends HTMLElement {
   // strings widget.js renders itself).
   _t(key) {
     const T = {
-      en: { showMore: "show more", showLess: "show less", speaker: "Speaker", speakers: "Speakers", session: "Session", sessions: "Sessions", noOtherSessions: "No other sessions found.", backToSession: "\u2190 Back to session details", concurrentSessions: "Concurrent sessions", unknownDate: "Unknown Date", close: "Close", speakerPhoto: "Speaker photo" },
-      es: { showMore: "ver m\u00e1s", showLess: "ver menos", speaker: "Ponente", speakers: "Ponentes", session: "Sesi\u00f3n", sessions: "Sesiones", noOtherSessions: "No se encontraron otras sesiones.", backToSession: "\u2190 Volver a los detalles de la sesi\u00f3n", concurrentSessions: "Sesiones simult\u00e1neas", unknownDate: "Fecha desconocida", close: "Cerrar", speakerPhoto: "Foto del ponente" },
-      pt: { showMore: "ver mais", showLess: "ver menos", speaker: "Palestrante", speakers: "Palestrantes", session: "Sess\u00e3o", sessions: "Sess\u00f5es", noOtherSessions: "Nenhuma outra sess\u00e3o encontrada.", backToSession: "\u2190 Voltar aos detalhes da sess\u00e3o", concurrentSessions: "Sess\u00f5es simult\u00e2neas", unknownDate: "Data desconhecida", close: "Fechar", speakerPhoto: "Foto do palestrante" },
+      en: { showMore: "show more", showLess: "show less", speaker: "Speaker", speakers: "Speakers", session: "Session", sessions: "Sessions", noOtherSessions: "No other sessions found.", backToSession: "\u2190 Back to session details", concurrentSessions: "Concurrent sessions", unknownDate: "Unknown Date", close: "Close", speakerPhoto: "Speaker photo", noMatches: "No sessions match these filters.", clearFilters: "Clear filters", filterType: "Type", filterLocation: "Location", filterCategory: "Category", filterTags: "Tags" },
+      es: { showMore: "ver m\u00e1s", showLess: "ver menos", speaker: "Ponente", speakers: "Ponentes", session: "Sesi\u00f3n", sessions: "Sesiones", noOtherSessions: "No se encontraron otras sesiones.", backToSession: "\u2190 Volver a los detalles de la sesi\u00f3n", concurrentSessions: "Sesiones simult\u00e1neas", unknownDate: "Fecha desconocida", close: "Cerrar", speakerPhoto: "Foto del ponente", noMatches: "Ninguna sesi\u00f3n coincide con estos filtros.", clearFilters: "Borrar filtros", filterType: "Tipo", filterLocation: "Ubicaci\u00f3n", filterCategory: "Categor\u00eda", filterTags: "Etiquetas" },
+      pt: { showMore: "ver mais", showLess: "ver menos", speaker: "Palestrante", speakers: "Palestrantes", session: "Sess\u00e3o", sessions: "Sess\u00f5es", noOtherSessions: "Nenhuma outra sess\u00e3o encontrada.", backToSession: "\u2190 Voltar aos detalhes da sess\u00e3o", concurrentSessions: "Sess\u00f5es simult\u00e2neas", unknownDate: "Data desconhecida", close: "Fechar", speakerPhoto: "Foto do palestrante", noMatches: "Nenhuma sess\u00e3o corresponde a estes filtros.", clearFilters: "Limpar filtros", filterType: "Tipo", filterLocation: "Local", filterCategory: "Categoria", filterTags: "Tags" },
     };
     const lang = this._eventLang || "en";
     return (T[lang] || T.en)[key] ?? T.en[key] ?? key;

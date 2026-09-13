@@ -160,6 +160,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
       hideDateNav: false,
       dateNavMode: "jump",
       concurrentTiles: false,
+      showFilters: false,
       plenaryAccent: "#f7a325",
       focusAccent: "#1a7f8e",
       focusGutterText: "#e8f6f8",
@@ -988,6 +989,20 @@ soSelect.onchange = () => {
     // Concurrent session tiles — when ON, overlapping sessions render as
     // side-by-side tiles in a time grid. When OFF (default), all sessions render
     // in a single column regardless of overlap (the classic layout).
+    featWrap.append(
+      this._checkbox(
+        "Show session filters (type / location / category / tags)",
+        !!this._config.showFilters,
+        (v) => this._patch({ showFilters: v })
+      )
+    );
+    const filtersNote = document.createElement("div");
+    filtersNote.style.fontSize = "11px";
+    filtersNote.style.opacity = "0.7";
+    filtersNote.style.margin = "4px 0 10px";
+    filtersNote.textContent =
+      "Adds a row of filter chips under the date nav. A facet only appears when the agenda has two or more values for it. Type uses the Plenary / Focus labels; breaks hide when a type is chosen.";
+    featWrap.append(filtersNote);
     featWrap.append(
       this._checkbox(
         "Enable concurrent session tiles",
