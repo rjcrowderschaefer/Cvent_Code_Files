@@ -392,7 +392,7 @@ export default class extends HTMLElement {
         .dateNav .navMon { font-size:11px; font-weight:500; opacity:.85; }
         .dateNav button.active {
           background: ${cfg.plenaryAccent || "#f7a325"};
-          color: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,.12);
+          color: ${this._readableOn(cfg.plenaryAccent || "#f7a325")}; box-shadow: 0 2px 6px rgba(0,0,0,.12);
         }
         .dateNav button.active .navDow, .dateNav button.active .navMon { opacity: 1; }
         /* "All days": a compact single-line chip, vertically centred, then a hairline. */
@@ -1480,6 +1480,17 @@ export default class extends HTMLElement {
       };
       raf = requestAnimationFrame(step);
     });
+  }
+
+  // Text colour to put ON a solid accent: white on dark accents, near-black on
+  // light ones (perceived brightness, YIQ).
+  _readableOn(color) {
+    const h = (color || "").trim().replace("#", "");
+    const hex = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+    if (hex.length !== 6) return "#ffffff";
+    const r = parseInt(hex.slice(0, 2), 16), g = parseInt(hex.slice(2, 4), 16), b = parseInt(hex.slice(4, 6), 16);
+    if ([r, g, b].some(Number.isNaN)) return "#ffffff";
+    return (r * 299 + g * 587 + b * 114) / 1000 < 150 ? "#ffffff" : "#111111";
   }
 
   // "All days" tab wording (filter mode), localised to the runtime language.

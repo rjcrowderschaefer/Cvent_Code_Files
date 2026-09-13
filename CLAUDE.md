@@ -77,6 +77,16 @@ agenda with extensive custom features built over many iterations.
 - **Compact typography** is the default scale now (title 17/desc 13/speaker 14 px
   on desktop).
 - **Bios** come as `\r\n\r\n` plain text — convert to `<p>` before innerHTML.
+- **Contrast helpers** (2026-09-13, AgendaItem.js): `_readableOn(bg)` picks
+  white or near-black text for anything sitting ON a solid accent (tile tag
+  bar, active date tab, close-button hover, pill icon chips);
+  `_textAccent(accent)` darkens a very pale accent when it is used AS text
+  (speaker names, tags, role eyebrow, "show more", close button). Use them
+  rather than hardcoding `#fff` on an accent. widget.js has its own
+  `_readableOn` for the date tabs.
+- **Meta pills** (location / category) on the card AND the session modal come
+  from one builder, `_metaPill()`, using the sessionLocation / sessionCategory
+  typography and a size derived from the description typography.
 - **Accent-derived colours** (2026-09-12): the time column, speaker names,
   "show more", and the active date tab all take the Plenary accent (or the
   Focus accent on focus sessions). `gutterBg`, `showMoreColor`,
