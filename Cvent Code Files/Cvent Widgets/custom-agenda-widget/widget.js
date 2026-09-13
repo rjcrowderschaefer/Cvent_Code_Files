@@ -888,7 +888,7 @@ export default class extends HTMLElement {
     header.style.fontSize = "13px";
     header.style.fontWeight = "700";
     header.style.marginBottom = "10px";
-    header.textContent = `${fmt(groupStart)}–${fmt(groupEnd)} · Concurrent sessions`;
+    header.textContent = `${fmt(groupStart)}–${fmt(groupEnd)} · ${this._t("concurrentSessions")}`;
     wrap.appendChild(header);
 
     // Each session as a full-width, content-height compact TILE card (same
@@ -1266,7 +1266,7 @@ export default class extends HTMLElement {
   }
 
   _formatDayKeyLabel(key) {
-    if (key === "Unknown") return "Unknown Date";
+    if (key === "Unknown") return this._t("unknownDate");
     const [y, m, d] = key.split("-").map(Number);
     const date = new Date(y, m - 1, d);
     return this._capFirst(
@@ -1279,7 +1279,7 @@ export default class extends HTMLElement {
   }
 
   _formatDayKeyLabelShort(key) {
-    if (key === "Unknown") return "Unknown Date";
+    if (key === "Unknown") return this._t("unknownDate");
     const [y, m, d] = key.split("-").map(Number);
     const date = new Date(y, m - 1, d);
     return this._capFirst(
@@ -1515,6 +1515,18 @@ export default class extends HTMLElement {
     if ((r * 299 + g * 587 + b * 114) / 1000 <= 175) return accent;
     const to2 = (n) => Math.round(n * 0.55).toString(16).padStart(2, "0");
     return `#${to2(r)}${to2(g)}${to2(b)}`;
+  }
+
+  // Fixed UI strings, by runtime language (mirror of AgendaItem._t for the
+  // strings widget.js renders itself).
+  _t(key) {
+    const T = {
+      en: { showMore: "show more", showLess: "show less", speaker: "Speaker", speakers: "Speakers", session: "Session", sessions: "Sessions", noOtherSessions: "No other sessions found.", backToSession: "\u2190 Back to session details", concurrentSessions: "Concurrent sessions", unknownDate: "Unknown Date", close: "Close", speakerPhoto: "Speaker photo" },
+      es: { showMore: "ver m\u00e1s", showLess: "ver menos", speaker: "Ponente", speakers: "Ponentes", session: "Sesi\u00f3n", sessions: "Sesiones", noOtherSessions: "No se encontraron otras sesiones.", backToSession: "\u2190 Volver a los detalles de la sesi\u00f3n", concurrentSessions: "Sesiones simult\u00e1neas", unknownDate: "Fecha desconocida", close: "Cerrar", speakerPhoto: "Foto del ponente" },
+      pt: { showMore: "ver mais", showLess: "ver menos", speaker: "Palestrante", speakers: "Palestrantes", session: "Sess\u00e3o", sessions: "Sess\u00f5es", noOtherSessions: "Nenhuma outra sess\u00e3o encontrada.", backToSession: "\u2190 Voltar aos detalhes da sess\u00e3o", concurrentSessions: "Sess\u00f5es simult\u00e2neas", unknownDate: "Data desconhecida", close: "Fechar", speakerPhoto: "Foto do palestrante" },
+    };
+    const lang = this._eventLang || "en";
+    return (T[lang] || T.en)[key] ?? T.en[key] ?? key;
   }
 
   // "All days" tab wording (filter mode), localised to the runtime language.
