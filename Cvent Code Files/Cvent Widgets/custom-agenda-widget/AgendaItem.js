@@ -1228,16 +1228,18 @@ export class AgendaItem extends HTMLElement {
     time.classList.add("smodalTime");
     const start = s.startDateTime ? new Date(s.startDateTime) : null;
     const end = s.endDateTime ? new Date(s.endDateTime) : null;
-    const fmtFull = (d) =>
-      d
-        ? d.toLocaleString("en-US", {
-            weekday: "short", month: "short", day: "numeric",
-            hour: "numeric", minute: "2-digit", timeZone: tz,
-          })
-        : "";
+    // Date part follows the active language; time part is ALWAYS 12-hour.
     const fmtT = (d) =>
       d
         ? d.toLocaleString("en-US", { hour: "numeric", minute: "2-digit", timeZone: tz })
+        : "";
+    const fmtFull = (d) =>
+      d
+        ? `${this._capFirst(
+            d.toLocaleDateString(this._dateLocale(), {
+              weekday: "short", month: "short", day: "numeric", timeZone: tz,
+            })
+          )}, ${fmtT(d)}`
         : "";
     time.textContent = start ? `${fmtFull(start)} – ${fmtT(end)}` : "";
     headLeft.append(title, time);
