@@ -751,6 +751,15 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
       ["speakerRole",  "Speaker role / title"],
       ["speakerTag",   "Company tag"],
     ].forEach(([key, label]) => typoSection.append(this._typographyBlock(key, label)));
+    // Escape hatch for events whose saved typography predates a restyle and
+    // was never migrated: write the current defaults for every key.
+    const resetTypo = document.createElement("button");
+    resetTypo.type = "button";
+    resetTypo.className = "clear-btn";
+    resetTypo.style.marginTop = "10px";
+    resetTypo.textContent = "Reset all typography to defaults";
+    resetTypo.onclick = () => this._patch({ typography: this._makeDefaultTypography() });
+    typoSectionBlock.append(resetTypo);
     panel.append(typoSectionDetails);
 
     const typoModalDetails = this._details("Typography (Modal)", false);

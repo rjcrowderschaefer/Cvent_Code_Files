@@ -53,11 +53,11 @@ const TYPO_NEW = {
   speakerTag:  TY(12, 12, 11, "#3F3F3D", { bold: true }),
 };
 const TYPO_LEGACY = {
-  intro:     [TY(15, 14, 13, "#5C5C5A")],
+  intro:     [TY(15, 14, 13, "#5C5C5A"), TY(16, 16, 15, "#5C5C5A")],
   modalRole: [TY(15, 15, 14, "#5C5C5A")],
   modalTag:  [TY(10.5, 10.5, 10.5, "#3F3F3D", { bold: true })],
   modalBio:  [TY(14.5, 14.5, 14, "#3F3F3D")],
-  speakerName: [TY(15.5, 15.5, 15, "#141416", { bold: true })],
+  speakerName: [TY(15.5, 15.5, 15, "#141416", { bold: true }), TY(18, 16, 14, "#f7a325", { bold: true })],
   speakerRole: [TY(13, 13, 13, "#5C5C5A")],
   speakerTag:  [TY(10.5, 10.5, 10.5, "#3F3F3D", { bold: true })],
 };
