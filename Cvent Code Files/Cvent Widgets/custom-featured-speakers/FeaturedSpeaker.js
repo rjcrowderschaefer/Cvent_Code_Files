@@ -48,12 +48,18 @@ const TYPO_NEW = {
   modalRole: TY(18, 16, 15, "#5C5C5A"),
   modalTag:  TY(12, 12, 11, "#3F3F3D", { bold: true }),
   modalBio:  TY(18, 16, 15, "#3F3F3D"),
+  speakerName: TY(16, 15, 14, "#141416", { bold: true }),
+  speakerRole: TY(14, 13, 12, "#5C5C5A"),
+  speakerTag:  TY(12, 12, 11, "#3F3F3D", { bold: true }),
 };
 const TYPO_LEGACY = {
   intro:     [TY(15, 14, 13, "#5C5C5A")],
   modalRole: [TY(15, 15, 14, "#5C5C5A")],
   modalTag:  [TY(10.5, 10.5, 10.5, "#3F3F3D", { bold: true })],
   modalBio:  [TY(14.5, 14.5, 14, "#3F3F3D")],
+  speakerName: [TY(15.5, 15.5, 15, "#141416", { bold: true })],
+  speakerRole: [TY(13, 13, 13, "#5C5C5A")],
+  speakerTag:  [TY(10.5, 10.5, 10.5, "#3F3F3D", { bold: true })],
 };
 const sameTypo = (a, b) =>
   !!a && !!b &&
@@ -133,7 +139,7 @@ export class FeaturedSpeaker extends HTMLElement {
       }
       .card:hover .overlay, .card:focus-visible .overlay { opacity: 1; }
       .name {
-        font-size: 15.5px; font-weight: 700; letter-spacing: -.01em;
+        font-size: 16px; font-weight: 700; letter-spacing: -.01em;
         color: ${c.ink}; margin-bottom: 3px; transition: color .15s ease;
       }
       .card:hover .name { color: ${c.mainAccent} !important; }
@@ -142,12 +148,12 @@ export class FeaturedSpeaker extends HTMLElement {
          header for the row below. The role reserves two lines so tags still
          line up across a row of single-line names; any slack goes to the
          bottom of the card, where it merges with the grid's row gap. */
-      .role { font-size: 13px; color: ${c.muted}; min-height: calc(2 * 1.45em); margin-bottom: 8px; }
+      .role { font-size: 14px; color: ${c.muted}; min-height: calc(2 * 1.45em); margin-bottom: 8px; }
       .tagWrap { display: flex; align-items: flex-start; }
       .name, .role, .tag { overflow-wrap: break-word; min-width: 0; }
       .tag {
         display: inline-block; max-width: 100%;
-        font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+        font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
         line-height: 1.4; padding: 4px 8px; border-radius: 2px;
         background: ${c.tagBg}; color: ${c.tagInk};
       }
