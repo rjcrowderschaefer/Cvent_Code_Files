@@ -1,41 +1,18 @@
 // editor.js
-// Planner-facing editor. Renders configuration controls inside Shadow DOM
-// and persists values via setConfiguration. Follows agenda widget editor patterns.
+// Planner-facing editor for the Featured Speakers widget (NYCW design).
+// Renders configuration controls inside Shadow DOM and persists values via
+// setConfiguration. Sections: Section text, Layout, Colours, Speaker selection,
+// Modal, Typography (section) and Typography (modal).
 
 export default class FeaturedSpeakersEditor extends HTMLElement {
   constructor({ setConfiguration, initialConfiguration } = {}) {
     super();
     this.setConfiguration = setConfiguration;
 
-    const defaults = this._getDefaultConfig();
-    const incoming = initialConfiguration || {};
-
-    const defaultTypography = defaults.typography || {};
-    const incomingTypography = incoming.typography || {};
-    const mergedTypography = {};
-
-    Object.keys(defaultTypography).forEach((key) => {
-      mergedTypography[key] = {
-        ...(defaultTypography[key] || {}),
-        ...(incomingTypography[key] || {}),
-      };
-    });
-    Object.keys(incomingTypography).forEach((key) => {
-      if (!mergedTypography[key]) mergedTypography[key] = incomingTypography[key];
-    });
-
-    this._config = {
-      ...defaults,
-      ...incoming,
-      modalColors: {
-        ...(defaults.modalColors || {}),
-        ...(incoming.modalColors || {}),
-      },
-      typography: mergedTypography,
-    };
-
+    this._config = this._mergeWithDefaults(initialConfiguration || {});
     this._allSpeakers = [];
     this._speakersLoading = false;
+    this._rosterFilter = "";
 
     if (!initialConfiguration) {
       setConfiguration(this._config);
@@ -50,38 +27,28 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
   }
 
   onConfigurationUpdate(newConfig) {
-    const defaults = this._getDefaultConfig();
-    const incoming = newConfig || {};
-
-    const defaultTypography = defaults.typography || {};
-    const incomingTypography = incoming.typography || {};
-    const mergedTypography = {};
-
-    Object.keys(defaultTypography).forEach((key) => {
-      mergedTypography[key] = {
-        ...(defaultTypography[key] || {}),
-        ...(incomingTypography[key] || {}),
-      };
-    });
-    Object.keys(incomingTypography).forEach((key) => {
-      if (!mergedTypography[key]) mergedTypography[key] = incomingTypography[key];
-    });
-
-    this._config = {
-      ...defaults,
-      ...incoming,
-      modalColors: {
-        ...(defaults.modalColors || {}),
-        ...(incoming.modalColors || {}),
-      },
-      typography: mergedTypography,
-    };
-
+    this._config = this._mergeWithDefaults(newConfig || {});
     this._safeRenderUI();
   }
 
+  _mergeWithDefaults(incoming) {
+    const defaults = this._getDefaultConfig();
+    const mergedTypography = {};
+    const dT = defaults.typography || {};
+    const iT = incoming.typography || {};
+    Object.keys(dT).forEach((k) => { mergedTypography[k] = { ...(dT[k] || {}), ...(iT[k] || {}) }; });
+    Object.keys(iT).forEach((k) => { if (!mergedTypography[k]) mergedTypography[k] = iT[k]; });
+
+    return {
+      ...defaults,
+      ...incoming,
+      colors: { ...(defaults.colors || {}), ...(incoming.colors || {}) },
+      typography: mergedTypography,
+    };
+  }
+
   // =============================================
-  // SPEAKER LOADING
+  // SPEAKER LOADING (roster for the selector)
   // =============================================
 
   _resolveGetSpeakers() {
@@ -97,11 +64,8 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
 
     try {
       let gen = null;
-      if (this.cventSdk?.getSessionGenerator) {
-        gen = await this.cventSdk.getSessionGenerator("dateTimeAsc", 200);
-      } else if (typeof this.getSessionGenerator === "function") {
-        gen = await this.getSessionGenerator("dateTimeAsc", 200);
-      }
+      if (this.cventSdk?.getSessionGenerator) gen = await this.cventSdk.getSessionGenerator("dateTimeAsc", 200);
+      else if (typeof this.getSessionGenerator === "function") gen = await this.getSessionGenerator("dateTimeAsc", 200);
 
       if (!gen) {
         console.warn("[editor.js] getSessionGenerator not available; cannot load speaker roster.");
@@ -110,23 +74,17 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
 
       const sessions = [];
       for await (const page of gen) {
-        const batch = Array.isArray(page)
-          ? page
-          : Array.isArray(page?.sessions)
-          ? page.sessions
-          : Array.isArray(page?.records)
-          ? page.records
-          : [];
+        const batch = Array.isArray(page) ? page
+          : Array.isArray(page?.sessions) ? page.sessions
+          : Array.isArray(page?.records) ? page.records : [];
         if (batch.length) sessions.push(...batch);
         if (sessions.length >= 200) break;
       }
 
       const idSet = new Set();
       sessions.forEach((sess) => {
-        const list = Array.isArray(sess.resolvedSpeakers)
-          ? sess.resolvedSpeakers
-          : Array.isArray(sess.speakers)
-          ? sess.speakers.map((x) => (x && x.speaker ? x.speaker : x)).filter(Boolean)
+        const list = Array.isArray(sess.resolvedSpeakers) ? sess.resolvedSpeakers
+          : Array.isArray(sess.speakers) ? sess.speakers.map((x) => (x && x.speaker ? x.speaker : x)).filter(Boolean)
           : [];
         list.forEach((sp) => {
           const id = sp?.id || sp?.speakerId;
@@ -159,7 +117,6 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
         return aName.localeCompare(bName);
       });
 
-      console.log(`[editor.js] Loaded ${speakers.length} speakers from event.`);
       this._allSpeakers = speakers;
       this._safeRenderUI();
     } catch (e) {
@@ -170,61 +127,67 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
   }
 
   // =============================================
-  // DEFAULT CONFIG
+  // DEFAULT CONFIG (NYCW tokens)
   // =============================================
 
   _getDefaultConfig() {
     return {
-      headerText: "Featured Speakers",
-      subheaderText: "Meet the experts taking the stage",
+      eyebrowText: "Featured speakers",
+      headerText: "Meet our speakers",
+      introText: "Select a speaker to read their bio.",
+      moreText: "",
+      noteText: "",
       featuredSpeakerIds: [],
-      columns: 3,
-      cardGap: "16px",
-      cardLayout: "vertical",
-      cardBg: "#ffffff",
-      accentColor: "#f7a325",
-      showMoreColor: "#f7a325",
-      cardBorder: {
-        width: 1,
-        style: "solid",
-        color: "#000000",
-      },
-      showBio: false,
-      showBioLimited: false,
+      tileSize: 200,
+      gridGapRow: 36,
+      gridGapCol: 24,
+      gridAlign: "center",
+      hoverPrompt: "Click to view bio",
+      nameLines: 2,
+      titleLines: 3,
+      tagLines: 1,
+      fixedTextSlot: true,
+      companyAliases: [],
+      useBrandFont: true,
       showSessions: true,
-      modalColors: {
-        headerBg: "#f7a325",
-        dividerColor: "#555555",
-        contentBg: "#ffffff",
+      modalEyebrowText: "Speaker",
+      sessionsHeaderText: "Sessions",
+      colors: {
+        ink: "#141416",
+        muted: "#5C5C5A",
+        faint: "#6F6F6D",
+        hair: "#E4E4E0",
+        placeholder: "#EDEDEA",
+        accent: "#9C5F00",
+        tagBg: "#F0F0EE",
+        tagInk: "#3F3F3D",
+        modalBar: "#F7A325",
+        bioInk: "#3F3F3D",
+        focus: "#2B6CE8",
       },
       typography: this._makeDefaultTypography(),
     };
   }
 
   _makeDefaultTypography() {
-    const base = {
-      fontSize: 16,
-      fontSizeMd: 14,
-      fontSizeSm: 13,
-      color: "#000000",
-      bold: false,
-      italic: false,
-      underline: false,
-    };
+    const base = { italic: false, underline: false };
     return {
-      widgetHeader:         { ...base, fontSize: 40, fontSizeMd: 32, fontSizeSm: 24, bold: false },
-      widgetSubheader:      { ...base, fontSize: 20, fontSizeMd: 18, fontSizeSm: 14 },
-      speakerName:          { ...base, fontSize: 18, fontSizeMd: 16, fontSizeSm: 14, bold: true, color: "#f7a325" },
-      speakerTitle:         { ...base, fontSize: 14, fontSizeMd: 13, fontSizeSm: 12, italic: true },
-      speakerCompany:       { ...base, fontSize: 14, fontSizeMd: 13, fontSizeSm: 12 },
-      speakerBio:           { ...base, fontSize: 13, fontSizeMd: 12, fontSizeSm: 12 },
-      modalSpeakerName:     { ...base, bold: true },
-      modalSpeakerTitle:    { ...base, fontSize: 16, fontSizeMd: 14, fontSizeSm: 13, italic: true },
-      modalSpeakerCompany:  { ...base, fontSize: 16, fontSizeMd: 14, fontSizeSm: 13 },
-      modalSpeakerBio:      { ...base, fontSize: 15, fontSizeMd: 14, fontSizeSm: 13 },
-      modalSessionsHeader:  { ...base, fontSize: 16, fontSizeMd: 14, fontSizeSm: 13, bold: true },
-      modalSessionName:     { ...base, fontSize: 14, fontSizeMd: 13, fontSizeSm: 12, bold: true },
-      modalSessionDateTime: { ...base, fontSize: 14, fontSizeMd: 13, fontSizeSm: 12 },
+      eyebrow:              { ...base, fontSize: 11,   fontSizeMd: 11,   fontSizeSm: 11,   color: "#5C5C5A", bold: true },
+      header:               { ...base, fontSize: 42,   fontSizeMd: 34,   fontSizeSm: 26,   color: "#141416", bold: true },
+      intro:                { ...base, fontSize: 16,   fontSizeMd: 16,   fontSizeSm: 15,   color: "#5C5C5A", bold: false },
+      more:                 { ...base, fontSize: 15,   fontSizeMd: 15,   fontSizeSm: 14,   color: "#9C5F00" },
+      note:                 { ...base, fontSize: 13,   fontSizeMd: 13,   fontSizeSm: 13,   color: "#6F6F6D", bold: false, italic: true },
+      speakerName:          { ...base, fontSize: 15.5, fontSizeMd: 15.5, fontSizeSm: 15,   color: "#141416", bold: true },
+      speakerRole:          { ...base, fontSize: 13,   fontSizeMd: 13,   fontSizeSm: 13,   color: "#5C5C5A", bold: false },
+      speakerTag:           { ...base, fontSize: 10.5, fontSizeMd: 10.5, fontSizeSm: 10.5, color: "#3F3F3D", bold: true },
+      modalEyebrow:         { ...base, fontSize: 11,   fontSizeMd: 11,   fontSizeSm: 11,   color: "#9C5F00", bold: true },
+      modalName:            { ...base, fontSize: 29,   fontSizeMd: 27,   fontSizeSm: 24,   color: "#141416", bold: true },
+      modalRole:            { ...base, fontSize: 15,   fontSizeMd: 15,   fontSizeSm: 14,   color: "#5C5C5A", bold: false },
+      modalTag:             { ...base, fontSize: 10.5, fontSizeMd: 10.5, fontSizeSm: 10.5, color: "#3F3F3D", bold: true },
+      modalBio:             { ...base, fontSize: 14.5, fontSizeMd: 14.5, fontSizeSm: 14,   color: "#3F3F3D", bold: false },
+      modalSessionsHeader:  { ...base, fontSize: 11,   fontSizeMd: 11,   fontSizeSm: 11,   color: "#5C5C5A", bold: true },
+      modalSessionName:     { ...base, fontSize: 14.5, fontSizeMd: 14.5, fontSizeSm: 14,   color: "#141416", bold: true },
+      modalSessionDateTime: { ...base, fontSize: 13,   fontSizeMd: 13,   fontSizeSm: 13,   color: "#5C5C5A", bold: false },
     };
   }
 
@@ -237,9 +200,7 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     const detailsState = [...this.shadowRoot.querySelectorAll("details")].map((d) => d.open);
     this._renderUI();
     const newDetails = [...this.shadowRoot.querySelectorAll("details")];
-    detailsState.forEach((wasOpen, i) => {
-      if (newDetails[i]) newDetails[i].open = wasOpen;
-    });
+    detailsState.forEach((wasOpen, i) => { if (newDetails[i]) newDetails[i].open = wasOpen; });
     this.scrollTop = scrollTop;
   }
 
@@ -248,23 +209,26 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
 
     const style = document.createElement("style");
     style.textContent = `
-      :host {
-        display: block;
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      }
+      :host { display: block; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
       .panel { padding: 14px; }
       .section { margin: 10px 0 14px; }
       .field { margin: 8px 0; }
       .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+      .hint { font-size: 11px; color: #777; margin-top: 3px; }
       fieldset { border: 1px solid #ddd; border-radius: 8px; padding: 10px; margin: 10px 0; }
       legend { padding: 0 6px; font-weight: 600; }
       label { font-size: 12px; opacity: .85; }
+      input[type="text"], textarea {
+        width: 100%; box-sizing: border-box; padding: 6px 8px;
+        border: 1px solid #ccc; border-radius: 6px; font: inherit; font-size: 13px;
+      }
+      textarea { min-height: 64px; resize: vertical; }
       input[type="number"] {
-        width: 100px; min-width: 100px;
+        width: 90px; min-width: 90px;
         pointer-events: auto; user-select: text; -webkit-user-select: text; cursor: text;
       }
       input[type="color"] { width: 48px; height: 28px; padding: 0; border: none; background: transparent; }
-      h3 { margin: 14px 0 6px; }
+      h3 { margin: 14px 0 6px; font-size: 13px; }
       details { border: 1px solid #e7e7e7; border-radius: 8px; margin: 10px 0; background: #fff; }
       summary {
         list-style: none; cursor: pointer; padding: 10px 12px;
@@ -294,10 +258,7 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
       }
       .speaker-row:hover { border-color: #ccc; }
       .speaker-row.selected { border-color: #185FA5; background: #e6f1fb; }
-      .sp-avatar {
-        width: 32px; height: 32px; border-radius: 50%;
-        object-fit: cover; flex-shrink: 0; background: #e0e0e0;
-      }
+      .sp-avatar { width: 32px; height: 32px; border-radius: 2px; object-fit: cover; flex-shrink: 0; background: #e0e0e0; }
       .sp-info { flex: 1; min-width: 0; }
       .sp-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .sp-meta { font-size: 11px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -312,10 +273,27 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
         font-size: 11px; color: #c00; cursor: pointer;
         text-decoration: underline; background: none; border: none; padding: 0; margin-left: 8px;
       }
-      .search-input {
-        width: 100%; box-sizing: border-box; padding: 6px 10px;
-        border: 1px solid #ddd; border-radius: 6px; font-size: 13px; margin-bottom: 8px;
-      }
+      .search-input { margin-bottom: 8px; }
+      .list-head { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 600; margin: 12px 0 4px; }
+      .list-head:first-of-type { margin-top: 4px; }
+      .selected-list { margin-bottom: 4px; }
+      .speaker-row[draggable="true"] { cursor: grab; }
+      .speaker-row.dragging { opacity: .4; }
+      .speaker-row.drop-before { box-shadow: 0 -2px 0 0 #185FA5; }
+      .speaker-row.drop-after { box-shadow: 0 2px 0 0 #185FA5; }
+      .grip { color: #9a9a9a; font-size: 16px; line-height: 1; width: 10px; flex-shrink: 0; user-select: none; }
+      .add-mark { width: 20px; height: 20px; border-radius: 50%; border: 1px solid #ccc; color: #666; font-size: 14px; line-height: 18px; text-align: center; flex-shrink: 0; }
+      .speaker-row:hover .add-mark { border-color: #185FA5; color: #185FA5; }
+      .remove-btn { appearance: none; border: 0; background: transparent; color: #999; font-size: 18px; line-height: 1; cursor: pointer; padding: 2px 4px; border-radius: 4px; flex-shrink: 0; }
+      .remove-btn:hover { color: #c00; background: #fbe9e9; }
+      .alias-table { display: flex; flex-direction: column; gap: 6px; }
+      .alias-row { display: grid; grid-template-columns: 1fr 1fr 28px; gap: 6px; align-items: center; }
+      .alias-head { font-size: 11px; color: #666; font-weight: 600; }
+      .alias-row input[type="text"] { width: 100%; }
+      .small-btn { margin-top: 8px; font: inherit; font-size: 12px; padding: 5px 10px; border: 1px solid #ccc; border-radius: 6px; background: #fff; cursor: pointer; }
+      .small-btn:hover { border-color: #185FA5; color: #185FA5; }
+      .chip { font: inherit; font-size: 11px; margin: 4px 4px 0 0; padding: 3px 8px; border: 1px solid #ddd; border-radius: 12px; background: #fff; cursor: pointer; color: #333; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .chip:hover { border-color: #185FA5; color: #185FA5; }
     `;
     this.shadowRoot.append(style);
 
@@ -324,347 +302,424 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     this.shadowRoot.append(panel);
 
     // =============================================
-    // SECTION 1: WIDGET & CARD CONTROLS
+    // SECTION 1: SECTION TEXT
     // =============================================
+    const textDetails = this._details("Section Text");
+    const textBlock = this._block(textDetails);
 
-    const widgetDetails = this._details("Widget & Card Controls");
-    const widgetBlock = document.createElement("div");
-    widgetBlock.className = "block";
-    widgetDetails.append(widgetBlock);
+    this._appendTextInput(textBlock, "Eyebrow (small uppercase label)", "eyebrowText", "Featured speakers");
+    this._appendTextInput(textBlock, "Heading", "headerText", "Meet our speakers");
+    this._appendTextArea(textBlock, "Intro paragraph", "introText", "Select a speaker to read their bio.");
+    this._appendTextInput(textBlock, "“More coming” line (accent colour; leave blank to hide)", "moreText", "More speakers being announced shortly");
+    this._appendTextArea(textBlock, "Disclosure note (italic, below the grid; leave blank to hide)", "noteText", "");
+    panel.append(textDetails);
 
-    this._appendTextInput(widgetBlock, "Header", "headerText", "Featured Speakers");
-    this._appendTextInput(widgetBlock, "Subheader", "subheaderText", "Meet the experts taking the stage");
+    // =============================================
+    // SECTION 2: LAYOUT
+    // =============================================
+    const layoutDetails = this._details("Layout & Tiles");
+    const layoutBlock = this._block(layoutDetails);
 
-    // Columns
-    const columnsWrap = document.createElement("div");
-    columnsWrap.className = "section";
-    columnsWrap.append(this._label("Columns (1\u20136)"), document.createElement("br"));
-    const columnsInput = document.createElement("input");
-    columnsInput.type = "number";
-    columnsInput.min = "1";
-    columnsInput.max = "6";
-    columnsInput.value = this._config.columns || 3;
-    columnsInput.onchange = () => {
-      this._patch({ columns: Math.min(6, Math.max(1, Number(columnsInput.value) || 3)) });
-    };
-    columnsWrap.append(columnsInput);
-    widgetBlock.append(columnsWrap);
+    layoutBlock.append(
+      this._numberRow("Tile size (px, square photo)", this._config.tileSize ?? 200, 120, 400, (v) => this._patch({ tileSize: v })),
+      this._numberRow("Row gap (px)", this._config.gridGapRow ?? 36, 0, 120, (v) => this._patch({ gridGapRow: v })),
+      this._numberRow("Column gap (px)", this._config.gridGapCol ?? 24, 0, 120, (v) => this._patch({ gridGapCol: v }))
+    );
 
-    // Card Layout
-    const layoutFieldset = document.createElement("fieldset");
-    document.createElement("legend");
-    const layoutLegend = document.createElement("legend");
-    layoutLegend.textContent = "Card Layout";
-    layoutFieldset.append(layoutLegend);
-
-    const makeLayoutRadio = (label, value) => {
+    const alignFs = document.createElement("fieldset");
+    const alignLg = document.createElement("legend");
+    alignLg.textContent = "Grid alignment";
+    alignFs.append(alignLg);
+    [["Centred", "center"], ["Left", "left"]].forEach(([label, value]) => {
       const wrap = document.createElement("label");
       wrap.style.cssText = "display:flex;align-items:center;gap:6px;margin:4px 0;";
       const rb = document.createElement("input");
       rb.type = "radio";
-      rb.name = "cardLayout";
-      rb.value = value;
-      rb.checked = (this._config.cardLayout || "vertical") === value;
-      rb.onchange = () => { if (rb.checked) this._patch({ cardLayout: value }); };
+      rb.name = "gridAlign";
+      rb.checked = (this._config.gridAlign || "center") === value;
+      rb.onchange = () => { if (rb.checked) this._patch({ gridAlign: value }); };
       wrap.append(rb, document.createTextNode(label));
-      return wrap;
-    };
-    layoutFieldset.append(
-      makeLayoutRadio("Vertical (avatar on top)", "vertical"),
-      makeLayoutRadio("Horizontal (avatar left, text right)", "horizontal")
-    );
-    widgetBlock.append(layoutFieldset);
-
-    // Bio display
-    const bioFieldset = document.createElement("fieldset");
-    const bioLegend = document.createElement("legend");
-    bioLegend.textContent = "Bio Display (on card)";
-    bioFieldset.append(bioLegend);
-
-    const makeBioRadio = (label, value, checked) => {
-      const wrap = document.createElement("label");
-      wrap.style.cssText = "display:flex;align-items:center;gap:6px;margin:4px 0;";
-      const rb = document.createElement("input");
-      rb.type = "radio";
-      rb.name = "bioMode";
-      rb.value = value;
-      rb.checked = checked;
-      rb.onchange = () => {
-        if (!rb.checked) return;
-        if (value === "none")    this._patch({ showBio: false, showBioLimited: false });
-        if (value === "full")    this._patch({ showBio: true,  showBioLimited: false });
-        if (value === "limited") this._patch({ showBio: true,  showBioLimited: true  });
-      };
-      wrap.append(rb, document.createTextNode(label));
-      return wrap;
-    };
-    bioFieldset.append(
-      makeBioRadio("Hide bio",                               "none",    !this._config.showBio),
-      makeBioRadio("Show full bio",                          "full",    this._config.showBio && !this._config.showBioLimited),
-      makeBioRadio("Show limited bio (3 lines + Show more)", "limited", !!this._config.showBioLimited)
-    );
-    widgetBlock.append(bioFieldset);
-
-    widgetBlock.append(
-      this._checkbox("Show sessions in speaker modal", !!this._config.showSessions, (v) =>
-        this._patch({ showSessions: v })
-      )
-    );
-
-    widgetBlock.append(
-      this._colorRow("Card background", "cardBg", this._config.cardBg || "#ffffff", (v) =>
-        this._patch({ cardBg: v })
-      ),
-      this._colorRow("Accent color", "accentColor", this._config.accentColor || "#f7a325", (v) =>
-        this._patch({ accentColor: v })
-      ),
-      this._colorRow("Show more color", "showMoreColor", this._config.showMoreColor || "#f7a325", (v) =>
-        this._patch({ showMoreColor: v })
-      )
-    );
-
-    // Card Border
-    const borderFieldset = document.createElement("fieldset");
-    const borderLegend = document.createElement("legend");
-    borderLegend.textContent = "Card Border";
-    borderFieldset.append(borderLegend);
-
-    const borderWidthWrap = document.createElement("div");
-    borderWidthWrap.className = "row field";
-    const borderWidthInput = document.createElement("input");
-    borderWidthInput.type = "number";
-    borderWidthInput.min = "0";
-    borderWidthInput.value = this._config.cardBorder?.width ?? 1;
-    borderWidthInput.oninput = () => {
-      this._patch({ cardBorder: { ...(this._config.cardBorder || {}), width: Number(borderWidthInput.value) || 0 } });
-    };
-    borderWidthWrap.append(this._label("Width (px)"), borderWidthInput);
-
-    const borderStyleWrap = document.createElement("div");
-    borderStyleWrap.className = "row field";
-    const borderStyleSelect = document.createElement("select");
-    ["solid", "dashed", "dotted", "none"].forEach((s) => {
-      const opt = document.createElement("option");
-      opt.value = s;
-      opt.textContent = s;
-      if ((this._config.cardBorder?.style || "solid") === s) opt.selected = true;
-      borderStyleSelect.append(opt);
+      alignFs.append(wrap);
     });
-    borderStyleSelect.onchange = () => {
-      this._patch({ cardBorder: { ...(this._config.cardBorder || {}), style: borderStyleSelect.value } });
-    };
-    borderStyleWrap.append(this._label("Style"), borderStyleSelect);
+    layoutBlock.append(alignFs);
 
-    const borderColorWrap = document.createElement("div");
-    borderColorWrap.className = "row field";
-    const borderColorInput = document.createElement("input");
-    borderColorInput.type = "color";
-    borderColorInput.value = this._config.cardBorder?.color || "#000000";
-    borderColorInput.onchange = () => {
-      this._patch({ cardBorder: { ...(this._config.cardBorder || {}), color: borderColorInput.value } });
-    };
-    borderColorWrap.append(this._label("Color"), borderColorInput);
+    this._appendTextInput(layoutBlock, "Photo hover prompt (leave blank to disable)", "hoverPrompt", "Click to view bio");
 
-    borderFieldset.append(borderWidthWrap, borderStyleWrap, borderColorWrap);
-    widgetBlock.append(borderFieldset);
+    const linesFs = document.createElement("fieldset");
+    const linesLg = document.createElement("legend");
+    linesLg.textContent = "Text limits (lines, 0 = no limit)";
+    linesFs.append(linesLg);
+    linesFs.append(
+      this._numberRow("Name", this._config.nameLines ?? 2, 0, 6, (v) => this._patch({ nameLines: v })),
+      this._numberRow("Title / role", this._config.titleLines ?? 3, 0, 6, (v) => this._patch({ titleLines: v })),
+      this._numberRow("Company tag", this._config.tagLines ?? 1, 0, 6, (v) => this._patch({ tagLines: v })),
+      this._checkbox("Reserve equal text height on every tile", this._config.fixedTextSlot !== false, (v) => this._patch({ fixedTextSlot: v }))
+    );
+    const linesHint = document.createElement("div");
+    linesHint.className = "hint";
+    linesHint.textContent = "Longer text is trimmed with \u2026 on the tile; the full name, title and company always show in the bio modal.";
+    linesFs.append(linesHint);
+    layoutBlock.append(linesFs);
 
-    const h3Widget = document.createElement("h3");
-    h3Widget.textContent = "Typography (Widget)";
-    widgetBlock.append(h3Widget);
-
-    const typoWidget = document.createElement("div");
-    typoWidget.className = "grid";
-    widgetBlock.append(typoWidget);
-
-    [
-      ["widgetHeader",   "Widget Header"],
-      ["widgetSubheader","Widget Subheader"],
-      ["speakerName",    "Speaker Name"],
-      ["speakerTitle",   "Speaker Title"],
-      ["speakerCompany", "Speaker Company"],
-      ["speakerBio",     "Speaker Bio (on card)"],
-    ].forEach(([key, label]) => typoWidget.append(this._typographyBlock(key, label)));
-
-    panel.append(widgetDetails);
+    layoutBlock.append(
+      this._checkbox("Use Bloomberg brand font (Avenir)", this._config.useBrandFont !== false, (v) => this._patch({ useBrandFont: v }))
+    );
+    const fontHint = document.createElement("div");
+    fontHint.className = "hint";
+    fontHint.textContent = "Off = inherit the page font from the Cvent theme.";
+    layoutBlock.append(fontHint);
+    panel.append(layoutDetails);
 
     // =============================================
-    // SECTION 2: FEATURED SPEAKER SELECTOR
+    // SECTION 3: COLOURS
     // =============================================
+    const colorDetails = this._details("Colours", false);
+    const colorBlock = this._block(colorDetails);
+    const colors = this._config.colors || {};
+    const cRow = (label, key) =>
+      this._colorRow(label, `c-${key}`, colors[key] || "#000000", (v) => this._patch({ colors: { ...this._config.colors, [key]: v } }));
 
+    colorBlock.append(
+      cRow("Accent (name on hover, “more coming”, modal eyebrow)", "accent"),
+      cRow("Modal top bar", "modalBar"),
+      cRow("Primary text", "ink"),
+      cRow("Secondary text (eyebrow, intro, roles)", "muted"),
+      cRow("Faint text (note, placeholder initials)", "faint"),
+      cRow("Bio text", "bioInk"),
+      cRow("Company tag background", "tagBg"),
+      cRow("Company tag text", "tagInk"),
+      cRow("Hairline / dividers", "hair"),
+      cRow("Photo placeholder", "placeholder"),
+      cRow("Keyboard focus ring", "focus")
+    );
+    panel.append(colorDetails);
+
+    // =============================================
+    // SECTION 4: FEATURED SPEAKER SELECTOR
+    // Two lists: "Selected speakers" (drag to reorder, click × to remove) and
+    // "Available speakers" (click to add; hides anyone already selected).
+    // =============================================
     const selectorDetails = this._details("Featured Speaker Selection");
-    const selectorBlock = document.createElement("div");
-    selectorBlock.className = "block";
-    selectorDetails.append(selectorBlock);
+    const selectorBlock = this._block(selectorDetails);
 
-    const selectedIds = Array.isArray(this._config.featuredSpeakerIds)
-      ? this._config.featuredSpeakerIds
-      : [];
+    const selectedIds = Array.isArray(this._config.featuredSpeakerIds) ? this._config.featuredSpeakerIds.map(String) : [];
+    const byId = new Map(this._allSpeakers.map((sp) => [String(sp?.id || sp?.speakerId || ""), sp]));
+    const spName = (sp) => `${(sp?.firstName || "").trim()} ${(sp?.lastName || "").trim()}`.trim();
+    const spMeta = (sp) => [(sp?.title || sp?.designation || "").trim(), (sp?.company || sp?.organization || "").trim()].filter(Boolean).join(" · ");
+    const setIds = (ids) => this._patch({ featuredSpeakerIds: ids });
 
-    const summaryLine = document.createElement("div");
-    summaryLine.className = "selected-summary";
-    summaryLine.textContent = selectedIds.length
-      ? `${selectedIds.length} speaker${selectedIds.length > 1 ? "s" : ""} selected`
-      : "No speakers selected \u2014 all event speakers will be shown";
+    const makeAvatar = (sp) => {
+      const avatar = document.createElement("img");
+      avatar.className = "sp-avatar";
+      avatar.src = (sp?.profilePictureUri || "").trim() ||
+        "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/pix/2ee8c4642e97488abc1852d9166b179b.png";
+      avatar.alt = "";
+      avatar.draggable = false;
+      return avatar;
+    };
+    const makeInfo = (sp) => {
+      const info = document.createElement("div");
+      info.className = "sp-info";
+      const nameDiv = document.createElement("div");
+      nameDiv.className = "sp-name";
+      nameDiv.textContent = spName(sp) || "(Unknown speaker)";
+      const metaDiv = document.createElement("div");
+      metaDiv.className = "sp-meta";
+      metaDiv.textContent = spMeta(sp);
+      info.append(nameDiv, metaDiv);
+      return info;
+    };
 
+    // ---- Selected speakers (ordered, drag-and-drop) ----
+    const selHead = document.createElement("div");
+    selHead.className = "list-head";
+    const selTitle = document.createElement("span");
+    selTitle.textContent = `Selected speakers (${selectedIds.length})`;
+    selHead.append(selTitle);
     if (selectedIds.length) {
       const clearBtn = document.createElement("button");
+      clearBtn.type = "button";
       clearBtn.className = "clear-btn";
       clearBtn.textContent = "Clear all";
-      clearBtn.onclick = () => this._patch({ featuredSpeakerIds: [] });
-      summaryLine.append(clearBtn);
+      clearBtn.onclick = () => setIds([]);
+      selHead.append(clearBtn);
     }
-    selectorBlock.append(summaryLine);
+    selectorBlock.append(selHead);
+
+    const selHint = document.createElement("div");
+    selHint.className = "hint";
+    selHint.textContent = selectedIds.length
+      ? "Shown on the page in this order. Drag to reorder (or use ↑ ↓ keys), × to remove."
+      : "None selected — every event speaker will be shown. Click a speaker below to feature them.";
+    selectorBlock.append(selHint);
+
+    const selList = document.createElement("div");
+    selList.className = "speaker-roster selected-list";
+    selectorBlock.append(selList);
+
+    let dragFrom = -1;
+    const moveId = (from, to) => {
+      if (from === to || from < 0 || to < 0 || from >= selectedIds.length || to >= selectedIds.length) return;
+      const ids = [...selectedIds];
+      const [m] = ids.splice(from, 1);
+      ids.splice(to, 0, m);
+      setIds(ids);
+    };
+
+    selectedIds.forEach((id, idx) => {
+      const sp = byId.get(id) || { id, firstName: this._allSpeakers.length ? "(Speaker not in this event)" : "Loading…" };
+      const row = document.createElement("div");
+      row.className = "speaker-row selected";
+      row.draggable = true;
+      row.tabIndex = 0;
+      row.dataset.idx = String(idx);
+      row.setAttribute("role", "listitem");
+      row.setAttribute("aria-label", `${idx + 1}. ${spName(sp)}`);
+
+      const grip = document.createElement("span");
+      grip.className = "grip";
+      grip.textContent = "⠇";
+      grip.setAttribute("aria-hidden", "true");
+
+      const badge = document.createElement("div");
+      badge.className = "selected-order";
+      badge.textContent = idx + 1;
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "remove-btn";
+      remove.textContent = "×";
+      remove.setAttribute("aria-label", `Remove ${spName(sp)}`);
+      remove.onclick = (e) => { e.stopPropagation(); setIds(selectedIds.filter((x) => x !== id)); };
+
+      row.append(grip, badge, makeAvatar(sp), makeInfo(sp), remove);
+
+      row.addEventListener("dragstart", (e) => {
+        dragFrom = idx;
+        row.classList.add("dragging");
+        try { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", id); } catch (err) { /* noop */ }
+      });
+      row.addEventListener("dragend", () => { row.classList.remove("dragging"); selList.querySelectorAll(".drop-before,.drop-after").forEach((r) => r.classList.remove("drop-before", "drop-after")); });
+      row.addEventListener("dragover", (e) => {
+        if (dragFrom < 0) return;
+        e.preventDefault();
+        try { e.dataTransfer.dropEffect = "move"; } catch (err) { /* noop */ }
+        const r = row.getBoundingClientRect();
+        const after = e.clientY > r.top + r.height / 2;
+        selList.querySelectorAll(".drop-before,.drop-after").forEach((x) => x.classList.remove("drop-before", "drop-after"));
+        row.classList.add(after ? "drop-after" : "drop-before");
+      });
+      row.addEventListener("drop", (e) => {
+        if (dragFrom < 0) return;
+        e.preventDefault();
+        const r = row.getBoundingClientRect();
+        const after = e.clientY > r.top + r.height / 2;
+        let to = idx + (after ? 1 : 0);
+        if (dragFrom < to) to -= 1;
+        const from = dragFrom;
+        dragFrom = -1;
+        moveId(from, to);
+      });
+      row.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowUp") { e.preventDefault(); moveId(idx, idx - 1); this._focusSelectedRow = idx - 1; }
+        else if (e.key === "ArrowDown") { e.preventDefault(); moveId(idx, idx + 1); this._focusSelectedRow = idx + 1; }
+        else if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); setIds(selectedIds.filter((x) => x !== id)); }
+      });
+
+      selList.append(row);
+    });
+
+    if (!selectedIds.length) {
+      const empty = document.createElement("div");
+      empty.className = "roster-empty";
+      empty.textContent = "No speakers selected yet.";
+      selList.append(empty);
+    }
+
+    // Restore keyboard focus after a re-render caused by arrow-key reordering
+    if (this._focusSelectedRow !== undefined) {
+      const target = selList.querySelector(`.speaker-row[data-idx="${this._focusSelectedRow}"]`);
+      this._focusSelectedRow = undefined;
+      if (target) setTimeout(() => target.focus(), 0);
+    }
+
+    // ---- Available speakers (click to add) ----
+    const availHead = document.createElement("div");
+    availHead.className = "list-head";
+    const availTitle = document.createElement("span");
+    availHead.append(availTitle);
+    selectorBlock.append(availHead);
 
     const searchInput = document.createElement("input");
     searchInput.type = "text";
     searchInput.className = "search-input";
-    searchInput.placeholder = "Search speakers by name, title, or company...";
+    searchInput.placeholder = "Search by name, title, or company…";
+    searchInput.value = this._rosterFilter || "";
     selectorBlock.append(searchInput);
 
     const roster = document.createElement("div");
     roster.className = "speaker-roster";
+    roster.setAttribute("role", "list");
     selectorBlock.append(roster);
 
     const renderRoster = (filter = "") => {
       roster.innerHTML = "";
+      const available = this._allSpeakers.filter((sp) => !selectedIds.includes(String(sp?.id || sp?.speakerId || "")));
+      availTitle.textContent = `Available speakers (${available.length})`;
 
       if (!this._allSpeakers.length) {
         const empty = document.createElement("div");
         empty.className = "roster-empty";
         empty.textContent = this._speakersLoading
-          ? "Loading speakers\u2026"
+          ? "Loading speakers…"
           : "No speakers found. Make sure speakers are assigned to sessions in this event.";
         roster.append(empty);
         return;
       }
 
-      const lower = filter.toLowerCase();
-      const filtered = this._allSpeakers.filter((sp) => {
-        if (!lower) return true;
-        const name    = `${sp?.firstName || ""} ${sp?.lastName || ""}`.toLowerCase();
-        const title   = (sp?.title || sp?.designation || "").toLowerCase();
-        const company = (sp?.company || sp?.organization || "").toLowerCase();
-        return name.includes(lower) || title.includes(lower) || company.includes(lower);
-      });
+      const lower = filter.trim().toLowerCase();
+      const filtered = available.filter((sp) => !lower || `${spName(sp)} ${spMeta(sp)}`.toLowerCase().includes(lower));
 
       if (!filtered.length) {
         const empty = document.createElement("div");
         empty.className = "roster-empty";
-        empty.textContent = "No speakers match your search.";
+        empty.textContent = available.length ? "No speakers match your search." : "All event speakers are selected.";
         roster.append(empty);
         return;
       }
 
       filtered.forEach((sp) => {
         const id = String(sp?.id || sp?.speakerId || "");
-        const orderIdx = selectedIds.indexOf(id);
-        const isSelected = orderIdx !== -1;
-
         const row = document.createElement("div");
-        row.className = "speaker-row" + (isSelected ? " selected" : "");
-
-        if (isSelected) {
-          const badge = document.createElement("div");
-          badge.className = "selected-order";
-          badge.textContent = orderIdx + 1;
-          row.append(badge);
-        } else {
-          const spacer = document.createElement("div");
-          spacer.style.cssText = "width:20px;height:20px;flex-shrink:0;";
-          row.append(spacer);
-        }
-
-        const avatar = document.createElement("img");
-        avatar.className = "sp-avatar";
-        avatar.src =
-          (sp?.profilePictureUri || "").trim() ||
-          "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/pix/2ee8c4642e97488abc1852d9166b179b.png";
-        avatar.alt = "";
-        row.append(avatar);
-
-        const info = document.createElement("div");
-        info.className = "sp-info";
-
-        const nameDiv = document.createElement("div");
-        nameDiv.className = "sp-name";
-        nameDiv.textContent = `${(sp?.firstName || "").trim()} ${(sp?.lastName || "").trim()}`.trim();
-
-        const metaDiv = document.createElement("div");
-        metaDiv.className = "sp-meta";
-        metaDiv.textContent = [
-          (sp?.title || sp?.designation || "").trim(),
-          (sp?.company || sp?.organization || "").trim(),
-        ].filter(Boolean).join(" \u00b7 ");
-
-        info.append(nameDiv, metaDiv);
-        row.append(info);
-
-        row.onclick = () => {
-          const currentIds = Array.isArray(this._config.featuredSpeakerIds)
-            ? [...this._config.featuredSpeakerIds]
-            : [];
-          const idx = currentIds.indexOf(id);
-          if (idx !== -1) {
-            currentIds.splice(idx, 1);
-          } else {
-            currentIds.push(id);
-          }
-          this._patch({ featuredSpeakerIds: currentIds });
-        };
-
+        row.className = "speaker-row";
+        row.tabIndex = 0;
+        row.setAttribute("role", "listitem");
+        row.setAttribute("aria-label", `Add ${spName(sp)}`);
+        const add = document.createElement("span");
+        add.className = "add-mark";
+        add.textContent = "+";
+        add.setAttribute("aria-hidden", "true");
+        row.append(add, makeAvatar(sp), makeInfo(sp));
+        const doAdd = () => setIds([...selectedIds, id]);
+        row.onclick = doAdd;
+        row.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); doAdd(); } });
         roster.append(row);
       });
     };
 
-    renderRoster();
-    searchInput.addEventListener("input", () => renderRoster(searchInput.value));
+    renderRoster(searchInput.value);
+    searchInput.addEventListener("input", () => { this._rosterFilter = searchInput.value; renderRoster(searchInput.value); });
 
     panel.append(selectorDetails);
 
     // =============================================
-    // SECTION 3: MODAL CONTROLS
+    // SECTION 4b: COMPANY TAG LABELS
     // =============================================
+    const aliasDetails = this._details("Company Tag Labels", false);
+    const aliasBlock = this._block(aliasDetails);
+    const aliasHint = document.createElement("div");
+    aliasHint.className = "hint";
+    aliasHint.style.marginBottom = "8px";
+    aliasHint.textContent = "Show a short label on the tile instead of the company name from Cvent. \u201cCompany contains\u201d matches case-insensitively; an exact match wins. The modal still shows the full company.";
+    aliasBlock.append(aliasHint);
 
-    const modalDetails = this._details("Speaker Modal Controls");
-    const modalBlock = document.createElement("div");
-    modalBlock.className = "block";
-    modalDetails.append(modalBlock);
+    const aliases = Array.isArray(this._config.companyAliases) ? this._config.companyAliases : [];
+    const setAliases = (list) => this._patch({ companyAliases: list });
+    const aliasTable = document.createElement("div");
+    aliasTable.className = "alias-table";
+    const aliasHead = document.createElement("div");
+    aliasHead.className = "alias-row alias-head";
+    ["Company contains", "Show as", ""].forEach((t) => { const d = document.createElement("div"); d.textContent = t; aliasHead.append(d); });
+    aliasTable.append(aliasHead);
+    aliases.forEach((a, i) => {
+      const row = document.createElement("div");
+      row.className = "alias-row";
+      const m = document.createElement("input");
+      m.type = "text"; m.value = a?.match || ""; m.placeholder = "e.g. Bloomberg Intelligence";
+      m.onchange = () => { const l = aliases.map((x) => ({ ...x })); l[i].match = m.value; setAliases(l); };
+      const lbl = document.createElement("input");
+      lbl.type = "text"; lbl.value = a?.label || ""; lbl.placeholder = "e.g. BI";
+      lbl.onchange = () => { const l = aliases.map((x) => ({ ...x })); l[i].label = lbl.value; setAliases(l); };
+      const del = document.createElement("button");
+      del.type = "button"; del.className = "remove-btn"; del.textContent = "\u00d7"; del.setAttribute("aria-label", "Remove label");
+      del.onclick = () => setAliases(aliases.filter((_, j) => j !== i));
+      row.append(m, lbl, del);
+      aliasTable.append(row);
+    });
+    aliasBlock.append(aliasTable);
+    const addAlias = document.createElement("button");
+    addAlias.type = "button"; addAlias.className = "small-btn"; addAlias.textContent = "+ Add label";
+    addAlias.onclick = () => setAliases([...aliases, { match: "", label: "" }]);
+    aliasBlock.append(addAlias);
 
-    const h3ModalColors = document.createElement("h3");
-    h3ModalColors.textContent = "Modal Colors";
-    modalBlock.append(h3ModalColors);
+    // Quick-add from companies seen in this event
+    const seen = [...new Set(this._allSpeakers.map((sp) => (sp?.company || sp?.organization || "").trim()).filter(Boolean))]
+      .filter((cName) => !aliases.some((a) => { const m = (a?.match || "").trim().toLowerCase(); return m && cName.toLowerCase().includes(m); }))
+      .sort((a, b) => b.length - a.length);
+    if (seen.length) {
+      const seenWrap = document.createElement("div");
+      seenWrap.className = "hint";
+      seenWrap.style.marginTop = "10px";
+      seenWrap.textContent = "Companies in this event without a label (click to add): ";
+      seen.slice(0, 12).forEach((cName) => {
+        const chip = document.createElement("button");
+        chip.type = "button"; chip.className = "chip"; chip.textContent = cName;
+        chip.onclick = () => setAliases([...aliases, { match: cName, label: "" }]);
+        seenWrap.append(chip);
+      });
+      aliasBlock.append(seenWrap);
+    }
+    panel.append(aliasDetails);
 
+    // =============================================
+    // SECTION 5: MODAL
+    // =============================================
+    const modalDetails = this._details("Speaker Modal", false);
+    const modalBlock = this._block(modalDetails);
+
+    this._appendTextInput(modalBlock, "Modal eyebrow (leave blank to hide)", "modalEyebrowText", "Speaker");
     modalBlock.append(
-      this._colorRow("Header background", "modalHeaderBg", this._config.modalColors?.headerBg || "#f7a325", (v) =>
-        this._patch({ modalColors: { ...this._config.modalColors, headerBg: v } })
-      ),
-      this._colorRow("Divider line", "modalDivider", this._config.modalColors?.dividerColor || "#555555", (v) =>
-        this._patch({ modalColors: { ...this._config.modalColors, dividerColor: v } })
-      ),
-      this._colorRow("Content background", "modalContentBg", this._config.modalColors?.contentBg || "#ffffff", (v) =>
-        this._patch({ modalColors: { ...this._config.modalColors, contentBg: v } })
-      )
+      this._checkbox("Show sessions this speaker appears in", !!this._config.showSessions, (v) => this._patch({ showSessions: v }))
     );
+    this._appendTextInput(modalBlock, "Sessions header", "sessionsHeaderText", "Sessions");
+    panel.append(modalDetails);
 
-    const h3ModalTypo = document.createElement("h3");
-    h3ModalTypo.textContent = "Typography (Modal)";
-    modalBlock.append(h3ModalTypo);
+    // =============================================
+    // SECTION 6/7: TYPOGRAPHY
+    // =============================================
+    const typoSectionDetails = this._details("Typography (Section & Tiles)", false);
+    const typoSectionBlock = this._block(typoSectionDetails);
+    const typoSection = document.createElement("div");
+    typoSection.className = "grid";
+    typoSectionBlock.append(typoSection);
+    [
+      ["eyebrow",      "Eyebrow"],
+      ["header",       "Heading"],
+      ["intro",        "Intro paragraph"],
+      ["more",         "“More coming” line"],
+      ["note",         "Disclosure note"],
+      ["speakerName",  "Speaker name"],
+      ["speakerRole",  "Speaker role / title"],
+      ["speakerTag",   "Company tag"],
+    ].forEach(([key, label]) => typoSection.append(this._typographyBlock(key, label)));
+    panel.append(typoSectionDetails);
 
+    const typoModalDetails = this._details("Typography (Modal)", false);
+    const typoModalBlock = this._block(typoModalDetails);
     const typoModal = document.createElement("div");
     typoModal.className = "grid";
-    modalBlock.append(typoModal);
-
+    typoModalBlock.append(typoModal);
     [
-      ["modalSpeakerName",    "Modal Speaker Name"],
-      ["modalSpeakerTitle",   "Modal Speaker Title"],
-      ["modalSpeakerCompany", "Modal Speaker Company"],
-      ["modalSpeakerBio",     "Modal Speaker Bio"],
-      ["modalSessionsHeader", "Modal Sessions Header"],
-      ["modalSessionName",    "Modal Session Name"],
-      ["modalSessionDateTime","Modal Session Date & Time"],
+      ["modalEyebrow",         "Modal eyebrow"],
+      ["modalName",            "Modal speaker name"],
+      ["modalRole",            "Modal speaker role / title"],
+      ["modalTag",             "Modal company tag"],
+      ["modalBio",             "Modal bio"],
+      ["modalSessionsHeader",  "Sessions header"],
+      ["modalSessionName",     "Session name"],
+      ["modalSessionDateTime", "Session date & time"],
     ].forEach(([key, label]) => typoModal.append(this._typographyBlock(key, label)));
-
-    panel.append(modalDetails);
+    panel.append(typoModalDetails);
   }
 
   // =============================================
@@ -677,10 +732,17 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     const sum = document.createElement("summary");
     const chev = document.createElement("span");
     chev.className = "chev";
-    chev.textContent = "\u25b6";
+    chev.textContent = "▶";
     sum.append(chev, document.createTextNode(" " + title));
     d.append(sum);
     return d;
+  }
+
+  _block(details) {
+    const b = document.createElement("div");
+    b.className = "block";
+    details.append(b);
+    return b;
   }
 
   _label(text) {
@@ -695,17 +757,44 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     wrap.append(this._label(labelText), document.createElement("br"));
     const input = document.createElement("input");
     input.type = "text";
-    input.value = this._config[configKey] !== undefined ? this._config[configKey] : placeholder;
+    input.value = this._config[configKey] !== undefined ? this._config[configKey] : "";
     input.placeholder = placeholder;
-    input.style.width = "100%";
     input.onchange = () => this._patch({ [configKey]: input.value });
     wrap.append(input);
     parent.append(wrap);
   }
 
+  _appendTextArea(parent, labelText, configKey, placeholder) {
+    const wrap = document.createElement("div");
+    wrap.className = "section";
+    wrap.append(this._label(labelText), document.createElement("br"));
+    const ta = document.createElement("textarea");
+    ta.value = this._config[configKey] !== undefined ? this._config[configKey] : "";
+    ta.placeholder = placeholder;
+    ta.onchange = () => this._patch({ [configKey]: ta.value });
+    wrap.append(ta);
+    parent.append(wrap);
+  }
+
+  _numberRow(labelText, current, min, max, onChange) {
+    const wrap = document.createElement("div");
+    wrap.className = "row field";
+    const i = document.createElement("input");
+    i.type = "number";
+    i.min = String(min);
+    i.max = String(max);
+    i.value = current;
+    i.onchange = () => {
+      const n = Number(i.value);
+      if (Number.isFinite(n)) onChange(Math.max(min, Math.min(max, n)));
+    };
+    wrap.append(this._label(labelText), i);
+    return wrap;
+  }
+
   _checkbox(text, checked, onChange) {
     const wrap = document.createElement("label");
-    wrap.style.cssText = "display:inline-flex;align-items:center;gap:6px;";
+    wrap.style.cssText = "display:inline-flex;align-items:center;gap:6px;margin:6px 0;";
     const cb = document.createElement("input");
     cb.type = "checkbox";
     cb.checked = !!checked;
@@ -730,7 +819,9 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
       hexInput.value = v.toUpperCase();
       onChange(v);
     };
-    wrap.append(this._label(labelText), picker, hexInput);
+    const lbl = this._label(labelText);
+    lbl.style.flex = "1 1 160px";
+    wrap.append(lbl, picker, hexInput);
     return wrap;
   }
 
@@ -744,7 +835,6 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     lg.textContent = label;
     fs.append(lg);
 
-    // Font sizes
     const rowSizes = document.createElement("div");
     rowSizes.className = "row field";
 
@@ -754,6 +844,7 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
       i.type = "number";
       i.min = "8";
       i.max = "72";
+      i.step = "0.5";
       i.value = merged[prop] !== undefined ? merged[prop] : "";
       const commit = () => {
         const raw = i.value.trim();
@@ -766,36 +857,28 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
         });
       };
       i.onchange = commit;
-      i.onblur = commit;
       wrap.append(this._label(lbl), document.createElement("br"), i);
       return wrap;
     };
 
     rowSizes.append(
       mkSize("Font size (px)", "fontSize"),
-      mkSize("\u22641024px (px)", "fontSizeMd"),
-      mkSize("\u2264600px (px)", "fontSizeSm")
+      mkSize("≤1024px (px)", "fontSizeMd"),
+      mkSize("≤600px (px)", "fontSizeSm")
     );
     fs.append(rowSizes);
 
-    // Color
     const rowColor = document.createElement("div");
     rowColor.className = "row field";
 
     const colorWrap = document.createElement("div");
     const colorInput = document.createElement("input");
     colorInput.type = "color";
-    colorInput.value =
-      this._config.typography?.[key]?.color ??
-      this._makeDefaultTypography()?.[key]?.color ??
-      "#000000";
+    const initialHex = merged.color || "#000000";
+    colorInput.value = initialHex;
     colorWrap.append(this._label("Color"), document.createElement("br"), colorInput);
 
     const hexWrap = document.createElement("div");
-    const initialHex =
-      this._config.typography?.[key]?.color ??
-      this._makeDefaultTypography()?.[key]?.color ??
-      "#000000";
     const hexInput = this._makeHexInput(initialHex, (withHash) => {
       if (withHash !== colorInput.value) colorInput.value = withHash;
       this._patch({
@@ -821,12 +904,11 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     rowColor.append(colorWrap, hexWrap);
     fs.append(rowColor);
 
-    // Bold / Italic / Underline
     const rowBIU = document.createElement("div");
     rowBIU.className = "row field";
     rowBIU.append(
-      this._flag(key, "bold",      "Bold"),
-      this._flag(key, "italic",    "Italic"),
+      this._flag(key, "bold", "Bold"),
+      this._flag(key, "italic", "Italic"),
       this._flag(key, "underline", "Underline")
     );
     fs.append(rowBIU);
@@ -887,7 +969,6 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     };
 
     hex.addEventListener("change", apply);
-    hex.addEventListener("blur", apply);
     hex.addEventListener("input", () => {
       hex.style.borderColor = this._isValidHex6(this._normalizeHex(hex.value)) ? "#0a0" : "#d33";
     });
@@ -901,15 +982,13 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
 
   _patch(patch) {
     const merged = { ...this._config, ...patch };
-
-    if (patch.typography) {
-      merged.typography = { ...(this._config.typography || {}), ...patch.typography };
-    }
-    if (patch.modalColors) {
-      merged.modalColors = { ...(this._config.modalColors || {}), ...patch.modalColors };
-    }
-
+    if (patch.typography) merged.typography = { ...(this._config.typography || {}), ...patch.typography };
+    if (patch.colors) merged.colors = { ...(this._config.colors || {}), ...patch.colors };
+    if (patch.companyAliases) merged.companyAliases = [...patch.companyAliases];
     this._config = merged;
     this.setConfiguration(this._config);
+    // Re-render our own panel so the UI reflects the patch even if the host
+    // doesn't echo onConfigurationUpdate back to the editor.
+    this._safeRenderUI();
   }
 }

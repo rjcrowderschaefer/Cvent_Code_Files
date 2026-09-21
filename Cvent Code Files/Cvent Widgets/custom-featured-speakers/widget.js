@@ -1,6 +1,40 @@
 // widget.js
+// Featured Speakers — NYCW "Meet our speakers" design.
+// Section: eyebrow / heading / intro / "more coming" line, centred grid of
+// square speaker tiles, optional disclosure note. Each tile is a
+// <dev-featured-speaker-card> (FeaturedSpeaker.js) that owns its bio modal.
 // NOTE: include the file extension in imports
 import { FeaturedSpeaker } from "./FeaturedSpeaker.js";
+
+const FALLBACK_TOKENS = {
+  ink: "#141416",
+  muted: "#5C5C5A",
+  faint: "#6F6F6D",
+  hair: "#E4E4E0",
+  placeholder: "#EDEDEA",
+  accent: "#9C5F00",
+  tagBg: "#F0F0EE",
+  tagInk: "#3F3F3D",
+  modalBar: "#F7A325",
+  bioInk: "#3F3F3D",
+  focus: "#2B6CE8",
+};
+
+// Bloomberg brand font. Cvent registers the uploaded Avenir faces under
+// separate family names on the parent theme; re-declared here as ONE family
+// ("BBGAvenir") with correct weight slots. @font-face inside a shadow root is
+// not registered by browsers, so this is injected once into document.head.
+const BRAND_FONT_CSS = `
+@font-face{font-family:"BBGAvenir";font-weight:400;font-style:normal;font-display:swap;src:url("https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/43ba48291a694c6b839f5076a265c1bb.otf") format("opentype")}
+@font-face{font-family:"BBGAvenir";font-weight:500;font-style:normal;font-display:swap;src:url("https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/1c8ddb83438d454e97bc30944531a8c0.ttf") format("truetype")}
+@font-face{font-family:"BBGAvenir";font-weight:600;font-style:normal;font-display:swap;src:url("https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/2bc2aedb5a704c7483976a475ecf020f.otf") format("opentype")}
+@font-face{font-family:"BBGAvenir";font-weight:700;font-style:normal;font-display:swap;src:url("https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/370525f70e1b4cc68d3b6f5e9b5bcaa2.otf") format("opentype")}
+@font-face{font-family:"BBGAvenir";font-weight:400;font-style:italic;font-display:swap;src:url("https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/c10dce35a1914a99a8d286307087ef5b.ttf") format("truetype")}
+`;
+const BRAND_FONT_STACK = `"BBGAvenir","Helvetica Neue",Helvetica,Arial,-apple-system,BlinkMacSystemFont,sans-serif`;
+
+// Cvent maps some timezone options to DST-stripped IANA zones (playbook §2).
+const TZ_NORMALIZE = { "Atlantic/Reykjavik": "Europe/London" };
 
 export default class extends HTMLElement {
   constructor({ configuration, theme } = {}) {
@@ -10,31 +44,21 @@ export default class extends HTMLElement {
 
     this.attachShadow({ mode: "open" });
 
-    // Register the card sub-element once
     if (!customElements.get("dev-featured-speaker-card")) {
       customElements.define("dev-featured-speaker-card", FeaturedSpeaker);
     }
 
     this._typoBindings = [];
     this._onResize = null;
+    this._dataPromise = null; // cached sessions + speakers (survives config updates)
   }
 
   async connectedCallback() {
-    const container = document.createElement("div");
-    container.style.display = "flex";
-    container.style.flexDirection = "column";
-    container.style.width = "100%";
-    container.style.gap = "12px";
-
-    // Placeholder height while data loads
-    const placeholder = document.createElement("div");
-    placeholder.style.height = "200px";
-    placeholder.style.width = "0px";
-    container.append(placeholder);
-
-    this.shadowRoot.append(container);
-
-    await this._renderInto(container);
+    this._ensureBrandFont();
+    const root = document.createElement("div");
+    root.className = "fs";
+    this.shadowRoot.append(root);
+    await this._renderInto(root);
 
     this._onResize = () => this._reapplyTypography();
     window.addEventListener("resize", this._onResize);
@@ -47,19 +71,30 @@ export default class extends HTMLElement {
 
   onConfigurationUpdate(newConfig) {
     this.configuration = newConfig || {};
-    const container = this.shadowRoot?.firstElementChild;
-    if (container) {
-      container.innerHTML = "";
-      const placeholder = document.createElement("div");
-      placeholder.style.height = "200px";
-      placeholder.style.width = "0px";
-      container.append(placeholder);
-      this._renderInto(container);
+    const root = this.shadowRoot?.querySelector(".fs");
+    if (root) {
+      this._typoBindings = [];
+      this._renderInto(root);
     }
   }
 
   // =============================================
-  // SDK RESOLUTION  (mirrors widget.js pattern)
+  // BRAND FONT
+  // =============================================
+
+  _ensureBrandFont() {
+    if (this.configuration?.useBrandFont === false) return;
+    try {
+      if (document.getElementById("bbgspk-brand-font")) return;
+      const st = document.createElement("style");
+      st.id = "bbgspk-brand-font";
+      st.textContent = BRAND_FONT_CSS;
+      (document.head || document.documentElement).append(st);
+    } catch (e) { /* noop */ }
+  }
+
+  // =============================================
+  // SDK RESOLUTION
   // =============================================
 
   _resolveGetSpeakers() {
@@ -69,166 +104,231 @@ export default class extends HTMLElement {
     return undefined;
   }
 
+  async _resolveEventTz() {
+    try {
+      let info = null;
+      if (this.cventSdk?.getEventInfo) info = await this.cventSdk.getEventInfo();
+      else if (typeof this.getEventInfo === "function") info = await this.getEventInfo();
+      const tz = info?.timezone;
+      if (!tz) return undefined;
+      return TZ_NORMALIZE[tz] || tz;
+    } catch (e) {
+      return undefined;
+    }
+  }
+
+  // Fetch sessions (for speaker IDs + "appears in") and full speaker profiles once.
+  _loadData() {
+    if (this._dataPromise) return this._dataPromise;
+    this._dataPromise = (async () => {
+      const cfg = this.configuration || {};
+      const getSpeakers = this._resolveGetSpeakers();
+      if (!getSpeakers) console.warn("[widget.js] getSpeakers not found; speaker data will not hydrate.");
+
+      const allSessions = [];
+      const sort = cfg.sort || "dateTimeAsc";
+      const pageSize = 200;
+      try {
+        let gen = null;
+        if (this.cventSdk?.getSessionGenerator) gen = await this.cventSdk.getSessionGenerator(sort, pageSize);
+        else if (typeof this.getSessionGenerator === "function") gen = await this.getSessionGenerator(sort, pageSize);
+        if (gen) {
+          for await (const page of gen) {
+            const batch = Array.isArray(page) ? page
+              : Array.isArray(page?.sessions) ? page.sessions
+              : Array.isArray(page?.records) ? page.records : [];
+            if (batch.length) allSessions.push(...batch);
+            if (allSessions.length >= pageSize) break;
+          }
+        }
+      } catch (e) {
+        console.warn("[widget.js] getSessionGenerator error:", e);
+      }
+
+      const idSet = new Set();
+      allSessions.forEach((sess) => {
+        const list = Array.isArray(sess.resolvedSpeakers) ? sess.resolvedSpeakers
+          : Array.isArray(sess.speakers) ? sess.speakers.map((x) => (x && x.speaker ? x.speaker : x)).filter(Boolean)
+          : [];
+        list.forEach((sp) => {
+          const id = sp?.id || sp?.speakerId;
+          if (id) idSet.add(String(id));
+        });
+      });
+
+      let allSpeakers = [];
+      if (idSet.size && getSpeakers) {
+        try {
+          const map = await getSpeakers([...idSet]);
+          if (map && typeof map === "object") {
+            allSpeakers = Object.values(map).filter((s) => s && !s.failureReason);
+          }
+        } catch (e) {
+          console.warn("[widget.js] getSpeakers error:", e);
+        }
+      }
+
+      const eventTz = await this._resolveEventTz();
+      return { allSessions, allSpeakers, getSpeakers, eventTz };
+    })();
+    return this._dataPromise;
+  }
+
   // =============================================
   // RENDER
   // =============================================
 
-  async _renderInto(container) {
+  async _renderInto(root) {
     const cfg = this.configuration || {};
-    const theme = this.theme || {};
+    const c = { ...FALLBACK_TOKENS, ...(cfg.colors || {}) };
+    const fontFamily = cfg.useBrandFont === false ? "inherit" : BRAND_FONT_STACK;
+    const tile = Math.max(120, Math.min(400, Number(cfg.tileSize) || 200));
+    const gapRow = Number(cfg.gridGapRow) || 36;
+    const gapCol = Number(cfg.gridGapCol) || 24;
+    const align = cfg.gridAlign === "left" ? "start" : "center";
 
-    // ---- Header & Subheader ----
-    const headerText = cfg.headerText !== undefined ? cfg.headerText : "Featured Speakers";
-    const subheaderText = cfg.subheaderText !== undefined ? cfg.subheaderText : "Meet the experts taking the stage";
+    root.innerHTML = "";
 
-    const headerWrap = document.createElement("div");
-    headerWrap.style.cssText = "display:flex;flex-direction:column;gap:4px;width:calc(100% - 40px);max-width:1210px;margin:0 auto;box-sizing:border-box;";
-
-    const headerEl = document.createElement("div");
-    headerEl.textContent = headerText;
-    this._applyTypographyOverrides(headerEl, cfg.typography?.widgetHeader, true);
-    if (!headerEl.style.fontSize) headerEl.style.fontSize = "32px";
-    if (!headerEl.style.fontWeight) headerEl.style.fontWeight = "700";
-
-    const subheaderEl = document.createElement("div");
-    subheaderEl.textContent = subheaderText;
-    this._applyTypographyOverrides(subheaderEl, cfg.typography?.widgetSubheader, true);
-    if (!subheaderEl.style.fontSize) subheaderEl.style.fontSize = "18px";
-    if (!subheaderEl.style.color) subheaderEl.style.color = "#444";
-
-    headerWrap.append(headerEl, subheaderEl);
-    container.append(headerWrap);
-
-    // ---- Resolve getSpeakers ----
-    const getSpeakers = this._resolveGetSpeakers();
-    if (!getSpeakers) {
-      console.warn("[widget.js] getSpeakers not found; speaker data will not hydrate.");
-    }
-
-    // ---- Fetch sessions first (needed both for speaker IDs and modal "appears in") ----
-    let allSessions = [];
-    const sort = cfg.sort || "dateTimeAsc";
-    const pageSize = 200;
-    try {
-      let gen = null;
-      if (this.cventSdk?.getSessionGenerator) {
-        gen = await this.cventSdk.getSessionGenerator(sort, pageSize);
-      } else if (typeof this.getSessionGenerator === "function") {
-        gen = await this.getSessionGenerator(sort, pageSize);
+    const style = document.createElement("style");
+    style.textContent = `
+      :host { display: block; width: 100%; }
+      .fs, .fs *, .fs *::before, .fs *::after { box-sizing: border-box; }
+      .fs {
+        font-family: ${fontFamily};
+        color: ${c.ink};
+        line-height: 1.45; font-size: 16px; text-align: left;
+        background: transparent; display: block; width: 100%; margin: 0;
+        padding: clamp(28px, 3.5vw, 52px) 0;
       }
-      if (gen) {
-        for await (const page of gen) {
-          const batch = Array.isArray(page)
-            ? page
-            : Array.isArray(page?.sessions)
-            ? page.sessions
-            : Array.isArray(page?.records)
-            ? page.records
-            : [];
-          if (batch.length) allSessions.push(...batch);
-          if (allSessions.length >= pageSize) break;
-        }
+      .fs p, .fs h2 { margin: 0; padding: 0; }
+      .fs :focus-visible { outline: 3px solid ${c.focus}; outline-offset: 3px; }
+      .fs__inner { max-width: 1240px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 48px); }
+      .fs .fs__eyebrow {
+        font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+        font-weight: 700; color: ${c.muted};
       }
-    } catch (e) {
-      console.warn("[widget.js] getSessionGenerator error:", e);
-    }
-
-    // ---- Collect unique speaker IDs from sessions ----
-    const idSet = new Set();
-    allSessions.forEach((sess) => {
-      const list = Array.isArray(sess.resolvedSpeakers)
-        ? sess.resolvedSpeakers
-        : Array.isArray(sess.speakers)
-        ? sess.speakers.map((x) => (x && x.speaker ? x.speaker : x)).filter(Boolean)
-        : [];
-      list.forEach((sp) => {
-        const id = sp?.id || sp?.speakerId;
-        if (id) idSet.add(String(id));
-      });
-    });
-
-    // ---- Fetch full speaker profiles by ID ----
-    let allSpeakers = [];
-    if (idSet.size && getSpeakers) {
-      try {
-        const map = await getSpeakers([...idSet]);
-        if (map && typeof map === "object") {
-          allSpeakers = Object.values(map).filter((s) => s && !s.failureReason);
-        }
-      } catch (e) {
-        console.warn("[widget.js] getSpeakers error:", e);
+      .fs .fs__h2 {
+        font-size: clamp(26px, 3.3vw, 42px); font-weight: 700; letter-spacing: -.02em;
+        line-height: 1.1; margin: 14px 0 10px; max-width: 34ch; color: ${c.ink};
       }
-    }
+      .fs .fs__eyebrow[style*="display: none"] + .fs__h2 { margin-top: 0; }
+      .fs .fs__intro { font-size: 16px; color: ${c.muted}; max-width: 86ch; }
+      .fs .fs__more { margin-top: 16px; font-size: 15px; font-weight: 600; letter-spacing: .01em; color: ${c.accent}; }
+      .fs .fs__grid {
+        display: grid; grid-template-columns: repeat(auto-fit, ${tile}px);
+        justify-content: ${align}; gap: ${gapRow}px ${gapCol}px; margin-top: 38px;
+      }
+      .fs__grid > * { height: 100%; }
+      .fs .fs__empty { margin-top: 38px; font-size: 14px; color: ${c.faint}; font-style: italic; }
+      .fs .fs__note {
+        margin-top: clamp(44px, 4.5vw, 64px); padding-top: 20px;
+        border-top: 1px solid ${c.hair};
+        font-size: 13px; font-style: italic; line-height: 1.5; color: ${c.faint};
+      }
+      @media (max-width: ${tile * 2 + gapCol + 40}px) {
+        .fs .fs__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: ${Math.round(gapRow*0.75)}px ${Math.min(gapCol, 16)}px; }
+      }
+    `;
+    root.append(style);
 
+    const inner = document.createElement("div");
+    inner.className = "fs__inner";
+    root.append(inner);
+
+    // ---- Header block ----
+    const eyebrowText = cfg.eyebrowText !== undefined ? cfg.eyebrowText : "Featured speakers";
+    const headerText = cfg.headerText !== undefined ? cfg.headerText : "Meet our speakers";
+    const introText = cfg.introText !== undefined ? cfg.introText : "Select a speaker to read their bio.";
+    const moreText = cfg.moreText !== undefined ? cfg.moreText : "";
+    const noteText = cfg.noteText !== undefined ? cfg.noteText : "";
+
+    const eyebrow = document.createElement("p");
+    eyebrow.className = "fs__eyebrow";
+    eyebrow.textContent = eyebrowText;
+    this._applyTypographyOverrides(eyebrow, cfg.typography?.eyebrow, true);
+    if (!eyebrowText) eyebrow.style.display = "none";
+
+    const h2 = document.createElement("h2");
+    h2.className = "fs__h2";
+    h2.textContent = headerText;
+    this._applyTypographyOverrides(h2, cfg.typography?.header, true);
+    if (!headerText) h2.style.display = "none";
+
+    const intro = document.createElement("p");
+    intro.className = "fs__intro";
+    intro.textContent = introText;
+    this._applyTypographyOverrides(intro, cfg.typography?.intro, true);
+    if (!introText) intro.style.display = "none";
+
+    const more = document.createElement("p");
+    more.className = "fs__more";
+    more.textContent = moreText;
+    this._applyTypographyOverrides(more, cfg.typography?.more, true);
+    if (!moreText) more.style.display = "none";
+
+    inner.append(eyebrow, h2, intro, more);
+
+    // ---- Grid (placeholder while loading) ----
+    const grid = document.createElement("ul");
+    grid.className = "fs__grid";
+    grid.setAttribute("role", "list");
+    grid.style.listStyle = "none";
+    grid.style.padding = "0";
+    grid.style.margin = "38px 0 0";
+    grid.style.minHeight = `${tile + 80}px`;
+    inner.append(grid);
+
+    // ---- Disclosure note ----
+    const note = document.createElement("p");
+    note.className = "fs__note";
+    note.textContent = noteText;
+    this._applyTypographyOverrides(note, cfg.typography?.note, true);
+    if (!noteText) note.style.display = "none";
+    inner.append(note);
+
+    // ---- Data ----
+    const { allSessions, allSpeakers, getSpeakers, eventTz } = await this._loadData();
+    grid.style.minHeight = "";
 
     if (!allSpeakers.length) {
       console.warn("[widget.js] No speakers returned.");
-      const placeholder = container.querySelector("div[style*='height: 200px']");
-      if (placeholder) container.removeChild(placeholder);
+      grid.remove();
+      const empty = document.createElement("p");
+      empty.className = "fs__empty";
+      empty.textContent = "No speakers to display yet.";
+      inner.insertBefore(empty, note);
       return;
     }
 
-    // ---- Filter to planner-selected speakers (featuredSpeakerIds) ----
-    // cfg.featuredSpeakerIds: string[] of IDs the planner selected in the editor.
-    // If none selected yet, fall back to showing all speakers (editor preview mode).
+    // Planner-selected speakers (featuredSpeakerIds) in planner order;
+    // fall back to all speakers when none are selected.
     const selectedIds = Array.isArray(cfg.featuredSpeakerIds) && cfg.featuredSpeakerIds.length
-      ? cfg.featuredSpeakerIds
-      : null;
-
-    let speakersToRender = selectedIds
-      ? selectedIds
-          .map((id) => allSpeakers.find((s) => String(s?.id || s?.speakerId) === String(id)))
-          .filter(Boolean)
+      ? cfg.featuredSpeakerIds : null;
+    const speakersToRender = selectedIds
+      ? selectedIds.map((id) => allSpeakers.find((s) => String(s?.id || s?.speakerId) === String(id))).filter(Boolean)
       : allSpeakers;
 
-    // ---- Remove placeholder ----
-    const placeholder = container.querySelector("div[style*='height: 200px']");
-    if (placeholder) container.removeChild(placeholder);
-
-    // ---- Grid wrapper ----
-    const columns = Math.min(Math.max(cfg.columns || 3, 1), 6);
-    const grid = document.createElement("div");
-    grid.style.cssText = `
-      display: grid;
-      grid-template-columns: repeat(${columns}, minmax(0, 1fr));
-      gap: ${cfg.cardGap || "16px"};
-      width: calc(100% - 40px);
-      max-width: 1210px;
-      margin: 0 auto;
-      box-sizing: border-box;
-    `;
-
-    // Responsive grid breakpoints via a style tag in shadow root
-    const gridStyle = document.createElement("style");
-    gridStyle.textContent = `
-      @media (max-width: 1024px) {
-        .speaker-grid { grid-template-columns: repeat(${Math.min(columns, 3)}, minmax(0, 1fr)) !important; }
-      }
-      @media (max-width: 600px) {
-        .speaker-grid { grid-template-columns: repeat(${Math.min(columns, 2)}, minmax(0, 1fr)) !important; }
-      }
-    `;
-    grid.classList.add("speaker-grid");
-    this.shadowRoot.prepend(gridStyle);
-
-    // ---- Render each speaker card ----
     speakersToRender.forEach((sp) => {
+      const li = document.createElement("li");
       const card = document.createElement("dev-featured-speaker-card");
       card.speaker = sp;
-      card.theme = theme;
+      card.theme = this.theme || {};
       card.config = {
         ...cfg,
+        colors: c,
+        tileSize: tile,
+        fontFamily,
         allSessions,
         getSpeakers,
+        eventTz,
       };
-      grid.append(card);
+      li.append(card);
+      grid.append(li);
     });
-
-    container.append(grid);
   }
 
   // =============================================
-  // TYPOGRAPHY HELPERS
+  // TYPOGRAPHY HELPERS (shared pattern with FeaturedSpeaker.js)
   // =============================================
 
   _activeFontSize(ov) {
@@ -240,18 +340,19 @@ export default class extends HTMLElement {
   }
 
   _applyTypographyNow(element, override) {
-    const { color, bold, italic, underline } = override || {};
+    if (!override) return;
+    const { color, bold, italic, underline } = override;
     const fs = this._activeFontSize(override);
-    element.style.fontSize = fs ? `${fs}px` : "";
-    if (color !== undefined) element.style.color = color || "";
-    if (bold !== undefined) element.style.fontWeight = bold ? "700" : "";
-    if (italic !== undefined) element.style.fontStyle = italic ? "italic" : "";
+    element.style.fontSize = fs !== undefined && fs !== null && fs !== "" ? `${fs}px` : "";
+    if (color) element.style.color = color;
+    if (bold !== undefined) element.style.fontWeight = bold ? "700" : "400";
+    if (italic !== undefined) element.style.fontStyle = italic ? "italic" : "normal";
     if (underline !== undefined) element.style.textDecoration = underline ? "underline" : "none";
   }
 
   _applyTypographyOverrides(element, override, track = false) {
     this._applyTypographyNow(element, override);
-    if (track) this._typoBindings.push([element, override || {}]);
+    if (track && override) this._typoBindings.push([element, override]);
   }
 
   _reapplyTypography() {
