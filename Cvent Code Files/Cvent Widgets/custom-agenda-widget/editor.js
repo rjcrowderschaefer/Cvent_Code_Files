@@ -372,9 +372,9 @@ export default class ExampleAgendaEditor extends HTMLElement {
       sessionDescription: { ...base, fontSize: 16, fontSizeMd: 14, fontSizeSm: 13 },
       sessionLocation: { ...base, fontSize: 12, fontSizeMd: 11, fontSizeSm: 10 },
       sessionCategory: { ...base, fontSize: 12, fontSizeMd: 11, fontSizeSm: 10 },
-      speakerName: { ...base, fontSize: 14, fontSizeMd: 13, fontSizeSm: 12, bold: true, color: "#F7A325" },
-      speakerTitle: { ...base, fontSize: 12, fontSizeMd: 11, fontSizeSm: 11, italic: true },
-      speakerCompany: { ...base, fontSize: 12, fontSizeMd: 11, fontSizeSm: 11 },
+      speakerName: { ...base, fontSize: 16, fontSizeMd: 15, fontSizeSm: 14, bold: true, color: "#F7A325" },
+      speakerTitle: { ...base, fontSize: 14, fontSizeMd: 13, fontSizeSm: 12, italic: true },
+      speakerCompany: { ...base, fontSize: 14, fontSizeMd: 13, fontSizeSm: 12 },
       modalName: { ...base, fontSize: 18, bold: true },
       // Speaker modal scale is not card-density dependent; same as standard.
       modalSpeakerName: { ...base, fontSize: 29, fontSizeMd: 26, fontSizeSm: 24, bold: true, color: "#141416" },

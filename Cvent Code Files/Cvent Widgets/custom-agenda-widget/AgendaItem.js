@@ -24,6 +24,8 @@ const MODAL_TYPO_KEYS = [
   "agendaHeader", "agendaSubheader",
   // Session description: 16px on desktop in both scales.
   "sessionDescription",
+  // Card speaker line (compact scale bumped 2px).
+  "speakerName", "speakerTitle", "speakerCompany",
 ];
 const T = (fontSize, fontSizeMd, fontSizeSm, extra = {}) => ({
   fontSize, fontSizeMd, fontSizeSm, color: "#000000", bold: false, italic: false, underline: false, ...extra,
@@ -39,6 +41,9 @@ const MODAL_TYPO_NEW = {
   agendaHeader:         T(28, 24, 20, { bold: true, color: "#141416" }),
   agendaSubheader:      T(18, 16, 15, { color: "#5C5C5A" }),
   sessionDescription:   T(16, 14, 13),
+  speakerName:          T(16, 15, 14, { bold: true, color: "#F7A325" }),
+  speakerTitle:         T(14, 13, 12, { italic: true }),
+  speakerCompany:       T(14, 13, 12),
 };
 const MODAL_TYPO_LEGACY = {
   modalSpeakerName:     [T(22, 18, 14, { bold: true }), T(26, 14, 13, { bold: true })],
@@ -51,6 +56,9 @@ const MODAL_TYPO_LEGACY = {
   agendaHeader:         [T(40, 32, 24), T(28, 24, 20)],
   agendaSubheader:      [T(20, 18, 14), T(15, 14, 13), T(15, 14, 13, { color: "#5C5C5A" })],
   sessionDescription:   [T(13, 12, 12), T(16, 14, 12)],
+  speakerName:          [T(14, 13, 12, { bold: true, color: "#F7A325" })],
+  speakerTitle:         [T(12, 11, 11, { italic: true })],
+  speakerCompany:       [T(12, 11, 11)],
 };
 const sameTypo = (a, b) =>
   !!a && !!b &&
