@@ -5,6 +5,7 @@
 // <dev-featured-speaker-card> (FeaturedSpeaker.js) that owns its bio modal.
 // NOTE: include the file extension in imports
 import { FeaturedSpeaker, migrateTypography } from "./FeaturedSpeaker.js";
+import { FONT_STACK, ensureBrandFont } from "./type-scale.js";
 
 const FALLBACK_TOKENS = {
   ink: "#141416",
@@ -22,18 +23,7 @@ const FALLBACK_TOKENS = {
   focus: "#2B6CE8",
 };
 
-// Bloomberg brand font. Cvent registers the uploaded Avenir faces under
-// separate family names on the parent theme; re-declared here as ONE family
-// ("AvenirNextforBBG") with correct weight slots. @font-face inside a shadow root is
-// not registered by browsers, so this is injected once into document.head.
-const BRAND_FONT_CSS = `
-@font-face{font-family:"AvenirNextforBBG";font-weight:400;font-style:normal;font-display:swap;src:url("https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/43ba48291a694c6b839f5076a265c1bb.otf") format("opentype")}
-@font-face{font-family:"AvenirNextforBBG";font-weight:500;font-style:normal;font-display:swap;src:url("https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/1c8ddb83438d454e97bc30944531a8c0.ttf") format("truetype")}
-@font-face{font-family:"AvenirNextforBBG";font-weight:600;font-style:normal;font-display:swap;src:url("https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/2bc2aedb5a704c7483976a475ecf020f.otf") format("opentype")}
-@font-face{font-family:"AvenirNextforBBG";font-weight:700;font-style:normal;font-display:swap;src:url("https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/370525f70e1b4cc68d3b6f5e9b5bcaa2.otf") format("opentype")}
-@font-face{font-family:"AvenirNextforBBG";font-weight:400;font-style:italic;font-display:swap;src:url("https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/c10dce35a1914a99a8d286307087ef5b.ttf") format("truetype")}
-`;
-const BRAND_FONT_STACK = `"AvenirNextforBBG","Helvetica Neue",Helvetica,Arial,-apple-system,BlinkMacSystemFont,sans-serif`;
+const BRAND_FONT_STACK = FONT_STACK;
 
 // Cvent maps some timezone options to DST-stripped IANA zones (playbook §2).
 const TZ_NORMALIZE = { "Atlantic/Reykjavik": "Europe/London" };
@@ -86,13 +76,7 @@ export default class extends HTMLElement {
 
   _ensureBrandFont() {
     if (this.configuration?.useBrandFont === false) return;
-    try {
-      if (document.getElementById("bbgspk-brand-font")) return;
-      const st = document.createElement("style");
-      st.id = "bbgspk-brand-font";
-      st.textContent = BRAND_FONT_CSS;
-      (document.head || document.documentElement).append(st);
-    } catch (e) { /* noop */ }
+    ensureBrandFont(); // shared @font-face loader (type-scale.js)
   }
 
   // =============================================

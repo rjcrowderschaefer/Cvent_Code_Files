@@ -1,4 +1,5 @@
 // FeaturedSpeaker.js
+import { FONT_STACK, COLORS, T, buildTypography, migrateTypography as migrateTypographyShared } from "./type-scale.js";
 // Reusable custom element used by widget.js (registered as <dev-featured-speaker-card>)
 // Renders a single speaker tile (square photo, name, role, company tag) and a
 // click-to-open bio modal. Visual language mirrors the NYCW "Meet our speakers"
@@ -35,46 +36,49 @@ const PLACEHOLDER_SVG = (bg, fg) =>
   );
 
 // ---------------------------------------------------------------------------
-// Typography migration. Saved configs carry whatever defaults the editor wrote
-// at the time and are applied inline, so a restyle of the defaults would not
-// reach existing events. When a saved entry equals an OLD default exactly it
-// is swapped for the new one; anything a planner changed is left alone.
-// Keep NEW in sync with editor.js _makeDefaultTypography().
+// Typography: every key maps to a ROLE of the shared type scale
+// (type-scale.js / TYPOGRAPHY.md). Overrides are only for real exceptions.
 // ---------------------------------------------------------------------------
-const TY = (fontSize, fontSizeMd, fontSizeSm, color, extra = {}) =>
-  ({ fontSize, fontSizeMd, fontSizeSm, color, bold: false, italic: false, underline: false, ...extra });
-const TYPO_NEW = {
-  intro:     TY(18, 16, 15, "#5C5C5A"),
-  modalRole: TY(18, 16, 15, "#5C5C5A"),
-  modalTag:  TY(12, 12, 11, "#3F3F3D", { bold: true }),
-  modalBio:  TY(18, 16, 15, "#3F3F3D"),
-  speakerName: TY(16, 15, 14, "#141416", { bold: true }),
-  speakerRole: TY(14, 13, 12, "#5C5C5A"),
-  speakerTag:  TY(12, 12, 11, "#3F3F3D", { bold: true }),
+export const TYPO_ROLES = {
+  eyebrow:              "label",
+  header:               "display",
+  intro:                "lead",
+  more:                 { role: "bodySmall", color: COLORS.accentInk },
+  note:                 { role: "caption", italic: true, color: COLORS.faint },
+  speakerName:          "name",
+  speakerRole:          "meta",
+  speakerTag:           "tag",
+  modalEyebrow:         { role: "label", color: COLORS.accentInk },
+  modalName:            "headline",
+  modalRole:            "lead",
+  modalTag:             "tag",
+  modalBio:             "body",
+  modalSessionsHeader:  "label",
+  modalSessionName:     "listTitle",
+  modalSessionDateTime: "caption",
 };
+
+// Every default set this widget's editor has EVER written for a key (the
+// pre-NYCW design used different keys; only speakerName overlaps). Append
+// here whenever a default changes.
+const C = (fontSize, fontSizeMd, fontSizeSm, color, extra = {}) => T(fontSize, fontSizeMd, fontSizeSm, { color, ...extra });
 const TYPO_LEGACY = {
-  intro:     [TY(15, 14, 13, "#5C5C5A"), TY(16, 16, 15, "#5C5C5A")],
-  modalRole: [TY(15, 15, 14, "#5C5C5A")],
-  modalTag:  [TY(10.5, 10.5, 10.5, "#3F3F3D", { bold: true })],
-  modalBio:  [TY(14.5, 14.5, 14, "#3F3F3D")],
-  speakerName: [TY(15.5, 15.5, 15, "#141416", { bold: true }), TY(18, 16, 14, "#f7a325", { bold: true })],
-  speakerRole: [TY(13, 13, 13, "#5C5C5A")],
-  speakerTag:  [TY(10.5, 10.5, 10.5, "#3F3F3D", { bold: true })],
+  intro:                [C(15, 14, 13, "#5C5C5A"), C(16, 16, 15, "#5C5C5A")],
+  more:                 [C(15, 15, 14, "#9C5F00")],
+  note:                 [C(13, 13, 13, "#6F6F6D", { italic: true })],
+  speakerName:          [C(15.5, 15.5, 15, "#141416", { bold: true }), C(18, 16, 14, "#f7a325", { bold: true })],
+  speakerRole:          [C(13, 13, 13, "#5C5C5A")],
+  speakerTag:           [C(10.5, 10.5, 10.5, "#3F3F3D", { bold: true })],
+  modalName:            [C(29, 27, 24, "#141416", { bold: true })],
+  modalRole:            [C(15, 15, 14, "#5C5C5A")],
+  modalTag:             [C(10.5, 10.5, 10.5, "#3F3F3D", { bold: true })],
+  modalBio:             [C(14.5, 14.5, 14, "#3F3F3D")],
+  modalSessionName:     [C(14.5, 14.5, 14, "#141416", { bold: true })],
+  modalSessionDateTime: [C(13, 13, 13, "#5C5C5A")],
 };
-const sameTypo = (a, b) =>
-  !!a && !!b &&
-  Number(a.fontSize) === b.fontSize && Number(a.fontSizeMd) === b.fontSizeMd &&
-  Number(a.fontSizeSm) === b.fontSizeSm &&
-  String(a.color || "").toLowerCase() === b.color.toLowerCase() &&
-  !!a.bold === b.bold && !!a.italic === b.italic && !!a.underline === b.underline;
-export function migrateTypography(typography) {
-  const out = { ...(typography || {}) };
-  Object.keys(TYPO_NEW).forEach((key) => {
-    const cur = out[key];
-    if (cur && (TYPO_LEGACY[key] || []).some((old) => sameTypo(cur, old))) out[key] = { ...TYPO_NEW[key] };
-  });
-  return out;
-}
+
+export const defaultTypography = () => buildTypography(TYPO_ROLES);
+export const migrateTypography = (typography) => migrateTypographyShared(typography, TYPO_ROLES, TYPO_LEGACY);
 
 export class FeaturedSpeaker extends HTMLElement {
   constructor() {
@@ -98,7 +102,7 @@ export class FeaturedSpeaker extends HTMLElement {
     const c = { ...FALLBACK_TOKENS, ...(cfg.colors || {}) };
     const tile = Math.max(120, Math.min(400, Number(cfg.tileSize) || 200));
     const hoverPrompt = cfg.hoverPrompt !== undefined ? cfg.hoverPrompt : "Click to view bio";
-    const fontFamily = cfg.fontFamily || `"AvenirNextforBBG","Helvetica Neue",Helvetica,Arial,-apple-system,BlinkMacSystemFont,sans-serif`;
+    const fontFamily = cfg.fontFamily || FONT_STACK;
 
     const style = document.createElement("style");
     style.textContent = `
@@ -201,7 +205,8 @@ export class FeaturedSpeaker extends HTMLElement {
       }
       .mRule { height: 1px; background: ${c.hair}; margin: 26px 34px 0; flex: none; }
       .mBody { padding: 22px 34px 34px; overflow: auto; flex: 1 1 auto; }
-      .mBio p { font-size: 18px; line-height: 1.6; color: ${c.bioInk}; margin: 0 0 13px; }
+      .mBio { font-size: 18px; line-height: 1.6; color: ${c.bioInk}; }
+      .mBio p { margin: 0 0 13px; }
       .mBio p:last-child { margin-bottom: 0; }
       .mBio > *:first-child { margin-top: 0 !important; }
       .mBio > *:last-child { margin-bottom: 0 !important; }
@@ -213,7 +218,7 @@ export class FeaturedSpeaker extends HTMLElement {
       .mSessionsList { list-style: none; margin: 0; padding: 0; }
       .mSessionsList li { padding: 8px 0; border-top: 1px solid ${c.hair}; }
       .mSessionsList li:first-child { border-top: 0; padding-top: 0; }
-      .sName { display: block; font-size: 14.5px; font-weight: 700; color: ${c.ink}; line-height: 1.35; }
+      .sName { display: block; font-size: 15px; font-weight: 700; color: ${c.ink}; line-height: 1.35; }
       .sWhen { display: block; font-size: 13px; color: ${c.muted}; margin-top: 2px; }
       .mClose {
         position: absolute; top: 12px; right: 12px; width: 36px; height: 36px;
@@ -230,7 +235,7 @@ export class FeaturedSpeaker extends HTMLElement {
         .mRule { margin: 22px 22px 0; }
         .mBody { padding: 18px 22px 26px; }
         .mName { font-size: 24px; }
-        .mRole, .mBio p { font-size: 15px; }
+        .mRole, .mBio { font-size: 15px; }
       }
     `;
     this.shadowRoot.append(style);

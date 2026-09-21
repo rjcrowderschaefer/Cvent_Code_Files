@@ -19,6 +19,8 @@ Cvent Code Files/
 │       ├── AGENDA_WIDGET_TODO.md    ← backlog / deferred items for the agenda widget
 │       ├── README.md                ← boilerplate guide + §3 branch workflow
 │       ├── LOCAL_PREVIEW.md         ← start/stop the local preview server, clone the harness for a new widget, capture a dump
+│       ├── TYPOGRAPHY.md            ← the shared type scale every widget uses (roles, colours, font, migration rules)
+│       ├── type-scale.js            ← canonical copy of the scale; each widget folder carries an identical copy
 │       ├── MIGRATION_folders_to_branches.md
 │       └── widget.js / ITEM.js / editor.js / config.json  (boilerplate scaffold, not a live widget)
 ├── BLE-Events/, code-snippets/, css-files/   ← event CSS and snippets, not environment-tracked
@@ -38,6 +40,10 @@ agenda with extensive custom features built over many iterations.
   or editor code. It will save you from re-discovering hard-won lessons.
 - **`AGENDA_WIDGET_TODO.md`** — backlog and deferred items.
 - **`README.md` §3** — git branch workflow (dev → main via `promote.sh`).
+- **`TYPOGRAPHY.md`** — every font size comes from the shared scale in `type-scale.js`
+  via a per-widget role map. Never hard-code a size in a widget's typography
+  defaults; change a role (scale) or a mapping (widget), and append the old
+  default to that widget's `TYPO_LEGACY` so existing events migrate.
 - **`LOCAL_PREVIEW.md`** — local live preview: `preview_start {name: "agenda-preview"}`
   → http://localhost:8765/preview/ (agenda) or `/preview-<widget>/` for a clone.
   Verify every visual change there (desktop + mobile, en/es/pt) before a sandbox upload.

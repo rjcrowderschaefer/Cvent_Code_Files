@@ -1,9 +1,7 @@
 // widget.js
 // NOTE: include the file extension in imports
 import { AgendaItem, migrateModalTypography } from "./AgendaItem.js";
-
-// Brand stack used by the featured-speakers section, so the two headings match.
-const HEADER_FONT_STACK = `"AvenirNextforBBG","Helvetica Neue",Helvetica,Arial,-apple-system,BlinkMacSystemFont,sans-serif`;
+import { FONT_STACK as HEADER_FONT_STACK, ensureBrandFont } from "./type-scale.js";
 
 export default class extends HTMLElement {
   constructor({ configuration, theme } = {}) {
@@ -150,6 +148,7 @@ export default class extends HTMLElement {
     this._applyTypographyOverrides(subheaderEl, headerTypo.agendaSubheader || {}, true);
 
     // Same face + tracking as the featured-speakers heading (.fs__h2 / .fs__intro).
+    ensureBrandFont(); // brand @font-face for the header + speaker modal (type-scale.js)
     headerWrap.style.fontFamily = HEADER_FONT_STACK;
     headerEl.style.letterSpacing = "-.02em";
     headerEl.style.lineHeight = "1.1";

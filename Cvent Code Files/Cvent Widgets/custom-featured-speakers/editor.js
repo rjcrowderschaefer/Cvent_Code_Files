@@ -4,7 +4,7 @@
 // setConfiguration. Sections: Section text, Layout, Colours, Speaker selection,
 // Modal, Typography (section) and Typography (modal).
 
-import { migrateTypography } from "./FeaturedSpeaker.js";
+import { migrateTypography, defaultTypography } from "./FeaturedSpeaker.js";
 
 export default class FeaturedSpeakersEditor extends HTMLElement {
   constructor({ setConfiguration, initialConfiguration } = {}) {
@@ -172,26 +172,10 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     };
   }
 
+  // Typography defaults come from the shared type scale (type-scale.js) via
+  // the role map in FeaturedSpeaker.js.
   _makeDefaultTypography() {
-    const base = { italic: false, underline: false };
-    return {
-      eyebrow:              { ...base, fontSize: 11,   fontSizeMd: 11,   fontSizeSm: 11,   color: "#5C5C5A", bold: true },
-      header:               { ...base, fontSize: 28,   fontSizeMd: 24,   fontSizeSm: 20,   color: "#141416", bold: true },
-      intro:                { ...base, fontSize: 18,   fontSizeMd: 16,   fontSizeSm: 15,   color: "#5C5C5A", bold: false },
-      more:                 { ...base, fontSize: 15,   fontSizeMd: 15,   fontSizeSm: 14,   color: "#9C5F00" },
-      note:                 { ...base, fontSize: 13,   fontSizeMd: 13,   fontSizeSm: 13,   color: "#6F6F6D", bold: false, italic: true },
-      speakerName:          { ...base, fontSize: 16,   fontSizeMd: 15,   fontSizeSm: 14,   color: "#141416", bold: true },
-      speakerRole:          { ...base, fontSize: 14,   fontSizeMd: 13,   fontSizeSm: 12,   color: "#5C5C5A", bold: false },
-      speakerTag:           { ...base, fontSize: 12,   fontSizeMd: 12,   fontSizeSm: 11,   color: "#3F3F3D", bold: true },
-      modalEyebrow:         { ...base, fontSize: 11,   fontSizeMd: 11,   fontSizeSm: 11,   color: "#9C5F00", bold: true },
-      modalName:            { ...base, fontSize: 29,   fontSizeMd: 27,   fontSizeSm: 24,   color: "#141416", bold: true },
-      modalRole:            { ...base, fontSize: 18,   fontSizeMd: 16,   fontSizeSm: 15,   color: "#5C5C5A", bold: false },
-      modalTag:             { ...base, fontSize: 12,   fontSizeMd: 12,   fontSizeSm: 11,   color: "#3F3F3D", bold: true },
-      modalBio:             { ...base, fontSize: 18,   fontSizeMd: 16,   fontSizeSm: 15,   color: "#3F3F3D", bold: false },
-      modalSessionsHeader:  { ...base, fontSize: 11,   fontSizeMd: 11,   fontSizeSm: 11,   color: "#5C5C5A", bold: true },
-      modalSessionName:     { ...base, fontSize: 14.5, fontSizeMd: 14.5, fontSizeSm: 14,   color: "#141416", bold: true },
-      modalSessionDateTime: { ...base, fontSize: 13,   fontSizeMd: 13,   fontSizeSm: 13,   color: "#5C5C5A", bold: false },
-    };
+    return defaultTypography();
   }
 
   // =============================================
