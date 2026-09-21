@@ -101,12 +101,13 @@ export class FeaturedSpeaker extends HTMLElement {
         color: ${c.ink}; margin-bottom: 3px; transition: color .15s ease;
       }
       .card:hover .name { color: ${c.mainAccent} !important; }
-      /* Role reserves two lines and the tag slot reserves two tag lines, so
-         cards in a row are the same height: the title -> company gap stays
-         small and constant, and one- and two-line company tags start on the
-         same line across the row. */
-      .role { font-size: 13px; color: ${c.muted}; min-height: calc(2 * 1.45em); margin-bottom: 6px; }
-      .tagWrap { margin-top: auto; min-height: 38px; display: flex; align-items: flex-start; }
+      /* The company tag hangs directly off the title (8px), never off the card
+         bottom, so it reads as part of the speaker above it rather than a
+         header for the row below. The role reserves two lines so tags still
+         line up across a row of single-line names; any slack goes to the
+         bottom of the card, where it merges with the grid's row gap. */
+      .role { font-size: 13px; color: ${c.muted}; min-height: calc(2 * 1.45em); margin-bottom: 8px; }
+      .tagWrap { display: flex; align-items: flex-start; }
       .name, .role, .tag { overflow-wrap: break-word; min-width: 0; }
       .tag {
         display: inline-block; max-width: 100%;
