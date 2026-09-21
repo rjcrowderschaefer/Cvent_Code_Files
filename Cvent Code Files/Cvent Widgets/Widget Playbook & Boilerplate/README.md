@@ -1,7 +1,7 @@
 # Cvent Custom Widget Framework
 
 A reusable starting point for building Cvent Flex custom widgets, distilled from
-production experience. Two parts:
+production experience. Three parts:
 
 ## 1. `CVENT_WIDGET_PLAYBOOK.md` — the reference
 
@@ -16,7 +16,13 @@ Highlights:
 - The multi-file sync trap
 - A pre-prod checklist
 
-## 2. `boilerplate/` — the scaffold
+## 2. `LOCAL_PREVIEW.md` — run it locally before uploading
+
+How to start the local preview server, clone the `preview/` harness for a new
+widget (one `cp` + one `sed`), capture a sandbox data dump for it, and which
+prompts to give Claude. Every widget should get a preview folder on day one.
+
+## 3. `boilerplate/` — the scaffold
 
 Four skeleton files with the proven patterns pre-wired, but no widget-specific
 logic. Copy the folder, rename, and build on top.

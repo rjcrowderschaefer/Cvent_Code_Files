@@ -1,6 +1,9 @@
 // widget.js
 // NOTE: include the file extension in imports
-import { AgendaItem } from "./AgendaItem.js";
+import { AgendaItem, migrateModalTypography } from "./AgendaItem.js";
+
+// Brand stack used by the featured-speakers section, so the two headings match.
+const HEADER_FONT_STACK = `"AvenirNextforBBG","Helvetica Neue",Helvetica,Arial,-apple-system,BlinkMacSystemFont,sans-serif`;
 
 export default class extends HTMLElement {
   constructor({ configuration, theme } = {}) {
@@ -124,7 +127,7 @@ export default class extends HTMLElement {
     const headerWrap = document.createElement("div");
     headerWrap.style.display = "flex";
     headerWrap.style.flexDirection = "column";
-    headerWrap.style.gap = "4px";
+    headerWrap.style.gap = "10px"; // heading -> intro gap, as .fs__h2 -> .fs__intro
     headerWrap.style.width = "calc(100% - 40px)";
     headerWrap.style.maxWidth = "1210px";
     headerWrap.style.margin = "0px auto 0px auto";
@@ -140,25 +143,28 @@ export default class extends HTMLElement {
     this._subheaderEl = subheaderEl;
     subheaderEl.style.margin = "0";
 
-    this._applyTypographyOverrides(
-      headerEl,
-      (cfg.typography && cfg.typography.agendaHeader) || {},
-      true
-    );
+    // Old default header/subheader typography (never a planner choice) is
+    // migrated to the featured-speakers section-heading scale.
+    const headerTypo = migrateModalTypography(cfg.typography || {});
+    this._applyTypographyOverrides(headerEl, headerTypo.agendaHeader || {}, true);
+    this._applyTypographyOverrides(subheaderEl, headerTypo.agendaSubheader || {}, true);
 
-    this._applyTypographyOverrides(
-      subheaderEl,
-      (cfg.typography && cfg.typography.agendaSubheader) || {},
-      true
-    );
+    // Same face + tracking as the featured-speakers heading (.fs__h2 / .fs__intro).
+    headerWrap.style.fontFamily = HEADER_FONT_STACK;
+    headerEl.style.letterSpacing = "-.02em";
+    headerEl.style.lineHeight = "1.1";
+    subheaderEl.style.lineHeight = "1.45";
 
     // fallback defaults if planner hasn't styled them yet
-    if (!headerEl.style.fontSize) headerEl.style.fontSize = "32px";
-    const hasExplicitBold = (cfg.typography?.agendaHeader?.bold !== undefined);
+    if (!headerEl.style.fontSize) headerEl.style.fontSize = "28px";
+    const hasExplicitBold = (headerTypo.agendaHeader?.bold !== undefined);
     if (!hasExplicitBold) headerEl.style.fontWeight = "700";
+    if (!headerEl.style.color) headerEl.style.color = "#141416";
 
-    if (!subheaderEl.style.fontSize) subheaderEl.style.fontSize = "18px";
-    if (!subheaderEl.style.color) subheaderEl.style.color = "#444";
+    if (!subheaderEl.style.fontSize) subheaderEl.style.fontSize = "15px";
+    if (!subheaderEl.style.color || /^#0{6}$/i.test(subheaderEl.style.color) || subheaderEl.style.color === "rgb(0, 0, 0)") {
+      subheaderEl.style.color = "#5C5C5A";
+    }
 
     // "Editorial" header style (opt-in; default "classic" leaves existing
     // events untouched): eyebrow + title + short accent rule + muted subheader,

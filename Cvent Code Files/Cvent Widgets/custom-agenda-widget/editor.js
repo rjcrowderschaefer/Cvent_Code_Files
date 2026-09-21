@@ -2,6 +2,10 @@
 // Planner-facing editor. Recreates your index.html + main.js control surface inside Shadow DOM
 // and persists values via setConfiguration. No mock data required.
 
+// Legacy speaker-modal typography (pre-restyle defaults) is migrated on load so
+// the panel shows and re-saves the new values. Same rule the widget applies.
+import { migrateModalTypography } from "./AgendaItem.js";
+
 export default class ExampleAgendaEditor extends HTMLElement {
   constructor({ setConfiguration, initialConfiguration } = {}) {
     super();
@@ -14,7 +18,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
     const incoming = initialConfiguration || {};
 
     const defaultTypography = defaults.typography || {};
-    const incomingTypography = incoming.typography || {};
+    const incomingTypography = migrateModalTypography(incoming.typography || {});
     const mergedTypography = {};
 
     Object.keys(defaultTypography).forEach((key) => {
@@ -60,7 +64,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
     const incoming = newConfig || {};
 
     const defaultTypography = defaults.typography || {};
-    const incomingTypography = incoming.typography || {};
+    const incomingTypography = migrateModalTypography(incoming.typography || {});
     const mergedTypography = {};
 
     Object.keys(defaultTypography).forEach((key) => {
@@ -207,18 +211,21 @@ export default class ExampleAgendaEditor extends HTMLElement {
     };
 
     return {
+      // Section header mirrors the featured-speakers section heading.
       agendaHeader: {
         ...base,
-        fontSize: 40,
-        fontSizeMd: 32,
-        fontSizeSm: 24,
-        bold: false,
+        fontSize: 28,
+        fontSizeMd: 24,
+        fontSizeSm: 20,
+        bold: true,
+        color: "#141416",
       },
       agendaSubheader: {
         ...base,
-        fontSize: 20,
-        fontSizeMd: 18,
-        fontSizeSm: 14,
+        fontSize: 15,
+        fontSizeMd: 14,
+        fontSizeSm: 13,
+        color: "#5C5C5A",
       },
       eventDate: {
         ...base,
@@ -286,48 +293,59 @@ export default class ExampleAgendaEditor extends HTMLElement {
         ...base,
         bold: true,
       },
+      // Speaker modal scale mirrors the featured-speakers widget bio modal.
       modalSpeakerName: {
         ...base,
+        fontSize: 29,
+        fontSizeMd: 26,
+        fontSizeSm: 24,
         bold: true,
+        color: "#141416",
       },
       modalSpeakerTitle: {
         ...base,
-        fontSize: 18,
-        fontSizeMd: 16,
+        fontSize: 15,
+        fontSizeMd: 15,
         fontSizeSm: 14,
-        italic: true,
+        color: "#5C5C5A",
       },
       modalSpeakerCompany: {
         ...base,
-        fontSize: 18,
-        fontSizeMd: 16,
-        fontSizeSm: 14,
+        fontSize: 11,
+        fontSizeMd: 11,
+        fontSizeSm: 10,
+        bold: true,
+        color: "#3F3F3D",
       },
       modalSpeakerBio: {
         ...base,
-        fontSize: 16,
+        fontSize: 15,
         fontSizeMd: 14,
-        fontSizeSm: 12,
+        fontSizeSm: 14,
+        color: "#3F3F3D",
       },
       modalSessionsHeader: {
         ...base,
-        fontSize: 18,
-        fontSizeMd: 16,
-        fontSizeSm: 14,
+        fontSize: 11,
+        fontSizeMd: 11,
+        fontSizeSm: 11,
         bold: true,
+        color: "#5C5C5A",
       },
       modalSessionName: {
         ...base,
-        fontSize: 16,
+        fontSize: 15,
         fontSizeMd: 14,
-        fontSizeSm: 12,
+        fontSizeSm: 14,
         bold: true,
+        color: "#141416",
       },
       modalSessionDateTime: {
         ...base,
-        fontSize: 16,
-        fontSizeMd: 14,
+        fontSize: 13,
+        fontSizeMd: 13,
         fontSizeSm: 12,
+        color: "#5C5C5A",
       },
     };
   }
@@ -346,8 +364,8 @@ export default class ExampleAgendaEditor extends HTMLElement {
       underline: false,
     };
     return {
-      agendaHeader: { ...base, fontSize: 28, fontSizeMd: 24, fontSizeSm: 20, bold: false },
-      agendaSubheader: { ...base, fontSize: 15, fontSizeMd: 14, fontSizeSm: 13 },
+      agendaHeader: { ...base, fontSize: 28, fontSizeMd: 24, fontSizeSm: 20, bold: true, color: "#141416" },
+      agendaSubheader: { ...base, fontSize: 15, fontSizeMd: 14, fontSizeSm: 13, color: "#5C5C5A" },
       eventDate: { ...base, fontSize: 18, fontSizeMd: 16, fontSizeSm: 14, bold: true },
       sessionName: { ...base, fontSize: 17, fontSizeMd: 15, fontSizeSm: 14, bold: true },
       sessionTime: { ...base, fontSize: 12, fontSizeMd: 12, fontSizeSm: 11, bold: true, color: "#FFFFFF" },
@@ -358,13 +376,14 @@ export default class ExampleAgendaEditor extends HTMLElement {
       speakerTitle: { ...base, fontSize: 12, fontSizeMd: 11, fontSizeSm: 11, italic: true },
       speakerCompany: { ...base, fontSize: 12, fontSizeMd: 11, fontSizeSm: 11 },
       modalName: { ...base, fontSize: 18, bold: true },
-      modalSpeakerName: { ...base, fontSize: 26, bold: true },
-      modalSpeakerTitle: { ...base, fontSize: 17, fontSizeMd: 16, fontSizeSm: 15, italic: false },
-      modalSpeakerCompany: { ...base, fontSize: 13, fontSizeMd: 12, fontSizeSm: 12 },
-      modalSpeakerBio: { ...base, fontSize: 13, fontSizeMd: 12, fontSizeSm: 12 },
-      modalSessionsHeader: { ...base, fontSize: 14, fontSizeMd: 13, fontSizeSm: 12, bold: true },
-      modalSessionName: { ...base, fontSize: 13, fontSizeMd: 12, fontSizeSm: 12, bold: true },
-      modalSessionDateTime: { ...base, fontSize: 12, fontSizeMd: 11, fontSizeSm: 11 },
+      // Speaker modal scale is not card-density dependent; same as standard.
+      modalSpeakerName: { ...base, fontSize: 29, fontSizeMd: 26, fontSizeSm: 24, bold: true, color: "#141416" },
+      modalSpeakerTitle: { ...base, fontSize: 15, fontSizeMd: 15, fontSizeSm: 14, italic: false, color: "#5C5C5A" },
+      modalSpeakerCompany: { ...base, fontSize: 11, fontSizeMd: 11, fontSizeSm: 10, bold: true, color: "#3F3F3D" },
+      modalSpeakerBio: { ...base, fontSize: 15, fontSizeMd: 14, fontSizeSm: 14, color: "#3F3F3D" },
+      modalSessionsHeader: { ...base, fontSize: 11, fontSizeMd: 11, fontSizeSm: 11, bold: true, color: "#5C5C5A" },
+      modalSessionName: { ...base, fontSize: 15, fontSizeMd: 14, fontSizeSm: 14, bold: true, color: "#141416" },
+      modalSessionDateTime: { ...base, fontSize: 13, fontSizeMd: 13, fontSizeSm: 12, color: "#5C5C5A" },
     };
   }
 

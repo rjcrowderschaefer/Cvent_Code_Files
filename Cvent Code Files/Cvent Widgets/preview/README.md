@@ -25,6 +25,9 @@ so this is belt-and-suspenders.)
 Claude Code: `.claude/launch.json` at the repo root defines the same server as
 `agenda-preview`.
 
+**New widget?** Don't edit this folder; clone it. The recipe (one `cp`, one
+`sed`, drop in a dump) is in `Widget Playbook & Boilerplate/LOCAL_PREVIEW.md` §3.
+
 ## What it covers / doesn't
 
 Covers layout, typography, concurrent tiles, modals, editor plumbing, timezone and

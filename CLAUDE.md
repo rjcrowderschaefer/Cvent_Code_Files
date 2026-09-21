@@ -13,10 +13,12 @@ Cvent Code Files/
 ├── Cvent Widgets/
 │   ├── custom-agenda-widget/        ← THE agenda widget (widget.js, AgendaItem.js, editor.js, config.json)
 │   ├── custom-featured-speakers/    ← dev branch only so far (not yet promoted to prod)
+│   ├── preview/                     ← local live-preview harness (agenda); clone per widget, see LOCAL_PREVIEW.md
 │   └── Widget Playbook & Boilerplate/
 │       ├── CVENT_WIDGET_PLAYBOOK.md ← gotchas, SDK limits, patterns (REQUIRED READING)
 │       ├── AGENDA_WIDGET_TODO.md    ← backlog / deferred items for the agenda widget
 │       ├── README.md                ← boilerplate guide + §3 branch workflow
+│       ├── LOCAL_PREVIEW.md         ← start/stop the local preview server, clone the harness for a new widget, capture a dump
 │       ├── MIGRATION_folders_to_branches.md
 │       └── widget.js / ITEM.js / editor.js / config.json  (boilerplate scaffold, not a live widget)
 ├── BLE-Events/, code-snippets/, css-files/   ← event CSS and snippets, not environment-tracked
@@ -36,6 +38,9 @@ agenda with extensive custom features built over many iterations.
   or editor code. It will save you from re-discovering hard-won lessons.
 - **`AGENDA_WIDGET_TODO.md`** — backlog and deferred items.
 - **`README.md` §3** — git branch workflow (dev → main via `promote.sh`).
+- **`LOCAL_PREVIEW.md`** — local live preview: `preview_start {name: "agenda-preview"}`
+  → http://localhost:8765/preview/ (agenda) or `/preview-<widget>/` for a clone.
+  Verify every visual change there (desktop + mobile, en/es/pt) before a sandbox upload.
 
 ## Golden rules (from the Playbook — do not violate)
 
