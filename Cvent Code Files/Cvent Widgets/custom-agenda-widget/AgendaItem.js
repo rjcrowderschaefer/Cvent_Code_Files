@@ -1,6 +1,81 @@
 // AgendaItem.js
 // Reusable custom element used by widget.js (registered as <vertical-agenda-layout>)
 
+
+// ---------------------------------------------------------------------------
+// Speaker-modal typography migration.
+// The modal was restyled to match the featured-speakers widget. Configs saved
+// before that carry the OLD default typography for these keys (never a
+// planner's choice, just what the editor wrote at the time), and because saved
+// typography is applied inline it would override the new stylesheet. When a
+// saved entry equals one of the old defaults exactly (standard or compact
+// scale) it is swapped for the new default; anything a planner actually
+// changed is left alone. Keep NEW in sync with editor.js.
+// ---------------------------------------------------------------------------
+// Same brand stack the featured-speakers widget pins its modal to, so the two
+// modals render in the same face at the same weights.
+const MODAL_FONT_STACK = `"AvenirNextforBBG","Helvetica Neue",Helvetica,Arial,-apple-system,BlinkMacSystemFont,sans-serif`;
+
+const MODAL_TYPO_KEYS = [
+  "modalSpeakerName", "modalSpeakerTitle", "modalSpeakerCompany", "modalSpeakerBio",
+  "modalSessionsHeader", "modalSessionName", "modalSessionDateTime",
+  // Section header + subheader: restyled to match the featured-speakers
+  // section heading (28px/700, muted 15px intro).
+  "agendaHeader", "agendaSubheader",
+];
+const T = (fontSize, fontSizeMd, fontSizeSm, extra = {}) => ({
+  fontSize, fontSizeMd, fontSizeSm, color: "#000000", bold: false, italic: false, underline: false, ...extra,
+});
+const MODAL_TYPO_NEW = {
+  modalSpeakerName:     T(29, 26, 24, { bold: true, color: "#141416" }),
+  modalSpeakerTitle:    T(15, 15, 14, { color: "#5C5C5A" }),
+  modalSpeakerCompany:  T(11, 11, 10, { bold: true, color: "#3F3F3D" }),
+  modalSpeakerBio:      T(15, 14, 14, { color: "#3F3F3D" }),
+  modalSessionsHeader:  T(11, 11, 11, { bold: true, color: "#5C5C5A" }),
+  modalSessionName:     T(15, 14, 14, { bold: true, color: "#141416" }),
+  modalSessionDateTime: T(13, 13, 12, { color: "#5C5C5A" }),
+  agendaHeader:         T(28, 24, 20, { bold: true, color: "#141416" }),
+  agendaSubheader:      T(15, 14, 13, { color: "#5C5C5A" }),
+};
+const MODAL_TYPO_LEGACY = {
+  modalSpeakerName:     [T(22, 18, 14, { bold: true }), T(26, 14, 13, { bold: true })],
+  modalSpeakerTitle:    [T(18, 16, 14, { italic: true }), T(17, 16, 15)],
+  modalSpeakerCompany:  [T(18, 16, 14), T(13, 12, 12)],
+  modalSpeakerBio:      [T(16, 14, 12), T(13, 12, 12)],
+  modalSessionsHeader:  [T(18, 16, 14, { bold: true }), T(14, 13, 12, { bold: true })],
+  modalSessionName:     [T(16, 14, 12, { bold: true }), T(13, 12, 12, { bold: true })],
+  modalSessionDateTime: [T(16, 14, 12), T(12, 11, 11)],
+  agendaHeader:         [T(40, 32, 24), T(28, 24, 20)],
+  agendaSubheader:      [T(20, 18, 14), T(15, 14, 13)],
+};
+const sameTypo = (a, b) =>
+  !!a && !!b &&
+  Number(a.fontSize) === b.fontSize && Number(a.fontSizeMd) === b.fontSizeMd &&
+  Number(a.fontSizeSm) === b.fontSizeSm &&
+  String(a.color || "#000000").toLowerCase() === b.color &&
+  !!a.bold === b.bold && !!a.italic === b.italic && !!a.underline === b.underline;
+// Returns a typography map with legacy modal defaults replaced. Exported so
+// editor.js can apply the same rule when it loads a saved config.
+export function migrateModalTypography(typography) {
+  const out = { ...(typography || {}) };
+  MODAL_TYPO_KEYS.forEach((key) => {
+    const cur = out[key];
+    if (!cur) return;
+    const legacy = MODAL_TYPO_LEGACY[key] || [];
+    const exact = legacy.some((old) => sameTypo(cur, old));
+    // Mixed state (e.g. compact styling toggled on and off leaves the desktop
+    // size from one scale and the md/sm sizes from the other): still an old
+    // default as long as the desktop size is a legacy one and the planner
+    // never picked a colour.
+    const noColor = !cur.color || /^#0{6}$/i.test(String(cur.color));
+    const legacySize = legacy.some((old) => Number(cur.fontSize) === old.fontSize);
+    if (exact || (noColor && legacySize)) {
+      out[key] = { ...MODAL_TYPO_NEW[key] };
+    }
+  });
+  return out;
+}
+
 export class AgendaItem extends HTMLElement {
   constructor() {
     super();
@@ -415,12 +490,6 @@ export class AgendaItem extends HTMLElement {
 
   .comma-node {
     display: none;
-  }
-
-  .sessionsList li {
-    margin: 2px 0 !important;
-    line-height: 1.3 !important;
-    padding: 0 !important;
   }
 
   .timeTz {
@@ -1215,8 +1284,11 @@ export class AgendaItem extends HTMLElement {
 
   _renderSessionView() {
     const { s, cfg, tz } = this._sessionCtx;
-    const { modal } = this._sessionModal;
+    const { modal, backdrop } = this._sessionModal;
     modal.innerHTML = "";
+    modal.classList.remove("smSpeaker");
+    backdrop.classList.remove("sbSpeaker");
+    modal.style.borderTopWidth = "4px";
 
     const head = document.createElement("div");
     head.classList.add("smodalHead");
@@ -1338,8 +1410,13 @@ export class AgendaItem extends HTMLElement {
   // standalone card opened the speaker directly (the card already shows the
   // session details, so there is nothing to go back to).
   _renderSpeakerView(sp, { showBack = true } = {}) {
-    const { modal } = this._sessionModal;
+    const { modal, backdrop } = this._sessionModal;
     modal.innerHTML = "";
+    // Speaker view uses the featured-speakers modal treatment (see
+    // _sharedModalCss): darker scrim, 640px shell, 3px brand bar.
+    modal.classList.add("smSpeaker");
+    backdrop.classList.add("sbSpeaker");
+    modal.style.borderTopWidth = "3px";
 
     const close = document.createElement("button");
     close.classList.add("smodalClose");
@@ -1352,24 +1429,26 @@ export class AgendaItem extends HTMLElement {
     // From the tile flow: a head bar with the back link + close. From a card:
     // no head bar at all — the close floats top-right and the body carries the
     // role eyebrow ("Speaker" / "Moderator"), name, title, company.
+    // The close always floats top-right. From the tile flow a quiet back link
+    // sits above the photo (no header strip), so the modal reads the same as
+    // the standalone speaker modal.
+    close.classList.add("smodalCloseFloat");
     let back = null;
-    let head = null;
+    let backRow = null;
     if (showBack && this._sessionCtx) {
-      head = document.createElement("div");
-      head.classList.add("smodalHead");
+      backRow = document.createElement("div");
+      backRow.classList.add("smodalBackRow");
       back = document.createElement("button");
       back.classList.add("smodalBack");
       back.textContent = this._t("backToSession");
       back.addEventListener("click", () => this._renderSessionView());
-      head.append(back, close);
-    } else {
-      close.classList.add("smodalCloseFloat");
+      backRow.append(back);
     }
 
     const refs = this._buildSpeakerBody();
     this._fillSpeakerRefs(refs, sp);
 
-    if (head) modal.append(head, refs.body);
+    if (backRow) modal.append(close, backRow, refs.body);
     else modal.append(close, refs.body);
     (back || close).focus();
   }
@@ -1720,38 +1799,53 @@ export class AgendaItem extends HTMLElement {
     const body = document.createElement("div");
     body.classList.add("modalBody");
 
+    // Pinned head: square photo + eyebrow / name / title / company tag.
+    const head = document.createElement("div");
+    head.classList.add("modalHead");
+
+    const photo = document.createElement("div");
+    photo.classList.add("modalPhoto");
     const avatar = document.createElement("img");
     avatar.classList.add("modalAvatar");
     avatar.alt = this._t("speakerPhoto");
+    photo.append(avatar);
 
     const details = document.createElement("div");
     details.classList.add("modalDetails");
-    const roleEl = document.createElement("div");
+    const roleEl = document.createElement("p");
     roleEl.classList.add("modalRole");
-    const nameEl = document.createElement("div");
+    const nameEl = document.createElement("h2");
     nameEl.classList.add("modalName");
-    const titleEl = document.createElement("div");
+    const titleEl = document.createElement("p");
     titleEl.classList.add("kv", "modalTitleLine");
-    const companyEl = document.createElement("div");
+    const companyEl = document.createElement("span");
     companyEl.classList.add("kv", "modalCompanyLine");
     details.append(roleEl, nameEl, titleEl, companyEl);
+    head.append(photo, details);
 
     const divider = document.createElement("div");
     divider.classList.add("modalDivider");
 
+    // Scrollable body: bio, then the "Sessions" block.
+    const scroll = document.createElement("div");
+    scroll.classList.add("modalScroll");
+
     const bioEl = document.createElement("div");
     bioEl.classList.add("bio");
 
-    const sessionsHdr = document.createElement("div");
+    const sessionsWrap = document.createElement("div");
+    sessionsWrap.classList.add("modalSessions");
+    const sessionsHdr = document.createElement("p");
     sessionsHdr.classList.add("sessionsHeader");
     sessionsHdr.textContent = this._t("sessions");
-
     const sessionsUl = document.createElement("ul");
     sessionsUl.classList.add("sessionsList");
+    sessionsWrap.append(sessionsHdr, sessionsUl);
 
-    body.append(avatar, details, divider, bioEl, sessionsHdr, sessionsUl);
+    scroll.append(bioEl, sessionsWrap);
+    body.append(head, divider, scroll);
 
-    return { body, avatar, roleEl, nameEl, titleEl, companyEl, bioEl, sessionsHdr, sessionsUl };
+    return { body, avatar, roleEl, nameEl, titleEl, companyEl, bioEl, sessionsWrap, sessionsHdr, sessionsUl };
   }
 
   // Populate a set of speaker refs (from _buildSpeakerBody or this.modal) with a
@@ -1867,33 +1961,78 @@ export class AgendaItem extends HTMLElement {
         appearance:none; border:none; background:transparent; cursor:pointer;
         font-size:13px; font-weight:600; color:#555; padding:0; text-decoration:underline;
       }
-      .modalBody {
-        padding:28px 30px 26px; display:grid; grid-template-columns:150px 1fr;
-        grid-auto-rows:auto; column-gap:24px; row-gap:0; background:${contentBg};
+      /* ---- Speaker view: mirrors the featured-speakers widget bio modal ----
+         (dark scrim, 640px shell, 3px brand bar, square photo + eyebrow/name/
+         role/company tag, hairline rule, scrollable bio + sessions list). */
+      .sbackdrop.sbSpeaker { background:rgba(11,11,12,.72); padding:24px; box-sizing:border-box; }
+      .smodal.smSpeaker {
+        width:100%; max-width:640px; max-height:90vh; border-radius:4px;
+        display:flex; flex-direction:column; overflow:hidden; text-align:left;
+        color:#141416; box-shadow:none;
+        font-family:${MODAL_FONT_STACK};
       }
-      .modalAvatar { width:150px; height:150px; object-fit:cover; border-radius:4px; grid-column:1; grid-row:1; background:#eee; }
-      .modalDetails { grid-column:2; grid-row:1; align-self:center; min-width:0; padding-right:48px; }
-      .modalRole { font-size:11px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; margin-bottom:8px; }
-      .modalName { font-size:26px; font-weight:800; line-height:1.15; letter-spacing:-0.01em; }
-      .modalTitleLine { font-size:17px; color:#555; margin-top:6px; line-height:1.3; }
-      .modalCompanyLine { font-size:15px; color:#222; margin-top:4px; line-height:1.3; }
-      .kv { margin:2px 0; }
-      .modalDivider { grid-column:1 / -1; grid-row:2; height:1px; background:${divider}; margin:24px 0 20px; }
-      .bio { grid-column:1 / -1; grid-row:3; font-size:15px; line-height:1.6; color:#333; }
-      .bio p { margin:0 0 12px 0; }
+      .smSpeaker .smodalBackRow { flex:none; padding:22px 34px 0; }
+      .smSpeaker .smodalBackRow + .modalBody .modalHead { padding-top:18px; }
+      .smSpeaker .smodalBack { font-size:12px; font-weight:700; letter-spacing:.02em; color:#5C5C5A; text-decoration:none; }
+      .smSpeaker .smodalBack:hover { color:#141416; text-decoration:underline; }
+      .smSpeaker .smodalHead .smodalClose { border:0; color:#141416; background:transparent; }
+      .smSpeaker .smodalHead .smodalClose:hover { background:#F0F0EE; color:#141416; }
+      .smSpeaker .smodalCloseFloat {
+        top:12px; right:12px; width:36px; height:36px; border:0;
+        background:rgba(255,255,255,.92); color:#141416; font-size:22px;
+      }
+      .smSpeaker .smodalCloseFloat:hover { background:#fff; color:#141416; }
+      .smSpeaker .smodalCloseFloat:focus-visible { outline:3px solid #2B6CE8; outline-offset:2px; }
+      .modalBody {
+        display:flex; flex-direction:column; min-height:0; flex:1 1 auto;
+        background:${contentBg};
+      }
+      .modalHead {
+        display:grid; grid-template-columns:180px 1fr; gap:26px; align-items:start;
+        padding:30px 34px 0; flex:none;
+      }
+      .modalPhoto { width:180px; aspect-ratio:1 / 1; background:#EDEDEA; overflow:hidden; position:relative; }
+      .modalAvatar { display:block; width:100%; height:100%; object-fit:cover; object-position:center; }
+      .modalDetails { min-width:0; padding-right:40px; }
+      .modalRole {
+        font-size:11px; line-height:1.4; font-weight:700; letter-spacing:.14em;
+        text-transform:uppercase; margin:0 0 12px;
+      }
+      .modalName { font-size:29px; font-weight:700; letter-spacing:-.02em; line-height:1.12; margin:0 0 6px; color:#141416; }
+      .modalTitleLine { font-size:15px; color:#5C5C5A; margin:0 0 14px; line-height:1.35; }
+      .modalCompanyLine {
+        display:inline-block; font-size:10.5px; font-weight:700; letter-spacing:.08em;
+        text-transform:uppercase; line-height:1.4; padding:4px 8px; border-radius:2px;
+        background:#F0F0EE; color:#3F3F3D; margin:0;
+      }
+      .kv { margin-top:0; }
+      .modalDivider { height:1px; background:${divider}; margin:26px 34px 0; flex:none; }
+      .modalScroll { padding:22px 34px 34px; overflow:auto; flex:1 1 auto; min-height:0; }
+      .bio { font-size:14.5px; line-height:1.65; color:#3F3F3D; }
+      .bio p { margin:0 0 13px; }
       .bio p:last-child { margin-bottom:0; }
-      .sessionsHeader { grid-column:1 / -1; grid-row:4; margin-top:24px; font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:#8a8a8a; }
-      .sessionsList { grid-column:1 / -1; grid-row:5; margin:8px 0 0 18px; padding:0; }
-      .sessionsList li { margin:4px 0; line-height:1.4; }
+      .bio > *:first-child { margin-top:0 !important; }
+      .bio > *:last-child { margin-bottom:0 !important; }
+      .modalSessions { margin-top:22px; padding-top:20px; border-top:1px solid ${divider}; }
+      .sessionsHeader {
+        font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+        color:#5C5C5A; margin:0 0 10px;
+      }
+      .sessionsList { list-style:none; margin:0; padding:0; }
+      .sessionsList li { padding:8px 0; border-top:1px solid ${divider}; line-height:1.4; }
+      .sessionsList li:first-child { border-top:0; padding-top:0; }
+      .sName { display:block; font-size:14.5px; font-weight:700; color:#141416; line-height:1.35; }
+      .sWhen { display:block; font-size:13px; color:#5C5C5A; margin-top:2px; }
       @media (max-width: 600px) {
-        .modalBody { grid-template-columns:1fr; padding:22px 18px 20px; }
-        .modalAvatar { grid-row:1; width:120px; height:120px; }
-        .modalDetails { grid-column:1; grid-row:2; margin-top:12px; padding-right:0; }
-        .modalDivider { grid-row:3; margin:18px 0 14px; }
-        .bio { grid-row:4; font-size:14px; }
-        .sessionsHeader { grid-row:5; margin-top:18px; }
-        .sessionsList { grid-row:6; }
-        .smodalCloseFloat { top:12px; right:12px; width:34px; height:34px; font-size:18px; }
+        .sbackdrop.sbSpeaker { padding:16px; }
+        .modalHead { grid-template-columns:1fr; gap:18px; padding:26px 22px 0; }
+        .modalPhoto { width:160px; }
+        .modalDetails { padding-right:0; }
+        .modalDivider { margin:22px 22px 0; }
+        .smSpeaker .smodalBackRow { padding:20px 22px 0; }
+        .modalScroll { padding:18px 22px 26px; }
+        .modalName { font-size:24px; }
+        .smSpeaker .smodalCloseFloat { top:12px; right:12px; width:34px; height:34px; font-size:20px; }
       }
     `;
   }
@@ -1951,6 +2090,22 @@ export class AgendaItem extends HTMLElement {
   }
   // Accent used AS text (names, eyebrow, tags, "show more"): a very pale accent
   // is darkened so it stays legible on white / on its own tint.
+  // Eyebrow ("Speaker" / "Moderator") ink derived from the session accent.
+  // Light/mid accents (brightness > 130, e.g. the #F7A325 plenary default) are
+  // pulled 45% toward black so 11px caps stay legible on white — #F7A325
+  // becomes #885A14, matching the featured-speakers modal. Accents that are
+  // already dark (navy, forest, etc.) are used as-is.
+  _eyebrowInk(accent) {
+    const b = this._brightness(accent);
+    if (b <= 130) return accent;
+    const h = (accent || "").trim().replace("#", "");
+    const hex = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+    if (hex.length !== 6) return accent;
+    const mix = (c) => Math.round(parseInt(c, 16) * 0.55);
+    const to2 = (n) => n.toString(16).padStart(2, "0");
+    return `#${to2(mix(hex.slice(0, 2)))}${to2(mix(hex.slice(2, 4)))}${to2(mix(hex.slice(4, 6)))}`;
+  }
+
   _textAccent(accent) {
     const b = this._brightness(accent);
     if (b <= 175) return accent;
@@ -2068,23 +2223,39 @@ export class AgendaItem extends HTMLElement {
     // Typography. The title is muted by default (a planner-chosen non-black
     // colour is respected); the company pill is tinted with the session accent.
     const accent = this._modalAccent || cfg.plenaryAccent || "#f7a325";
-    const titleTypo = { ...(cfg.typography?.modalSpeakerTitle || {}) };
-    if (!titleTypo.color || /^#0{6}$/i.test(titleTypo.color)) titleTypo.color = "#555555";
-    this.applyTypographyOverrides(refs.nameEl, cfg.typography?.modalSpeakerName, true);
+    const typo = migrateModalTypography(cfg.typography);
+    // Muted elements: a missing or plain-black colour means "no planner
+    // choice" and falls back to the modal's muted ink.
+    const muted = (o, fallback) => {
+      const t = { ...(o || {}) };
+      if (!t.color || /^#0{6}$/i.test(t.color)) t.color = fallback;
+      return t;
+    };
+    const titleTypo = muted(typo.modalSpeakerTitle, "#5C5C5A");
+    this.applyTypographyOverrides(refs.nameEl, typo.modalSpeakerName, true);
     this.applyTypographyOverrides(refs.titleEl, titleTypo, true);
-    this.applyTypographyOverrides(refs.companyEl, cfg.typography?.modalSpeakerCompany, true);
-    if (refs.roleEl) refs.roleEl.style.color = this._textAccent(accent);
-    this.applyTypographyOverrides(refs.bioEl, cfg.typography?.modalSpeakerBio, true);
-    this.applyTypographyOverrides(refs.sessionsHdr, cfg.typography?.modalSessionsHeader, true);
-
-    // Focus recolor of the speaker name
-    if (cfg.isFocus === true && cfg.showAccentBar === true) {
-      refs.nameEl.style.color = cfg.focusAccent || "#1a7f8e";
+    // Company renders as a neutral uppercase tag; a plain-black default colour
+    // maps to the tag ink so the pill stays readable on its grey fill.
+    this.applyTypographyOverrides(refs.companyEl, muted(typo.modalSpeakerCompany, "#3F3F3D"), true);
+    if (refs.roleEl) {
+      refs.roleEl.style.color = this._eyebrowInk(accent);
+      refs.roleEl.style.fontWeight = "700";
     }
+    // Name: bold unless the planner explicitly turned bold off.
+    if (typo.modalSpeakerName?.bold !== false) refs.nameEl.style.fontWeight = "700";
+    this.applyTypographyOverrides(refs.bioEl, typo.modalSpeakerBio, true);
+    this.applyTypographyOverrides(refs.sessionsHdr, muted(typo.modalSessionsHeader, "#5C5C5A"), true);
 
     refs.titleEl.style.display = jobTitle ? "" : "none";
     refs.companyEl.style.display = company ? "" : "none";
     refs.bioEl.style.display = bio ? "" : "none";
+    // With no bio the sessions block sits directly under the rule (no second
+    // hairline), matching the featured-speakers modal.
+    if (refs.sessionsWrap) {
+      refs.sessionsWrap.style.marginTop = bio ? "" : "0";
+      refs.sessionsWrap.style.paddingTop = bio ? "" : "0";
+      refs.sessionsWrap.style.borderTop = bio ? "" : "0";
+    }
 
     // "Appears in" sessions
     const speakerId = sp?.id || sp?.speakerId;
@@ -2104,18 +2275,16 @@ export class AgendaItem extends HTMLElement {
       appearsIn.forEach((sess) => {
         const li = document.createElement("li");
         const nameSpan = document.createElement("span");
+        nameSpan.classList.add("sName");
         nameSpan.textContent = sess.name || "(Untitled)";
-        this.applyTypographyOverrides(nameSpan, cfg.typography?.modalSessionName, true);
+        this.applyTypographyOverrides(nameSpan, typo.modalSessionName, true);
 
         const dtSpan = document.createElement("span");
+        dtSpan.classList.add("sWhen");
         const st = sess.startDateTime ? new Date(sess.startDateTime) : null;
         const et = sess.endDateTime ? new Date(sess.endDateTime) : null;
-        const stTxt = st
-          ? `${st.toLocaleDateString(this._dateLocale(), { month: "short", day: "numeric", year: "numeric", timeZone: tz })}, ${st.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: tz })}`
-          : "";
-        const etTxt = et
-          ? et.toLocaleString("en-US", { timeStyle: "short", timeZone: tz })
-          : "";
+        // Same "Mon, Jun 16 · 10:50 AM – 11:30 AM GMT+2" format as the
+        // featured-speakers modal; the date part follows the active language.
         const overrideAbbr =
           typeof cfg.timezoneAbbr === "string" ? cfg.timezoneAbbr.trim() : "";
         const autoAbbr = st
@@ -2123,18 +2292,31 @@ export class AgendaItem extends HTMLElement {
           : "";
         const showTz = cfg.showTimezone !== false;
         const tzAbbr = showTz ? overrideAbbr || autoAbbr : "";
-        dtSpan.textContent = stTxt
-          ? etTxt
-            ? ` — ${stTxt} – ${etTxt}${tzAbbr ? " " + tzAbbr : ""}`
-            : ` — ${stTxt}${tzAbbr ? " " + tzAbbr : ""}`
+        const dateTxt = st
+          ? this._capFirst(
+              st.toLocaleDateString(this._dateLocale(), {
+                weekday: "short", month: "short", day: "numeric", timeZone: tz,
+              })
+            )
           : "";
-        this.applyTypographyOverrides(dtSpan, cfg.typography?.modalSessionDateTime, true);
+        const t1 = st
+          ? st.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: tz })
+          : "";
+        const t2 = et
+          ? et.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: tz })
+          : "";
+        dtSpan.textContent = st
+          ? `${dateTxt} \u00b7 ${t1}${t2 ? ` \u2013 ${t2}` : ""}${tzAbbr ? " " + tzAbbr : ""}`
+          : "";
+        dtSpan.style.display = dtSpan.textContent ? "" : "none";
+        this.applyTypographyOverrides(dtSpan, muted(typo.modalSessionDateTime, "#5C5C5A"), true);
 
         li.append(nameSpan, dtSpan);
         refs.sessionsUl.appendChild(li);
       });
     } else {
       const li = document.createElement("li");
+      li.classList.add("sWhen");
       li.textContent = this._t("noOtherSessions");
       refs.sessionsUl.appendChild(li);
     }
@@ -2171,6 +2353,12 @@ export class AgendaItem extends HTMLElement {
             if (hBio && !bio) {
               refs.bioEl.innerHTML = this._formatBioHtml(hBio);
               refs.bioEl.style.display = "";
+              // Bio arrived late: restore the sessions block separator.
+              if (refs.sessionsWrap) {
+                refs.sessionsWrap.style.marginTop = "";
+                refs.sessionsWrap.style.paddingTop = "";
+                refs.sessionsWrap.style.borderTop = "";
+              }
             }
           })
           .catch(() => {});
