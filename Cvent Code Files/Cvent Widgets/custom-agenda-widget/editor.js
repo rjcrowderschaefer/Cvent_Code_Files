@@ -253,7 +253,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
         ...base,
         fontSize: 16,
         fontSizeMd: 14,
-        fontSizeSm: 12,
+        fontSizeSm: 13,
       },
       sessionLocation: {
         ...base,
@@ -369,7 +369,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
       eventDate: { ...base, fontSize: 18, fontSizeMd: 16, fontSizeSm: 14, bold: true },
       sessionName: { ...base, fontSize: 17, fontSizeMd: 15, fontSizeSm: 14, bold: true },
       sessionTime: { ...base, fontSize: 12, fontSizeMd: 12, fontSizeSm: 11, bold: true, color: "#FFFFFF" },
-      sessionDescription: { ...base, fontSize: 13, fontSizeMd: 12, fontSizeSm: 12 },
+      sessionDescription: { ...base, fontSize: 16, fontSizeMd: 14, fontSizeSm: 13 },
       sessionLocation: { ...base, fontSize: 12, fontSizeMd: 11, fontSizeSm: 10 },
       sessionCategory: { ...base, fontSize: 12, fontSizeMd: 11, fontSizeSm: 10 },
       speakerName: { ...base, fontSize: 14, fontSizeMd: 13, fontSizeSm: 12, bold: true, color: "#F7A325" },
