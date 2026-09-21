@@ -26,6 +26,7 @@ const MODAL_TYPO_KEYS = [
   "sessionDescription",
   // Card speaker line (compact scale bumped 2px).
   "speakerName", "speakerTitle", "speakerCompany",
+  "sessionName",
 ];
 const T = (fontSize, fontSizeMd, fontSizeSm, extra = {}) => ({
   fontSize, fontSizeMd, fontSizeSm, color: "#000000", bold: false, italic: false, underline: false, ...extra,
@@ -44,6 +45,7 @@ const MODAL_TYPO_NEW = {
   speakerName:          T(16, 15, 14, { bold: true, color: "#F7A325" }),
   speakerTitle:         T(14, 13, 12, { italic: true }),
   speakerCompany:       T(14, 13, 12),
+  sessionName:          T(20, 18, 16, { bold: true }),
 };
 const MODAL_TYPO_LEGACY = {
   modalSpeakerName:     [T(22, 18, 14, { bold: true }), T(26, 14, 13, { bold: true })],
@@ -59,6 +61,7 @@ const MODAL_TYPO_LEGACY = {
   speakerName:          [T(14, 13, 12, { bold: true, color: "#F7A325" })],
   speakerTitle:         [T(12, 11, 11, { italic: true })],
   speakerCompany:       [T(12, 11, 11)],
+  sessionName:          [T(17, 15, 14, { bold: true })],
 };
 const sameTypo = (a, b) =>
   !!a && !!b &&

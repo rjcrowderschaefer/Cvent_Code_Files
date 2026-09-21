@@ -367,7 +367,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
       agendaHeader: { ...base, fontSize: 28, fontSizeMd: 24, fontSizeSm: 20, bold: true, color: "#141416" },
       agendaSubheader: { ...base, fontSize: 18, fontSizeMd: 16, fontSizeSm: 15, color: "#5C5C5A" },
       eventDate: { ...base, fontSize: 18, fontSizeMd: 16, fontSizeSm: 14, bold: true },
-      sessionName: { ...base, fontSize: 17, fontSizeMd: 15, fontSizeSm: 14, bold: true },
+      sessionName: { ...base, fontSize: 20, fontSizeMd: 18, fontSizeSm: 16, bold: true },
       sessionTime: { ...base, fontSize: 12, fontSizeMd: 12, fontSizeSm: 11, bold: true, color: "#FFFFFF" },
       sessionDescription: { ...base, fontSize: 16, fontSizeMd: 14, fontSizeSm: 13 },
       sessionLocation: { ...base, fontSize: 12, fontSizeMd: 11, fontSizeSm: 10 },
