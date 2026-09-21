@@ -4,6 +4,8 @@
 // setConfiguration. Sections: Section text, Layout, Colours, Speaker selection,
 // Modal, Typography (section) and Typography (modal).
 
+import { migrateTypography, defaultTypography } from "./FeaturedSpeaker.js";
+
 export default class FeaturedSpeakersEditor extends HTMLElement {
   constructor({ setConfiguration, initialConfiguration } = {}) {
     super();
@@ -35,7 +37,7 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     const defaults = this._getDefaultConfig();
     const mergedTypography = {};
     const dT = defaults.typography || {};
-    const iT = incoming.typography || {};
+    const iT = migrateTypography(incoming.typography || {});
     Object.keys(dT).forEach((k) => { mergedTypography[k] = { ...(dT[k] || {}), ...(iT[k] || {}) }; });
     Object.keys(iT).forEach((k) => { if (!mergedTypography[k]) mergedTypography[k] = iT[k]; });
 
@@ -138,9 +140,9 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
       moreText: "",
       noteText: "",
       featuredSpeakerIds: [],
-      tileSize: 200,
+      tileSize: 250,
       gridGapRow: 36,
-      gridGapCol: 24,
+      gridGapCol: 65,
       gridAlign: "center",
       hoverPrompt: "Click to view bio",
       showAccentRule: true,
@@ -162,6 +164,7 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
         tagInk: "#3F3F3D",
         modalBar: "#F7A325",
         accentRule: "#F7A325",
+        mainAccent: "#F7A325",
         bioInk: "#3F3F3D",
         focus: "#2B6CE8",
       },
@@ -169,26 +172,10 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     };
   }
 
+  // Typography defaults come from the shared type scale (type-scale.js) via
+  // the role map in FeaturedSpeaker.js.
   _makeDefaultTypography() {
-    const base = { italic: false, underline: false };
-    return {
-      eyebrow:              { ...base, fontSize: 11,   fontSizeMd: 11,   fontSizeSm: 11,   color: "#5C5C5A", bold: true },
-      header:               { ...base, fontSize: 28,   fontSizeMd: 24,   fontSizeSm: 20,   color: "#141416", bold: true },
-      intro:                { ...base, fontSize: 15,   fontSizeMd: 14,   fontSizeSm: 13,   color: "#5C5C5A", bold: false },
-      more:                 { ...base, fontSize: 15,   fontSizeMd: 15,   fontSizeSm: 14,   color: "#9C5F00" },
-      note:                 { ...base, fontSize: 13,   fontSizeMd: 13,   fontSizeSm: 13,   color: "#6F6F6D", bold: false, italic: true },
-      speakerName:          { ...base, fontSize: 15.5, fontSizeMd: 15.5, fontSizeSm: 15,   color: "#141416", bold: true },
-      speakerRole:          { ...base, fontSize: 13,   fontSizeMd: 13,   fontSizeSm: 13,   color: "#5C5C5A", bold: false },
-      speakerTag:           { ...base, fontSize: 10.5, fontSizeMd: 10.5, fontSizeSm: 10.5, color: "#3F3F3D", bold: true },
-      modalEyebrow:         { ...base, fontSize: 11,   fontSizeMd: 11,   fontSizeSm: 11,   color: "#9C5F00", bold: true },
-      modalName:            { ...base, fontSize: 29,   fontSizeMd: 27,   fontSizeSm: 24,   color: "#141416", bold: true },
-      modalRole:            { ...base, fontSize: 15,   fontSizeMd: 15,   fontSizeSm: 14,   color: "#5C5C5A", bold: false },
-      modalTag:             { ...base, fontSize: 10.5, fontSizeMd: 10.5, fontSizeSm: 10.5, color: "#3F3F3D", bold: true },
-      modalBio:             { ...base, fontSize: 14.5, fontSizeMd: 14.5, fontSizeSm: 14,   color: "#3F3F3D", bold: false },
-      modalSessionsHeader:  { ...base, fontSize: 11,   fontSizeMd: 11,   fontSizeSm: 11,   color: "#5C5C5A", bold: true },
-      modalSessionName:     { ...base, fontSize: 14.5, fontSizeMd: 14.5, fontSizeSm: 14,   color: "#141416", bold: true },
-      modalSessionDateTime: { ...base, fontSize: 13,   fontSizeMd: 13,   fontSizeSm: 13,   color: "#5C5C5A", bold: false },
-    };
+    return defaultTypography();
   }
 
   // =============================================
@@ -324,9 +311,9 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     const layoutBlock = this._block(layoutDetails);
 
     layoutBlock.append(
-      this._numberRow("Tile size (px, square photo)", this._config.tileSize ?? 200, 120, 400, (v) => this._patch({ tileSize: v })),
+      this._numberRow("Tile size (px, square photo)", (this._config.tileSize === 200 ? 250 : this._config.tileSize) ?? 250, 120, 400, (v) => this._patch({ tileSize: v })),
       this._numberRow("Row gap (px)", this._config.gridGapRow ?? 36, 0, 120, (v) => this._patch({ gridGapRow: v })),
-      this._numberRow("Column gap (px)", this._config.gridGapCol ?? 24, 0, 120, (v) => this._patch({ gridGapCol: v }))
+      this._numberRow("Column gap (px)", (this._config.gridGapCol === 24 ? 65 : this._config.gridGapCol) ?? 65, 0, 120, (v) => this._patch({ gridGapCol: v }))
     );
 
     const alignFs = document.createElement("fieldset");
@@ -368,8 +355,8 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
       this._colorRow(label, `c-${key}`, colors[key] || "#000000", (v) => this._patch({ colors: { ...this._config.colors, [key]: v } }));
 
     colorBlock.append(
-      cRow("Accent (name on hover, “more coming”, modal eyebrow)", "accent"),
-      cRow("Accent rule under heading", "accentRule"),
+      cRow("Main accent (heading underline, speaker hover)", "mainAccent"),
+      cRow("Accent (“more coming” line, modal eyebrow)", "accent"),
       cRow("Modal top bar", "modalBar"),
       cRow("Primary text", "ink"),
       cRow("Secondary text (eyebrow, intro, roles)", "muted"),
@@ -667,6 +654,10 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     const modalBlock = this._block(modalDetails);
 
     this._appendTextInput(modalBlock, "Modal eyebrow (leave blank to hide)", "modalEyebrowText", "Speaker");
+    const modHint = document.createElement("div");
+    modHint.className = "hint";
+    modHint.textContent = "Speakers in a “Moderator” Cvent category (or with “(Moderator)” in their title/company) always show “Moderator” here.";
+    modalBlock.append(modHint);
 
     modalBlock.append(
       this._checkbox("Eyebrow follows the speaker\u2019s Cvent speaker category", !!this._config.eyebrowFromCategory, (v) => this._patch({ eyebrowFromCategory: v }))
@@ -748,6 +739,15 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
       ["speakerRole",  "Speaker role / title"],
       ["speakerTag",   "Company tag"],
     ].forEach(([key, label]) => typoSection.append(this._typographyBlock(key, label)));
+    // Escape hatch for events whose saved typography predates a restyle and
+    // was never migrated: write the current defaults for every key.
+    const resetTypo = document.createElement("button");
+    resetTypo.type = "button";
+    resetTypo.className = "clear-btn";
+    resetTypo.style.marginTop = "10px";
+    resetTypo.textContent = "Reset all typography to defaults";
+    resetTypo.onclick = () => this._patch({ typography: this._makeDefaultTypography() });
+    typoSectionBlock.append(resetTypo);
     panel.append(typoSectionDetails);
 
     const typoModalDetails = this._details("Typography (Modal)", false);

@@ -17,6 +17,7 @@ async function load() {
   const bust = `?v=${Date.now()}`;
   const { createMockSdk } = await import(`./mock-sdk.js${bust}`);
   await fetch(`${WIDGET_DIR}/AgendaItem.js`, { cache: "reload" }); // fixed-specifier import
+  await fetch(`${WIDGET_DIR}/type-scale.js`, { cache: "reload" }); // fixed-specifier import
   const [mod, dump] = await Promise.all([
     import(`${WIDGET_DIR}/widget.js${bust}`),
     fetch(`./data/agenda-dump.json${bust}`).then((r) => r.json()),

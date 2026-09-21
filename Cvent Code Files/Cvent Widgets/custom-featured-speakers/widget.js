@@ -4,7 +4,8 @@
 // square speaker tiles, optional disclosure note. Each tile is a
 // <dev-featured-speaker-card> (FeaturedSpeaker.js) that owns its bio modal.
 // NOTE: include the file extension in imports
-import { FeaturedSpeaker } from "./FeaturedSpeaker.js";
+import { FeaturedSpeaker, migrateTypography } from "./FeaturedSpeaker.js";
+import { FONT_STACK, ensureBrandFont } from "./type-scale.js";
 
 const FALLBACK_TOKENS = {
   ink: "#141416",
@@ -17,22 +18,12 @@ const FALLBACK_TOKENS = {
   tagInk: "#3F3F3D",
   modalBar: "#F7A325",
   accentRule: "#F7A325",
+  mainAccent: "#F7A325", // heading rule + speaker hover; wins over accentRule when set
   bioInk: "#3F3F3D",
   focus: "#2B6CE8",
 };
 
-// Bloomberg brand font. Cvent registers the uploaded Avenir faces under
-// separate family names on the parent theme; re-declared here as ONE family
-// ("AvenirNextforBBG") with correct weight slots. @font-face inside a shadow root is
-// not registered by browsers, so this is injected once into document.head.
-const BRAND_FONT_CSS = `
-@font-face{font-family:"AvenirNextforBBG";font-weight:400;font-style:normal;font-display:swap;src:url("https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/43ba48291a694c6b839f5076a265c1bb.otf") format("opentype")}
-@font-face{font-family:"AvenirNextforBBG";font-weight:500;font-style:normal;font-display:swap;src:url("https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/1c8ddb83438d454e97bc30944531a8c0.ttf") format("truetype")}
-@font-face{font-family:"AvenirNextforBBG";font-weight:600;font-style:normal;font-display:swap;src:url("https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/2bc2aedb5a704c7483976a475ecf020f.otf") format("opentype")}
-@font-face{font-family:"AvenirNextforBBG";font-weight:700;font-style:normal;font-display:swap;src:url("https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/370525f70e1b4cc68d3b6f5e9b5bcaa2.otf") format("opentype")}
-@font-face{font-family:"AvenirNextforBBG";font-weight:400;font-style:italic;font-display:swap;src:url("https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/c10dce35a1914a99a8d286307087ef5b.ttf") format("truetype")}
-`;
-const BRAND_FONT_STACK = `"AvenirNextforBBG","Helvetica Neue",Helvetica,Arial,-apple-system,BlinkMacSystemFont,sans-serif`;
+const BRAND_FONT_STACK = FONT_STACK;
 
 // Cvent maps some timezone options to DST-stripped IANA zones (playbook §2).
 const TZ_NORMALIZE = { "Atlantic/Reykjavik": "Europe/London" };
@@ -85,13 +76,7 @@ export default class extends HTMLElement {
 
   _ensureBrandFont() {
     if (this.configuration?.useBrandFont === false) return;
-    try {
-      if (document.getElementById("bbgspk-brand-font")) return;
-      const st = document.createElement("style");
-      st.id = "bbgspk-brand-font";
-      st.textContent = BRAND_FONT_CSS;
-      (document.head || document.documentElement).append(st);
-    } catch (e) { /* noop */ }
+    ensureBrandFont(); // shared @font-face loader (type-scale.js)
   }
 
   // =============================================
@@ -180,12 +165,21 @@ export default class extends HTMLElement {
   // =============================================
 
   async _renderInto(root) {
-    const cfg = this.configuration || {};
+    // Saved OLD default typography is swapped for the current defaults (see
+    // migrateTypography); the migrated map is what the cards receive too.
+    const cfg = { ...(this.configuration || {}), typography: migrateTypography((this.configuration || {}).typography) };
     const c = { ...FALLBACK_TOKENS, ...(cfg.colors || {}) };
+    // Main accent: heading rule + card hover. Older configs only carry accentRule.
+    c.mainAccent = (cfg.colors && cfg.colors.mainAccent) || (cfg.colors && cfg.colors.accentRule) || c.mainAccent;
     const fontFamily = cfg.useBrandFont === false ? "inherit" : BRAND_FONT_STACK;
-    const tile = Math.max(120, Math.min(400, Number(cfg.tileSize) || 200));
+    // 250px tiles (4 across in the 1210px content box). 200 was the old default;
+    // a saved 200 is treated as "default", not a planner choice.
+    const tileRaw = Number(cfg.tileSize) || 250;
+    const tile = Math.max(120, Math.min(400, tileRaw === 200 ? 250 : tileRaw));
     const gapRow = Number(cfg.gridGapRow) || 36;
-    const gapCol = Number(cfg.gridGapCol) || 24;
+    // 65px column gap; a saved 24 (the old default) is treated as the new default.
+    const gapColRaw = Number(cfg.gridGapCol) || 65;
+    const gapCol = gapColRaw === 24 ? 65 : gapColRaw;
     const align = cfg.gridAlign === "left" ? "start" : "center";
 
     root.innerHTML = "";
@@ -205,7 +199,7 @@ export default class extends HTMLElement {
       .fs :focus-visible { outline: 3px solid ${c.focus}; outline-offset: 3px; }
       /* Same content box as the agenda widget so the two line up on a page */
       .fs__inner { width: calc(100% - 40px); max-width: 1210px; margin: 0 auto; padding: 0; }
-      .fs .fs__rule { width: 40px; height: 3px; border-radius: 2px; margin: 14px 0 12px; background: ${c.accentRule}; }
+      .fs .fs__rule { width: 40px; height: 3px; border-radius: 2px; margin: 14px 0 12px; background: ${c.mainAccent}; }
       @media (max-width: 600px) { .fs .fs__rule { margin: 10px 0 8px; } }
       .fs .fs__eyebrow {
         font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
@@ -216,9 +210,9 @@ export default class extends HTMLElement {
         line-height: 1.1; margin: 14px 0 10px; max-width: 34ch; color: ${c.ink};
       }
       .fs .fs__eyebrow[style*="display: none"] + .fs__h2 { margin-top: 0; }
-      .fs .fs__intro { font-size: 15px; color: ${c.muted}; max-width: 86ch; }
-      @media (max-width: 1024px) { .fs .fs__h2 { font-size: 24px; } .fs .fs__intro { font-size: 14px; } }
-      @media (max-width: 600px)  { .fs .fs__h2 { font-size: 20px; } .fs .fs__intro { font-size: 13px; } }
+      .fs .fs__intro { font-size: 18px; color: ${c.muted}; max-width: 86ch; }
+      @media (max-width: 1024px) { .fs .fs__h2 { font-size: 24px; } .fs .fs__intro { font-size: 16px; } }
+      @media (max-width: 600px)  { .fs .fs__h2 { font-size: 20px; } .fs .fs__intro { font-size: 15px; } }
       .fs .fs__more { margin-top: 16px; font-size: 15px; font-weight: 600; letter-spacing: .01em; color: ${c.accent}; }
       .fs .fs__grid {
         display: grid; grid-template-columns: repeat(auto-fit, ${tile}px);
@@ -312,13 +306,23 @@ export default class extends HTMLElement {
       return;
     }
 
-    // Planner-selected speakers (featuredSpeakerIds) in planner order;
-    // fall back to all speakers when none are selected.
-    const selectedIds = Array.isArray(cfg.featuredSpeakerIds) && cfg.featuredSpeakerIds.length
-      ? cfg.featuredSpeakerIds : null;
+    // Planner-selected speakers (featuredSpeakerIds) in planner order. A fresh
+    // widget has none selected and renders nothing but a prompt to use the
+    // editor; it never falls back to "every speaker in the event".
+    const selectedIds = Array.isArray(cfg.featuredSpeakerIds)
+      ? cfg.featuredSpeakerIds.map(String) : [];
     const speakersToRender = selectedIds
-      ? selectedIds.map((id) => allSpeakers.find((s) => String(s?.id || s?.speakerId) === String(id))).filter(Boolean)
-      : allSpeakers;
+      .map((id) => allSpeakers.find((s) => String(s?.id || s?.speakerId) === id))
+      .filter(Boolean);
+
+    if (!speakersToRender.length) {
+      grid.remove();
+      const empty = document.createElement("p");
+      empty.className = "fs__empty";
+      empty.textContent = "No speakers have been added. Use the editor to the right to add and order speakers to feature within this widget.";
+      inner.insertBefore(empty, note);
+      return;
+    }
 
     speakersToRender.forEach((sp) => {
       const li = document.createElement("li");

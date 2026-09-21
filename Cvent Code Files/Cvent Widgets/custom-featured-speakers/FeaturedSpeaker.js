@@ -1,4 +1,5 @@
 // FeaturedSpeaker.js
+import { FONT_STACK, COLORS, T, buildTypography, migrateTypography as migrateTypographyShared } from "./type-scale.js";
 // Reusable custom element used by widget.js (registered as <dev-featured-speaker-card>)
 // Renders a single speaker tile (square photo, name, role, company tag) and a
 // click-to-open bio modal. Visual language mirrors the NYCW "Meet our speakers"
@@ -16,6 +17,7 @@ const FALLBACK_TOKENS = {
   tagInk: "#3F3F3D",
   modalBar: "#F7A325",
   accentRule: "#F7A325",
+  mainAccent: "#F7A325",
   bioInk: "#3F3F3D",
   focus: "#2B6CE8",
 };
@@ -32,6 +34,51 @@ const PLACEHOLDER_SVG = (bg, fg) =>
     `<path d='M70 400c0-95 58-150 130-150s130 55 130 150z' fill='${fg}'/>` +
     `</svg>`
   );
+
+// ---------------------------------------------------------------------------
+// Typography: every key maps to a ROLE of the shared type scale
+// (type-scale.js / TYPOGRAPHY.md). Overrides are only for real exceptions.
+// ---------------------------------------------------------------------------
+export const TYPO_ROLES = {
+  eyebrow:              "label",
+  header:               "display",
+  intro:                "lead",
+  more:                 { role: "bodySmall", color: COLORS.accentInk },
+  note:                 { role: "caption", italic: true, color: COLORS.faint },
+  speakerName:          "name",
+  speakerRole:          "meta",
+  speakerTag:           "tag",
+  modalEyebrow:         { role: "label", color: COLORS.accentInk },
+  modalName:            "headline",
+  modalRole:            "lead",
+  modalTag:             "tag",
+  modalBio:             "body",
+  modalSessionsHeader:  "label",
+  modalSessionName:     "listTitle",
+  modalSessionDateTime: "caption",
+};
+
+// Every default set this widget's editor has EVER written for a key (the
+// pre-NYCW design used different keys; only speakerName overlaps). Append
+// here whenever a default changes.
+const C = (fontSize, fontSizeMd, fontSizeSm, color, extra = {}) => T(fontSize, fontSizeMd, fontSizeSm, { color, ...extra });
+const TYPO_LEGACY = {
+  intro:                [C(15, 14, 13, "#5C5C5A"), C(16, 16, 15, "#5C5C5A")],
+  more:                 [C(15, 15, 14, "#9C5F00")],
+  note:                 [C(13, 13, 13, "#6F6F6D", { italic: true })],
+  speakerName:          [C(15.5, 15.5, 15, "#141416", { bold: true }), C(18, 16, 14, "#f7a325", { bold: true })],
+  speakerRole:          [C(13, 13, 13, "#5C5C5A")],
+  speakerTag:           [C(10.5, 10.5, 10.5, "#3F3F3D", { bold: true })],
+  modalName:            [C(29, 27, 24, "#141416", { bold: true })],
+  modalRole:            [C(15, 15, 14, "#5C5C5A")],
+  modalTag:             [C(10.5, 10.5, 10.5, "#3F3F3D", { bold: true })],
+  modalBio:             [C(14.5, 14.5, 14, "#3F3F3D")],
+  modalSessionName:     [C(14.5, 14.5, 14, "#141416", { bold: true })],
+  modalSessionDateTime: [C(13, 13, 13, "#5C5C5A")],
+};
+
+export const defaultTypography = () => buildTypography(TYPO_ROLES);
+export const migrateTypography = (typography) => migrateTypographyShared(typography, TYPO_ROLES, TYPO_LEGACY);
 
 export class FeaturedSpeaker extends HTMLElement {
   constructor() {
@@ -53,9 +100,10 @@ export class FeaturedSpeaker extends HTMLElement {
     const sp = this.speaker || {};
     const cfg = this.config || {};
     const c = { ...FALLBACK_TOKENS, ...(cfg.colors || {}) };
-    const tile = Math.max(120, Math.min(400, Number(cfg.tileSize) || 200));
+    const tileRaw = Number(cfg.tileSize) || 250;
+    const tile = Math.max(120, Math.min(400, tileRaw === 200 ? 250 : tileRaw));
     const hoverPrompt = cfg.hoverPrompt !== undefined ? cfg.hoverPrompt : "Click to view bio";
-    const fontFamily = cfg.fontFamily || `"AvenirNextforBBG","Helvetica Neue",Helvetica,Arial,-apple-system,BlinkMacSystemFont,sans-serif`;
+    const fontFamily = cfg.fontFamily || FONT_STACK;
 
     const style = document.createElement("style");
     style.textContent = `
@@ -96,18 +144,27 @@ export class FeaturedSpeaker extends HTMLElement {
       }
       .card:hover .overlay, .card:focus-visible .overlay { opacity: 1; }
       .name {
-        font-size: 15.5px; font-weight: 700; letter-spacing: -.01em;
+        font-size: 16px; font-weight: 700; letter-spacing: -.01em;
         color: ${c.ink}; margin-bottom: 3px; transition: color .15s ease;
       }
-      .card:hover .name { color: ${c.accent} !important; }
-      .role { font-size: 13px; color: ${c.muted}; margin-bottom: 10px; }
+      .card:hover .name { color: ${c.mainAccent} !important; }
+      /* The company tag hangs directly off the title (8px), never off the card
+         bottom, so it reads as part of the speaker above it rather than a
+         header for the row below. The role reserves two lines so tags still
+         line up across a row of single-line names; any slack goes to the
+         bottom of the card, where it merges with the grid's row gap. */
+      .role { font-size: 14px; color: ${c.muted}; min-height: calc(2 * 1.45em); margin-bottom: 8px; }
+      .tagWrap { display: flex; align-items: flex-start; }
       .name, .role, .tag { overflow-wrap: break-word; min-width: 0; }
       .tag {
-        display: inline-block; margin-top: auto; align-self: flex-start; max-width: 100%;
-        font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+        display: inline-block; max-width: 100%;
+        font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
         line-height: 1.4; padding: 4px 8px; border-radius: 2px;
         background: ${c.tagBg}; color: ${c.tagInk};
       }
+      /* Company names are never cut off: the pill wraps to as many lines as
+         the name needs (wider 250px tiles keep that to two in practice). */
+      .tag > span { display: block; overflow-wrap: anywhere; }
 
       /* ---------- MODAL ---------- */
       .scrim {
@@ -136,15 +193,16 @@ export class FeaturedSpeaker extends HTMLElement {
         font-size: 29px; font-weight: 700; letter-spacing: -.02em; line-height: 1.12;
         margin: 0 0 6px; color: ${c.ink};
       }
-      .mRole { font-size: 15px; color: ${c.muted}; margin: 0 0 14px; }
+      .mRole { font-size: 18px; line-height: 1.35; color: ${c.muted}; margin: 0 0 14px; }
       .mTag {
-        display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: .08em;
+        display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: .08em;
         text-transform: uppercase; padding: 4px 8px; border-radius: 2px;
         background: ${c.tagBg}; color: ${c.tagInk};
       }
       .mRule { height: 1px; background: ${c.hair}; margin: 26px 34px 0; flex: none; }
       .mBody { padding: 22px 34px 34px; overflow: auto; flex: 1 1 auto; }
-      .mBio p { font-size: 14.5px; line-height: 1.65; color: ${c.bioInk}; margin: 0 0 13px; }
+      .mBio { font-size: 18px; line-height: 1.6; color: ${c.bioInk}; }
+      .mBio p { margin: 0 0 13px; }
       .mBio p:last-child { margin-bottom: 0; }
       .mBio > *:first-child { margin-top: 0 !important; }
       .mBio > *:last-child { margin-bottom: 0 !important; }
@@ -156,7 +214,7 @@ export class FeaturedSpeaker extends HTMLElement {
       .mSessionsList { list-style: none; margin: 0; padding: 0; }
       .mSessionsList li { padding: 8px 0; border-top: 1px solid ${c.hair}; }
       .mSessionsList li:first-child { border-top: 0; padding-top: 0; }
-      .sName { display: block; font-size: 14.5px; font-weight: 700; color: ${c.ink}; line-height: 1.35; }
+      .sName { display: block; font-size: 15px; font-weight: 700; color: ${c.ink}; line-height: 1.35; }
       .sWhen { display: block; font-size: 13px; color: ${c.muted}; margin-top: 2px; }
       .mClose {
         position: absolute; top: 12px; right: 12px; width: 36px; height: 36px;
@@ -173,6 +231,7 @@ export class FeaturedSpeaker extends HTMLElement {
         .mRule { margin: 22px 22px 0; }
         .mBody { padding: 18px 22px 26px; }
         .mName { font-size: 24px; }
+        .mRole, .mBio { font-size: 15px; }
       }
     `;
     this.shadowRoot.append(style);
@@ -211,15 +270,20 @@ export class FeaturedSpeaker extends HTMLElement {
     roleEl.className = "role";
     roleEl.textContent = this._jobTitle(sp);
     this._applyTypographyOverrides(roleEl, cfg.typography?.speakerRole, true);
-    roleEl.style.display = roleEl.textContent ? "" : "none";
+    // Kept in flow when empty so the reserved height still aligns the row.
+    roleEl.setAttribute("aria-hidden", roleEl.textContent ? "false" : "true");
 
     const tagEl = document.createElement("span");
     tagEl.className = "tag";
-    tagEl.textContent = this._tagLabel(sp);
+    this._setTag(tagEl, this._tagLabel(sp));
     this._applyTypographyOverrides(tagEl, cfg.typography?.speakerTag, true);
-    tagEl.style.display = tagEl.textContent ? "" : "none";
+    tagEl.style.display = tagEl.title ? "" : "none";
 
-    card.append(photo, nameEl, roleEl, tagEl);
+    const tagWrap = document.createElement("span");
+    tagWrap.className = "tagWrap";
+    tagWrap.append(tagEl);
+
+    card.append(photo, nameEl, roleEl, tagWrap);
     this.shadowRoot.append(card);
 
     // Lazy hydration — fill role/company if missing from SDK
@@ -515,7 +579,7 @@ export class FeaturedSpeaker extends HTMLElement {
         const hTitle = this._jobTitle(full);
         const hCompany = this._company(full);
         if (hTitle && !hasTitle) { roleEl.textContent = hTitle; roleEl.style.display = ""; }
-        if (hCompany && !hasCompany) { tagEl.textContent = this._tagLabel(full); tagEl.style.display = ""; }
+        if (hCompany && !hasCompany) { this._setTag(tagEl, this._tagLabel(full)); tagEl.style.display = ""; }
       })
       .catch((err) => { console.warn("[FeaturedSpeaker] getSpeakers error", err); });
   }
@@ -596,6 +660,16 @@ export class FeaturedSpeaker extends HTMLElement {
   // SPEAKER DATA HELPERS
   // =============================================
 
+  // Tile company tag: text lives in an inner span so it can be clamped to two
+  // lines; the full label goes on the title attribute.
+  _setTag(tagEl, text) {
+    tagEl.textContent = "";
+    const inner = document.createElement("span");
+    inner.textContent = text || "";
+    tagEl.append(inner);
+    tagEl.title = text || "";
+  }
+
   _fullName(sp) {
     return `${(sp?.firstName || "").trim()} ${(sp?.lastName || "").trim()}`.trim();
   }
@@ -621,6 +695,13 @@ export class FeaturedSpeaker extends HTMLElement {
   _eyebrowLabel(sp) {
     const cfg = this.config || {};
     const fixed = cfg.modalEyebrowText !== undefined ? String(cfg.modalEyebrowText) : "Speaker";
+    // Moderators are always labelled as such, whatever the fixed text and
+    // whether or not category-driven eyebrows are on: a Cvent speaker
+    // category of "Moderator(s)", or "(Moderator)" in the title/company
+    // (same rule as the agenda widget's _speakerRole).
+    const cat = (sp?.category?.name || sp?.categoryName || sp?.speakerCategory?.name || "").toString();
+    const hay = [cat, this._jobTitle(sp), this._company(sp)].filter(Boolean).join(" ");
+    if (/moderator|moderadora?/i.test(hay)) return "Moderator";
     if (!cfg.eyebrowFromCategory) return fixed;
     const raw = (sp?.category?.name || sp?.categoryName || sp?.speakerCategory?.name || "").toString().trim();
     if (!raw) return fixed;

@@ -227,6 +227,11 @@ fields are how you attach data to sessions the widget can read.**
   (used for accent bar, hide date nav, focus legend, compact styling, concurrent
   tiles). There's no way to distinguish "new event" from "existing un-customized
   event," so a default-off toggle is the only clean opt-in.
+- **Typography is a shared system.** Sizes, weights and text colours come from
+  `type-scale.js` through a role map in the widget's component file; the editor's
+  defaults and the saved-config migration both derive from it. See `TYPOGRAPHY.md`.
+  Saved typography is applied inline, so a changed default must be added to the
+  widget's `TYPO_LEGACY` table or existing events never pick it up.
 - **The editor should reflect what renders.** If a feature sets values (e.g. a
   compact type scale), write those values into the config so the editor fields
   show them accurately and stay editable.
@@ -299,7 +304,8 @@ fields are how you attach data to sessions the widget can read.**
 - [ ] All `console.log` debug statements removed (keep `console.warn` error handlers)
 - [ ] Checked in the local preview at desktop + mobile, en/es/pt (`LOCAL_PREVIEW.md`)
 - [ ] Tested in Incognito on the PUBLISHED front end, not just editor preview
-- [ ] Both widget.js and component file(s) uploaded & verified live
+- [ ] Both widget.js and component file(s) uploaded & verified live — including `type-scale.js`
+- [ ] Font sizes come from the shared type scale (`TYPOGRAPHY.md`); any changed default appended to `TYPO_LEGACY`
 - [ ] Timezone: times + day grouping use the event zone; DST abbreviations correct
 - [ ] Language: legend/eyebrow/dates follow the runtime selector, not just default
 - [ ] New behavioral features gated behind a default-OFF toggle

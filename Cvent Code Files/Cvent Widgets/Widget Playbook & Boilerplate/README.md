@@ -1,7 +1,7 @@
 # Cvent Custom Widget Framework
 
 A reusable starting point for building Cvent Flex custom widgets, distilled from
-production experience. Three parts:
+production experience. Four parts:
 
 ## 1. `CVENT_WIDGET_PLAYBOOK.md` — the reference
 
@@ -22,7 +22,14 @@ How to start the local preview server, clone the `preview/` harness for a new
 widget (one `cp` + one `sed`), capture a sandbox data dump for it, and which
 prompts to give Claude. Every widget should get a preview folder on day one.
 
-## 3. `boilerplate/` — the scaffold
+## 3. `TYPOGRAPHY.md` + `type-scale.js` — one type system for every widget
+
+The shared scale (roles → size / weight / colour at three breakpoints), the
+colour tokens, the brand font loader, and the rules for migrating saved
+configs when a default changes. Each widget maps its typography keys to roles
+and carries an identical copy of `type-scale.js`.
+
+## 4. `boilerplate/` — the scaffold
 
 Four skeleton files with the proven patterns pre-wired, but no widget-specific
 logic. Copy the folder, rename, and build on top.

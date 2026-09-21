@@ -14,67 +14,64 @@
 // ---------------------------------------------------------------------------
 // Same brand stack the featured-speakers widget pins its modal to, so the two
 // modals render in the same face at the same weights.
-const MODAL_FONT_STACK = `"AvenirNextforBBG","Helvetica Neue",Helvetica,Arial,-apple-system,BlinkMacSystemFont,sans-serif`;
+import { FONT_STACK, COLORS, T, buildTypography, migrateTypography } from "./type-scale.js";
 
-const MODAL_TYPO_KEYS = [
-  "modalSpeakerName", "modalSpeakerTitle", "modalSpeakerCompany", "modalSpeakerBio",
-  "modalSessionsHeader", "modalSessionName", "modalSessionDateTime",
-  // Section header + subheader: restyled to match the featured-speakers
-  // section heading (28px/700, muted 15px intro).
-  "agendaHeader", "agendaSubheader",
-];
-const T = (fontSize, fontSizeMd, fontSizeSm, extra = {}) => ({
-  fontSize, fontSizeMd, fontSizeSm, color: "#000000", bold: false, italic: false, underline: false, ...extra,
-});
-const MODAL_TYPO_NEW = {
-  modalSpeakerName:     T(29, 26, 24, { bold: true, color: "#141416" }),
-  modalSpeakerTitle:    T(15, 15, 14, { color: "#5C5C5A" }),
-  modalSpeakerCompany:  T(11, 11, 10, { bold: true, color: "#3F3F3D" }),
-  modalSpeakerBio:      T(15, 14, 14, { color: "#3F3F3D" }),
-  modalSessionsHeader:  T(11, 11, 11, { bold: true, color: "#5C5C5A" }),
-  modalSessionName:     T(15, 14, 14, { bold: true, color: "#141416" }),
-  modalSessionDateTime: T(13, 13, 12, { color: "#5C5C5A" }),
-  agendaHeader:         T(28, 24, 20, { bold: true, color: "#141416" }),
-  agendaSubheader:      T(15, 14, 13, { color: "#5C5C5A" }),
+const MODAL_FONT_STACK = FONT_STACK;
+
+// ---------------------------------------------------------------------------
+// Typography: every key maps to a ROLE of the shared type scale
+// (type-scale.js / TYPOGRAPHY.md). Overrides are only for real exceptions.
+// ---------------------------------------------------------------------------
+export const TYPO_ROLES = {
+  agendaHeader:         "display",
+  agendaSubheader:      "lead",
+  eventDate:            "subtitle",
+  sessionName:          "title",
+  sessionTime:          { role: "caption", bold: true, color: COLORS.onBrand }, // on the time gutter
+  sessionDescription:   "bodySmall",
+  sessionLocation:      "tag",
+  sessionCategory:      "tag",
+  speakerName:          { role: "name", color: COLORS.brand },                  // accent name on cards
+  speakerTitle:         { role: "meta", italic: true },
+  speakerCompany:       "meta",
+  modalName:            "subtitle",                                            // session modal title
+  modalSpeakerName:     "headline",
+  modalSpeakerTitle:    "lead",
+  modalSpeakerCompany:  "tag",
+  modalSpeakerBio:      "body",
+  modalSessionsHeader:  "label",
+  modalSessionName:     "listTitle",
+  modalSessionDateTime: "caption",
 };
-const MODAL_TYPO_LEGACY = {
+
+// Every default set this widget's editor has EVER written for a key. A saved
+// entry that matches one of these is an old default, not a planner choice,
+// and is migrated to the current role. Append here whenever a default changes.
+const TYPO_LEGACY = {
+  agendaHeader:         [T(40, 32, 24), T(28, 24, 20)],
+  agendaSubheader:      [T(20, 18, 14), T(15, 14, 13), T(15, 14, 13, { color: "#5C5C5A" })],
+  eventDate:            [T(22, 18, 14, { bold: true }), T(18, 16, 14, { bold: true })],
+  sessionName:          [T(25, 21, 17, { bold: true }), T(17, 15, 14, { bold: true })],
+  sessionTime:          [T(14, 14, 12, { bold: true, color: "#FFFFFF" }), T(12, 12, 11, { bold: true, color: "#FFFFFF" })],
+  sessionDescription:   [T(13, 12, 12), T(16, 14, 12)],
+  sessionLocation:      [T(14, 12, 10), T(12, 11, 10)],
+  sessionCategory:      [T(14, 12, 10), T(12, 11, 10)],
+  speakerName:          [T(18, 16, 14, { bold: true, color: "#F7A325" }), T(14, 13, 12, { bold: true, color: "#F7A325" })],
+  speakerTitle:         [T(15, 13, 11, { italic: true }), T(12, 11, 11, { italic: true })],
+  speakerCompany:       [T(15, 13, 11), T(12, 11, 11)],
+  modalName:            [T(22, 18, 14, { bold: true }), T(18, 14, 13, { bold: true })],
   modalSpeakerName:     [T(22, 18, 14, { bold: true }), T(26, 14, 13, { bold: true })],
-  modalSpeakerTitle:    [T(18, 16, 14, { italic: true }), T(17, 16, 15)],
-  modalSpeakerCompany:  [T(18, 16, 14), T(13, 12, 12)],
-  modalSpeakerBio:      [T(16, 14, 12), T(13, 12, 12)],
+  modalSpeakerTitle:    [T(18, 16, 14, { italic: true }), T(17, 16, 15), T(15, 15, 14, { color: "#5C5C5A" })],
+  modalSpeakerCompany:  [T(18, 16, 14), T(13, 12, 12), T(11, 11, 10, { bold: true, color: "#3F3F3D" })],
+  modalSpeakerBio:      [T(16, 14, 12), T(13, 12, 12), T(15, 14, 14, { color: "#3F3F3D" })],
   modalSessionsHeader:  [T(18, 16, 14, { bold: true }), T(14, 13, 12, { bold: true })],
   modalSessionName:     [T(16, 14, 12, { bold: true }), T(13, 12, 12, { bold: true })],
   modalSessionDateTime: [T(16, 14, 12), T(12, 11, 11)],
-  agendaHeader:         [T(40, 32, 24), T(28, 24, 20)],
-  agendaSubheader:      [T(20, 18, 14), T(15, 14, 13)],
 };
-const sameTypo = (a, b) =>
-  !!a && !!b &&
-  Number(a.fontSize) === b.fontSize && Number(a.fontSizeMd) === b.fontSizeMd &&
-  Number(a.fontSizeSm) === b.fontSizeSm &&
-  String(a.color || "#000000").toLowerCase() === b.color &&
-  !!a.bold === b.bold && !!a.italic === b.italic && !!a.underline === b.underline;
-// Returns a typography map with legacy modal defaults replaced. Exported so
-// editor.js can apply the same rule when it loads a saved config.
-export function migrateModalTypography(typography) {
-  const out = { ...(typography || {}) };
-  MODAL_TYPO_KEYS.forEach((key) => {
-    const cur = out[key];
-    if (!cur) return;
-    const legacy = MODAL_TYPO_LEGACY[key] || [];
-    const exact = legacy.some((old) => sameTypo(cur, old));
-    // Mixed state (e.g. compact styling toggled on and off leaves the desktop
-    // size from one scale and the md/sm sizes from the other): still an old
-    // default as long as the desktop size is a legacy one and the planner
-    // never picked a colour.
-    const noColor = !cur.color || /^#0{6}$/i.test(String(cur.color));
-    const legacySize = legacy.some((old) => Number(cur.fontSize) === old.fontSize);
-    if (exact || (noColor && legacySize)) {
-      out[key] = { ...MODAL_TYPO_NEW[key] };
-    }
-  });
-  return out;
-}
+
+export const defaultTypography = () => buildTypography(TYPO_ROLES);
+// Kept under its old name: widget.js and editor.js import it.
+export const migrateModalTypography = (typography) => migrateTypography(typography, TYPO_ROLES, TYPO_LEGACY);
 
 export class AgendaItem extends HTMLElement {
   constructor() {
@@ -92,6 +89,11 @@ export class AgendaItem extends HTMLElement {
 
   connectedCallback() {
     const t = this.theme || {};
+    // Saved OLD default typography -> current defaults, once, for every
+    // read of this.config below (card, tile, pills, modal).
+    if (this.config && this.config.typography) {
+      this.config = { ...this.config, typography: migrateModalTypography(this.config.typography) };
+    }
     const cfg = this.config || {};
     const s = this.session || {};
 
@@ -342,6 +344,7 @@ export class AgendaItem extends HTMLElement {
         overflow: visible; 
         text-overflow: unset;
         word-break: break-word;
+        font-weight: 600; /* semi-bold; the typography "bold" toggle still lifts it to 700 */
       }
 
       .sessionDescriptionBlock {
@@ -1999,16 +2002,16 @@ export class AgendaItem extends HTMLElement {
         text-transform:uppercase; margin:0 0 12px;
       }
       .modalName { font-size:29px; font-weight:700; letter-spacing:-.02em; line-height:1.12; margin:0 0 6px; color:#141416; }
-      .modalTitleLine { font-size:15px; color:#5C5C5A; margin:0 0 14px; line-height:1.35; }
+      .modalTitleLine { font-size:18px; color:#5C5C5A; margin:0 0 14px; line-height:1.35; }
       .modalCompanyLine {
-        display:inline-block; font-size:10.5px; font-weight:700; letter-spacing:.08em;
+        display:inline-block; font-size:12px; font-weight:700; letter-spacing:.08em;
         text-transform:uppercase; line-height:1.4; padding:4px 8px; border-radius:2px;
         background:#F0F0EE; color:#3F3F3D; margin:0;
       }
       .kv { margin-top:0; }
       .modalDivider { height:1px; background:${divider}; margin:26px 34px 0; flex:none; }
       .modalScroll { padding:22px 34px 34px; overflow:auto; flex:1 1 auto; min-height:0; }
-      .bio { font-size:14.5px; line-height:1.65; color:#3F3F3D; }
+      .bio { font-size:18px; line-height:1.6; color:#3F3F3D; }
       .bio p { margin:0 0 13px; }
       .bio p:last-child { margin-bottom:0; }
       .bio > *:first-child { margin-top:0 !important; }
@@ -2021,7 +2024,7 @@ export class AgendaItem extends HTMLElement {
       .sessionsList { list-style:none; margin:0; padding:0; }
       .sessionsList li { padding:8px 0; border-top:1px solid ${divider}; line-height:1.4; }
       .sessionsList li:first-child { border-top:0; padding-top:0; }
-      .sName { display:block; font-size:14.5px; font-weight:700; color:#141416; line-height:1.35; }
+      .sName { display:block; font-size:15px; font-weight:700; color:#141416; line-height:1.35; }
       .sWhen { display:block; font-size:13px; color:#5C5C5A; margin-top:2px; }
       @media (max-width: 600px) {
         .sbackdrop.sbSpeaker { padding:16px; }
@@ -2032,6 +2035,7 @@ export class AgendaItem extends HTMLElement {
         .smSpeaker .smodalBackRow { padding:20px 22px 0; }
         .modalScroll { padding:18px 22px 26px; }
         .modalName { font-size:24px; }
+        .modalTitleLine, .bio { font-size:15px; }
         .smSpeaker .smodalCloseFloat { top:12px; right:12px; width:34px; height:34px; font-size:20px; }
       }
     `;
