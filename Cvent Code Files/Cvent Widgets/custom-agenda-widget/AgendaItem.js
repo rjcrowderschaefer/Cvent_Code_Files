@@ -362,6 +362,7 @@ export class AgendaItem extends HTMLElement {
         overflow: visible; 
         text-overflow: unset;
         word-break: break-word;
+        font-weight: 600; /* semi-bold; the typography "bold" toggle still lifts it to 700 */
       }
 
       .sessionDescriptionBlock {
