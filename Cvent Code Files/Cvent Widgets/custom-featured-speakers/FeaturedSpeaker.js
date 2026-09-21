@@ -157,6 +157,14 @@ export class FeaturedSpeaker extends HTMLElement {
         line-height: 1.4; padding: 4px 8px; border-radius: 2px;
         background: ${c.tagBg}; color: ${c.tagInk};
       }
+      /* Never more than two lines: the text sits in an inner span that is
+         clamped with an ellipsis (clamping the padded pill itself lets a third
+         line peek through the bottom padding). Full name is in the title
+         attribute and in the modal. */
+      .tag > span {
+        display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+        overflow: hidden; overflow-wrap: anywhere;
+      }
 
       /* ---------- MODAL ---------- */
       .scrim {
@@ -266,9 +274,9 @@ export class FeaturedSpeaker extends HTMLElement {
 
     const tagEl = document.createElement("span");
     tagEl.className = "tag";
-    tagEl.textContent = this._tagLabel(sp);
+    this._setTag(tagEl, this._tagLabel(sp));
     this._applyTypographyOverrides(tagEl, cfg.typography?.speakerTag, true);
-    tagEl.style.display = tagEl.textContent ? "" : "none";
+    tagEl.style.display = tagEl.title ? "" : "none";
 
     const tagWrap = document.createElement("span");
     tagWrap.className = "tagWrap";
@@ -570,7 +578,7 @@ export class FeaturedSpeaker extends HTMLElement {
         const hTitle = this._jobTitle(full);
         const hCompany = this._company(full);
         if (hTitle && !hasTitle) { roleEl.textContent = hTitle; roleEl.style.display = ""; }
-        if (hCompany && !hasCompany) { tagEl.textContent = this._tagLabel(full); tagEl.style.display = ""; }
+        if (hCompany && !hasCompany) { this._setTag(tagEl, this._tagLabel(full)); tagEl.style.display = ""; }
       })
       .catch((err) => { console.warn("[FeaturedSpeaker] getSpeakers error", err); });
   }
@@ -650,6 +658,16 @@ export class FeaturedSpeaker extends HTMLElement {
   // =============================================
   // SPEAKER DATA HELPERS
   // =============================================
+
+  // Tile company tag: text lives in an inner span so it can be clamped to two
+  // lines; the full label goes on the title attribute.
+  _setTag(tagEl, text) {
+    tagEl.textContent = "";
+    const inner = document.createElement("span");
+    inner.textContent = text || "";
+    tagEl.append(inner);
+    tagEl.title = text || "";
+  }
 
   _fullName(sp) {
     return `${(sp?.firstName || "").trim()} ${(sp?.lastName || "").trim()}`.trim();
