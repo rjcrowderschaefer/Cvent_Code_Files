@@ -15,9 +15,23 @@ const FALLBACK_TOKENS = {
   tagBg: "#F0F0EE",
   tagInk: "#3F3F3D",
   modalBar: "#F7A325",
+  accentRule: "#F7A325",
   bioInk: "#3F3F3D",
   focus: "#2B6CE8",
 };
+
+// Grayscale placeholder for speakers without a photo: neutral square with a
+// simple head-and-shoulders silhouette. Colour-free so it never competes with
+// real photos; sized to match the tile.
+const PLACEHOLDER_SVG = (bg, fg) =>
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'>` +
+    `<rect width='400' height='400' fill='${bg}'/>` +
+    `<circle cx='200' cy='150' r='72' fill='${fg}'/>` +
+    `<path d='M70 400c0-95 58-150 130-150s130 55 130 150z' fill='${fg}'/>` +
+    `</svg>`
+  );
 
 export class FeaturedSpeaker extends HTMLElement {
   constructor() {
@@ -41,14 +55,7 @@ export class FeaturedSpeaker extends HTMLElement {
     const c = { ...FALLBACK_TOKENS, ...(cfg.colors || {}) };
     const tile = Math.max(120, Math.min(400, Number(cfg.tileSize) || 200));
     const hoverPrompt = cfg.hoverPrompt !== undefined ? cfg.hoverPrompt : "Click to view bio";
-    const lines = (v, d) => Math.max(0, Math.min(6, Number.isFinite(Number(v)) && v !== "" && v !== null ? Number(v) : d));
-    const nameLines = lines(cfg.nameLines, 2);
-    const titleLines = lines(cfg.titleLines, 3);
-    const tagLines = lines(cfg.tagLines, 1);
-    const fixedSlot = cfg.fixedTextSlot !== false;
-    const clamp = (n) => n > 0 ? `display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:${n};overflow:hidden;` : "";
-    const slot = (n, lh) => (fixedSlot && n > 0) ? `min-height:calc(${n} * ${lh});` : "";
-    const fontFamily = cfg.fontFamily || `"BBGAvenir","Helvetica Neue",Helvetica,Arial,-apple-system,BlinkMacSystemFont,sans-serif`;
+    const fontFamily = cfg.fontFamily || `"AvenirNextforBBG","Helvetica Neue",Helvetica,Arial,-apple-system,BlinkMacSystemFont,sans-serif`;
 
     const style = document.createElement("style");
     style.textContent = `
@@ -80,10 +87,6 @@ export class FeaturedSpeaker extends HTMLElement {
       .photo img {
         display: block; width: 100%; height: 100%; object-fit: cover; object-position: center;
       }
-      .photo .initials {
-        position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-        font-size: 11px; font-weight: 700; letter-spacing: .14em; color: ${c.faint};
-      }
       .photo .overlay {
         position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
         text-align: center; padding: 10px;
@@ -93,19 +96,17 @@ export class FeaturedSpeaker extends HTMLElement {
       }
       .card:hover .overlay, .card:focus-visible .overlay { opacity: 1; }
       .name {
-        font-size: 15.5px; font-weight: 700; letter-spacing: -.01em; line-height: 1.25;
+        font-size: 15.5px; font-weight: 700; letter-spacing: -.01em;
         color: ${c.ink}; margin-bottom: 3px; transition: color .15s ease;
-        ${clamp(nameLines)} ${slot(nameLines, "1.25em")}
       }
       .card:hover .name { color: ${c.accent} !important; }
-      .role { font-size: 13px; color: ${c.muted}; margin-bottom: 10px; line-height: 1.45; ${clamp(titleLines)} ${slot(titleLines, "1.45em")} }
+      .role { font-size: 13px; color: ${c.muted}; margin-bottom: 10px; }
       .name, .role, .tag { overflow-wrap: break-word; min-width: 0; }
       .tag {
         display: inline-block; margin-top: auto; align-self: flex-start; max-width: 100%;
         font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
         line-height: 1.4; padding: 4px 8px; border-radius: 2px;
         background: ${c.tagBg}; color: ${c.tagInk};
-        ${tagLines === 1 ? "white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" : clamp(tagLines)}
       }
 
       /* ---------- MODAL ---------- */
@@ -127,10 +128,6 @@ export class FeaturedSpeaker extends HTMLElement {
       }
       .mPhoto { width: 180px; aspect-ratio: 1 / 1; background: ${c.placeholder}; overflow: hidden; position: relative; }
       .mPhoto img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; }
-      .mPhoto .initials {
-        position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-        font-size: 11px; font-weight: 700; letter-spacing: .14em; color: ${c.faint};
-      }
       .mEyebrow {
         font-size: 11px; line-height: 1.4; font-weight: 700; letter-spacing: .14em;
         text-transform: uppercase; color: ${c.accent}; margin: 0 0 12px;
@@ -192,18 +189,11 @@ export class FeaturedSpeaker extends HTMLElement {
     const photo = document.createElement("div");
     photo.className = "photo";
     const src = (sp?.profilePictureUri || "").trim();
-    if (src) {
-      const img = document.createElement("img");
-      img.src = src;
-      img.alt = fullName || "Speaker";
-      img.loading = "lazy";
-      photo.append(img);
-    } else {
-      const ini = document.createElement("span");
-      ini.className = "initials";
-      ini.textContent = this._initials(sp) || "TBA";
-      photo.append(ini);
-    }
+    const img = document.createElement("img");
+    img.src = src || this._placeholder(c);
+    img.alt = src ? (fullName || "Speaker") : "";
+    img.loading = "lazy";
+    photo.append(img);
     if (hoverPrompt) {
       const overlay = document.createElement("span");
       overlay.className = "overlay";
@@ -215,20 +205,17 @@ export class FeaturedSpeaker extends HTMLElement {
     const nameEl = document.createElement("p");
     nameEl.className = "name";
     nameEl.textContent = fullName;
-    nameEl.title = fullName;
     this._applyTypographyOverrides(nameEl, cfg.typography?.speakerName, true);
 
     const roleEl = document.createElement("p");
     roleEl.className = "role";
     roleEl.textContent = this._jobTitle(sp);
-    roleEl.title = roleEl.textContent;
     this._applyTypographyOverrides(roleEl, cfg.typography?.speakerRole, true);
     roleEl.style.display = roleEl.textContent ? "" : "none";
 
     const tagEl = document.createElement("span");
     tagEl.className = "tag";
     tagEl.textContent = this._tagLabel(sp);
-    tagEl.title = this._company(sp);
     this._applyTypographyOverrides(tagEl, cfg.typography?.speakerTag, true);
     tagEl.style.display = tagEl.textContent ? "" : "none";
 
@@ -332,6 +319,11 @@ export class FeaturedSpeaker extends HTMLElement {
     const m = this._modal;
     if (!m) return;
 
+    // Eyebrow: fixed planner text, or the speaker's Cvent category when enabled
+    const eyebrowText = this._eyebrowLabel(sp);
+    m.eyebrow.textContent = eyebrowText;
+    m.eyebrow.style.display = eyebrowText ? "" : "none";
+
     const fullName = this._fullName(sp);
     const jobTitle = this._jobTitle(sp);
     const company = this._company(sp);
@@ -340,17 +332,11 @@ export class FeaturedSpeaker extends HTMLElement {
     // Photo
     m.photo.innerHTML = "";
     const src = (sp?.profilePictureUri || "").trim();
-    if (src) {
-      const img = document.createElement("img");
-      img.src = src;
-      img.alt = fullName || "Speaker";
-      m.photo.append(img);
-    } else {
-      const ini = document.createElement("span");
-      ini.className = "initials";
-      ini.textContent = this._initials(sp) || "TBA";
-      m.photo.append(ini);
-    }
+    const c = { ...FALLBACK_TOKENS, ...(cfg.colors || {}) };
+    const img = document.createElement("img");
+    img.src = src || this._placeholder(c);
+    img.alt = src ? (fullName || "Speaker") : "";
+    m.photo.append(img);
 
     m.nameEl.textContent = fullName || "Speaker";
     m.roleEl.textContent = jobTitle || "";
@@ -453,6 +439,12 @@ export class FeaturedSpeaker extends HTMLElement {
             if (hTitle && !jobTitle) { m.roleEl.textContent = hTitle; m.roleEl.style.display = ""; }
             if (hCompany && !company) { m.tagEl.textContent = hCompany; m.tagEl.style.display = ""; }
             if (hBio && !bio) { m.bioEl.innerHTML = this._bioToHtml(hBio); m.bioEl.style.display = ""; }
+            if (full.category && !sp.category) {
+              this.speaker = { ...this.speaker, category: full.category };
+              const eb = this._eyebrowLabel(this.speaker);
+              m.eyebrow.textContent = eb;
+              m.eyebrow.style.display = eb ? "" : "none";
+            }
           })
           .catch(() => { /* noop */ });
       }
@@ -523,7 +515,7 @@ export class FeaturedSpeaker extends HTMLElement {
         const hTitle = this._jobTitle(full);
         const hCompany = this._company(full);
         if (hTitle && !hasTitle) { roleEl.textContent = hTitle; roleEl.style.display = ""; }
-        if (hCompany && !hasCompany) { tagEl.textContent = this._tagLabel(full); tagEl.title = hCompany; tagEl.style.display = ""; }
+        if (hCompany && !hasCompany) { tagEl.textContent = this._tagLabel(full); tagEl.style.display = ""; }
       })
       .catch((err) => { console.warn("[FeaturedSpeaker] getSpeakers error", err); });
   }
@@ -608,8 +600,9 @@ export class FeaturedSpeaker extends HTMLElement {
     return `${(sp?.firstName || "").trim()} ${(sp?.lastName || "").trim()}`.trim();
   }
 
-  _initials(sp) {
-    return `${(sp?.firstName || "").trim().charAt(0)}${(sp?.lastName || "").trim().charAt(0)}`.toUpperCase();
+  _placeholder(c) {
+    // Neutral greys derived from the placeholder token; no hue.
+    return PLACEHOLDER_SVG(c.placeholder || "#EDEDEA", "#C8C8C4");
   }
 
   _jobTitle(sp) {
@@ -618,6 +611,34 @@ export class FeaturedSpeaker extends HTMLElement {
 
   _company(sp) {
     return (sp?.company || sp?.organization || sp?.companyName || sp?.org || "").toString().trim();
+  }
+
+  // Modal eyebrow. Default: the planner's fixed text (cfg.modalEyebrowText,
+  // "Speaker"). With cfg.eyebrowFromCategory on, use the speaker's Cvent
+  // speaker category (speaker.category.name, e.g. "Moderators"), singularised
+  // for the common one-word plural, with cfg.categoryLabels [{match, label}]
+  // as planner overrides. Falls back to the fixed text when no category.
+  _eyebrowLabel(sp) {
+    const cfg = this.config || {};
+    const fixed = cfg.modalEyebrowText !== undefined ? String(cfg.modalEyebrowText) : "Speaker";
+    if (!cfg.eyebrowFromCategory) return fixed;
+    const raw = (sp?.category?.name || sp?.categoryName || sp?.speakerCategory?.name || "").toString().trim();
+    if (!raw) return fixed;
+    const norm = (v) => (v || "").toString().trim().toLowerCase();
+    const overrides = Array.isArray(cfg.categoryLabels) ? cfg.categoryLabels : [];
+    const hit = overrides.find((o) => o && norm(o.match) && norm(o.match) === norm(raw))
+      || overrides.find((o) => o && norm(o.match) && norm(raw).includes(norm(o.match)));
+    if (hit) return (hit.label || "").toString().trim() || raw;
+    return this._singular(raw);
+  }
+
+  _singular(word) {
+    const w = word.trim();
+    if (/\s/.test(w) || w.length < 4) return w;         // multi-word or short: leave as typed
+    if (/ies$/i.test(w)) return w.replace(/ies$/i, "y");   // "Panel Chairs" handled above; "Secretaries" -> "Secretary"
+    if (/(ss|us|is)$/i.test(w)) return w;                  // "Press", "Emeritus"
+    if (/s$/i.test(w)) return w.slice(0, -1);               // "Moderators" -> "Moderator"
+    return w;
   }
 
   // Planner-defined short labels for company tags (cfg.companyAliases: [{match, label}]).

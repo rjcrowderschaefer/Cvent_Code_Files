@@ -132,8 +132,8 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
 
   _getDefaultConfig() {
     return {
-      eyebrowText: "Featured speakers",
-      headerText: "Meet our speakers",
+      eyebrowText: "",
+      headerText: "Featured Speakers",
       introText: "Select a speaker to read their bio.",
       moreText: "",
       noteText: "",
@@ -143,14 +143,13 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
       gridGapCol: 24,
       gridAlign: "center",
       hoverPrompt: "Click to view bio",
-      nameLines: 2,
-      titleLines: 3,
-      tagLines: 1,
-      fixedTextSlot: true,
+      showAccentRule: true,
       companyAliases: [],
       useBrandFont: true,
       showSessions: true,
       modalEyebrowText: "Speaker",
+      eyebrowFromCategory: false,
+      categoryLabels: [],
       sessionsHeaderText: "Sessions",
       colors: {
         ink: "#141416",
@@ -162,6 +161,7 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
         tagBg: "#F0F0EE",
         tagInk: "#3F3F3D",
         modalBar: "#F7A325",
+        accentRule: "#F7A325",
         bioInk: "#3F3F3D",
         focus: "#2B6CE8",
       },
@@ -173,8 +173,8 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     const base = { italic: false, underline: false };
     return {
       eyebrow:              { ...base, fontSize: 11,   fontSizeMd: 11,   fontSizeSm: 11,   color: "#5C5C5A", bold: true },
-      header:               { ...base, fontSize: 42,   fontSizeMd: 34,   fontSizeSm: 26,   color: "#141416", bold: true },
-      intro:                { ...base, fontSize: 16,   fontSizeMd: 16,   fontSizeSm: 15,   color: "#5C5C5A", bold: false },
+      header:               { ...base, fontSize: 28,   fontSizeMd: 24,   fontSizeSm: 20,   color: "#141416", bold: true },
+      intro:                { ...base, fontSize: 15,   fontSizeMd: 14,   fontSizeSm: 13,   color: "#5C5C5A", bold: false },
       more:                 { ...base, fontSize: 15,   fontSizeMd: 15,   fontSizeSm: 14,   color: "#9C5F00" },
       note:                 { ...base, fontSize: 13,   fontSizeMd: 13,   fontSizeSm: 13,   color: "#6F6F6D", bold: false, italic: true },
       speakerName:          { ...base, fontSize: 15.5, fontSizeMd: 15.5, fontSizeSm: 15,   color: "#141416", bold: true },
@@ -307,11 +307,14 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     const textDetails = this._details("Section Text");
     const textBlock = this._block(textDetails);
 
-    this._appendTextInput(textBlock, "Eyebrow (small uppercase label)", "eyebrowText", "Featured speakers");
-    this._appendTextInput(textBlock, "Heading", "headerText", "Meet our speakers");
+    this._appendTextInput(textBlock, "Eyebrow (small uppercase label; leave blank to hide)", "eyebrowText", "e.g. Meet the experts");
+    this._appendTextInput(textBlock, "Heading", "headerText", "Featured Speakers");
     this._appendTextArea(textBlock, "Intro paragraph", "introText", "Select a speaker to read their bio.");
     this._appendTextInput(textBlock, "“More coming” line (accent colour; leave blank to hide)", "moreText", "More speakers being announced shortly");
     this._appendTextArea(textBlock, "Disclosure note (italic, below the grid; leave blank to hide)", "noteText", "");
+    textBlock.append(
+      this._checkbox("Show accent rule under the heading (as on the agenda widget)", this._config.showAccentRule !== false, (v) => this._patch({ showAccentRule: v }))
+    );
     panel.append(textDetails);
 
     // =============================================
@@ -345,24 +348,9 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
 
     this._appendTextInput(layoutBlock, "Photo hover prompt (leave blank to disable)", "hoverPrompt", "Click to view bio");
 
-    const linesFs = document.createElement("fieldset");
-    const linesLg = document.createElement("legend");
-    linesLg.textContent = "Text limits (lines, 0 = no limit)";
-    linesFs.append(linesLg);
-    linesFs.append(
-      this._numberRow("Name", this._config.nameLines ?? 2, 0, 6, (v) => this._patch({ nameLines: v })),
-      this._numberRow("Title / role", this._config.titleLines ?? 3, 0, 6, (v) => this._patch({ titleLines: v })),
-      this._numberRow("Company tag", this._config.tagLines ?? 1, 0, 6, (v) => this._patch({ tagLines: v })),
-      this._checkbox("Reserve equal text height on every tile", this._config.fixedTextSlot !== false, (v) => this._patch({ fixedTextSlot: v }))
-    );
-    const linesHint = document.createElement("div");
-    linesHint.className = "hint";
-    linesHint.textContent = "Longer text is trimmed with \u2026 on the tile; the full name, title and company always show in the bio modal.";
-    linesFs.append(linesHint);
-    layoutBlock.append(linesFs);
 
     layoutBlock.append(
-      this._checkbox("Use Bloomberg brand font (Avenir)", this._config.useBrandFont !== false, (v) => this._patch({ useBrandFont: v }))
+      this._checkbox("Use Bloomberg brand font (AvenirNextforBBG)", this._config.useBrandFont !== false, (v) => this._patch({ useBrandFont: v }))
     );
     const fontHint = document.createElement("div");
     fontHint.className = "hint";
@@ -381,6 +369,7 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
 
     colorBlock.append(
       cRow("Accent (name on hover, “more coming”, modal eyebrow)", "accent"),
+      cRow("Accent rule under heading", "accentRule"),
       cRow("Modal top bar", "modalBar"),
       cRow("Primary text", "ink"),
       cRow("Secondary text (eyebrow, intro, roles)", "muted"),
@@ -678,6 +667,63 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     const modalBlock = this._block(modalDetails);
 
     this._appendTextInput(modalBlock, "Modal eyebrow (leave blank to hide)", "modalEyebrowText", "Speaker");
+
+    modalBlock.append(
+      this._checkbox("Eyebrow follows the speaker\u2019s Cvent speaker category", !!this._config.eyebrowFromCategory, (v) => this._patch({ eyebrowFromCategory: v }))
+    );
+    const catHint = document.createElement("div");
+    catHint.className = "hint";
+    catHint.textContent = "Uses the category set on the speaker in Cvent (e.g. \u201cModerators\u201d \u2192 \u201cModerator\u201d). Speakers without a category show the fixed eyebrow above.";
+    modalBlock.append(catHint);
+
+    if (this._config.eyebrowFromCategory) {
+      const catLabels = Array.isArray(this._config.categoryLabels) ? this._config.categoryLabels : [];
+      const setCat = (list) => this._patch({ categoryLabels: list });
+      const catTable = document.createElement("div");
+      catTable.className = "alias-table";
+      catTable.style.marginTop = "10px";
+      const catHead = document.createElement("div");
+      catHead.className = "alias-row alias-head";
+      ["Category contains", "Show as", ""].forEach((t) => { const d = document.createElement("div"); d.textContent = t; catHead.append(d); });
+      catTable.append(catHead);
+      catLabels.forEach((a, i) => {
+        const row = document.createElement("div");
+        row.className = "alias-row";
+        const m = document.createElement("input");
+        m.type = "text"; m.value = a?.match || ""; m.placeholder = "e.g. Panel Chairs";
+        m.onchange = () => { const l = catLabels.map((x) => ({ ...x })); l[i].match = m.value; setCat(l); };
+        const lbl = document.createElement("input");
+        lbl.type = "text"; lbl.value = a?.label || ""; lbl.placeholder = "e.g. Chair";
+        lbl.onchange = () => { const l = catLabels.map((x) => ({ ...x })); l[i].label = lbl.value; setCat(l); };
+        const del = document.createElement("button");
+        del.type = "button"; del.className = "remove-btn"; del.textContent = "\u00d7"; del.setAttribute("aria-label", "Remove label");
+        del.onclick = () => setCat(catLabels.filter((_, j) => j !== i));
+        row.append(m, lbl, del);
+        catTable.append(row);
+      });
+      modalBlock.append(catTable);
+      const addCat = document.createElement("button");
+      addCat.type = "button"; addCat.className = "small-btn"; addCat.textContent = "+ Add category label";
+      addCat.onclick = () => setCat([...catLabels, { match: "", label: "" }]);
+      modalBlock.append(addCat);
+
+      const seenCats = [...new Set(this._allSpeakers.map((sp) => (sp?.category?.name || "").trim()).filter(Boolean))]
+        .filter((n) => !catLabels.some((a) => (a?.match || "").trim().toLowerCase() === n.toLowerCase()));
+      if (seenCats.length) {
+        const seenWrap = document.createElement("div");
+        seenWrap.className = "hint";
+        seenWrap.style.marginTop = "10px";
+        seenWrap.textContent = "Categories in this event (click to add an override): ";
+        seenCats.forEach((n) => {
+          const chip = document.createElement("button");
+          chip.type = "button"; chip.className = "chip"; chip.textContent = n;
+          chip.onclick = () => setCat([...catLabels, { match: n, label: "" }]);
+          seenWrap.append(chip);
+        });
+        modalBlock.append(seenWrap);
+      }
+    }
+
     modalBlock.append(
       this._checkbox("Show sessions this speaker appears in", !!this._config.showSessions, (v) => this._patch({ showSessions: v }))
     );
@@ -985,6 +1031,7 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     if (patch.typography) merged.typography = { ...(this._config.typography || {}), ...patch.typography };
     if (patch.colors) merged.colors = { ...(this._config.colors || {}), ...patch.colors };
     if (patch.companyAliases) merged.companyAliases = [...patch.companyAliases];
+    if (patch.categoryLabels) merged.categoryLabels = [...patch.categoryLabels];
     this._config = merged;
     this.setConfiguration(this._config);
     // Re-render our own panel so the UI reflects the patch even if the host

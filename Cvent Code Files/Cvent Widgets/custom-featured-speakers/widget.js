@@ -16,22 +16,23 @@ const FALLBACK_TOKENS = {
   tagBg: "#F0F0EE",
   tagInk: "#3F3F3D",
   modalBar: "#F7A325",
+  accentRule: "#F7A325",
   bioInk: "#3F3F3D",
   focus: "#2B6CE8",
 };
 
 // Bloomberg brand font. Cvent registers the uploaded Avenir faces under
 // separate family names on the parent theme; re-declared here as ONE family
-// ("BBGAvenir") with correct weight slots. @font-face inside a shadow root is
+// ("AvenirNextforBBG") with correct weight slots. @font-face inside a shadow root is
 // not registered by browsers, so this is injected once into document.head.
 const BRAND_FONT_CSS = `
-@font-face{font-family:"BBGAvenir";font-weight:400;font-style:normal;font-display:swap;src:url("https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/43ba48291a694c6b839f5076a265c1bb.otf") format("opentype")}
-@font-face{font-family:"BBGAvenir";font-weight:500;font-style:normal;font-display:swap;src:url("https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/1c8ddb83438d454e97bc30944531a8c0.ttf") format("truetype")}
-@font-face{font-family:"BBGAvenir";font-weight:600;font-style:normal;font-display:swap;src:url("https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/2bc2aedb5a704c7483976a475ecf020f.otf") format("opentype")}
-@font-face{font-family:"BBGAvenir";font-weight:700;font-style:normal;font-display:swap;src:url("https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/370525f70e1b4cc68d3b6f5e9b5bcaa2.otf") format("opentype")}
-@font-face{font-family:"BBGAvenir";font-weight:400;font-style:italic;font-display:swap;src:url("https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/c10dce35a1914a99a8d286307087ef5b.ttf") format("truetype")}
+@font-face{font-family:"AvenirNextforBBG";font-weight:400;font-style:normal;font-display:swap;src:url("https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/43ba48291a694c6b839f5076a265c1bb.otf") format("opentype")}
+@font-face{font-family:"AvenirNextforBBG";font-weight:500;font-style:normal;font-display:swap;src:url("https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/1c8ddb83438d454e97bc30944531a8c0.ttf") format("truetype")}
+@font-face{font-family:"AvenirNextforBBG";font-weight:600;font-style:normal;font-display:swap;src:url("https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/2bc2aedb5a704c7483976a475ecf020f.otf") format("opentype")}
+@font-face{font-family:"AvenirNextforBBG";font-weight:700;font-style:normal;font-display:swap;src:url("https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/370525f70e1b4cc68d3b6f5e9b5bcaa2.otf") format("opentype")}
+@font-face{font-family:"AvenirNextforBBG";font-weight:400;font-style:italic;font-display:swap;src:url("https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/c10dce35a1914a99a8d286307087ef5b.ttf") format("truetype")}
 `;
-const BRAND_FONT_STACK = `"BBGAvenir","Helvetica Neue",Helvetica,Arial,-apple-system,BlinkMacSystemFont,sans-serif`;
+const BRAND_FONT_STACK = `"AvenirNextforBBG","Helvetica Neue",Helvetica,Arial,-apple-system,BlinkMacSystemFont,sans-serif`;
 
 // Cvent maps some timezone options to DST-stripped IANA zones (playbook §2).
 const TZ_NORMALIZE = { "Atlantic/Reykjavik": "Europe/London" };
@@ -202,17 +203,22 @@ export default class extends HTMLElement {
       }
       .fs p, .fs h2 { margin: 0; padding: 0; }
       .fs :focus-visible { outline: 3px solid ${c.focus}; outline-offset: 3px; }
-      .fs__inner { max-width: 1240px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 48px); }
+      /* Same content box as the agenda widget so the two line up on a page */
+      .fs__inner { width: calc(100% - 40px); max-width: 1210px; margin: 0 auto; padding: 0; }
+      .fs .fs__rule { width: 40px; height: 3px; border-radius: 2px; margin: 14px 0 12px; background: ${c.accentRule}; }
+      @media (max-width: 600px) { .fs .fs__rule { margin: 10px 0 8px; } }
       .fs .fs__eyebrow {
         font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
         font-weight: 700; color: ${c.muted};
       }
       .fs .fs__h2 {
-        font-size: clamp(26px, 3.3vw, 42px); font-weight: 700; letter-spacing: -.02em;
+        font-size: 28px; font-weight: 700; letter-spacing: -.02em;
         line-height: 1.1; margin: 14px 0 10px; max-width: 34ch; color: ${c.ink};
       }
       .fs .fs__eyebrow[style*="display: none"] + .fs__h2 { margin-top: 0; }
-      .fs .fs__intro { font-size: 16px; color: ${c.muted}; max-width: 86ch; }
+      .fs .fs__intro { font-size: 15px; color: ${c.muted}; max-width: 86ch; }
+      @media (max-width: 1024px) { .fs .fs__h2 { font-size: 24px; } .fs .fs__intro { font-size: 14px; } }
+      @media (max-width: 600px)  { .fs .fs__h2 { font-size: 20px; } .fs .fs__intro { font-size: 13px; } }
       .fs .fs__more { margin-top: 16px; font-size: 15px; font-weight: 600; letter-spacing: .01em; color: ${c.accent}; }
       .fs .fs__grid {
         display: grid; grid-template-columns: repeat(auto-fit, ${tile}px);
@@ -236,8 +242,8 @@ export default class extends HTMLElement {
     root.append(inner);
 
     // ---- Header block ----
-    const eyebrowText = cfg.eyebrowText !== undefined ? cfg.eyebrowText : "Featured speakers";
-    const headerText = cfg.headerText !== undefined ? cfg.headerText : "Meet our speakers";
+    const eyebrowText = cfg.eyebrowText !== undefined ? cfg.eyebrowText : "";
+    const headerText = cfg.headerText !== undefined ? cfg.headerText : "Featured Speakers";
     const introText = cfg.introText !== undefined ? cfg.introText : "Select a speaker to read their bio.";
     const moreText = cfg.moreText !== undefined ? cfg.moreText : "";
     const noteText = cfg.noteText !== undefined ? cfg.noteText : "";
@@ -266,7 +272,13 @@ export default class extends HTMLElement {
     this._applyTypographyOverrides(more, cfg.typography?.more, true);
     if (!moreText) more.style.display = "none";
 
-    inner.append(eyebrow, h2, intro, more);
+    const rule = document.createElement("div");
+    rule.className = "fs__rule";
+    rule.setAttribute("aria-hidden", "true");
+    if (cfg.showAccentRule === false) rule.style.display = "none";
+    else h2.style.marginBottom = "0";
+
+    inner.append(eyebrow, h2, rule, intro, more);
 
     // ---- Grid (placeholder while loading) ----
     const grid = document.createElement("ul");
