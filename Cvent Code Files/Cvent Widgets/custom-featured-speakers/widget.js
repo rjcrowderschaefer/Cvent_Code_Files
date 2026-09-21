@@ -177,7 +177,9 @@ export default class extends HTMLElement {
     const tileRaw = Number(cfg.tileSize) || 250;
     const tile = Math.max(120, Math.min(400, tileRaw === 200 ? 250 : tileRaw));
     const gapRow = Number(cfg.gridGapRow) || 36;
-    const gapCol = Number(cfg.gridGapCol) || 24;
+    // 65px column gap; a saved 24 (the old default) is treated as the new default.
+    const gapColRaw = Number(cfg.gridGapCol) || 65;
+    const gapCol = gapColRaw === 24 ? 65 : gapColRaw;
     const align = cfg.gridAlign === "left" ? "start" : "center";
 
     root.innerHTML = "";

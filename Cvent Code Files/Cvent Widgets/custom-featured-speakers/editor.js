@@ -142,7 +142,7 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
       featuredSpeakerIds: [],
       tileSize: 250,
       gridGapRow: 36,
-      gridGapCol: 24,
+      gridGapCol: 65,
       gridAlign: "center",
       hoverPrompt: "Click to view bio",
       showAccentRule: true,
@@ -313,7 +313,7 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     layoutBlock.append(
       this._numberRow("Tile size (px, square photo)", (this._config.tileSize === 200 ? 250 : this._config.tileSize) ?? 250, 120, 400, (v) => this._patch({ tileSize: v })),
       this._numberRow("Row gap (px)", this._config.gridGapRow ?? 36, 0, 120, (v) => this._patch({ gridGapRow: v })),
-      this._numberRow("Column gap (px)", this._config.gridGapCol ?? 24, 0, 120, (v) => this._patch({ gridGapCol: v }))
+      this._numberRow("Column gap (px)", (this._config.gridGapCol === 24 ? 65 : this._config.gridGapCol) ?? 65, 0, 120, (v) => this._patch({ gridGapCol: v }))
     );
 
     const alignFs = document.createElement("fieldset");
