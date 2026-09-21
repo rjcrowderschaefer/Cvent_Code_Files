@@ -275,6 +275,10 @@ fields are how you attach data to sessions the widget can read.**
 
 ## 10. Debugging workflow that works
 
+0. Reproduce **locally first** in the live preview (`LOCAL_PREVIEW.md`): real
+   widget + editor against a sandbox dump, at any breakpoint, no upload cycle.
+   Only what the harness can't cover (global CSS, real header, SDK drift,
+   caching) needs the sandbox.
 1. Reproduce in **Incognito** (rules out cache).
 2. Add a `console.log` with a **unique tag** (`"XYZ PROBE |"`), upload, filter
    the console for that tag. Cvent/Datadog spam the console — always filter.
@@ -293,6 +297,7 @@ fields are how you attach data to sessions the widget can read.**
 ## 11. Pre-prod checklist
 
 - [ ] All `console.log` debug statements removed (keep `console.warn` error handlers)
+- [ ] Checked in the local preview at desktop + mobile, en/es/pt (`LOCAL_PREVIEW.md`)
 - [ ] Tested in Incognito on the PUBLISHED front end, not just editor preview
 - [ ] Both widget.js and component file(s) uploaded & verified live
 - [ ] Timezone: times + day grouping use the event zone; DST abbreviations correct
