@@ -162,6 +162,7 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
         tagInk: "#3F3F3D",
         modalBar: "#F7A325",
         accentRule: "#F7A325",
+        mainAccent: "#F7A325",
         bioInk: "#3F3F3D",
         focus: "#2B6CE8",
       },
@@ -368,8 +369,8 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
       this._colorRow(label, `c-${key}`, colors[key] || "#000000", (v) => this._patch({ colors: { ...this._config.colors, [key]: v } }));
 
     colorBlock.append(
-      cRow("Accent (name on hover, “more coming”, modal eyebrow)", "accent"),
-      cRow("Accent rule under heading", "accentRule"),
+      cRow("Main accent (heading underline, speaker hover)", "mainAccent"),
+      cRow("Accent (“more coming” line, modal eyebrow)", "accent"),
       cRow("Modal top bar", "modalBar"),
       cRow("Primary text", "ink"),
       cRow("Secondary text (eyebrow, intro, roles)", "muted"),

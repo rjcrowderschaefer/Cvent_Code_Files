@@ -17,6 +17,7 @@ const FALLBACK_TOKENS = {
   tagInk: "#3F3F3D",
   modalBar: "#F7A325",
   accentRule: "#F7A325",
+  mainAccent: "#F7A325", // heading rule + speaker hover; wins over accentRule when set
   bioInk: "#3F3F3D",
   focus: "#2B6CE8",
 };
@@ -182,6 +183,8 @@ export default class extends HTMLElement {
   async _renderInto(root) {
     const cfg = this.configuration || {};
     const c = { ...FALLBACK_TOKENS, ...(cfg.colors || {}) };
+    // Main accent: heading rule + card hover. Older configs only carry accentRule.
+    c.mainAccent = (cfg.colors && cfg.colors.mainAccent) || (cfg.colors && cfg.colors.accentRule) || c.mainAccent;
     const fontFamily = cfg.useBrandFont === false ? "inherit" : BRAND_FONT_STACK;
     const tile = Math.max(120, Math.min(400, Number(cfg.tileSize) || 200));
     const gapRow = Number(cfg.gridGapRow) || 36;
@@ -205,7 +208,7 @@ export default class extends HTMLElement {
       .fs :focus-visible { outline: 3px solid ${c.focus}; outline-offset: 3px; }
       /* Same content box as the agenda widget so the two line up on a page */
       .fs__inner { width: calc(100% - 40px); max-width: 1210px; margin: 0 auto; padding: 0; }
-      .fs .fs__rule { width: 40px; height: 3px; border-radius: 2px; margin: 14px 0 12px; background: ${c.accentRule}; }
+      .fs .fs__rule { width: 40px; height: 3px; border-radius: 2px; margin: 14px 0 12px; background: ${c.mainAccent}; }
       @media (max-width: 600px) { .fs .fs__rule { margin: 10px 0 8px; } }
       .fs .fs__eyebrow {
         font-size: 11px; letter-spacing: .14em; text-transform: uppercase;

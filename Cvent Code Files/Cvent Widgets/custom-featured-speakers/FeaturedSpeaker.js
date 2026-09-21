@@ -16,6 +16,7 @@ const FALLBACK_TOKENS = {
   tagInk: "#3F3F3D",
   modalBar: "#F7A325",
   accentRule: "#F7A325",
+  mainAccent: "#F7A325",
   bioInk: "#3F3F3D",
   focus: "#2B6CE8",
 };
@@ -99,11 +100,16 @@ export class FeaturedSpeaker extends HTMLElement {
         font-size: 15.5px; font-weight: 700; letter-spacing: -.01em;
         color: ${c.ink}; margin-bottom: 3px; transition: color .15s ease;
       }
-      .card:hover .name { color: ${c.accent} !important; }
-      .role { font-size: 13px; color: ${c.muted}; margin-bottom: 10px; }
+      .card:hover .name { color: ${c.mainAccent} !important; }
+      /* Role reserves two lines and the tag slot reserves two tag lines, so
+         cards in a row are the same height: the title -> company gap stays
+         small and constant, and one- and two-line company tags start on the
+         same line across the row. */
+      .role { font-size: 13px; color: ${c.muted}; min-height: calc(2 * 1.45em); margin-bottom: 6px; }
+      .tagWrap { margin-top: auto; min-height: 38px; display: flex; align-items: flex-start; }
       .name, .role, .tag { overflow-wrap: break-word; min-width: 0; }
       .tag {
-        display: inline-block; margin-top: auto; align-self: flex-start; max-width: 100%;
+        display: inline-block; max-width: 100%;
         font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
         line-height: 1.4; padding: 4px 8px; border-radius: 2px;
         background: ${c.tagBg}; color: ${c.tagInk};
@@ -211,7 +217,8 @@ export class FeaturedSpeaker extends HTMLElement {
     roleEl.className = "role";
     roleEl.textContent = this._jobTitle(sp);
     this._applyTypographyOverrides(roleEl, cfg.typography?.speakerRole, true);
-    roleEl.style.display = roleEl.textContent ? "" : "none";
+    // Kept in flow when empty so the reserved height still aligns the row.
+    roleEl.setAttribute("aria-hidden", roleEl.textContent ? "false" : "true");
 
     const tagEl = document.createElement("span");
     tagEl.className = "tag";
@@ -219,7 +226,11 @@ export class FeaturedSpeaker extends HTMLElement {
     this._applyTypographyOverrides(tagEl, cfg.typography?.speakerTag, true);
     tagEl.style.display = tagEl.textContent ? "" : "none";
 
-    card.append(photo, nameEl, roleEl, tagEl);
+    const tagWrap = document.createElement("span");
+    tagWrap.className = "tagWrap";
+    tagWrap.append(tagEl);
+
+    card.append(photo, nameEl, roleEl, tagWrap);
     this.shadowRoot.append(card);
 
     // Lazy hydration — fill role/company if missing from SDK
