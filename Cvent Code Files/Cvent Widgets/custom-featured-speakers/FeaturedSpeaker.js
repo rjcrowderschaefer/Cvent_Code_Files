@@ -695,6 +695,13 @@ export class FeaturedSpeaker extends HTMLElement {
   _eyebrowLabel(sp) {
     const cfg = this.config || {};
     const fixed = cfg.modalEyebrowText !== undefined ? String(cfg.modalEyebrowText) : "Speaker";
+    // Moderators are always labelled as such, whatever the fixed text and
+    // whether or not category-driven eyebrows are on: a Cvent speaker
+    // category of "Moderator(s)", or "(Moderator)" in the title/company
+    // (same rule as the agenda widget's _speakerRole).
+    const cat = (sp?.category?.name || sp?.categoryName || sp?.speakerCategory?.name || "").toString();
+    const hay = [cat, this._jobTitle(sp), this._company(sp)].filter(Boolean).join(" ");
+    if (/moderator|moderadora?/i.test(hay)) return "Moderator";
     if (!cfg.eyebrowFromCategory) return fixed;
     const raw = (sp?.category?.name || sp?.categoryName || sp?.speakerCategory?.name || "").toString().trim();
     if (!raw) return fixed;

@@ -654,6 +654,10 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     const modalBlock = this._block(modalDetails);
 
     this._appendTextInput(modalBlock, "Modal eyebrow (leave blank to hide)", "modalEyebrowText", "Speaker");
+    const modHint = document.createElement("div");
+    modHint.className = "hint";
+    modHint.textContent = "Speakers in a “Moderator” Cvent category (or with “(Moderator)” in their title/company) always show “Moderator” here.";
+    modalBlock.append(modHint);
 
     modalBlock.append(
       this._checkbox("Eyebrow follows the speaker\u2019s Cvent speaker category", !!this._config.eyebrowFromCategory, (v) => this._patch({ eyebrowFromCategory: v }))
