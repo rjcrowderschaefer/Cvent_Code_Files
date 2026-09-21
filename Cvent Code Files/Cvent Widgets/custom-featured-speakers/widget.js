@@ -315,13 +315,23 @@ export default class extends HTMLElement {
       return;
     }
 
-    // Planner-selected speakers (featuredSpeakerIds) in planner order;
-    // fall back to all speakers when none are selected.
-    const selectedIds = Array.isArray(cfg.featuredSpeakerIds) && cfg.featuredSpeakerIds.length
-      ? cfg.featuredSpeakerIds : null;
+    // Planner-selected speakers (featuredSpeakerIds) in planner order. A fresh
+    // widget has none selected and renders nothing but a prompt to use the
+    // editor; it never falls back to "every speaker in the event".
+    const selectedIds = Array.isArray(cfg.featuredSpeakerIds)
+      ? cfg.featuredSpeakerIds.map(String) : [];
     const speakersToRender = selectedIds
-      ? selectedIds.map((id) => allSpeakers.find((s) => String(s?.id || s?.speakerId) === String(id))).filter(Boolean)
-      : allSpeakers;
+      .map((id) => allSpeakers.find((s) => String(s?.id || s?.speakerId) === id))
+      .filter(Boolean);
+
+    if (!speakersToRender.length) {
+      grid.remove();
+      const empty = document.createElement("p");
+      empty.className = "fs__empty";
+      empty.textContent = "No speakers have been added. Use the editor to the right to add and order speakers to feature within this widget.";
+      inner.insertBefore(empty, note);
+      return;
+    }
 
     speakersToRender.forEach((sp) => {
       const li = document.createElement("li");
