@@ -4,7 +4,7 @@
 // square speaker tiles, optional disclosure note. Each tile is a
 // <dev-featured-speaker-card> (FeaturedSpeaker.js) that owns its bio modal.
 // NOTE: include the file extension in imports
-import { FeaturedSpeaker } from "./FeaturedSpeaker.js";
+import { FeaturedSpeaker, migrateTypography } from "./FeaturedSpeaker.js";
 
 const FALLBACK_TOKENS = {
   ink: "#141416",
@@ -181,7 +181,9 @@ export default class extends HTMLElement {
   // =============================================
 
   async _renderInto(root) {
-    const cfg = this.configuration || {};
+    // Saved OLD default typography is swapped for the current defaults (see
+    // migrateTypography); the migrated map is what the cards receive too.
+    const cfg = { ...(this.configuration || {}), typography: migrateTypography((this.configuration || {}).typography) };
     const c = { ...FALLBACK_TOKENS, ...(cfg.colors || {}) };
     // Main accent: heading rule + card hover. Older configs only carry accentRule.
     c.mainAccent = (cfg.colors && cfg.colors.mainAccent) || (cfg.colors && cfg.colors.accentRule) || c.mainAccent;
@@ -219,9 +221,9 @@ export default class extends HTMLElement {
         line-height: 1.1; margin: 14px 0 10px; max-width: 34ch; color: ${c.ink};
       }
       .fs .fs__eyebrow[style*="display: none"] + .fs__h2 { margin-top: 0; }
-      .fs .fs__intro { font-size: 15px; color: ${c.muted}; max-width: 86ch; }
-      @media (max-width: 1024px) { .fs .fs__h2 { font-size: 24px; } .fs .fs__intro { font-size: 14px; } }
-      @media (max-width: 600px)  { .fs .fs__h2 { font-size: 20px; } .fs .fs__intro { font-size: 13px; } }
+      .fs .fs__intro { font-size: 18px; color: ${c.muted}; max-width: 86ch; }
+      @media (max-width: 1024px) { .fs .fs__h2 { font-size: 24px; } .fs .fs__intro { font-size: 16px; } }
+      @media (max-width: 600px)  { .fs .fs__h2 { font-size: 20px; } .fs .fs__intro { font-size: 15px; } }
       .fs .fs__more { margin-top: 16px; font-size: 15px; font-weight: 600; letter-spacing: .01em; color: ${c.accent}; }
       .fs .fs__grid {
         display: grid; grid-template-columns: repeat(auto-fit, ${tile}px);

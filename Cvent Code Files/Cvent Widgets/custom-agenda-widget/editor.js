@@ -222,9 +222,9 @@ export default class ExampleAgendaEditor extends HTMLElement {
       },
       agendaSubheader: {
         ...base,
-        fontSize: 15,
-        fontSizeMd: 14,
-        fontSizeSm: 13,
+        fontSize: 18,
+        fontSizeMd: 16,
+        fontSizeSm: 15,
         color: "#5C5C5A",
       },
       eventDate: {
@@ -304,24 +304,24 @@ export default class ExampleAgendaEditor extends HTMLElement {
       },
       modalSpeakerTitle: {
         ...base,
-        fontSize: 15,
-        fontSizeMd: 15,
-        fontSizeSm: 14,
+        fontSize: 18,
+        fontSizeMd: 16,
+        fontSizeSm: 15,
         color: "#5C5C5A",
       },
       modalSpeakerCompany: {
         ...base,
-        fontSize: 11,
-        fontSizeMd: 11,
-        fontSizeSm: 10,
+        fontSize: 12,
+        fontSizeMd: 12,
+        fontSizeSm: 11,
         bold: true,
         color: "#3F3F3D",
       },
       modalSpeakerBio: {
         ...base,
-        fontSize: 15,
-        fontSizeMd: 14,
-        fontSizeSm: 14,
+        fontSize: 18,
+        fontSizeMd: 16,
+        fontSizeSm: 15,
         color: "#3F3F3D",
       },
       modalSessionsHeader: {
@@ -365,7 +365,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
     };
     return {
       agendaHeader: { ...base, fontSize: 28, fontSizeMd: 24, fontSizeSm: 20, bold: true, color: "#141416" },
-      agendaSubheader: { ...base, fontSize: 15, fontSizeMd: 14, fontSizeSm: 13, color: "#5C5C5A" },
+      agendaSubheader: { ...base, fontSize: 18, fontSizeMd: 16, fontSizeSm: 15, color: "#5C5C5A" },
       eventDate: { ...base, fontSize: 18, fontSizeMd: 16, fontSizeSm: 14, bold: true },
       sessionName: { ...base, fontSize: 17, fontSizeMd: 15, fontSizeSm: 14, bold: true },
       sessionTime: { ...base, fontSize: 12, fontSizeMd: 12, fontSizeSm: 11, bold: true, color: "#FFFFFF" },
@@ -378,9 +378,9 @@ export default class ExampleAgendaEditor extends HTMLElement {
       modalName: { ...base, fontSize: 18, bold: true },
       // Speaker modal scale is not card-density dependent; same as standard.
       modalSpeakerName: { ...base, fontSize: 29, fontSizeMd: 26, fontSizeSm: 24, bold: true, color: "#141416" },
-      modalSpeakerTitle: { ...base, fontSize: 15, fontSizeMd: 15, fontSizeSm: 14, italic: false, color: "#5C5C5A" },
-      modalSpeakerCompany: { ...base, fontSize: 11, fontSizeMd: 11, fontSizeSm: 10, bold: true, color: "#3F3F3D" },
-      modalSpeakerBio: { ...base, fontSize: 15, fontSizeMd: 14, fontSizeSm: 14, color: "#3F3F3D" },
+      modalSpeakerTitle: { ...base, fontSize: 18, fontSizeMd: 16, fontSizeSm: 15, italic: false, color: "#5C5C5A" },
+      modalSpeakerCompany: { ...base, fontSize: 12, fontSizeMd: 12, fontSizeSm: 11, bold: true, color: "#3F3F3D" },
+      modalSpeakerBio: { ...base, fontSize: 18, fontSizeMd: 16, fontSizeSm: 15, color: "#3F3F3D" },
       modalSessionsHeader: { ...base, fontSize: 11, fontSizeMd: 11, fontSizeSm: 11, bold: true, color: "#5C5C5A" },
       modalSessionName: { ...base, fontSize: 15, fontSizeMd: 14, fontSizeSm: 14, bold: true, color: "#141416" },
       modalSessionDateTime: { ...base, fontSize: 13, fontSizeMd: 13, fontSizeSm: 12, color: "#5C5C5A" },

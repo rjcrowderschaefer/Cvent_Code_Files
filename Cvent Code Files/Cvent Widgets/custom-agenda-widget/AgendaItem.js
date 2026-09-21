@@ -28,31 +28,31 @@ const T = (fontSize, fontSizeMd, fontSizeSm, extra = {}) => ({
 });
 const MODAL_TYPO_NEW = {
   modalSpeakerName:     T(29, 26, 24, { bold: true, color: "#141416" }),
-  modalSpeakerTitle:    T(15, 15, 14, { color: "#5C5C5A" }),
-  modalSpeakerCompany:  T(11, 11, 10, { bold: true, color: "#3F3F3D" }),
-  modalSpeakerBio:      T(15, 14, 14, { color: "#3F3F3D" }),
+  modalSpeakerTitle:    T(18, 16, 15, { color: "#5C5C5A" }),
+  modalSpeakerCompany:  T(12, 12, 11, { bold: true, color: "#3F3F3D" }),
+  modalSpeakerBio:      T(18, 16, 15, { color: "#3F3F3D" }),
   modalSessionsHeader:  T(11, 11, 11, { bold: true, color: "#5C5C5A" }),
   modalSessionName:     T(15, 14, 14, { bold: true, color: "#141416" }),
   modalSessionDateTime: T(13, 13, 12, { color: "#5C5C5A" }),
   agendaHeader:         T(28, 24, 20, { bold: true, color: "#141416" }),
-  agendaSubheader:      T(15, 14, 13, { color: "#5C5C5A" }),
+  agendaSubheader:      T(18, 16, 15, { color: "#5C5C5A" }),
 };
 const MODAL_TYPO_LEGACY = {
   modalSpeakerName:     [T(22, 18, 14, { bold: true }), T(26, 14, 13, { bold: true })],
-  modalSpeakerTitle:    [T(18, 16, 14, { italic: true }), T(17, 16, 15)],
-  modalSpeakerCompany:  [T(18, 16, 14), T(13, 12, 12)],
-  modalSpeakerBio:      [T(16, 14, 12), T(13, 12, 12)],
+  modalSpeakerTitle:    [T(18, 16, 14, { italic: true }), T(17, 16, 15), T(15, 15, 14, { color: "#5C5C5A" })],
+  modalSpeakerCompany:  [T(18, 16, 14), T(13, 12, 12), T(11, 11, 10, { bold: true, color: "#3F3F3D" })],
+  modalSpeakerBio:      [T(16, 14, 12), T(13, 12, 12), T(15, 14, 14, { color: "#3F3F3D" })],
   modalSessionsHeader:  [T(18, 16, 14, { bold: true }), T(14, 13, 12, { bold: true })],
   modalSessionName:     [T(16, 14, 12, { bold: true }), T(13, 12, 12, { bold: true })],
   modalSessionDateTime: [T(16, 14, 12), T(12, 11, 11)],
   agendaHeader:         [T(40, 32, 24), T(28, 24, 20)],
-  agendaSubheader:      [T(20, 18, 14), T(15, 14, 13)],
+  agendaSubheader:      [T(20, 18, 14), T(15, 14, 13), T(15, 14, 13, { color: "#5C5C5A" })],
 };
 const sameTypo = (a, b) =>
   !!a && !!b &&
   Number(a.fontSize) === b.fontSize && Number(a.fontSizeMd) === b.fontSizeMd &&
   Number(a.fontSizeSm) === b.fontSizeSm &&
-  String(a.color || "#000000").toLowerCase() === b.color &&
+  String(a.color || "#000000").toLowerCase() === String(b.color).toLowerCase() &&
   !!a.bold === b.bold && !!a.italic === b.italic && !!a.underline === b.underline;
 // Returns a typography map with legacy modal defaults replaced. Exported so
 // editor.js can apply the same rule when it loads a saved config.
@@ -1999,16 +1999,16 @@ export class AgendaItem extends HTMLElement {
         text-transform:uppercase; margin:0 0 12px;
       }
       .modalName { font-size:29px; font-weight:700; letter-spacing:-.02em; line-height:1.12; margin:0 0 6px; color:#141416; }
-      .modalTitleLine { font-size:15px; color:#5C5C5A; margin:0 0 14px; line-height:1.35; }
+      .modalTitleLine { font-size:18px; color:#5C5C5A; margin:0 0 14px; line-height:1.35; }
       .modalCompanyLine {
-        display:inline-block; font-size:10.5px; font-weight:700; letter-spacing:.08em;
+        display:inline-block; font-size:12px; font-weight:700; letter-spacing:.08em;
         text-transform:uppercase; line-height:1.4; padding:4px 8px; border-radius:2px;
         background:#F0F0EE; color:#3F3F3D; margin:0;
       }
       .kv { margin-top:0; }
       .modalDivider { height:1px; background:${divider}; margin:26px 34px 0; flex:none; }
       .modalScroll { padding:22px 34px 34px; overflow:auto; flex:1 1 auto; min-height:0; }
-      .bio { font-size:14.5px; line-height:1.65; color:#3F3F3D; }
+      .bio { font-size:18px; line-height:1.6; color:#3F3F3D; }
       .bio p { margin:0 0 13px; }
       .bio p:last-child { margin-bottom:0; }
       .bio > *:first-child { margin-top:0 !important; }
@@ -2032,6 +2032,7 @@ export class AgendaItem extends HTMLElement {
         .smSpeaker .smodalBackRow { padding:20px 22px 0; }
         .modalScroll { padding:18px 22px 26px; }
         .modalName { font-size:24px; }
+        .modalTitleLine, .bio { font-size:15px; }
         .smSpeaker .smodalCloseFloat { top:12px; right:12px; width:34px; height:34px; font-size:20px; }
       }
     `;

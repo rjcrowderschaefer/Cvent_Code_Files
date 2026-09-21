@@ -34,6 +34,42 @@ const PLACEHOLDER_SVG = (bg, fg) =>
     `</svg>`
   );
 
+// ---------------------------------------------------------------------------
+// Typography migration. Saved configs carry whatever defaults the editor wrote
+// at the time and are applied inline, so a restyle of the defaults would not
+// reach existing events. When a saved entry equals an OLD default exactly it
+// is swapped for the new one; anything a planner changed is left alone.
+// Keep NEW in sync with editor.js _makeDefaultTypography().
+// ---------------------------------------------------------------------------
+const TY = (fontSize, fontSizeMd, fontSizeSm, color, extra = {}) =>
+  ({ fontSize, fontSizeMd, fontSizeSm, color, bold: false, italic: false, underline: false, ...extra });
+const TYPO_NEW = {
+  intro:     TY(18, 16, 15, "#5C5C5A"),
+  modalRole: TY(18, 16, 15, "#5C5C5A"),
+  modalTag:  TY(12, 12, 11, "#3F3F3D", { bold: true }),
+  modalBio:  TY(18, 16, 15, "#3F3F3D"),
+};
+const TYPO_LEGACY = {
+  intro:     [TY(15, 14, 13, "#5C5C5A")],
+  modalRole: [TY(15, 15, 14, "#5C5C5A")],
+  modalTag:  [TY(10.5, 10.5, 10.5, "#3F3F3D", { bold: true })],
+  modalBio:  [TY(14.5, 14.5, 14, "#3F3F3D")],
+};
+const sameTypo = (a, b) =>
+  !!a && !!b &&
+  Number(a.fontSize) === b.fontSize && Number(a.fontSizeMd) === b.fontSizeMd &&
+  Number(a.fontSizeSm) === b.fontSizeSm &&
+  String(a.color || "").toLowerCase() === b.color.toLowerCase() &&
+  !!a.bold === b.bold && !!a.italic === b.italic && !!a.underline === b.underline;
+export function migrateTypography(typography) {
+  const out = { ...(typography || {}) };
+  Object.keys(TYPO_NEW).forEach((key) => {
+    const cur = out[key];
+    if (cur && (TYPO_LEGACY[key] || []).some((old) => sameTypo(cur, old))) out[key] = { ...TYPO_NEW[key] };
+  });
+  return out;
+}
+
 export class FeaturedSpeaker extends HTMLElement {
   constructor() {
     super();
@@ -143,15 +179,15 @@ export class FeaturedSpeaker extends HTMLElement {
         font-size: 29px; font-weight: 700; letter-spacing: -.02em; line-height: 1.12;
         margin: 0 0 6px; color: ${c.ink};
       }
-      .mRole { font-size: 15px; color: ${c.muted}; margin: 0 0 14px; }
+      .mRole { font-size: 18px; line-height: 1.35; color: ${c.muted}; margin: 0 0 14px; }
       .mTag {
-        display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: .08em;
+        display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: .08em;
         text-transform: uppercase; padding: 4px 8px; border-radius: 2px;
         background: ${c.tagBg}; color: ${c.tagInk};
       }
       .mRule { height: 1px; background: ${c.hair}; margin: 26px 34px 0; flex: none; }
       .mBody { padding: 22px 34px 34px; overflow: auto; flex: 1 1 auto; }
-      .mBio p { font-size: 14.5px; line-height: 1.65; color: ${c.bioInk}; margin: 0 0 13px; }
+      .mBio p { font-size: 18px; line-height: 1.6; color: ${c.bioInk}; margin: 0 0 13px; }
       .mBio p:last-child { margin-bottom: 0; }
       .mBio > *:first-child { margin-top: 0 !important; }
       .mBio > *:last-child { margin-bottom: 0 !important; }
@@ -180,6 +216,7 @@ export class FeaturedSpeaker extends HTMLElement {
         .mRule { margin: 22px 22px 0; }
         .mBody { padding: 18px 22px 26px; }
         .mName { font-size: 24px; }
+        .mRole, .mBio p { font-size: 15px; }
       }
     `;
     this.shadowRoot.append(style);

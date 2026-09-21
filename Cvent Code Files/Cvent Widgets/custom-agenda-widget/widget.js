@@ -161,7 +161,7 @@ export default class extends HTMLElement {
     if (!hasExplicitBold) headerEl.style.fontWeight = "700";
     if (!headerEl.style.color) headerEl.style.color = "#141416";
 
-    if (!subheaderEl.style.fontSize) subheaderEl.style.fontSize = "15px";
+    if (!subheaderEl.style.fontSize) subheaderEl.style.fontSize = "18px";
     if (!subheaderEl.style.color || /^#0{6}$/i.test(subheaderEl.style.color) || subheaderEl.style.color === "rgb(0, 0, 0)") {
       subheaderEl.style.color = "#5C5C5A";
     }
