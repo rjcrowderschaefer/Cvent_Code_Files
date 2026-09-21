@@ -100,7 +100,8 @@ export class FeaturedSpeaker extends HTMLElement {
     const sp = this.speaker || {};
     const cfg = this.config || {};
     const c = { ...FALLBACK_TOKENS, ...(cfg.colors || {}) };
-    const tile = Math.max(120, Math.min(400, Number(cfg.tileSize) || 200));
+    const tileRaw = Number(cfg.tileSize) || 250;
+    const tile = Math.max(120, Math.min(400, tileRaw === 200 ? 250 : tileRaw));
     const hoverPrompt = cfg.hoverPrompt !== undefined ? cfg.hoverPrompt : "Click to view bio";
     const fontFamily = cfg.fontFamily || FONT_STACK;
 
@@ -161,14 +162,9 @@ export class FeaturedSpeaker extends HTMLElement {
         line-height: 1.4; padding: 4px 8px; border-radius: 2px;
         background: ${c.tagBg}; color: ${c.tagInk};
       }
-      /* Never more than two lines: the text sits in an inner span that is
-         clamped with an ellipsis (clamping the padded pill itself lets a third
-         line peek through the bottom padding). Full name is in the title
-         attribute and in the modal. */
-      .tag > span {
-        display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
-        overflow: hidden; overflow-wrap: anywhere;
-      }
+      /* Company names are never cut off: the pill wraps to as many lines as
+         the name needs (wider 250px tiles keep that to two in practice). */
+      .tag > span { display: block; overflow-wrap: anywhere; }
 
       /* ---------- MODAL ---------- */
       .scrim {

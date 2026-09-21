@@ -172,7 +172,10 @@ export default class extends HTMLElement {
     // Main accent: heading rule + card hover. Older configs only carry accentRule.
     c.mainAccent = (cfg.colors && cfg.colors.mainAccent) || (cfg.colors && cfg.colors.accentRule) || c.mainAccent;
     const fontFamily = cfg.useBrandFont === false ? "inherit" : BRAND_FONT_STACK;
-    const tile = Math.max(120, Math.min(400, Number(cfg.tileSize) || 200));
+    // 250px tiles (4 across in the 1210px content box). 200 was the old default;
+    // a saved 200 is treated as "default", not a planner choice.
+    const tileRaw = Number(cfg.tileSize) || 250;
+    const tile = Math.max(120, Math.min(400, tileRaw === 200 ? 250 : tileRaw));
     const gapRow = Number(cfg.gridGapRow) || 36;
     const gapCol = Number(cfg.gridGapCol) || 24;
     const align = cfg.gridAlign === "left" ? "start" : "center";
