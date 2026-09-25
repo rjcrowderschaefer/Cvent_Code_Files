@@ -427,6 +427,12 @@ export class FeaturedSpeaker extends HTMLElement {
 
     m.sessionsUl.innerHTML = "";
     m.sessionsWrap.style.display = appearsIn.length ? "" : "none";
+
+    // Header: "Session" for one, "Sessions" for two or more. A custom header
+    // ending in "Sessions" (e.g. "Speaking Sessions") is singularised the same way.
+    const hdrText = (cfg.sessionsHeaderText || "").trim() || "Sessions";
+    m.sessionsHdr.textContent =
+      appearsIn.length === 1 && /sessions$/i.test(hdrText) ? hdrText.slice(0, -1) : hdrText;
     if (!bio && appearsIn.length) {
       m.sessionsWrap.style.marginTop = "0";
       m.sessionsWrap.style.paddingTop = "0";
