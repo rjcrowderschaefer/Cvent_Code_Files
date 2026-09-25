@@ -183,6 +183,8 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
   // =============================================
 
   _safeRenderUI() {
+    // A re-render mid-drag would detach the row being dragged; defer it.
+    if (this._reordering) { this._pendingRender = true; return; }
     const scrollTop = this.scrollTop;
     const detailsState = [...this.shadowRoot.querySelectorAll("details")].map((d) => d.open);
     this._renderUI();
@@ -264,8 +266,9 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
       .list-head { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 600; margin: 12px 0 4px; }
       .list-head:first-of-type { margin-top: 4px; }
       .selected-list { margin-bottom: 4px; }
-      .speaker-row[draggable="true"] { cursor: grab; }
-      .speaker-row.dragging { opacity: .4; }
+      .selected-list .speaker-row { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+      .selected-list.is-reordering, .selected-list.is-reordering * { cursor: grabbing !important; }
+      .speaker-row.dragging { opacity: .45; }
       .speaker-row.drop-before { box-shadow: 0 -2px 0 0 #185FA5; }
       .speaker-row.drop-after { box-shadow: 0 2px 0 0 #185FA5; }
       .grip { color: #9a9a9a; font-size: 16px; line-height: 1; width: 10px; flex-shrink: 0; user-select: none; }
@@ -433,7 +436,6 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
     selList.className = "speaker-roster selected-list";
     selectorBlock.append(selList);
 
-    let dragFrom = -1;
     const moveId = (from, to) => {
       if (from === to || from < 0 || to < 0 || from >= selectedIds.length || to >= selectedIds.length) return;
       const ids = [...selectedIds];
@@ -442,11 +444,79 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
       setIds(ids);
     };
 
+    // Reordering uses pointer events, not HTML5 drag-and-drop: inside Cvent's
+    // page builder the native drag events are intercepted by the host, so the
+    // drop never registered. Pointer capture keeps every move/up on the row.
+    const clearIndicators = () =>
+      selList.querySelectorAll(".drop-before,.drop-after").forEach((x) => x.classList.remove("drop-before", "drop-after"));
+    const targetIndex = (clientY, dragged) => {
+      const others = [...selList.querySelectorAll(".speaker-row")].filter((r) => r !== dragged);
+      let to = 0;
+      others.forEach((r) => { const b = r.getBoundingClientRect(); if (clientY > b.top + b.height / 2) to += 1; });
+      return { to, others };
+    };
+    const beginReorder = (row, idx, e) => {
+      if (e.button !== 0 || e.target.closest(".remove-btn")) return;
+      e.preventDefault();
+      const st = { from: idx, to: idx, startY: e.clientY, moved: false, pointerId: e.pointerId, scrollTimer: null, lastY: e.clientY };
+      this._reordering = st;
+      try { row.setPointerCapture(e.pointerId); } catch (err) { /* noop */ }
+
+      const update = (clientY) => {
+        st.lastY = clientY;
+        const { to, others } = targetIndex(clientY, row);
+        st.to = to;
+        clearIndicators();
+        if (to === st.from) return;
+        if (to < others.length) others[to].classList.add("drop-before");
+        else if (others.length) others[others.length - 1].classList.add("drop-after");
+      };
+      const autoScroll = () => {
+        const b = selList.getBoundingClientRect();
+        const edge = 28;
+        let dy = 0;
+        if (st.lastY < b.top + edge) dy = -8;
+        else if (st.lastY > b.bottom - edge) dy = 8;
+        if (dy) { selList.scrollTop += dy; update(st.lastY); }
+      };
+      const onMove = (ev) => {
+        if (ev.pointerId !== st.pointerId) return;
+        if (!st.moved && Math.abs(ev.clientY - st.startY) < 4) return;
+        if (!st.moved) {
+          st.moved = true;
+          row.classList.add("dragging");
+          selList.classList.add("is-reordering");
+          st.scrollTimer = setInterval(autoScroll, 30);
+        }
+        update(ev.clientY);
+      };
+      const finish = (commit) => (ev) => {
+        if (ev.pointerId !== st.pointerId) return;
+        row.removeEventListener("pointermove", onMove);
+        row.removeEventListener("pointerup", onUp);
+        row.removeEventListener("pointercancel", onCancel);
+        try { row.releasePointerCapture(st.pointerId); } catch (err) { /* noop */ }
+        clearInterval(st.scrollTimer);
+        clearIndicators();
+        row.classList.remove("dragging");
+        selList.classList.remove("is-reordering");
+        this._reordering = null;
+        const pending = this._pendingRender;
+        this._pendingRender = false;
+        if (commit && st.moved && st.to !== st.from) moveId(st.from, st.to);
+        else if (pending) this._safeRenderUI();
+      };
+      const onUp = finish(true);
+      const onCancel = finish(false);
+      row.addEventListener("pointermove", onMove);
+      row.addEventListener("pointerup", onUp);
+      row.addEventListener("pointercancel", onCancel);
+    };
+
     selectedIds.forEach((id, idx) => {
       const sp = byId.get(id) || { id, firstName: this._allSpeakers.length ? "(Speaker not in this event)" : "Loading…" };
       const row = document.createElement("div");
       row.className = "speaker-row selected";
-      row.draggable = true;
       row.tabIndex = 0;
       row.dataset.idx = String(idx);
       row.setAttribute("role", "listitem");
@@ -470,32 +540,8 @@ export default class FeaturedSpeakersEditor extends HTMLElement {
 
       row.append(grip, badge, makeAvatar(sp), makeInfo(sp), remove);
 
-      row.addEventListener("dragstart", (e) => {
-        dragFrom = idx;
-        row.classList.add("dragging");
-        try { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", id); } catch (err) { /* noop */ }
-      });
-      row.addEventListener("dragend", () => { row.classList.remove("dragging"); selList.querySelectorAll(".drop-before,.drop-after").forEach((r) => r.classList.remove("drop-before", "drop-after")); });
-      row.addEventListener("dragover", (e) => {
-        if (dragFrom < 0) return;
-        e.preventDefault();
-        try { e.dataTransfer.dropEffect = "move"; } catch (err) { /* noop */ }
-        const r = row.getBoundingClientRect();
-        const after = e.clientY > r.top + r.height / 2;
-        selList.querySelectorAll(".drop-before,.drop-after").forEach((x) => x.classList.remove("drop-before", "drop-after"));
-        row.classList.add(after ? "drop-after" : "drop-before");
-      });
-      row.addEventListener("drop", (e) => {
-        if (dragFrom < 0) return;
-        e.preventDefault();
-        const r = row.getBoundingClientRect();
-        const after = e.clientY > r.top + r.height / 2;
-        let to = idx + (after ? 1 : 0);
-        if (dragFrom < to) to -= 1;
-        const from = dragFrom;
-        dragFrom = -1;
-        moveId(from, to);
-      });
+      row.addEventListener("pointerdown", (e) => beginReorder(row, idx, e));
+      row.addEventListener("dragstart", (e) => e.preventDefault());
       row.addEventListener("keydown", (e) => {
         if (e.key === "ArrowUp") { e.preventDefault(); moveId(idx, idx - 1); this._focusSelectedRow = idx - 1; }
         else if (e.key === "ArrowDown") { e.preventDefault(); moveId(idx, idx + 1); this._focusSelectedRow = idx + 1; }

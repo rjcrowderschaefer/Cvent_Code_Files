@@ -10,25 +10,48 @@
 // risk of React removing children, since Custom Elements are opaque to
 // React's reconciler.
 //
-// SUBMISSION IS MOCKED. Both forms validate and show a confirmation, but
-// post nowhere - no endpoint is wired and no network request is made. See
-// _confirm() before connecting a destination.
+// "Contact Us" links out to Bloomberg's own form rather than embedding it.
+// That is not a shortcut - the form at professional.bloomberg.com is
+// reCAPTCHA-gated against that exact origin (site key 6Lc8Gukn..., bound to
+// https://professional.bloomberg.com:443) and submits through Bloomberg's
+// form-builder to Eloqua via script, not via a form action. Lifted onto a
+// Cvent domain it would fail the captcha and have nowhere to post. Linking
+// out keeps the captcha, the consent banner and the Eloqua campaign
+// attribution working on Bloomberg's own origin, and carries tactic= across.
+//
+// "Submit a question" IS STILL MOCKED - it validates and confirms but posts
+// nowhere. Give it a destination or drop it from the menu before launch.
 
 const DEFAULTS = {
   hintText: "Connect with Bloomberg",
-  demoLabel: "Request a demo",
+  demoLabel: "Contact Us",
+  // Options 2 and 3 can be switched off without clearing their labels, so
+  // turning one back on does not mean retyping it.
+  showContact: true,
+  showQuestion: true,
+  // Where "Contact Us" sends the visitor. This is ASSEMBLED BY editor.js from
+  // the planner's Hive9 inputs and written here whole - it is not meant to be
+  // hand-edited. An empty string means the editor could not build a valid
+  // link, and the panel then renders with no button rather than a wrong one.
+  demoUrl: "https://professional.bloomberg.com/products/bloomberg-terminal/research/regulatory-intelligence/?utm_source=cvnt&utm_medium=genpro&utm_campaign=comp&utm_content=livepro_reg-contact-form&tactic=1065635#contact-us",
+  // The base the editor builds that URL from, kept so the settings panel can
+  // repopulate itself. Not read at render time.
+  demoBaseUrl: "https://professional.bloomberg.com/products/bloomberg-terminal/research/regulatory-intelligence/#contact-us",
+  demoIntro: "To learn how Bloomberg's global policy and regulatory team delivers insights that help you stay ahead.",
+  demoCtaText: "Open the contact form",
   contactLabel: "Contact Bloomberg",
   questionLabel: "Submit a question",
 
   tacticId: "",
 
-  // Attention nudge. Finite by design: it fires only after the visitor has
-  // scrolled (so it never greets a page they haven't engaged with), repeats
-  // a limited number of times, and stops permanently on first interaction.
+  // Attention nudge. Finite by design: it starts a few seconds after the page
+  // has finished loading, repeats a limited number of times, and stops
+  // permanently the moment the visitor interacts with the button.
   nudgeEnabled: true,
   nudgeCount: "3",
+  nudgeDelaySeconds: "5",
   nudgeIntervalSeconds: "12",
-  nudgeCtaText: "Request a demo",
+  nudgeCtaText: "Want to learn more?",
 
   phoneAmericas: "+1 212 318 2000",
   phoneEmea: "+44 20 7330 7500",
@@ -36,9 +59,7 @@ const DEFAULTS = {
   eventEmail: "events@bloomberg.net",
   supportUrl: "https://professional.bloomberg.com/support/customer-support/",
 
-  demoAreas: "Market data, Trading solutions, Risk, Compliance, Research, Data licensing, Other",
   questionTopics: "Fixed income, Macro & policy, Sustainable finance, Market structure, Technology & data, Other",
-  countries: "United States, United Kingdom, Singapore, Hong Kong, Japan, Australia, Canada, France, Germany, Switzerland, United Arab Emirates, Other",
 };
 
 // Bloomberg Terminal mark, inlined so there is no external asset to host.
@@ -47,6 +68,52 @@ const ICON_TERMINAL = `<svg class="ico-term" viewBox="0 0 122.7487 76.6267" aria
 const ICON_PHONE = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.2.4 2.4.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1l-2.3 2.2z"/></svg>`;
 const ICON_ARROW = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M4 12h15M13 6l6 6-6 6"/></svg>`;
 const ICON_QUESTION = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm.1 15.2a1.3 1.3 0 1 1 0-2.6 1.3 1.3 0 0 1 0 2.6zm1.8-5.7c-.7.5-.9.8-.9 1.4v.4h-2v-.5c0-1.3.5-2 1.5-2.7.8-.6 1.1-.9 1.1-1.5 0-.7-.5-1.2-1.4-1.2s-1.5.5-1.6 1.4H8.6c.1-1.9 1.5-3.2 3.6-3.2s3.4 1.2 3.4 2.9c0 1.1-.5 1.8-1.7 2.6z"/></svg>`;
+
+const TRACKING_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "tactic"];
+
+// The choke point that stops a "javascript:" or "data:" value reaching an
+// href. Only validates and normalises; tracking is handled below.
+function safeUrl(url) {
+  const raw = String(url == null ? "" : url).trim();
+  if (!raw) return "";
+  try {
+    // No base URL on purpose: these fields are documented as full links, and
+    // resolving relatively turned a typo into a broken link on the event's
+    // own domain rather than no link at all.
+    const u = new URL(raw);
+    if (u.protocol !== "https:" && u.protocol !== "http:") return "";
+    return u.href;
+  } catch (err) {
+    return "";
+  }
+}
+
+// Copy whatever tracking the Contact Us link carries onto another link.
+//
+// The support link used to get its parameters only from editor.js, which
+// meant a widget nobody had edited yet - and the local preview harness -
+// rendered it untagged. Deriving it here instead means the two links can
+// never disagree, and the support link is tagged from the moment the widget
+// renders. An untracked Contact Us link (the editor could not build one)
+// leaves the target plain rather than half-tagged.
+function withTrackingFrom(sourceUrl, targetUrl) {
+  const target = safeUrl(targetUrl);
+  if (!target) return "";
+  const source = safeUrl(sourceUrl);
+  if (!source) return target;
+  try {
+    const from = new URL(source);
+    const to = new URL(target);
+    TRACKING_KEYS.forEach((k) => to.searchParams.delete(k));
+    TRACKING_KEYS.forEach((k) => {
+      const v = from.searchParams.get(k);
+      if (v) to.searchParams.set(k, v);
+    });
+    return to.href;
+  } catch (err) {
+    return target;
+  }
+}
 
 function escapeHtml(value) {
   const div = document.createElement("div");
@@ -153,7 +220,9 @@ const WIDGET_CSS = `
     display: flex; align-items: center; justify-content: center;
     width: 56px; height: 56px; flex: 0 0 56px;
   }
-  .fab-mark .ico-term { width: 20px; height: auto; display: block; transition: opacity 150ms ease; }
+  /* 25px: the wireframe's 20px mark, up 25% at RJ's request. The .fab-mark
+     box stays 56px, so the icon grows without moving the button. */
+  .fab-mark .ico-term { width: 25px; height: auto; display: block; transition: opacity 150ms ease; }
   /* X drawn as two bars, matching the wireframe rather than a glyph. The
      terminal mark cross-fades out beneath them. */
   .fab-mark i {
@@ -403,6 +472,15 @@ const WIDGET_CSS = `
     transition: background 150ms ease;
   }
   .btn:hover { background: #0254BC; }
+  /* The primary action in the Contact Us panel is a real link, not a button,
+     because it navigates. It still has to look like .btn. */
+  a.btn { display: block; text-align: center; text-decoration: none; }
+  a.btn .ext { font-style: normal; margin-left: 6px; }
+  .vh {
+    position: absolute; width: 1px; height: 1px;
+    margin: -1px; padding: 0; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
   .btn:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #0362DD; }
   /* Amber highlight per the wireframe's brand ladder. Two different ambers
      on purpose: #FF9D00 is the brand colour and carries the border, but it
@@ -537,6 +615,29 @@ export default class BbgContactWidget extends HTMLElement {
 
     const rq = `<em aria-hidden="true">*</em>`;
     const tel = (n) => escapeHtml(String(n || "").replace(/[^+\d]/g, ""));
+    // A blank label hides its row, so a planner can drop an option - notably
+    // "Submit a question", whose form still posts nowhere - without needing a
+    // new build. The stagger is nth-child based, so it re-closes by itself.
+    const has = (v) => String(v == null ? "" : v).trim() !== "";
+    // A row needs both its toggle and a label. The toggle is what the planner
+    // uses; the blank-label check is a backstop so an empty row can never
+    // render as a clickable sliver of nothing.
+    const showDemo = has(c.demoLabel);
+    const showContact = c.showContact !== false && has(c.contactLabel);
+    const showQuestion = c.showQuestion !== false && has(c.questionLabel);
+    const row = (show, view, icon, label) => show
+      ? `<li><button type="button" data-go="${view}">${icon}<span>${escapeHtml(label)}</span></button></li>`
+      : "";
+    // demoUrl is the tracked link the editor assembles. When it could not
+    // build one it writes "", and we fall back to the untracked base URL.
+    //
+    // This used to render no button at all. That was the wrong trade: an
+    // untracked link still delivers the lead, while a missing button delivers
+    // nothing, and the condition fires easily - a fresh widget, or any edit to
+    // an older one, leaves demoUrl empty. Partial tracking is never emitted,
+    // so the fallback is untagged rather than mis-tagged.
+    const demoHref = safeUrl(c.demoUrl) || safeUrl(c.demoBaseUrl);
+    const supportHref = withTrackingFrom(demoHref, c.supportUrl);
 
     wrap.innerHTML = `
       <div class="backdrop"></div>
@@ -545,9 +646,9 @@ export default class BbgContactWidget extends HTMLElement {
 
         <div class="view view-menu">
           <ul class="menu">
-            <li><button type="button" data-go="demo">${ICON_TERMINAL}<span>${escapeHtml(c.demoLabel)}</span></button></li>
-            <li><button type="button" data-go="contact">${ICON_PHONE}<span>${escapeHtml(c.contactLabel)}</span></button></li>
-            <li><button type="button" data-go="question">${ICON_QUESTION}<span>${escapeHtml(c.questionLabel)}</span></button></li>
+            ${row(showDemo, "demo", ICON_TERMINAL, c.demoLabel)}
+            ${row(showContact, "contact", ICON_PHONE, c.contactLabel)}
+            ${row(showQuestion, "question", ICON_QUESTION, c.questionLabel)}
           </ul>
         </div>
 
@@ -556,25 +657,18 @@ export default class BbgContactWidget extends HTMLElement {
             <button type="button" class="back" data-go="menu" aria-label="Back to menu">&#8592;</button>
             <h2 class="ptitle" tabindex="-1">${escapeHtml(c.demoLabel)}</h2>
           </div>
-          <form class="pbody" data-form="demo" novalidate>
-            <p class="lede">Tell us a little about yourself and a specialist will be in touch.</p>
-            <div class="pair">
-              <div class="f"><label for="d-fn">First name ${rq}</label><input id="d-fn" name="firstName" type="text" autocomplete="given-name" required></div>
-              <div class="f"><label for="d-ln">Last name ${rq}</label><input id="d-ln" name="lastName" type="text" autocomplete="family-name" required></div>
-            </div>
-            <div class="f"><label for="d-em">Business email ${rq}</label><input id="d-em" name="emailAddress" type="email" autocomplete="email" required></div>
-            <div class="f"><label for="d-co">Company ${rq}</label><input id="d-co" name="company" type="text" autocomplete="organization" required></div>
-            <div class="f"><label for="d-jt">Job title ${rq}</label><input id="d-jt" name="jobTitle" type="text" autocomplete="organization-title" required></div>
-            <div class="f"><label for="d-ph">Business phone</label><input id="d-ph" name="busPhone" type="tel" autocomplete="tel"></div>
-            <div class="f"><label for="d-cy">Country</label><select id="d-cy" name="country"><option value="">Select</option>${optionList(c.countries)}</select></div>
-            <div class="f"><label for="d-ar">Area of interest</label><select id="d-ar" name="areaOfInterest"><option value="">Select</option>${optionList(c.demoAreas)}</select></div>
-            <div class="f"><label for="d-hl">How can we help?</label><textarea id="d-hl" name="message"></textarea></div>
-            <label class="check"><input type="checkbox" name="optIn"><span>Send me Bloomberg news and product updates</span></label>
-            <p class="fine">Bloomberg will use your details in line with its privacy policy.</p>
-            <button type="button" class="btn" data-submit="demo">${escapeHtml(c.demoLabel)}</button>
-          </form>
+          <div class="pbody">
+            <p class="lede">${escapeHtml(c.demoIntro)}</p>
+            ${demoHref ? `<a class="btn" href="${escapeHtml(demoHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(c.demoCtaText)}<i class="ext" aria-hidden="true">&#8594;</i><span class="vh"> (opens in a new tab)</span></a>` : ""}
+            ${supportHref ? `<a class="support" href="${escapeHtml(supportHref)}" target="_blank" rel="noopener noreferrer">
+              <p class="glabel">Help &amp; support</p>
+              <strong>Already a customer?</strong>
+              <span class="support-cta">Get in touch with the support team <i aria-hidden="true">&#8594;</i></span>
+            </a>` : ""}
+          </div>
         </div>
 
+        ${showContact ? `
         <div class="view view-contact">
           <div class="phead">
             <button type="button" class="back" data-go="menu" aria-label="Back to menu">&#8592;</button>
@@ -593,15 +687,16 @@ export default class BbgContactWidget extends HTMLElement {
               <p class="glabel">Event team</p>
               <a class="mail" href="mailto:${escapeHtml(c.eventEmail)}">${escapeHtml(c.eventEmail)}</a>
             </div>
-            <button type="button" class="btn btn-secondary" data-go="demo">Contact a specialist</button>
-            <a class="support" href="${escapeHtml(c.supportUrl)}" target="_blank" rel="noopener noreferrer">
+            ${showDemo ? `<button type="button" class="btn btn-secondary" data-go="demo">Contact a specialist</button>` : ""}
+            ${supportHref ? `<a class="support" href="${escapeHtml(supportHref)}" target="_blank" rel="noopener noreferrer">
               <p class="glabel">Help &amp; support</p>
               <strong>Already a customer?</strong>
               <span class="support-cta">Get in touch with the support team <i aria-hidden="true">&#8594;</i></span>
-            </a>
+            </a>` : ""}
           </div>
-        </div>
+        </div>` : ""}
 
+        ${showQuestion ? `
         <div class="view view-question">
           <div class="phead">
             <button type="button" class="back" data-go="menu" aria-label="Back to menu">&#8592;</button>
@@ -618,6 +713,7 @@ export default class BbgContactWidget extends HTMLElement {
             <button type="button" class="btn" data-submit="question">Submit question</button>
           </form>
         </div>
+` : ""}
       </div>
 
       <button type="button" class="fab" aria-haspopup="menu" aria-expanded="false" aria-label="${escapeHtml(c.hintText)}">
@@ -682,10 +778,10 @@ export default class BbgContactWidget extends HTMLElement {
       });
     }
 
-    // MOCKED SUBMIT. Validates, then swaps the form for a confirmation.
-    // Deliberately makes no network request - there is no destination yet,
-    // and a form that appears to send while discarding input is worse than
-    // one that says plainly it is a preview.
+    // MOCKED SUBMIT - now only "Submit a question", since Contact Us links
+    // out. Validates, then swaps the form for a confirmation. Deliberately
+    // makes no network request: a form that appears to send while discarding
+    // input is worse than one that says plainly it is a preview.
     card.querySelectorAll("[data-submit]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const form = card.querySelector(`[data-form="${btn.getAttribute("data-submit")}"]`);
@@ -693,7 +789,7 @@ export default class BbgContactWidget extends HTMLElement {
         form.innerHTML = `
           <div class="done">
             <strong>Thank you.</strong>
-            <p>A specialist will be in touch.</p>
+            <p>Your question has been noted for the moderator.</p>
             <p class="fine">Preview only - this form is not yet connected to a destination,
             so nothing was sent.</p>
           </div>`;
@@ -713,19 +809,22 @@ export default class BbgContactWidget extends HTMLElement {
     const nudgeMax = Math.max(0, parseInt(c.nudgeCount, 10) || 0);
     const gapSeconds = Math.max(3, parseInt(c.nudgeIntervalSeconds, 10) || 12);
     const gapMs = gapSeconds * 1000;
+    const parsedDelay = parseInt(c.nudgeDelaySeconds, 10);
+    const startMs = Math.max(0, isNaN(parsedDelay) ? 5 : parsedDelay) * 1000;
+
     if (c.nudgeEnabled !== false && nudgeMax > 0 && !isEditorPreview) {
       let fired = 0;
-      let armed = false;
+      let armed = true;
       let timer = null;
-      let settle = null;
+      let startTimer = null;
 
       const stopNudging = () => {
         armed = false;
         if (timer) clearInterval(timer);
-        if (settle) clearTimeout(settle);
-        timer = settle = null;
+        if (startTimer) clearTimeout(startTimer);
+        timer = startTimer = null;
         wrap.classList.remove("is-nudging");
-        window.removeEventListener("scroll", onScroll);
+        window.removeEventListener("load", begin);
       };
 
       const playNudge = () => {
@@ -741,17 +840,20 @@ export default class BbgContactWidget extends HTMLElement {
         }, 3900);
       };
 
-      function onScroll() {
-        // Wait for real engagement rather than a stray wheel tick.
-        if (armed || window.scrollY < 300) return;
-        armed = true;
-        window.removeEventListener("scroll", onScroll);
-        settle = setTimeout(() => {
+      function begin() {
+        if (!armed || startTimer) return;
+        startTimer = setTimeout(() => {
           playNudge();
           if (armed && nudgeMax > 1) timer = setInterval(playNudge, gapMs);
-        }, 1200);
+        }, startMs);
       }
-      window.addEventListener("scroll", onScroll, { passive: true });
+
+      // Cvent renders this widget asynchronously, so connectedCallback often
+      // runs AFTER window.load has already fired - a bare load listener would
+      // then never run and the nudge would never start. Check readyState and
+      // only wait for the event if the page is genuinely still loading.
+      if (document.readyState === "complete") begin();
+      else window.addEventListener("load", begin, { once: true });
 
       // Any sign of intent retires it for good - nothing is more irritating
       // than a button that keeps waving after you've found it.
