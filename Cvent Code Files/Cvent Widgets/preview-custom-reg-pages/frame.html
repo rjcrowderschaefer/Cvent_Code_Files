@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>widget frame</title>
+<style>
+  /* A stand-in for Cvent's registration page (step 2), using the real class
+     names (with fake build hashes) so the widget's form stylesheet applies. */
+  body { margin: 0; font: 14px/1.4 Arial, sans-serif; background: #fff; color: #fff; }
+  [class*=AppContainer__container] { background: #444; }
+  .cus_nav { height: 64px; background: #0b0b0c; border-bottom: 1px solid #333; display: flex; align-items: center; padding: 0 24px; font: 700 13px Arial; letter-spacing: .08em; color: #aaa; }
+  [class*=Grid__sectionContainer] { padding: 24px 0; }
+  .hero-padding { background: #333 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%23556'/%3E%3Ccircle cx='20' cy='20' r='12' fill='%23778'/%3E%3C/svg%3E"); padding: 40px 0 0; }
+  .hero-text-bg { max-width: 700px; margin: 0 auto 30px; padding: 24px; background: rgba(0,0,0,.5); border-radius: 8px; text-align: center; color: #fff; }
+  .inner { max-width: 1240px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 48px); box-sizing: border-box; }
+  [class*=ProgressBar__wrapper] { background: rgba(0,0,0,.4); padding: 12px; }
+  [class*=ProgressBar__progressbar] { display: flex; list-style: none; margin: 0; padding: 0; counter-reset: s; }
+  [class*=ProgressBar__progressbar] li { flex: 1; text-align: center; position: relative; }
+  [class*=ProgressBar__before] { display: inline-block; width: 24px; height: 24px; line-height: 24px; border-radius: 50%; background: #fff; color: #000; position: relative; z-index: 1; }
+  [class*=ProgressBar__after] { position: absolute; left: -50%; top: 11px; height: 8px; width: 100%; background: #ccc; }
+  [class*=ProgressBar__progressbar] li:first-child [class*=ProgressBar__after] { display: none; }
+  [class*=ProgressBar__progressText] { color: #fff; text-transform: uppercase; }
+  [class*=ProgressBar__mobileOnly] { display: none; }
+  @media (max-width: 767px) { [class*=ProgressBar__mobileOnly] { display: block; } [class*=ProgressBar__desktopOnly] { display: none; } }
+  [class*=ProgressBar__indicator] { height: 10px; background: #ccc; } [class*=ProgressBar__bar] { width: 66%; background: #fff; }
+  [role=main] > [class*=Grid__grid]:first-child [class*=Grid__sectionContainer] { background: rgb(204,204,204) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect width='60' height='60' fill='%23bbb'/%3E%3Cpath d='M0 60L60 0' stroke='%23999'/%3E%3C/svg%3E"); padding: 40px 0 60px; }
+  .cols { display: grid; grid-template-columns: minmax(0,1fr) 380px; gap: 56px; align-items: start; }
+  @media (max-width: 900px) { .cols { grid-template-columns: 1fr; } }
+  [class*=Grid__row] { margin-bottom: 12px; }
+  label, legend { display: block; color: #fff; text-transform: uppercase; font-size: 12px; margin-bottom: 4px; }
+  input[class*=TextInput__textbox] { width: 100%; height: 34px; border: 1px solid #999; }
+  [class*=ButtonGroup__buttonGroup] { list-style: none; padding: 0; display: flex; gap: 8px; }
+  button[class*=LinearNavigator__button] { background: #000; color: #fff; border: 0; height: 40px; padding: 0 20px; text-transform: uppercase; }
+  .site-footer { background: #000; color: #999; padding: 40px 24px; }
+  .dd-control { display: flex; align-items: center; justify-content: space-between; }
+  #slot-panel:empty, #slot-banner:empty, #slot-confirm:empty { display: none; }
+</style>
+</head>
+<body>
+<div class="AppContainer__container___9f2a">
+  <div role="banner">
+    <div class="cus_nav">FAKE CVENT NAV</div>
+    <div class="Grid__grid___1a"><div class="Grid__sectionContainer___2b" style="padding:0"><div id="slot-banner"></div></div></div>
+    <div class="Grid__grid___1a"><div class="Grid__sectionContainer___2b hero-padding">
+      <div data-cvent-id="containerParent" class="hero-text-bg">
+        <p class="spaced">EVENT REGISTRATION</p><h1 class="event-title">AI in Finance Summit</h1><p>Thursday, October 22 · New York</p>
+      </div>
+      <div data-cvent-id="containerParent">
+        <div class="ProgressBar__wrapper___7c">
+          <div class="ProgressBar__mobileOnly___8d"><div class="ProgressBar__indicator___1"><div class="ProgressBar__bar___2"></div></div></div>
+          <div class="ProgressBar__desktopOnly___9e"><ul class="ProgressBar__progressbar___3f">
+            <li><span class="ProgressBar__before___4 ProgressBar__cursor___5">1</span><div class="ProgressBar__progressText___6">Your details</div><span class="ProgressBar__after___7"></span></li>
+            <li aria-current="step"><span class="ProgressBar__before___4">2</span><div class="ProgressBar__progressText___6">About you</div><span class="ProgressBar__after___7"></span></li>
+            <li><span class="ProgressBar__before___4">3</span><div class="ProgressBar__progressText___6">Review</div><span class="ProgressBar__after___7"></span></li>
+          </ul></div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+  <div role="main">
+    <div class="Grid__grid___1a"><div class="Grid__sectionContainer___2b"><div class="inner">
+      <div id="slot-confirm"></div>
+      <div class="cols" id="form-cols">
+        <div class="left-align-fields">
+          <div class="TextWidget__container___11"><p>Tell us a little about you. It helps us tailor the program and introductions.</p></div>
+          <div class="Grid__row___r Forms__container___c1"><div class="Forms__element___e1">
+            <label class="QuestionText__labelOnTop___q QuestionText__label___l"><span class="QuestionText__required___rq">*</span><span data-cvent-id="label">Company</span></label>
+            <div class="Forms__inputContainerGuestSide___g"><div class="Forms__textboxContainer___t"><input class="TextInput__textbox___x" value="Bloomberg"></div></div>
+          </div></div>
+          <div class="Grid__row___r Forms__container___c1"><div class="Forms__element___e1 FormElement__formElementWithErrors___fe">
+            <label class="QuestionText__labelOnTop___q QuestionText__label___l"><span class="QuestionText__required___rq">*</span><span data-cvent-id="label">Job title</span></label>
+            <div class="Forms__inputContainerGuestSide___g"><div class="Forms__textboxContainer___t"><input class="TextInput__textbox___x Forms__error___er" placeholder="e.g. Head of Data"></div></div>
+            <div data-cvent-id="error-messages"><div class="ErrorMessages__errorText___et">Enter your job title.</div></div>
+          </div></div>
+          <div class="Grid__row___r Forms__container___c1"><div class="Forms__element___e1">
+            <label class="QuestionText__labelOnTop___q QuestionText__label___l"><span data-cvent-id="label">Phone</span></label>
+            <div class="Forms__inputContainerGuestSide___g"><div class="react-international-phone-input-container"><button class="react-international-phone-country-selector-button" type="button">🇺🇸 ▾</button><input class="react-international-phone-input" value="+1 212 555 0100"></div></div>
+            <span class="Forms__additionalText___at">Numbers only</span><span class="Forms__additionalText___at">Include the country code</span>
+          </div></div>
+          <div class="Grid__row___r Forms__container___c1"><div class="Forms__element___e1">
+            <label class="QuestionText__labelOnTop___q QuestionText__label___l"><span class="QuestionText__required___rq">*</span><span data-cvent-id="label">Industry</span></label>
+            <div class="Forms__inputContainerGuestSide___g Forms__inputContainer___ic"><div data-cvent-id="async-dropdown-wrapper"><div class="css-13cymwt-control dd-control"><div class="css-hlgwow"><div class="css-1jqq78o-placeholder">Select an industry</div></div><div class="css-1wy0on6"><div class="css-1xc3v61-indicatorContainer">▾</div></div></div></div></div>
+          </div></div>
+          <fieldset class="Forms__element___e1">
+            <legend class="QuestionText__label___l"><span class="QuestionText__required___rq">*</span><span>Would you like a conversation with a Bloomberg representative?</span></legend>
+            <ul class="Forms__radiobutton___rb"><li><input type="radio" name="r1" id="r1a" checked><label for="r1a">Yes</label></li><li><input type="radio" name="r1" id="r1b"><label for="r1b">No</label></li></ul>
+          </fieldset>
+          <div class="button-group-left"><ul class="ButtonGroup__buttonGroup___bg ButtonGroup__reverseButtonOrderOnMobile___m">
+            <li><button id="backward" type="button" class="LinearNavigator__button___lb letter_space_md">Previous</button></li>
+            <li><button id="exit" type="button" class="LinearNavigator__button___lb letter_space_md">Cancel</button></li>
+            <li><button id="forward" type="submit" class="LinearNavigator__button___lb letter_space_md">Next</button></li>
+          </ul></div>
+        </div>
+        <div id="slot-panel"></div>
+      </div>
+    </div></div></div>
+    <div class="Grid__grid___1a"><div class="Grid__sectionContainer___2b" style="padding:0"><div class="site-footer">Black site footer (never restyled)</div></div></div>
+  </div>
+</div>
+<script type="module">import(`./frame.js?v=${Date.now()}`);</script>
+</body>
+</html>

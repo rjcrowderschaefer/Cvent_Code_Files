@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Speakers page widget — local preview</title>
+<style>
+  body { margin: 0; font: 14px/1.4 system-ui, sans-serif; background: #e9eaee; color: #17201c; overflow: hidden; }
+  #bar { display: flex; gap: 12px; align-items: center; padding: 8px 14px; background: #111; color: #eee; font-size: 13px; height: 38px; box-sizing: border-box; }
+  #bar b { color: #f7a325; }
+  #bar select, #bar button { font: inherit; padding: 3px 8px; }
+  #size { opacity: .6; font-variant-numeric: tabular-nums; }
+  #status { margin-left: auto; opacity: .75; }
+  #layout { display: grid; grid-template-columns: 360px 1fr; height: calc(100vh - 38px); }
+  #editor-pane { background: #fff; border-right: 1px solid #ddd; overflow: auto; }
+  /* The stage centres a device-sized iframe. Everything the widget does —
+     media queries, innerWidth checks, fixed-position modals — happens INSIDE
+     that frame, so what you see is what that breakpoint gets. */
+  #stage { display: flex; justify-content: safe center; align-items: flex-start; padding: 12px; overflow: auto; box-sizing: border-box; }
+  /* Never shrink the frame: a preset must be exact. A narrow window scrolls the stage instead. */
+  #frame { border: 1px solid #c9cbd1; border-radius: 6px; background: #fff; box-shadow: 0 6px 24px rgba(0,0,0,.12); flex-shrink: 0; }
+</style>
+</head>
+<body>
+  <div id="bar">
+    <b>speakers page preview</b>
+    <label>lang <select id="lang"><option value="en">en</option><option value="es">es</option><option value="pt-BR">pt-BR</option></select></label>
+    <label>width <select id="width">
+      <option value="desktop">desktop 1440</option>
+      <option value="laptop">1024</option>
+      <option value="tablet">tablet 768</option>
+      <option value="mobile">mobile 390</option>
+    </select></label>
+    <span id="size"></span>
+    <button id="remount">re-render</button>
+    <button id="reset">reset config</button>
+    <span id="status">loading…</span>
+  </div>
+  <div id="layout">
+    <aside id="editor-pane"><div id="editor-host"></div></aside>
+    <main id="stage"><iframe id="frame" title="widget at breakpoint"></iframe></main>
+  </div>
+  <!-- Dynamic import with a timestamp so the harness itself is never served stale. -->
+  <script type="module">import(`./harness.js?v=${Date.now()}`);</script>
+</body>
+</html>

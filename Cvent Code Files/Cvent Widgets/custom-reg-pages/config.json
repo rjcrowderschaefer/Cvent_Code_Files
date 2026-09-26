@@ -1,0 +1,6 @@
+{
+  "product": "Event",
+  "purpose": "AllPages",
+  "essential": false,
+  "customElementName": "dev-custom-reg-pages"
+}

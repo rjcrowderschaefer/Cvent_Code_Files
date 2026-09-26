@@ -314,10 +314,17 @@ export default class extends HTMLElement {
     }
     if (stale()) return; // a newer render owns the container now
 
-    // Visibility is controlled solely by the "Hide from main agenda?" custom
-    // field. Registration status (isOpenForRegistration) is intentionally
-    // ignored so closed sessions still appear on the agenda.
+    // Visibility: the editor's "Hidden Sessions" list (by session ID) plus
+    // the "Hide from main agenda?" custom field. The ID list exists because
+    // the SDK doesn't expose session status and Cvent locks custom fields on
+    // canceled sessions. Registration status (isOpenForRegistration) is
+    // intentionally ignored so closed sessions still appear on the agenda.
+    const hiddenIds = new Set(
+      (Array.isArray(cfg.hiddenSessionIds) ? cfg.hiddenSessionIds : [])
+        .map((x) => String(x).trim()).filter(Boolean)
+    );
     const openSessions = sessions.filter(s => {
+      if (hiddenIds.has(String(s?.id))) return false;
       const hideField = s.sessionCustomFields?.find(f => f.name === "Hide from main agenda?");
       return !hideField?.value?.includes("Yes");
     });

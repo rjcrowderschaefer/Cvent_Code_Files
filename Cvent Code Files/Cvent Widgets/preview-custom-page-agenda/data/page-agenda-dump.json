@@ -1,0 +1,682 @@
+{
+ "_note": "Built by hand from the live AI in Finance Summit site (2026-09-24), NOT a sandbox SDK dump. Replace with a real DUMP PROBE capture (LOCAL_PREVIEW.md \u00a74) before relying on field shapes. | agenda preview: descriptions added from the design artboard for testing.",
+ "eventInfo": {
+  "id": "71dd213b-3d60-48f8-a94c-a4a6d2ed2475",
+  "attendingFormat": "InPerson",
+  "category": "Summit",
+  "code": "AIFIN26",
+  "description": "<div class=\"ag87-crtemvc-hsbk\"><div class=\"css-vsf5of\"><p class=\"carina-rte-public-DraftStyleDefault-block\"><span style=\"color: rgb(0,0,0);\">Join Bloomberg and our CEO, Vlad Kliatchko, at our flagship AI in Finance Summit, an exclusive gathering of senior financial leaders, policymakers, and technology luminaries.</span></p><p class=\"carina-rte-public-DraftStyleDefault-block\"><span>As AI adoption accelerates across financial markets, the conversation is shifting from experimentation to execution, and to the decisions that will determine where AI creates lasting value and competitive differentiation.</span></p><p class=\"carina-rte-public-DraftStyleDefault-block\"><span>Through executive discussions and panel sessions, the program will explore:</span></p><ul><li><span>Where AI is delivering measurable value and creating investment edge</span></li><li><span>How it is reshaping research, investment workflows, and the role of financial professionals</span></li><li><span>How firms should approach governance and accountability as AI becomes more agentic</span></li></ul><p class=\"carina-rte-public-DraftStyleDefault-block\"><span>Attendees will also have the opportunity to experience Bloomberg\u2019s latest AI developments and see how they are being applied to help financial professionals work more efficiently and make more informed decisions.</span></p></div></div>",
+  "startDate": "2026-10-15T17:00:00.000Z",
+  "endDate": "2026-10-15T23:00:00.000Z",
+  "location": "Bloomberg HQ",
+  "timezone": "America/New_York",
+  "title": "AI in Finance Summit",
+  "planner": {
+   "company": "Bloomberg",
+   "firstName": "Bloomberg",
+   "lastName": "Events"
+  },
+  "address": {
+   "address1": "731 Lexington Ave",
+   "address2": "",
+   "address3": "",
+   "city": "New York",
+   "countryCode": "US",
+   "postalCode": "10022",
+   "stateCode": "NY"
+  },
+  "locales": [
+   {
+    "cultureCode": "en-US",
+    "isDefault": true,
+    "languageCountry": "English",
+    "languageName": "English"
+   },
+   {
+    "cultureCode": "es",
+    "isDefault": false
+   },
+   {
+    "cultureCode": "pt-BR",
+    "isDefault": false
+   }
+  ]
+ },
+ "sessions": [
+  {
+   "id": "s01",
+   "name": "Arrivals & Registration",
+   "code": "",
+   "isIncludedSession": false,
+   "startDateTime": "2026-10-15T17:00:00.000Z",
+   "endDateTime": "2026-10-15T17:30:00.000Z",
+   "description": "",
+   "location": {
+    "id": "loc-hq",
+    "name": "Bloomberg HQ",
+    "code": "HQ"
+   },
+   "category": {
+    "id": "cat-logistics",
+    "name": "Logistics",
+    "description": ""
+   },
+   "speakers": [],
+   "presentationType": "Session",
+   "isOpenForRegistration": true,
+   "isWaitlistEnabled": false,
+   "displayPriority": 0,
+   "isFeatured": false,
+   "capacity": 0,
+   "waitlistCapacity": 0,
+   "sessionCustomFields": [],
+   "associatedRegistrationTypes": [],
+   "locale": "en-US"
+  },
+  {
+   "id": "s02",
+   "name": "Welcome Remarks",
+   "code": "",
+   "isIncludedSession": false,
+   "startDateTime": "2026-10-15T17:30:00.000Z",
+   "endDateTime": "2026-10-15T17:40:00.000Z",
+   "description": "",
+   "location": {
+    "id": "loc-hq",
+    "name": "Bloomberg HQ",
+    "code": "HQ"
+   },
+   "category": {
+    "id": "cat-remarks",
+    "name": "Remarks",
+    "description": ""
+   },
+   "speakers": [
+    {
+     "id": "vlad-kliatchko",
+     "firstName": "Vlad",
+     "lastName": "Kliatchko",
+     "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/71dd213b3d6048f8a94ca4a6d2ed2475/7a23886423d74540a95f61d7282cd5ac.png"
+    }
+   ],
+   "presentationType": "Session",
+   "isOpenForRegistration": true,
+   "isWaitlistEnabled": false,
+   "displayPriority": 0,
+   "isFeatured": false,
+   "capacity": 0,
+   "waitlistCapacity": 0,
+   "sessionCustomFields": [],
+   "associatedRegistrationTypes": [],
+   "locale": "en-US"
+  },
+  {
+   "id": "s03",
+   "name": "Keynote: The Future of AI in Financial Markets",
+   "code": "",
+   "isIncludedSession": false,
+   "startDateTime": "2026-10-15T17:40:00.000Z",
+   "endDateTime": "2026-10-15T18:10:00.000Z",
+   "description": "",
+   "location": {
+    "id": "loc-hq",
+    "name": "Bloomberg HQ",
+    "code": "HQ"
+   },
+   "category": {
+    "id": "cat-keynote",
+    "name": "Keynote",
+    "description": ""
+   },
+   "speakers": [
+    {
+     "id": "shawn-edwards",
+     "firstName": "Shawn",
+     "lastName": "Edwards",
+     "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/71dd213b3d6048f8a94ca4a6d2ed2475/a0d164ed6e284ec2b35249caf1d76957.png"
+    }
+   ],
+   "presentationType": "Session",
+   "isOpenForRegistration": true,
+   "isWaitlistEnabled": false,
+   "displayPriority": 0,
+   "isFeatured": false,
+   "capacity": 0,
+   "waitlistCapacity": 0,
+   "sessionCustomFields": [],
+   "associatedRegistrationTypes": [],
+   "locale": "en-US"
+  },
+  {
+   "id": "s04",
+   "name": "Fireside Chat: AI for Alpha Generation",
+   "code": "",
+   "isIncludedSession": false,
+   "startDateTime": "2026-10-15T18:10:00.000Z",
+   "endDateTime": "2026-10-15T18:30:00.000Z",
+   "description": "<p>AI is changing the investment research function from the inside out. Research leaders are rethinking how teams are organized, how analysts spend their time and where human expertise matters most.</p><p>This conversation looks at what that shift means for the next generation of analysts.</p>",
+   "location": {
+    "id": "loc-hq",
+    "name": "Bloomberg HQ",
+    "code": "HQ"
+   },
+   "category": {
+    "id": "cat-fireside-chat",
+    "name": "Fireside chat",
+    "description": ""
+   },
+   "speakers": [],
+   "presentationType": "Session",
+   "isOpenForRegistration": true,
+   "isWaitlistEnabled": false,
+   "displayPriority": 0,
+   "isFeatured": false,
+   "capacity": 0,
+   "waitlistCapacity": 0,
+   "sessionCustomFields": [],
+   "associatedRegistrationTypes": [],
+   "locale": "en-US"
+  },
+  {
+   "id": "s05",
+   "name": "Panel: AI for Investment Strategy",
+   "code": "",
+   "isIncludedSession": false,
+   "startDateTime": "2026-10-15T18:30:00.000Z",
+   "endDateTime": "2026-10-15T19:00:00.000Z",
+   "description": "<p>The race is on to turn advances in AI into investment performance. Investors are deploying AI across strategies and asset classes to uncover patterns in complex datasets, develop new signals and test investment theses.</p>",
+   "location": {
+    "id": "loc-hq",
+    "name": "Bloomberg HQ",
+    "code": "HQ"
+   },
+   "category": {
+    "id": "cat-panel",
+    "name": "Panel",
+    "description": ""
+   },
+   "speakers": [
+    {
+     "id": "jamie-newton",
+     "firstName": "Jamie",
+     "lastName": "Newton",
+     "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/71dd213b3d6048f8a94ca4a6d2ed2475/20bb0156d2c940e68997a4f63e9b09db.png"
+    },
+    {
+     "id": "matt-brundage",
+     "firstName": "Matt",
+     "lastName": "Brundage",
+     "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/71dd213b3d6048f8a94ca4a6d2ed2475/09a6b4d348ee4b4c89553a046f042926.jpg"
+    },
+    {
+     "id": "max-gokhman",
+     "firstName": "Max",
+     "lastName": "Gokhman",
+     "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/71dd213b3d6048f8a94ca4a6d2ed2475/28eceabc5315454e9dc3eb8ffadbd29c.jpg"
+    },
+    {
+     "id": "sonja-renander",
+     "firstName": "Sonja",
+     "lastName": "Renander",
+     "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/71dd213b3d6048f8a94ca4a6d2ed2475/ecd9fae2e9944c76aac94b52fec972f0.jpg"
+    }
+   ],
+   "presentationType": "Session",
+   "isOpenForRegistration": true,
+   "isWaitlistEnabled": false,
+   "displayPriority": 0,
+   "isFeatured": false,
+   "capacity": 0,
+   "waitlistCapacity": 0,
+   "sessionCustomFields": [],
+   "associatedRegistrationTypes": [],
+   "locale": "en-US"
+  },
+  {
+   "id": "s06",
+   "name": "Lightning Talk: BQuant Assistant",
+   "code": "",
+   "isIncludedSession": false,
+   "startDateTime": "2026-10-15T19:00:00.000Z",
+   "endDateTime": "2026-10-15T19:15:00.000Z",
+   "description": "<p>Accelerating quantitative research with AI. Learn how financial institutions can utilize advanced analytics and AI to bring their insights to life through quantitative fixed income and equity research workflows.</p>",
+   "location": {
+    "id": "loc-hq",
+    "name": "Bloomberg HQ",
+    "code": "HQ"
+   },
+   "category": {
+    "id": "cat-lightning-talk",
+    "name": "Lightning talk",
+    "description": ""
+   },
+   "speakers": [
+    {
+     "id": "james-jarvis",
+     "firstName": "James",
+     "lastName": "Jarvis",
+     "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/71dd213b3d6048f8a94ca4a6d2ed2475/fe11a0fcc24944c79329d3b7a35af0ee.jpg"
+    }
+   ],
+   "presentationType": "Session",
+   "isOpenForRegistration": true,
+   "isWaitlistEnabled": false,
+   "displayPriority": 0,
+   "isFeatured": false,
+   "capacity": 0,
+   "waitlistCapacity": 0,
+   "sessionCustomFields": [],
+   "associatedRegistrationTypes": [],
+   "locale": "en-US"
+  },
+  {
+   "id": "s07",
+   "name": "Break",
+   "code": "",
+   "isIncludedSession": false,
+   "startDateTime": "2026-10-15T19:15:00.000Z",
+   "endDateTime": "2026-10-15T19:40:00.000Z",
+   "description": "",
+   "location": {
+    "id": "loc-hq",
+    "name": "Bloomberg HQ",
+    "code": "HQ"
+   },
+   "category": {
+    "id": "cat-break",
+    "name": "Break",
+    "description": ""
+   },
+   "speakers": [],
+   "presentationType": "Session",
+   "isOpenForRegistration": true,
+   "isWaitlistEnabled": false,
+   "displayPriority": 0,
+   "isFeatured": false,
+   "capacity": 0,
+   "waitlistCapacity": 0,
+   "sessionCustomFields": [],
+   "associatedRegistrationTypes": [],
+   "locale": "en-US"
+  },
+  {
+   "id": "s08",
+   "name": "Policy Maker Fireside Chat",
+   "code": "",
+   "isIncludedSession": false,
+   "startDateTime": "2026-10-15T19:40:00.000Z",
+   "endDateTime": "2026-10-15T20:10:00.000Z",
+   "description": "",
+   "location": {
+    "id": "loc-hq",
+    "name": "Bloomberg HQ",
+    "code": "HQ"
+   },
+   "category": {
+    "id": "cat-fireside-chat",
+    "name": "Fireside chat",
+    "description": ""
+   },
+   "speakers": [],
+   "presentationType": "Session",
+   "isOpenForRegistration": true,
+   "isWaitlistEnabled": false,
+   "displayPriority": 0,
+   "isFeatured": false,
+   "capacity": 0,
+   "waitlistCapacity": 0,
+   "sessionCustomFields": [],
+   "associatedRegistrationTypes": [],
+   "locale": "en-US"
+  },
+  {
+   "id": "s09",
+   "name": "Trusted AI",
+   "code": "",
+   "isIncludedSession": false,
+   "startDateTime": "2026-10-15T20:10:00.000Z",
+   "endDateTime": "2026-10-15T20:20:00.000Z",
+   "description": "",
+   "location": {
+    "id": "loc-hq",
+    "name": "Bloomberg HQ",
+    "code": "HQ"
+   },
+   "category": {
+    "id": "cat-talk",
+    "name": "Talk",
+    "description": ""
+   },
+   "speakers": [
+    {
+     "id": "amanda-stent",
+     "firstName": "Amanda",
+     "lastName": "Stent",
+     "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/71dd213b3d6048f8a94ca4a6d2ed2475/6bb7fbd764814bedba55233942685981.png"
+    }
+   ],
+   "presentationType": "Session",
+   "isOpenForRegistration": true,
+   "isWaitlistEnabled": false,
+   "displayPriority": 0,
+   "isFeatured": false,
+   "capacity": 0,
+   "waitlistCapacity": 0,
+   "sessionCustomFields": [],
+   "associatedRegistrationTypes": [],
+   "locale": "en-US"
+  },
+  {
+   "id": "s10",
+   "name": "Executive Dialogue: Closing Discussion",
+   "code": "",
+   "isIncludedSession": false,
+   "startDateTime": "2026-10-15T20:20:00.000Z",
+   "endDateTime": "2026-10-15T20:45:00.000Z",
+   "description": "<p>The next era of investing will require firms to make a fundamental choice about where human judgment ends and AI begins. This executive dialogue will consider how humans and AI should divide the work across the investment process.</p>",
+   "location": {
+    "id": "loc-hq",
+    "name": "Bloomberg HQ",
+    "code": "HQ"
+   },
+   "category": {
+    "id": "cat-executive-dialogue",
+    "name": "Executive dialogue",
+    "description": ""
+   },
+   "speakers": [
+    {
+     "id": "charlie-flanagan",
+     "firstName": "Charlie",
+     "lastName": "Flanagan",
+     "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/71dd213b3d6048f8a94ca4a6d2ed2475/047473f0896c4973a6ff1ba1d0f47588.jpg"
+    }
+   ],
+   "presentationType": "Session",
+   "isOpenForRegistration": true,
+   "isWaitlistEnabled": false,
+   "displayPriority": 0,
+   "isFeatured": false,
+   "capacity": 0,
+   "waitlistCapacity": 0,
+   "sessionCustomFields": [],
+   "associatedRegistrationTypes": [],
+   "locale": "en-US"
+  },
+  {
+   "id": "s11",
+   "name": "Networking Reception",
+   "code": "",
+   "isIncludedSession": false,
+   "startDateTime": "2026-10-15T20:45:00.000Z",
+   "endDateTime": "2026-10-15T23:00:00.000Z",
+   "description": "",
+   "location": {
+    "id": "loc-hq",
+    "name": "Bloomberg HQ",
+    "code": "HQ"
+   },
+   "category": {
+    "id": "cat-networking",
+    "name": "Networking",
+    "description": ""
+   },
+   "speakers": [],
+   "presentationType": "Session",
+   "isOpenForRegistration": true,
+   "isWaitlistEnabled": false,
+   "displayPriority": 0,
+   "isFeatured": false,
+   "capacity": 0,
+   "waitlistCapacity": 0,
+   "sessionCustomFields": [],
+   "associatedRegistrationTypes": [],
+   "locale": "en-US"
+  }
+ ],
+ "speakers": {
+  "vlad-kliatchko": {
+   "id": "vlad-kliatchko",
+   "prefix": null,
+   "firstName": "Vlad",
+   "lastName": "Kliatchko",
+   "designation": null,
+   "company": "Bloomberg",
+   "title": "CEO",
+   "emailAddress": null,
+   "category": {
+    "id": "cat-speakers",
+    "name": "Speakers"
+   },
+   "code": "VladKliatchko",
+   "facebookUrl": "",
+   "linkedInUrl": "",
+   "twitterUrl": "",
+   "displayOnWebsite": true,
+   "biography": null,
+   "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/71dd213b3d6048f8a94ca4a6d2ed2475/7a23886423d74540a95f61d7282cd5ac.png",
+   "documents": [],
+   "assignedSessions": [
+    {
+     "id": "s02"
+    }
+   ]
+  },
+  "shawn-edwards": {
+   "id": "shawn-edwards",
+   "prefix": null,
+   "firstName": "Shawn",
+   "lastName": "Edwards",
+   "designation": null,
+   "company": "Bloomberg",
+   "title": "CTO",
+   "emailAddress": null,
+   "category": {
+    "id": "cat-speakers",
+    "name": "Speakers"
+   },
+   "code": "ShawnEdwards",
+   "facebookUrl": "",
+   "linkedInUrl": "",
+   "twitterUrl": "",
+   "displayOnWebsite": true,
+   "biography": null,
+   "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/71dd213b3d6048f8a94ca4a6d2ed2475/a0d164ed6e284ec2b35249caf1d76957.png",
+   "documents": [],
+   "assignedSessions": [
+    {
+     "id": "s03"
+    }
+   ]
+  },
+  "matt-brundage": {
+   "id": "matt-brundage",
+   "prefix": null,
+   "firstName": "Matt",
+   "lastName": "Brundage",
+   "designation": null,
+   "company": "Bloomberg",
+   "title": "Americas Head of Enterprise Sales",
+   "emailAddress": null,
+   "category": {
+    "id": "cat-speakers",
+    "name": "Speakers"
+   },
+   "code": "MattBrundage",
+   "facebookUrl": "",
+   "linkedInUrl": "",
+   "twitterUrl": "",
+   "displayOnWebsite": true,
+   "biography": null,
+   "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/71dd213b3d6048f8a94ca4a6d2ed2475/09a6b4d348ee4b4c89553a046f042926.jpg",
+   "documents": [],
+   "assignedSessions": [
+    {
+     "id": "s05"
+    }
+   ]
+  },
+  "charlie-flanagan": {
+   "id": "charlie-flanagan",
+   "prefix": null,
+   "firstName": "Charlie",
+   "lastName": "Flanagan",
+   "designation": null,
+   "company": "Balyasny Asset Management",
+   "title": "Chief AI Officer",
+   "emailAddress": null,
+   "category": {
+    "id": "cat-speakers",
+    "name": "Speakers"
+   },
+   "code": "CharlieFlanagan",
+   "facebookUrl": "",
+   "linkedInUrl": "",
+   "twitterUrl": "",
+   "displayOnWebsite": true,
+   "biography": null,
+   "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/71dd213b3d6048f8a94ca4a6d2ed2475/047473f0896c4973a6ff1ba1d0f47588.jpg",
+   "documents": [],
+   "assignedSessions": [
+    {
+     "id": "s10"
+    }
+   ]
+  },
+  "max-gokhman": {
+   "id": "max-gokhman",
+   "prefix": null,
+   "firstName": "Max",
+   "lastName": "Gokhman",
+   "designation": null,
+   "company": "Franklin Templeton",
+   "title": "Head of AI and Digital Asset Solutions",
+   "emailAddress": null,
+   "category": {
+    "id": "cat-speakers",
+    "name": "Speakers"
+   },
+   "code": "MaxGokhman",
+   "facebookUrl": "",
+   "linkedInUrl": "",
+   "twitterUrl": "",
+   "displayOnWebsite": true,
+   "biography": null,
+   "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/71dd213b3d6048f8a94ca4a6d2ed2475/28eceabc5315454e9dc3eb8ffadbd29c.jpg",
+   "documents": [],
+   "assignedSessions": [
+    {
+     "id": "s05"
+    }
+   ]
+  },
+  "james-jarvis": {
+   "id": "james-jarvis",
+   "prefix": null,
+   "firstName": "James",
+   "lastName": "Jarvis",
+   "designation": null,
+   "company": "Bloomberg",
+   "title": "BQuant Product, Head of Go-To-Market",
+   "emailAddress": null,
+   "category": {
+    "id": "cat-speakers",
+    "name": "Speakers"
+   },
+   "code": "JamesJarvis",
+   "facebookUrl": "",
+   "linkedInUrl": "",
+   "twitterUrl": "",
+   "displayOnWebsite": true,
+   "biography": null,
+   "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/71dd213b3d6048f8a94ca4a6d2ed2475/fe11a0fcc24944c79329d3b7a35af0ee.jpg",
+   "documents": [],
+   "assignedSessions": [
+    {
+     "id": "s06"
+    }
+   ]
+  },
+  "jamie-newton": {
+   "id": "jamie-newton",
+   "prefix": null,
+   "firstName": "Jamie",
+   "lastName": "Newton",
+   "designation": null,
+   "company": "Allspring Global Investments",
+   "title": "Head of Global Fixed Income Research and Deputy Head of Sustainability",
+   "emailAddress": null,
+   "category": {
+    "id": "cat-speakers",
+    "name": "Speakers"
+   },
+   "code": "JamieNewton",
+   "facebookUrl": "",
+   "linkedInUrl": "",
+   "twitterUrl": "",
+   "displayOnWebsite": true,
+   "biography": null,
+   "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/71dd213b3d6048f8a94ca4a6d2ed2475/20bb0156d2c940e68997a4f63e9b09db.png",
+   "documents": [],
+   "assignedSessions": [
+    {
+     "id": "s05"
+    }
+   ]
+  },
+  "sonja-renander": {
+   "id": "sonja-renander",
+   "prefix": null,
+   "firstName": "Sonja",
+   "lastName": "Renander",
+   "designation": null,
+   "company": "Oak Hill Advisors",
+   "title": "Managing Director & Co-Chief Operating Officer, U.S. Credit",
+   "emailAddress": null,
+   "category": {
+    "id": "cat-speakers",
+    "name": "Speakers"
+   },
+   "code": "SonjaRenander",
+   "facebookUrl": "",
+   "linkedInUrl": "",
+   "twitterUrl": "",
+   "displayOnWebsite": true,
+   "biography": null,
+   "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/71dd213b3d6048f8a94ca4a6d2ed2475/ecd9fae2e9944c76aac94b52fec972f0.jpg",
+   "documents": [],
+   "assignedSessions": [
+    {
+     "id": "s05"
+    }
+   ]
+  },
+  "amanda-stent": {
+   "id": "amanda-stent",
+   "prefix": null,
+   "firstName": "Amanda",
+   "lastName": "Stent",
+   "designation": null,
+   "company": "Bloomberg",
+   "title": "Head of AI Strategy & Research",
+   "emailAddress": null,
+   "category": {
+    "id": "cat-speakers",
+    "name": "Speakers"
+   },
+   "code": "AmandaStent",
+   "facebookUrl": "",
+   "linkedInUrl": "",
+   "twitterUrl": "",
+   "displayOnWebsite": true,
+   "biography": null,
+   "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/71dd213b3d6048f8a94ca4a6d2ed2475/6bb7fbd764814bedba55233942685981.png",
+   "documents": [],
+   "assignedSessions": [
+    {
+     "id": "s09"
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,90 @@
+{
+ "registerUrl": "#register",
+ "hero": {
+  "videoUrl": "https://player.vimeo.com/progressive_redirect/playback/1229096331/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&signature=a83a9a2d74c56ac58d7f4b12d2d1ad06085b21f3b9027a98a9588370bfa37fdc",
+  "logoUrl": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/pix/dff8b3f4523445859beee31ec77344a3.png",
+  "logoAlt": "AI in Finance Summit",
+  "eyebrow": "Bloomberg Live \u00b7 New York",
+  "lede": "An afternoon with Bloomberg CEO Vlad Kliatchko and senior leaders from across finance, policy and technology.",
+  "secondaryUrl": "#agenda",
+  "focalXMobile": 65
+ },
+ "facts": {
+  "programDetail": "Keynotes, panels and fireside chats"
+ },
+ "speakers": {
+  "heading": "Leaders deciding how AI is put to work across finance",
+  "linkLabel": "See all 9 speakers",
+  "linkUrl": "#speakers",
+  "featuredSpeakerIds": [
+   "vlad-kliatchko",
+   "shawn-edwards",
+   "charlie-flanagan",
+   "max-gokhman"
+  ]
+ },
+ "about": {
+  "eyebrow": "About the summit",
+  "heading": "From experimentation to execution",
+  "body": "Join Bloomberg and our CEO, Vlad Kliatchko, at our flagship AI in Finance Summit, an exclusive gathering of senior financial leaders, policymakers, and technology luminaries.\n\nAs AI adoption accelerates across financial markets, the conversation is shifting from experimentation to execution, and to the decisions that will determine where AI creates lasting value and competitive differentiation.\n\nAttendees will also have the opportunity to experience Bloomberg\u2019s latest AI developments and see how they are being applied to help financial professionals work more efficiently and make more informed decisions.",
+  "listEyebrow": "The program will explore",
+  "listItems": "Where AI is delivering measurable value and creating investment edge\nHow it is reshaping research, investment workflows, and the role of financial professionals\nHow firms should approach governance and accountability as AI becomes more agentic"
+ },
+ "themes": {
+  "heading": "Three themes shaping the program",
+  "items": [
+   {
+    "kicker": "01 / Institutional intelligence",
+    "title": "AI as institutional intelligence",
+    "body": "Perspectives on where AI is headed and how it is being applied across the financial sector, evolving beyond a standalone tool into a connected intelligence engine that supports the entire investment cycle."
+   },
+   {
+    "kicker": "02 / Responsible AI",
+    "title": "Responsible AI",
+    "body": "Addressing bias, fairness, transparency, and the systemic risks AI introduces to financial stability, ensuring responsible governance frameworks that protect both institutions and end users."
+   },
+   {
+    "kicker": "03 / Valuation",
+    "title": "Valuation & investment strategy",
+    "body": "How senior peers are thinking about the productivity gains, revenue potential, and infrastructure costs that underpin investment decisions."
+   }
+  ]
+ },
+ "program": {
+  "heading": "The afternoon at a glance",
+  "linkUrl": "#agenda",
+  "source": "picked",
+  "sessionIds": [
+   "s02",
+   "s03",
+   "s05",
+   "s10",
+   "s11"
+  ]
+ },
+ "cta": {
+  "heading": "Join us at Bloomberg HQ on October 15"
+ },
+ "more": {
+  "items": [
+   {
+    "title": "AI insights",
+    "body": "Analysis on companies, industries, regions, regulations and markets.",
+    "linkLabel": "Explore AI insights",
+    "url": "https://www.bloomberg.com/professional/insights/?topic=artificial-intelligence"
+   },
+   {
+    "title": "Webinars",
+    "body": "Upcoming and on-demand sessions with Bloomberg analysts.",
+    "linkLabel": "Watch webinars",
+    "url": "https://www.bloomberg.com/professional/insights/webinars/all/"
+   },
+   {
+    "title": "Talk to Bloomberg",
+    "body": "Speak with an account manager or arrange a demo.",
+    "linkLabel": "Schedule a conversation",
+    "url": "https://professional.bloomberg.com/products/bloomberg-terminal/ai/"
+   }
+  ]
+ }
+}

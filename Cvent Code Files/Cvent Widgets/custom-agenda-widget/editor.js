@@ -165,6 +165,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
       dateNavMode: "jump",
       concurrentTiles: false,
       showFilters: false,
+      hiddenSessionIds: [],
       plenaryAccent: "#f7a325",
       focusAccent: "#1a7f8e",
       showAccentBar: false,
@@ -217,6 +218,8 @@ export default class ExampleAgendaEditor extends HTMLElement {
   _safeRenderUI() {
     // --- Save scroll position of host editor container ---
     const scrollTop = this.scrollTop;
+    // Hidden Sessions list has its own scroll box; keep its position too.
+    const hiddenListScroll = this._hiddenList ? this._hiddenList.scrollTop : 0;
 
     // --- Save open/closed state of all existing <details> sections ---
     const detailsState = [...this.shadowRoot.querySelectorAll("details")].map(
@@ -235,6 +238,7 @@ export default class ExampleAgendaEditor extends HTMLElement {
 
     // --- Restore scroll position ---
     this.scrollTop = scrollTop;
+    if (this._hiddenList && hiddenListScroll) this._hiddenList.scrollTop = hiddenListScroll;
   }
 
   _renderUI() {
@@ -322,6 +326,8 @@ export default class ExampleAgendaEditor extends HTMLElement {
     const secHeader = makeSection("Agenda Header", true);
     const secNew = makeSection("New Features", true);
     const secLayout = makeSection("Layout & Ordering", false);
+    const secHidden = makeSection("Hidden Sessions", false);
+    this._buildHiddenSessions(secHidden.block);
     const secDateNav = makeSection("Date Navigation", false);
     const secCards = makeSection("Card Colors & Border", false);
     const secTypes = makeSection("Session Types (Plenary / Focus)", false);
@@ -1102,6 +1108,7 @@ soSelect.onchange = () => {
       secHeader,
       secNew,
       secLayout,
+      secHidden,
       secDateNav,
       secCards,
       secTypes,
@@ -1126,6 +1133,135 @@ soSelect.onchange = () => {
     sum.append(chev, document.createTextNode(" " + title));
     d.append(sum);
     return d;
+  }
+
+  // ---------------------------------------------------------------
+  // Hidden Sessions: planner-controlled exclusion list by session ID.
+  // Needed because the SDK does not expose session status, and Cvent
+  // locks custom fields on canceled sessions, so "Hide from main
+  // agenda?" can't be set on them. The textarea (one ID per line) is the
+  // source of truth; the checklist is a convenience when the editor can
+  // load sessions from the SDK.
+  // ---------------------------------------------------------------
+  _hiddenIds() {
+    const v = this._config.hiddenSessionIds;
+    return Array.isArray(v) ? v.map((x) => String(x).trim()).filter(Boolean) : [];
+  }
+
+  _setHiddenIds(ids) {
+    const clean = [...new Set(ids.map((x) => String(x).trim()).filter(Boolean))];
+    this._patch({ hiddenSessionIds: clean });
+    if (this._hiddenTextarea) this._hiddenTextarea.value = clean.join("\n");
+    if (this._hiddenCount) this._hiddenCount.textContent = `${clean.length} hidden`;
+  }
+
+  async _loadPickerSessions() {
+    if (this._pickerSessions || this._pickerLoading) return this._pickerSessions;
+    this._pickerLoading = true;
+    try {
+      const sdk = this.cventSdk;
+      if (!sdk?.getSessionGenerator) return null;
+      const gen = await sdk.getSessionGenerator("dateTimeAsc", 100);
+      const out = [];
+      for await (const page of gen) {
+        const batch = Array.isArray(page) ? page : page?.sessions || page?.records || [];
+        out.push(...batch);
+        if (out.length >= 500) break;
+      }
+      this._pickerSessions = out;
+    } catch (e) {
+      console.warn("[editor] could not load sessions for Hidden Sessions picker", e);
+    } finally {
+      this._pickerLoading = false;
+    }
+    return this._pickerSessions;
+  }
+
+  _buildHiddenSessions(block) {
+    const note = document.createElement("div");
+    note.style.fontSize = "11px";
+    note.style.opacity = "0.7";
+    note.style.margin = "4px 0 10px";
+    note.textContent =
+      "Sessions listed here never appear on the agenda. Use this for canceled sessions (Cvent doesn't tell the widget a session is canceled, and canceled sessions can't be edited). Publish after changing.";
+    block.append(note);
+
+    const list = document.createElement("div");
+    list.style.maxHeight = "260px";
+    list.style.overflowY = "auto";
+    list.style.border = "1px solid #eee";
+    list.style.borderRadius = "6px";
+    list.style.padding = "6px 8px";
+    list.style.margin = "0 0 10px";
+    list.style.fontSize = "12px";
+    list.textContent = "Loading sessions…";
+    block.append(list);
+    this._hiddenList = list;
+
+    const fmt = (iso) => {
+      if (!iso) return "";
+      try {
+        return new Date(iso).toLocaleString("en-US", {
+          month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC",
+        }) + " UTC";
+      } catch (_) { return ""; }
+    };
+
+    const renderList = (sessions) => {
+      list.innerHTML = "";
+      if (!sessions || !sessions.length) {
+        list.textContent = "Session list isn't available here. Paste session IDs below instead.";
+        return;
+      }
+      const hidden = new Set(this._hiddenIds());
+      sessions.forEach((sess) => {
+        const row = document.createElement("label");
+        row.style.display = "flex";
+        row.style.gap = "6px";
+        row.style.alignItems = "flex-start";
+        row.style.padding = "3px 0";
+        row.style.opacity = "1";
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.checked = hidden.has(String(sess.id));
+        cb.onchange = () => {
+          const cur = this._hiddenIds().filter((x) => x !== String(sess.id));
+          this._setHiddenIds(cb.checked ? [...cur, String(sess.id)] : cur);
+        };
+        const txt = document.createElement("span");
+        txt.textContent = `${sess.name || "(untitled)"} — ${fmt(sess.startDateTime)}`;
+        row.append(cb, txt);
+        list.append(row);
+      });
+    };
+
+    if (this._pickerSessions) renderList(this._pickerSessions);
+    else this._loadPickerSessions().then(renderList);
+
+    const idWrap = document.createElement("div");
+    idWrap.className = "field";
+    const idLabel = this._label("Hidden session IDs (one per line)");
+    const count = document.createElement("span");
+    count.style.fontSize = "11px";
+    count.style.opacity = "0.7";
+    count.style.marginLeft = "8px";
+    count.textContent = `${this._hiddenIds().length} hidden`;
+    this._hiddenCount = count;
+    const ta = document.createElement("textarea");
+    ta.rows = 4;
+    ta.style.width = "100%";
+    ta.style.boxSizing = "border-box";
+    ta.style.fontFamily = "ui-monospace, monospace";
+    ta.style.fontSize = "11px";
+    ta.placeholder = "d2adfa25-6c60-4356-bffb-663230e663d3";
+    ta.value = this._hiddenIds().join("\n");
+    ta.onchange = () => {
+      this._setHiddenIds(ta.value.split(/[\s,]+/));
+      if (this._pickerSessions) renderList(this._pickerSessions);
+    };
+    this._hiddenTextarea = ta;
+    idWrap.append(idLabel, count, document.createElement("br"), ta);
+    block.append(idWrap);
   }
 
   _label(text) {

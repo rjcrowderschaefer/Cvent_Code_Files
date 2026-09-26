@@ -1,0 +1,436 @@
+/* =====================================================================
+   OPTIONAL FEATURE CSS — not used on the AI in Finance test event, so it
+   was taken out of that event's custom CSS to make room. Add back only on
+   events that use the floating contact button / demo modal / modal scripts.
+   ===================================================================== */
+
+.close-modal {
+    /* Layout */
+    align-self: flex-end !important;
+    margin-bottom: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+
+    /* Aesthetics */
+    color: rgba(255, 255, 255, 0.8) !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    padding: 6px 12px !important;
+    border-radius: 4px !important;
+
+    /* Typography */
+    font-family: 'Inter', -apple-system, sans-serif !important;
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.15em !important;
+    text-transform: uppercase !important;
+
+    /* Interaction */
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    outline: none !important;
+}
+
+.close-modal:hover {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    padding-left: 14px !important;
+    padding-right: 10px !important;
+}
+
+.close-modal:active {
+    transform: scale(0.97) !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+}
+
+
+/* Modal base state */
+.modal-overlay {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7); /* Adjust overlay darkness here */
+  z-index: 9999; /* Ensure it stays on top */
+}
+
+/* Modal content base state */
+.modal-content {
+  transform: translateY(-20px);
+  transition: transform 0.3s ease;
+}
+
+/* Modal active state */
+.modal-overlay.active {
+  opacity: 1;
+}
+
+.modal-overlay.active .modal-content {
+  transform: translateY(0);
+}
+
+.bbg-contact-button a {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.bbg-contact-cta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  height: 32px;
+  padding-left: 16px;
+  border-left: 1px solid rgba(255, 255, 255, 0.22) !important;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.bbg-contact-cta a {
+  color: #fff !important;
+  text-decoration: none !important;
+}
+
+.bbg-contact-wrapper {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 16px;
+  z-index: 9999;
+  width: 100%;
+  padding: 0 16px;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.bbg-contact-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.bbg-contact-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  font-size: 18px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.bbg-contact-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+  min-width: 0;
+  text-align: left;
+}
+
+.bbg-contact-heading {
+  font-size: 15px;
+  font-weight: 650;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bbg-contact-subtext {
+  font-size: 13px;
+  opacity: 0.82;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bbg-contact-arrow {
+  font-size: 18px;
+  transition: transform 0.2s ease;
+}
+
+.bbg-contact-button:hover .bbg-contact-arrow {
+  transform: translateX(3px);
+}
+
+/* Floating CTA shell */
+
+.bbg-contact-spacer {
+  /* Keeps content off the fixed button: button height + bottom offset */
+  height: 96px;
+}
+
+.bbg-contact-button {
+  position: fixed !important;
+  /* Pinned to the right edge of a 1200px content container, not the raw
+     viewport edge. Change 1200px to match your template's content width. */
+  right: max(24px, calc((100vw - 1200px) / 2)) !important;
+  left: auto !important;
+  bottom: clamp(24px, 4vh, 48px);
+  transform: none !important;
+  z-index: 40;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  width: min(520px, calc(100vw - 40px));
+  max-width: 440px;
+  box-sizing: border-box;
+  padding: 14px 44px 14px 18px !important; /* right pad clears the toggle */
+
+  background: rgba(0, 98, 221, 0.92) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 18px !important;
+  box-shadow:
+    0 20px 60px rgba(0, 98, 221, 0.35),
+    0 8px 24px rgba(0, 0, 0, 0.35);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  color: #ffffff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  pointer-events: auto !important;
+  cursor: pointer;
+  overflow: hidden;
+
+  transition:
+    width 380ms cubic-bezier(0.4, 0, 0.2, 1),
+    padding 380ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-radius 380ms cubic-bezier(0.4, 0, 0.2, 1),
+    right 300ms ease,
+    bottom 300ms ease,
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    background 220ms ease;
+}
+
+.bbg-contact-button:hover,
+.bbg-contact-button:focus-visible {
+  transform: translateY(-3px) !important;
+  background: rgba(12, 113, 239, 0.96) !important;
+  box-shadow:
+    0 28px 80px rgba(0, 98, 221, 0.45),
+    0 12px 32px rgba(0, 0, 0, 0.45);
+  outline: none;
+}
+
+/* Minimize control: appended to <body> by JS, NOT as children of
+   .bbg-contact-button, so a React re-render can't remove them. */
+
+.bbg-contact-minimize-toggle {
+  position: fixed; /* top/left set by JS to track the button */
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 41; /* above the button (40) */
+  transition: background 180ms ease, transform 180ms ease;
+}
+
+.bbg-contact-minimize-toggle::before {
+  content: "";
+  display: block;
+  width: 12px;
+  height: 2px;
+  border-radius: 1px;
+  background: #0062dd;
+}
+
+.bbg-contact-minimize-toggle:hover {
+  background: #f0f4ff;
+  transform: scale(1.08);
+}
+
+/* "Have questions?" pill: same fixed position as .bbg-contact-button, higher
+   z-index so it covers the real button while minimized. */
+.bbg-contact-minimize-pill {
+  position: fixed;
+  right: max(24px, calc((100vw - 1200px) / 2));
+  left: auto;
+  bottom: clamp(24px, 4vh, 48px);
+  z-index: 41;
+  display: none; /* toggled to flex via JS */
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: min(212px, calc(100vw - 40px));
+  padding: 12px 18px;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
+  background: rgba(0, 98, 221, 0.92);
+  color: #ffffff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 650;
+  white-space: nowrap;
+  box-shadow:
+    0 20px 60px rgba(0, 98, 221, 0.35),
+    0 8px 24px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  cursor: pointer;
+}
+
+.bbg-contact-minimize-pill:hover {
+  background: rgba(12, 113, 239, 0.96);
+}
+
+.bbg-contact-minimized-icon {
+  font-size: 16px;
+}
+
+@media (max-width: 640px) {
+  .bbg-contact-minimize-pill {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+  }
+}
+
+/* Breakpoints */
+
+@media (max-width: 640px) {
+  .bbg-contact-button {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+  }
+
+  .bbg-contact-button:hover,
+  .bbg-contact-button:focus-visible {
+    transform: translateX(-50%) translateY(-3px) !important;
+  }
+
+  .bbg-contact-cta {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bbg-contact-button,
+  .bbg-contact-arrow,
+  .bbg-demo-panel {
+    transition: none !important;
+  }
+}
+
+/* Demo modal */
+
+.bbg-demo-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: none;
+  background: rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.bbg-demo-overlay.is-open {
+  display: block;
+}
+
+.bbg-demo-panel {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  width: min(680px, calc(100vw - 64px));
+  height: min(860px, calc(100vh - 72px));
+  background: #0f1117;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.52);
+  transform: translate(-50%, calc(-50% + 18px)) scale(0.98);
+  opacity: 0;
+  transition: transform 260ms cubic-bezier(.16, 1, .3, 1), opacity 220ms ease;
+}
+
+.bbg-demo-overlay.is-open .bbg-demo-panel {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+
+.bbg-demo-header {
+  height: 56px;
+  padding: 0 15px 0 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #141720;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.bbg-demo-title {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.bbg-demo-title strong {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.bbg-demo-title span {
+  margin-top: 2px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.bbg-demo-close {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding-bottom: 5px;
+}
+
+.bbg-demo-close:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.bbg-demo-frame {
+  width: 100%;
+  height: calc(100% - 56px);
+  border: 0;
+  background: #fff;
+  padding-left: 6px;
+}
+
+@media (max-width: 640px) {
+  .bbg-demo-panel {
+    left: 50%;
+    top: 50%;
+    width: calc(100vw - 24px);
+    height: calc(100vh - 24px);
+    border-radius: 16px;
+  }
+}

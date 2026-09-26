@@ -312,3 +312,27 @@ fields are how you attach data to sessions the widget can read.**
 - [ ] Custom fields created in Cvent with EXACT names your code matches (case-insensitive match recommended)
 - [ ] Prod widget updated separately from dev (they're different files)
 - [ ] Published (editor changes don't reach the front end without publishing)
+
+---
+
+## 12. Showing content from other sites (bloomberg.com)
+
+Learned building `custom-bloomberg-insights` (Sep 2026).
+
+- **Check framing headers before you promise an iframe.** bloomberg.com sends
+  `X-Frame-Options: SAMEORIGIN`, so its pages render blank inside a Cvent
+  frame. You can't work around that from the Cvent side.
+- **Look for a data API instead.** bloomberg.com/professional is WordPress:
+  `wp-json/wp/v2/posts` is public and CORS-open for GET, so a widget can
+  `fetch()` it and render its own cards. Use `_fields=` to cut the payload
+  (16 posts ≈ 17 KB vs ~700 KB with `_embed`). It's undocumented, so get the
+  owning team's sign-off, time out (8 s), cache in `sessionStorage`, and
+  always render a fallback link.
+- **WP taxonomy route collision.** `/wp/v2/series` is the *webinar* series.
+  Posts' `post_series` shares the `?series=` param but has no lookup route.
+  Resolve slug to ID from the posts' `class_list` (`post_series-<slug>`).
+- **Use `@container` queries** for widgets that may sit in a narrow Cvent
+  column. The layout should follow the column width, not the viewport.
+- **Preview harness for non-SDK data:** mock `window.fetch` for the API's base
+  URL in both the harness window (editor) and the frame (widget). See
+  `preview-custom-bloomberg-insights/mock-fetch.js`.
