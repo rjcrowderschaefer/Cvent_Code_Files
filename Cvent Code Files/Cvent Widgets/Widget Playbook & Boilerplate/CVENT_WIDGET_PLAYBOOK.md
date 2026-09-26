@@ -43,8 +43,15 @@ The Custom Widget SDK exposes far less than the Cvent backend has. Confirmed gap
   **`getEventInfo()`** instead (available), which returns event metadata incl.
   `timezone`, `locales`, `startDate`, planner, address.
 - **`config.json` `purpose` is a single string**, not an array. Values:
-  `Website`, `SessionRegistration`, `AllPages`. `AllPages` still can't access
-  `getSessionStatus`.
+  `Website`, `SessionRegistration`, `General`. Any other value (e.g. `AllPages`)
+  fails upload with "Configuration File Invalid". `General` is the one that
+  appears on Registration, Post-registration, Cancellation/Decline pages and the
+  default header/footer; the docs describe it but never print its name (the
+  enum `General | SessionRegistration | Website` is in Cvent's guest-side JS,
+  checked 2026-09-26). `General` still can't access `getSessionStatus`/`pickSession`.
+- **A widget's purpose is fixed by the config.json it was created with.** To move
+  a widget from `Website` to `General`, create a new widget; updating the files
+  of an existing Website widget does not make it appear on registration pages.
 - **No method to fetch a registrant's `registrationId`** — so `getSessionStatus`
   is effectively current-registrant-only even where available.
 

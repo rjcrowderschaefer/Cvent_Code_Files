@@ -11,7 +11,7 @@
 // this widget) and is removed again when no copy of the widget is on the page,
 // so the rest of the website is never affected.
 //
-// Purpose "AllPages" (config.json): allowed on registration pages, the pending
+// Purpose "General" (config.json): allowed on registration pages, the pending
 // approval / confirmation pages and the default header.
 // Shared building blocks: page-kit.js. NOTE: include the file extension in imports.
 import { ensureBrandFont } from "./type-scale.js";
