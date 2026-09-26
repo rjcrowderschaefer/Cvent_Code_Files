@@ -1,0 +1,159 @@
+/* =====================================================================
+   BLOOMBERG LIVE — NATIVE FOOTER OVERRIDE
+   v1 · 2026-09-25
+   Paste into: Website > Custom CSS, BELOW the nav override.
+   Cvent prefixes every rule with .custom-css-scope — don't add it.
+
+   Nothing in the footer is edited, removed or re-worded. These rules only
+   change colour, spacing and arrangement of the widgets already there:
+     Bloomberg · description · Request a Demo (code widget)
+     divider · social icons (code widget) · divider
+     © line · legal links (text widget, class "site-footer") · logo
+
+   HOW TO USE
+   1. Keep BASE.
+   2. Keep ONE theme (A, B or C). A is live; B and C are commented out.
+   3. Optional: keep LAYOUT "SPLIT" to put the social icons on the right,
+      level with the Bloomberg description.
+   ===================================================================== */
+
+/* shorthand used in comments below:
+   OUTER = footer [data-cvent-id="containerChild"]  (the footer's rows)
+   BRAND = the nested container holding Bloomberg / description / Demo */
+
+
+/* ============================ BASE (keep) ============================ */
+footer {
+  --bbg-f-font: "AvenirNextPForBBG", "AvenirNextforBBG", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+footer [data-cvent-id^="widget-NucleusText"] p,
+footer [data-cvent-id^="widget-NucleusText"] span,
+footer [data-cvent-id^="widget-NucleusText"] a {
+  font-family: var(--bbg-f-font) !important;
+}
+/* description: a little more air */
+footer [data-cvent-id="containerChild"] [data-cvent-id="containerChild"] [data-cvent-id^="widget-NucleusText"] span {
+  line-height: 1.55 !important;
+}
+/* legal links: even 24px gaps instead of typed-in spaces */
+footer .site-footer p { font-size: 0 !important; line-height: 0 !important; }
+footer .site-footer a {
+  display: inline-block;
+  font-size: 12px !important;
+  line-height: 20px !important;
+  margin: 0 24px 4px 0;
+  text-decoration: none !important;
+  transition: color .15s;
+}
+footer .site-footer a:hover { text-decoration: underline !important; }
+/* social icons: a compact 5-icon group, not spread across 1250px */
+footer [data-cvent-id="containerChild"]:has(> [class*="Grid__row"] [data-cvent-id="containerChild"]) > [class*="Grid__row"]:has(iframe):not(:has([data-cvent-id="containerChild"])) iframe {
+  width: 240px !important;
+  max-width: 100%;
+  display: block;
+}
+/* © / legal / logo row: drop the extra 15px container inset so it lines up
+   with "Bloomberg" and the dividers */
+footer [data-cvent-id="containerChild"]:has(> [class*="Grid__row"] [data-cvent-id="containerChild"]) > [class*="Grid__row"]:last-child [data-cvent-id="containerParent"] {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+/* bottom-right Bloomberg logo */
+footer [data-cvent-id^="widget-NucleusImage"] img {
+  max-width: 96px !important;
+  height: auto !important;
+}
+
+
+/* ================= THEME A — "NYCW BLACK" (live NYCW match) ================ */
+footer {
+  --bbg-f-bg: #0B0B0C;
+  --bbg-f-text: #FFFFFF;
+  --bbg-f-body: rgba(255, 255, 255, .72);
+  --bbg-f-muted: rgba(255, 255, 255, .55);
+  --bbg-f-hair: rgba(255, 255, 255, .16);
+  --bbg-f-hover: #FFFFFF;
+}
+footer [class*="Grid__sectionContainer"] { background: var(--bbg-f-bg) !important; }
+/* the two code widgets draw black on transparent: flip to white without
+   editing them (hue-rotate keeps the blue arrow blue) */
+footer [class*="CodeWidgetStyles__container"] iframe { filter: invert(1) hue-rotate(180deg); }
+/* black logo -> white */
+footer [data-cvent-id^="widget-NucleusImage"] img { filter: brightness(0) invert(1); }
+
+
+/* ======= THEME B — "BLACK + AMBER EDGE" (A + 3px amber top, amber hover) ======
+footer {
+  --bbg-f-bg: #0B0B0C;
+  --bbg-f-text: #FFFFFF;
+  --bbg-f-body: rgba(255, 255, 255, .72);
+  --bbg-f-muted: rgba(255, 255, 255, .55);
+  --bbg-f-hair: rgba(255, 255, 255, .16);
+  --bbg-f-hover: #F7A325;
+}
+footer [class*="Grid__sectionContainer"] {
+  background: var(--bbg-f-bg) !important;
+  box-shadow: inset 0 3px 0 #F7A325;
+}
+footer .site-footer a:hover { text-decoration: none !important; }
+footer [class*="CodeWidgetStyles__container"] iframe { filter: invert(1) hue-rotate(180deg); }
+footer [data-cvent-id^="widget-NucleusImage"] img { filter: brightness(0) invert(1); }
+============================================================================= */
+
+
+/* ======= THEME C — "PAPER" (warm light grey; use when the block above is dark) =
+footer {
+  --bbg-f-bg: #F5F5F3;
+  --bbg-f-text: #141416;
+  --bbg-f-body: #3D3D3B;
+  --bbg-f-muted: #5C5C5A;
+  --bbg-f-hair: #D9D9D4;
+  --bbg-f-hover: #141416;
+}
+footer [class*="Grid__sectionContainer"] {
+  background: var(--bbg-f-bg) !important;
+  box-shadow: inset 0 1px 0 var(--bbg-f-hair);
+}
+============================================================================= */
+
+
+/* ================= THEME COLOURS APPLIED (keep with any theme) ============== */
+footer [data-cvent-id^="widget-NucleusText"] p,
+footer [data-cvent-id^="widget-NucleusText"] span { color: var(--bbg-f-body) !important; }
+/* "Bloomberg" heading */
+footer [data-cvent-id="containerChild"] [data-cvent-id="containerChild"] > [class*="Grid__row"]:first-child p,
+footer [data-cvent-id="containerChild"] [data-cvent-id="containerChild"] > [class*="Grid__row"]:first-child span { color: var(--bbg-f-text) !important; }
+/* © line */
+footer [data-cvent-id="containerChild"]:has(> [class*="Grid__row"] [data-cvent-id="containerChild"]) > [class*="Grid__row"]:last-child [data-cvent-id^="widget-NucleusText"]:not(:has(.site-footer)) p,
+footer [data-cvent-id="containerChild"]:has(> [class*="Grid__row"] [data-cvent-id="containerChild"]) > [class*="Grid__row"]:last-child [data-cvent-id^="widget-NucleusText"]:not(:has(.site-footer)) span { color: var(--bbg-f-muted) !important; }
+footer .site-footer a { color: var(--bbg-f-muted) !important; }
+footer .site-footer a:hover { color: var(--bbg-f-hover) !important; }
+footer [data-cvent-id^="widget-NucleusDivider"] div { border-color: var(--bbg-f-hair) !important; }
+
+
+/* ========== LAYOUT "SPLIT" (optional): social icons move up to the right,
+   level with the description; the now-doubled divider is hidden =========== */
+@media screen and (min-width: 768px) {
+  footer [data-cvent-id="containerChild"]:has(> [class*="Grid__row"] [data-cvent-id="containerChild"]) {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 240px;
+    column-gap: 48px;
+    align-items: end;
+  }
+  footer [data-cvent-id="containerChild"]:has(> [class*="Grid__row"] [data-cvent-id="containerChild"]) > [class*="Grid__row"] {
+    grid-column: 1 / -1;
+    width: auto !important;
+  }
+  /* BRAND block: left, row 2 */
+  footer [data-cvent-id="containerChild"] > [class*="Grid__row"]:has([data-cvent-id="containerChild"] iframe) {
+    grid-column: 1; grid-row: 2;
+  }
+  /* social icons: right, same row, sitting on the Demo link's baseline */
+  footer [data-cvent-id="containerChild"]:has(> [class*="Grid__row"] [data-cvent-id="containerChild"]) > [class*="Grid__row"]:has(iframe):not(:has([data-cvent-id="containerChild"])) {
+    grid-column: 2; grid-row: 2; align-self: end; margin-bottom: 18px;
+  }
+  /* divider that used to sit above the icons -> hidden (decorative only) */
+  footer [data-cvent-id="containerChild"] > [class*="Grid__row"]:has([data-cvent-id^="widget-NucleusDivider"]):has(+ [class*="Grid__row"] iframe) {
+    display: none !important;
+  }
+}

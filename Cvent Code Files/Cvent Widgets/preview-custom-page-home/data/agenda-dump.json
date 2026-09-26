@@ -1,0 +1,2018 @@
+{
+    "eventInfo": {
+        "id": "287dc11e-43f6-4fce-8a1b-c4ab59f2712c",
+        "archiveDate": "2027-01-31T23:00:00.000Z",
+        "attendingFormat": "InPerson",
+        "category": "Seminar",
+        "code": "BCNCZQ3R75J",
+        "description": "<div class=\"ag87-crtemvc-hsbk\"><div class=\"css-vsf5of\"><p style=\"text-align:left;\" class=\"carina-rte-public-DraftStyleDefault-block\"><span style=\"color: rgb(0,0,0);\">The Bloomberg Index Team is pleased to invite you to an exclusive afternoon gathering of the brightest minds in fixed income on October 23, 2025.</span></p><p style=\"text-align:left;\" class=\"carina-rte-public-DraftStyleDefault-block\"><span style=\"color: rgb(0,0,0);\">As we head into the second half of the year, fixed income market dynamics continue to evolve. Fixed-income markets remain resilient, supported by strong investor demand, relative macro and geopolitical stability, ongoing ECB policy easing, and capital rotation away from U.S. assets.</span></p><p style=\"text-align:left;\" class=\"carina-rte-public-DraftStyleDefault-block\"><span style=\"color: rgb(0,0,0);\">Join industry experts, thought leaders, and fellow professionals for an in-depth exploration of the latest trends, strategies, and innovations in the fixed income sector. This event offers a unique opportunity for knowledge sharing and insight into the forces shaping the future of fixed income markets. The event will conclude with a networking reception, offering time to connect with peers and market participants.<br><br><span style=\"font-weight: bold;\">All event sessions will be on the record.</span></span></p></div></div>",
+        "endDate": "2026-06-17T16:30:00.000Z",
+        "location": "Bloomberg HQ",
+        "multipleLanguages": true,
+        "phone": "",
+        "startDate": "2026-06-17T11:30:00.000Z",
+        "timezone": "Europe/Budapest",
+        "title": "RJ Speaker Layout Test (Do Not Use)",
+        "planner": {
+            "company": "Bloomberg",
+            "emailAddress": null,
+            "firstName": "Bloomberg",
+            "lastName": "Events",
+            "prefix": ""
+        },
+        "address": {
+            "address1": "731 Lexington Ave",
+            "address2": "",
+            "address3": "",
+            "city": "New York",
+            "countryCode": "US",
+            "postalCode": "10022",
+            "stateCode": "NY"
+        },
+        "locales": [
+            {
+                "cultureCode": "en-US",
+                "isDefault": true,
+                "languageCountry": "English",
+                "languageName": "English"
+            },
+            {
+                "cultureCode": "pt-BR",
+                "isDefault": false,
+                "languageCountry": "Portuguese (Brazil)",
+                "languageName": "Português (Brasil)"
+            }
+        ]
+    },
+    "sessions": [
+        {
+            "id": "5ebeca53-fb1b-42f5-9019-09b82784dd8f",
+            "name": "Concurrent test B - starts earliest, frees column by 10:30",
+            "code": "",
+            "isIncludedSession": false,
+            "startDateTime": "2025-06-16T07:45:00.000Z",
+            "endDateTime": "2025-06-16T08:30:00.000Z",
+            "description": "<div class=\"ag87-crtemvc-hsbk\"><div class=\"css-vsf5of\"><p class=\"carina-rte-public-DraftStyleDefault-block\"><span style=\"color: rgb(23,32,28);\">Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.</span></p></div></div>",
+            "location": {
+                "id": "03bf0b2c-884e-46db-80ad-86633f78c0e5",
+                "name": "Test Location",
+                "code": "Test Location"
+            },
+            "category": {
+                "id": "6bb35328-36eb-488c-8836-42467aa8a24d",
+                "name": "Farm",
+                "description": ""
+            },
+            "speakers": [
+                {
+                    "id": "3bb77e36-678b-4587-aeda-e5609bbbf88b",
+                    "firstName": "Brad",
+                    "lastName": "Foster",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/42c03c43e44b406c8b3fd685976d17fd.png"
+                },
+                {
+                    "id": "12f4119a-ab10-4123-8da1-26d607fbd094",
+                    "firstName": "Alex",
+                    "lastName": "Morris",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/6fe3cc693daf4d9c92a30f8a9d078d6f.jpg"
+                },
+                {
+                    "id": "401dfe27-6ffb-42c3-9dce-f7f9f944027b",
+                    "firstName": "John",
+                    "lastName": "Cortese",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/f5813453be1f47148e89d2db6fe24e48.jpg"
+                },
+                {
+                    "id": "81889069-d453-4d67-ba46-af70e5c1d565",
+                    "firstName": "Mo",
+                    "lastName": "Haghbin",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/49bed229005f4667a7a64b0c3b7f22f9.png"
+                },
+                {
+                    "id": "f1bccc6d-7cb4-412a-848c-60984d6bf2d0",
+                    "firstName": "Katie",
+                    "lastName": "Greifeld",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/0433d346499f4c3791a6542851c29e15.png"
+                }
+            ],
+            "presentationType": "",
+            "isOpenForRegistration": true,
+            "isWaitlistEnabled": false,
+            "displayPriority": 0,
+            "isFeatured": false,
+            "capacity": {
+                "inPerson": {
+                    "total": -1,
+                    "available": -1
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "waitlistCapacity": {
+                "inPerson": {
+                    "total": null,
+                    "available": null
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "sessionCustomFields": [
+                {
+                    "id": "f052b1d8-ce52-449c-ae9d-abe95195df0c",
+                    "name": "Focus session?",
+                    "type": "SingleChoice",
+                    "value": [
+                        "Yes"
+                    ]
+                },
+                {
+                    "id": "2fe73993-de01-4af9-b59b-1e4cfd750a3c",
+                    "name": "Tags",
+                    "type": "MultiChoice",
+                    "value": [
+                        "Farm",
+                        "Fuel",
+                        "Food"
+                    ]
+                }
+            ],
+            "associatedRegistrationTypes": [],
+            "locale": "pt-BR"
+        },
+        {
+            "id": "f353cfb4-3aff-4518-ba3e-a988ecd61f3d",
+            "name": "Concurrent Test A - baseline mid-start",
+            "code": "",
+            "isIncludedSession": false,
+            "startDateTime": "2025-06-16T08:00:00.000Z",
+            "endDateTime": "2025-06-16T09:00:00.000Z",
+            "description": "<div class=\"ag87-crtemvc-hsbk\"><div class=\"css-vsf5of\"><p class=\"carina-rte-public-DraftStyleDefault-block\"><span style=\"color: rgb(23,32,28);\">Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.</span></p></div></div>",
+            "location": null,
+            "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
+                "name": "",
+                "description": ""
+            },
+            "speakers": [
+                {
+                    "id": "620494fa-c56d-4bde-b376-26cd185b6b19",
+                    "firstName": "Bradley",
+                    "lastName": "Sullivan",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/1383ada2ec3742c398158ea5398127b8.jpg"
+                },
+                {
+                    "id": "bf56c670-471a-450d-b064-841176bc2c94",
+                    "firstName": "Christina",
+                    "lastName": "Lee",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/9160066492d5462f8719c3bd93f99cc1.jpg"
+                }
+            ],
+            "presentationType": "",
+            "isOpenForRegistration": true,
+            "isWaitlistEnabled": false,
+            "displayPriority": 0,
+            "isFeatured": false,
+            "capacity": {
+                "inPerson": {
+                    "total": -1,
+                    "available": -1
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "waitlistCapacity": {
+                "inPerson": {
+                    "total": null,
+                    "available": null
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "sessionCustomFields": [
+                {
+                    "id": "2fe73993-de01-4af9-b59b-1e4cfd750a3c",
+                    "name": "Tags",
+                    "type": "MultiChoice",
+                    "value": [
+                        "Food"
+                    ]
+                }
+            ],
+            "associatedRegistrationTypes": [],
+            "locale": "pt-BR"
+        },
+        {
+            "id": "3fd4339c-f1bf-47f3-a687-dd407e101f13",
+            "name": "Concurrent test C - should reuse test B column",
+            "code": "",
+            "isIncludedSession": false,
+            "startDateTime": "2025-06-16T08:30:00.000Z",
+            "endDateTime": "2025-06-16T09:00:00.000Z",
+            "description": "<div class=\"ag87-crtemvc-hsbk\"><div class=\"css-vsf5of\"><p class=\"carina-rte-public-DraftStyleDefault-block\"><span style=\"color: rgb(23,32,28);\">Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.</span></p></div></div>",
+            "location": null,
+            "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
+                "name": "",
+                "description": ""
+            },
+            "speakers": [
+                {
+                    "id": "825e573e-0a90-4a3d-815b-eb50c48e9985",
+                    "firstName": "Russ",
+                    "lastName": "Brownback",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/7ce8fa4dd1f84ed787b4280f0eb94d4a.jpg"
+                },
+                {
+                    "id": "0f9009f5-5188-4a50-a800-82b50c1a9a0c",
+                    "firstName": "Scarlet",
+                    "lastName": "Fu",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/7ea077e5c2044e2ebe0443acc90aa2ac.png"
+                },
+                {
+                    "id": "4bc55224-1df8-4a0a-9a2c-0b1bf23aa95f",
+                    "firstName": "Tony",
+                    "lastName": "Kelly",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/8c2eff6aea4249e9b219aec7550bdcaa.jpg"
+                }
+            ],
+            "presentationType": "",
+            "isOpenForRegistration": true,
+            "isWaitlistEnabled": false,
+            "displayPriority": 0,
+            "isFeatured": false,
+            "capacity": {
+                "inPerson": {
+                    "total": -1,
+                    "available": -1
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "waitlistCapacity": {
+                "inPerson": {
+                    "total": null,
+                    "available": null
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "sessionCustomFields": [],
+            "associatedRegistrationTypes": [],
+            "locale": "pt-BR"
+        },
+        {
+            "id": "0783397c-d928-4ae4-ae8c-9e28c845cd96",
+            "name": "Concurrent test D - overlaps A & C, forces new column",
+            "code": "",
+            "isIncludedSession": false,
+            "startDateTime": "2025-06-16T08:45:00.000Z",
+            "endDateTime": "2025-06-16T10:00:00.000Z",
+            "description": "<div class=\"ag87-crtemvc-hsbk\"><div class=\"css-vsf5of\"><p class=\"carina-rte-public-DraftStyleDefault-block\"><span style=\"color: rgb(23,32,28);\">Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.</span></p></div></div>",
+            "location": null,
+            "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
+                "name": "",
+                "description": ""
+            },
+            "speakers": [
+                {
+                    "id": "498ccdf3-9e0b-4f02-8f51-74e1954c1677",
+                    "firstName": "Priya",
+                    "lastName": "Misra",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/79bdd676a466470889af03b1523e924d.png"
+                },
+                {
+                    "id": "f7d7e2dd-812d-4ecd-b432-8a3594a63b0c",
+                    "firstName": "Tony",
+                    "lastName": "Minella",
+                    "profilePictureUri": null
+                }
+            ],
+            "presentationType": "",
+            "isOpenForRegistration": true,
+            "isWaitlistEnabled": false,
+            "displayPriority": 0,
+            "isFeatured": false,
+            "capacity": {
+                "inPerson": {
+                    "total": -1,
+                    "available": -1
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "waitlistCapacity": {
+                "inPerson": {
+                    "total": null,
+                    "available": null
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "sessionCustomFields": [],
+            "associatedRegistrationTypes": [],
+            "locale": "pt-BR"
+        },
+        {
+            "id": "ded73b96-49e1-4264-b0df-86a40e58154e",
+            "name": "Concurrent Test E - forces 4th column",
+            "code": "",
+            "isIncludedSession": false,
+            "startDateTime": "2025-06-16T08:50:00.000Z",
+            "endDateTime": "2025-06-16T09:30:00.000Z",
+            "description": "<div class=\"ag87-crtemvc-hsbk\"><div class=\"css-vsf5of\"><p class=\"carina-rte-public-DraftStyleDefault-block\"><span style=\"color: rgb(23,32,28);\">Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.</span></p></div></div>",
+            "location": null,
+            "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
+                "name": "",
+                "description": ""
+            },
+            "speakers": [
+                {
+                    "id": "401dfe27-6ffb-42c3-9dce-f7f9f944027b",
+                    "firstName": "John",
+                    "lastName": "Cortese",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/f5813453be1f47148e89d2db6fe24e48.jpg"
+                },
+                {
+                    "id": "c9abfd17-382f-4fdb-9db4-841a7945c977",
+                    "firstName": "Noel",
+                    "lastName": "Hebert",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/5fe8585f19ab44a98d4624ab512079ff.png"
+                },
+                {
+                    "id": "c6c50f12-6354-4b7f-be2f-6885115872e8",
+                    "firstName": "Paul",
+                    "lastName": "Salerno",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/4ffd22aba6af41309c45cb0d292df06a.jpg"
+                }
+            ],
+            "presentationType": "",
+            "isOpenForRegistration": true,
+            "isWaitlistEnabled": false,
+            "displayPriority": 0,
+            "isFeatured": false,
+            "capacity": {
+                "inPerson": {
+                    "total": -1,
+                    "available": -1
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "waitlistCapacity": {
+                "inPerson": {
+                    "total": null,
+                    "available": null
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "sessionCustomFields": [
+                {
+                    "id": "f052b1d8-ce52-449c-ae9d-abe95195df0c",
+                    "name": "Focus session?",
+                    "type": "SingleChoice",
+                    "value": [
+                        "Yes"
+                    ]
+                },
+                {
+                    "id": "2fe73993-de01-4af9-b59b-1e4cfd750a3c",
+                    "name": "Tags",
+                    "type": "MultiChoice",
+                    "value": [
+                        "Fuel"
+                    ]
+                }
+            ],
+            "associatedRegistrationTypes": [],
+            "locale": "pt-BR"
+        },
+        {
+            "id": "ee7abcc4-ea73-44a2-9960-c8e540cd6e05",
+            "name": "(Allow reg = No) Another day 2 panel discussion",
+            "code": "",
+            "isIncludedSession": false,
+            "startDateTime": "2026-06-15T02:00:00.000Z",
+            "endDateTime": "2026-06-15T03:00:00.000Z",
+            "description": "<div class=\"ag87-crtemvc-hsbk\"><div class=\"css-vsf5of\"><p class=\"carina-rte-public-DraftStyleDefault-block\">Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.</p></div></div>",
+            "location": {
+                "id": "03bf0b2c-884e-46db-80ad-86633f78c0e5",
+                "name": "Test Location",
+                "code": "Test Location"
+            },
+            "category": {
+                "id": "55ef13e5-b495-49ad-be38-dd14118a09ec",
+                "name": "Afternoon Workshop",
+                "description": ""
+            },
+            "speakers": [
+                {
+                    "id": "825e573e-0a90-4a3d-815b-eb50c48e9985",
+                    "firstName": "Russ",
+                    "lastName": "Brownback",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/7ce8fa4dd1f84ed787b4280f0eb94d4a.jpg"
+                },
+                {
+                    "id": "620494fa-c56d-4bde-b376-26cd185b6b19",
+                    "firstName": "Bradley",
+                    "lastName": "Sullivan",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/1383ada2ec3742c398158ea5398127b8.jpg"
+                },
+                {
+                    "id": "425a86da-d1d8-4171-897d-8fd5f691eb1c",
+                    "firstName": "Gregory",
+                    "lastName": "Peters",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/19cfb3edf70a48929625704ec7f8148a.jpg"
+                },
+                {
+                    "id": "401dfe27-6ffb-42c3-9dce-f7f9f944027b",
+                    "firstName": "John",
+                    "lastName": "Cortese",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/f5813453be1f47148e89d2db6fe24e48.jpg"
+                },
+                {
+                    "id": "81889069-d453-4d67-ba46-af70e5c1d565",
+                    "firstName": "Mo",
+                    "lastName": "Haghbin",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/49bed229005f4667a7a64b0c3b7f22f9.png"
+                },
+                {
+                    "id": "12f4119a-ab10-4123-8da1-26d607fbd094",
+                    "firstName": "Alex",
+                    "lastName": "Morris",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/6fe3cc693daf4d9c92a30f8a9d078d6f.jpg"
+                }
+            ],
+            "presentationType": "",
+            "isOpenForRegistration": false,
+            "isWaitlistEnabled": false,
+            "displayPriority": 0,
+            "isFeatured": false,
+            "capacity": {
+                "inPerson": {
+                    "total": -1,
+                    "available": -1
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "waitlistCapacity": {
+                "inPerson": {
+                    "total": null,
+                    "available": null
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "sessionCustomFields": [
+                {
+                    "id": "caaff126-71d6-45ff-9a0e-73e4bdab8557",
+                    "name": "Hide from main agenda?",
+                    "type": "SingleChoice",
+                    "value": [
+                        "No"
+                    ]
+                },
+                {
+                    "id": "2fe73993-de01-4af9-b59b-1e4cfd750a3c",
+                    "name": "Tags",
+                    "type": "MultiChoice",
+                    "value": [
+                        "Farm",
+                        "Fuel",
+                        "Food"
+                    ]
+                }
+            ],
+            "associatedRegistrationTypes": [],
+            "locale": "pt-BR"
+        },
+        {
+            "id": "856866c4-8fde-4427-ae08-1a9f2e331865",
+            "name": "Session Day 2",
+            "code": "",
+            "isIncludedSession": false,
+            "startDateTime": "2026-06-15T11:30:00.000Z",
+            "endDateTime": "2026-06-15T12:30:00.000Z",
+            "description": "<div class=\"ag87-crtemvc-hsbk\"><div class=\"css-vsf5of\"><p class=\"carina-rte-public-DraftStyleDefault-block\">Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.</p></div></div>",
+            "location": null,
+            "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
+                "name": "",
+                "description": ""
+            },
+            "speakers": [],
+            "presentationType": "",
+            "isOpenForRegistration": true,
+            "isWaitlistEnabled": false,
+            "displayPriority": 0,
+            "isFeatured": false,
+            "capacity": {
+                "inPerson": {
+                    "total": -1,
+                    "available": -1
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "waitlistCapacity": {
+                "inPerson": {
+                    "total": null,
+                    "available": null
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "sessionCustomFields": [],
+            "associatedRegistrationTypes": [],
+            "locale": "pt-BR"
+        },
+        {
+            "id": "031fc898-06ad-47ea-ac5e-5875bec19d30",
+            "name": "FOCUS SESSION Opening Remarks (display agenda = no)",
+            "code": "",
+            "isIncludedSession": true,
+            "startDateTime": "2026-06-15T12:00:00.000Z",
+            "endDateTime": "2026-06-15T12:05:00.000Z",
+            "description": "<div class=\"ag87-crtemvc-hsbk\"><div class=\"css-vsf5of\"><p class=\"carina-rte-public-DraftStyleDefault-block\">Phasellus vitae quam nec leo tincidunt gravida. Mauris bibendum sapien vel leo blandit, nec fermentum sem pharetra. Nam ut nisl id massa malesuada rhoncus vitae et quam. Maecenas turpis enim, tempus quis faucibus nec, tincidunt vel velit. Vivamus congue mi ex, a maximus risus tristique eu. Etiam sit amet viverra enim, eu iaculis nisl. Vestibulum rhoncus porttitor odio a tempus. Nulla in sodales nunc.</p></div></div>",
+            "location": {
+                "id": "03bf0b2c-884e-46db-80ad-86633f78c0e5",
+                "name": "Test Location",
+                "code": "Test Location"
+            },
+            "category": {
+                "id": "3042cd20-ae28-485b-8e0d-49cfcd38ecb5",
+                "name": "Afternoon",
+                "description": ""
+            },
+            "speakers": [
+                {
+                    "id": "c6c50f12-6354-4b7f-be2f-6885115872e8",
+                    "firstName": "Paul",
+                    "lastName": "Salerno",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/4ffd22aba6af41309c45cb0d292df06a.jpg"
+                }
+            ],
+            "presentationType": "Keynote",
+            "isOpenForRegistration": true,
+            "isWaitlistEnabled": false,
+            "displayPriority": 0,
+            "isFeatured": false,
+            "capacity": {
+                "inPerson": {
+                    "total": -1,
+                    "available": -1
+                },
+                "virtual": {
+                    "total": -1,
+                    "available": -1
+                }
+            },
+            "waitlistCapacity": {
+                "inPerson": {
+                    "total": null,
+                    "available": null
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "sessionCustomFields": [
+                {
+                    "id": "caaff126-71d6-45ff-9a0e-73e4bdab8557",
+                    "name": "Hide from main agenda?",
+                    "type": "SingleChoice",
+                    "value": [
+                        "Yes"
+                    ]
+                },
+                {
+                    "id": "f052b1d8-ce52-449c-ae9d-abe95195df0c",
+                    "name": "Focus session?",
+                    "type": "SingleChoice",
+                    "value": [
+                        "Yes"
+                    ]
+                }
+            ],
+            "associatedRegistrationTypes": [],
+            "locale": "pt-BR"
+        },
+        {
+            "id": "b5fbcf6f-5d90-4d2e-aacb-8b58c915cf30",
+            "name": "Opening Fireside Chat (optional test)",
+            "code": "",
+            "isIncludedSession": false,
+            "startDateTime": "2026-06-15T12:05:00.000Z",
+            "endDateTime": "2026-06-15T12:25:00.000Z",
+            "description": "",
+            "location": null,
+            "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
+                "name": "",
+                "description": ""
+            },
+            "speakers": [
+                {
+                    "id": "f7d7e2dd-812d-4ecd-b432-8a3594a63b0c",
+                    "firstName": "Tony",
+                    "lastName": "Minella",
+                    "profilePictureUri": null
+                },
+                {
+                    "id": "931f6bc5-e631-4d05-969c-0c78c5f46268",
+                    "firstName": "Romaine",
+                    "lastName": "Bostick",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/f8d56c8b0893405885ba63897ccb74c6.jpeg"
+                }
+            ],
+            "presentationType": "",
+            "isOpenForRegistration": true,
+            "isWaitlistEnabled": false,
+            "displayPriority": 0,
+            "isFeatured": false,
+            "capacity": {
+                "inPerson": {
+                    "total": -1,
+                    "available": -1
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "waitlistCapacity": {
+                "inPerson": {
+                    "total": null,
+                    "available": null
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "sessionCustomFields": [],
+            "associatedRegistrationTypes": [],
+            "locale": "pt-BR"
+        },
+        {
+            "id": "db3c2083-8be6-4c98-8b90-1701bd287993",
+            "name": "Panel: Navigating the Future of Fixed Income: Leadership Insights (Copy)",
+            "code": "",
+            "isIncludedSession": true,
+            "startDateTime": "2026-06-15T12:25:00.000Z",
+            "endDateTime": "2026-06-15T13:00:00.000Z",
+            "description": "<div class=\"ag87-crtemvc-hsbk\"><div class=\"css-vsf5of\"><p class=\"carina-rte-public-DraftStyleDefault-block\">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam justo odio, sagittis quis ultrices at, consectetur sed odio. Etiam at magna aliquam sapien cursus venenatis et quis ante. Integer a urna pretium, placerat nisl quis, ultricies sem. Proin eu urna ac augue auctor porta. Sed vitae dolor et quam feugiat vulputate. Maecenas vel metus ut purus malesuada pharetra at non nisl. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Pellentesque iaculis tempor mollis. Vestibulum cursus, nibh at malesuada auctor, urna sapien semper lectus, id ullamcorper eros risus in augue. Proin viverra fermentum lacus. Quisque mattis lobortis nunc id feugiat. Quisque a sollicitudin libero. Pellentesque porta facilisis libero, quis ornare nunc.</p></div></div>",
+            "location": {
+                "id": "03bf0b2c-884e-46db-80ad-86633f78c0e5",
+                "name": "Test Location",
+                "code": "Test Location"
+            },
+            "category": {
+                "id": "235d1b8e-c87d-4090-aa78-c2247f625022",
+                "name": "Main Plenary",
+                "description": ""
+            },
+            "speakers": [
+                {
+                    "id": "931f6bc5-e631-4d05-969c-0c78c5f46268",
+                    "firstName": "Romaine",
+                    "lastName": "Bostick",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/f8d56c8b0893405885ba63897ccb74c6.jpeg"
+                },
+                {
+                    "id": "12f4119a-ab10-4123-8da1-26d607fbd094",
+                    "firstName": "Alex",
+                    "lastName": "Morris",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/6fe3cc693daf4d9c92a30f8a9d078d6f.jpg"
+                }
+            ],
+            "presentationType": "",
+            "isOpenForRegistration": true,
+            "isWaitlistEnabled": false,
+            "displayPriority": 0,
+            "isFeatured": false,
+            "capacity": {
+                "inPerson": {
+                    "total": -1,
+                    "available": -1
+                },
+                "virtual": {
+                    "total": -1,
+                    "available": -1
+                }
+            },
+            "waitlistCapacity": {
+                "inPerson": {
+                    "total": null,
+                    "available": null
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "sessionCustomFields": [],
+            "associatedRegistrationTypes": [],
+            "locale": "pt-BR"
+        },
+        {
+            "id": "82ca84fd-7f6f-4a49-8f17-c8aad23e213d",
+            "name": "(display agenda = no) Panel: Navigating the Future of Fixed Income: Leadership Insights",
+            "code": "",
+            "isIncludedSession": true,
+            "startDateTime": "2026-06-15T12:25:00.000Z",
+            "endDateTime": "2026-06-15T13:00:00.000Z",
+            "description": "<div class=\"ag87-crtemvc-hsbk\"><div class=\"css-vsf5of\"><p class=\"carina-rte-public-DraftStyleDefault-block\">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam justo odio, sagittis quis ultrices at, consectetur sed odio. Etiam at magna aliquam sapien cursus venenatis et quis ante. Integer a urna pretium, placerat nisl quis, ultricies sem. Proin eu urna ac augue auctor porta. Sed vitae dolor et quam feugiat vulputate. Maecenas vel metus ut purus malesuada pharetra at non nisl. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Pellentesque iaculis tempor mollis. Vestibulum cursus, nibh at malesuada auctor, urna sapien semper lectus, id ullamcorper eros risus in augue. Proin viverra fermentum lacus. Quisque mattis lobortis nunc id feugiat. Quisque a sollicitudin libero. Pellentesque porta facilisis libero, quis ornare nunc.</p></div></div>",
+            "location": null,
+            "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
+                "name": "",
+                "description": ""
+            },
+            "speakers": [
+                {
+                    "id": "825e573e-0a90-4a3d-815b-eb50c48e9985",
+                    "firstName": "Russ",
+                    "lastName": "Brownback",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/7ce8fa4dd1f84ed787b4280f0eb94d4a.jpg"
+                },
+                {
+                    "id": "498ccdf3-9e0b-4f02-8f51-74e1954c1677",
+                    "firstName": "Priya",
+                    "lastName": "Misra",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/79bdd676a466470889af03b1523e924d.png"
+                },
+                {
+                    "id": "620494fa-c56d-4bde-b376-26cd185b6b19",
+                    "firstName": "Bradley",
+                    "lastName": "Sullivan",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/1383ada2ec3742c398158ea5398127b8.jpg"
+                },
+                {
+                    "id": "f1bccc6d-7cb4-412a-848c-60984d6bf2d0",
+                    "firstName": "Katie",
+                    "lastName": "Greifeld",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/0433d346499f4c3791a6542851c29e15.png"
+                }
+            ],
+            "presentationType": "",
+            "isOpenForRegistration": true,
+            "isWaitlistEnabled": false,
+            "displayPriority": 0,
+            "isFeatured": false,
+            "capacity": {
+                "inPerson": {
+                    "total": -1,
+                    "available": -1
+                },
+                "virtual": {
+                    "total": -1,
+                    "available": -1
+                }
+            },
+            "waitlistCapacity": {
+                "inPerson": {
+                    "total": null,
+                    "available": null
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "sessionCustomFields": [],
+            "associatedRegistrationTypes": [],
+            "locale": "pt-BR"
+        },
+        {
+            "id": "4e42d64b-f34c-42d4-9d2b-bc73181f87fd",
+            "name": "General Break",
+            "code": "",
+            "isIncludedSession": false,
+            "startDateTime": "2026-06-15T13:00:00.000Z",
+            "endDateTime": "2026-06-15T14:00:00.000Z",
+            "description": "<div class=\"ag87-crtemvc-hsbk\"><div class=\"css-vsf5of\"><p class=\"carina-rte-public-DraftStyleDefault-block\">Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.</p></div></div>",
+            "location": null,
+            "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
+                "name": "",
+                "description": ""
+            },
+            "speakers": [],
+            "presentationType": "",
+            "isOpenForRegistration": true,
+            "isWaitlistEnabled": false,
+            "displayPriority": 0,
+            "isFeatured": false,
+            "capacity": {
+                "inPerson": {
+                    "total": -1,
+                    "available": -1
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "waitlistCapacity": {
+                "inPerson": {
+                    "total": null,
+                    "available": null
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "sessionCustomFields": [
+                {
+                    "id": "1dbcd129-b118-4a51-aa59-8e6d13b7ed6d",
+                    "name": "Break session?",
+                    "type": "SingleChoice",
+                    "value": [
+                        "Yes"
+                    ]
+                },
+                {
+                    "id": "8d864a21-0cd5-45fb-a002-7634a1523fa3",
+                    "name": "Break Type",
+                    "type": "SingleChoice",
+                    "value": [
+                        "General"
+                    ]
+                }
+            ],
+            "associatedRegistrationTypes": [],
+            "locale": "pt-BR"
+        },
+        {
+            "id": "c6b3213d-2fd5-4ec2-97aa-731596e82e2b",
+            "name": "Coffee Break",
+            "code": "",
+            "isIncludedSession": true,
+            "startDateTime": "2026-06-15T13:10:00.000Z",
+            "endDateTime": "2026-06-15T13:45:00.000Z",
+            "description": "",
+            "location": null,
+            "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
+                "name": "",
+                "description": ""
+            },
+            "speakers": [
+                {
+                    "id": "401dfe27-6ffb-42c3-9dce-f7f9f944027b",
+                    "firstName": "John",
+                    "lastName": "Cortese",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/f5813453be1f47148e89d2db6fe24e48.jpg"
+                },
+                {
+                    "id": "bf56c670-471a-450d-b064-841176bc2c94",
+                    "firstName": "Christina",
+                    "lastName": "Lee",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/9160066492d5462f8719c3bd93f99cc1.jpg"
+                },
+                {
+                    "id": "a2b2cf8d-daa7-4225-a6d3-fe975d330b2e",
+                    "firstName": "Carlos",
+                    "lastName": "Mendez",
+                    "profilePictureUri": null
+                },
+                {
+                    "id": "c9abfd17-382f-4fdb-9db4-841a7945c977",
+                    "firstName": "Noel",
+                    "lastName": "Hebert",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/5fe8585f19ab44a98d4624ab512079ff.png"
+                }
+            ],
+            "presentationType": "",
+            "isOpenForRegistration": true,
+            "isWaitlistEnabled": false,
+            "displayPriority": 0,
+            "isFeatured": false,
+            "capacity": {
+                "inPerson": {
+                    "total": -1,
+                    "available": -1
+                },
+                "virtual": {
+                    "total": -1,
+                    "available": -1
+                }
+            },
+            "waitlistCapacity": {
+                "inPerson": {
+                    "total": null,
+                    "available": null
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "sessionCustomFields": [
+                {
+                    "id": "1dbcd129-b118-4a51-aa59-8e6d13b7ed6d",
+                    "name": "Break session?",
+                    "type": "SingleChoice",
+                    "value": [
+                        "Yes"
+                    ]
+                },
+                {
+                    "id": "8d864a21-0cd5-45fb-a002-7634a1523fa3",
+                    "name": "Break Type",
+                    "type": "SingleChoice",
+                    "value": [
+                        "Coffee"
+                    ]
+                }
+            ],
+            "associatedRegistrationTypes": [],
+            "locale": "pt-BR"
+        },
+        {
+            "id": "a544c155-bf2f-4a57-9cb6-b330f31a70b1",
+            "name": "Networking Break",
+            "code": "",
+            "isIncludedSession": false,
+            "startDateTime": "2026-06-15T13:45:00.000Z",
+            "endDateTime": "2026-06-15T14:05:00.000Z",
+            "description": "",
+            "location": null,
+            "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
+                "name": "",
+                "description": ""
+            },
+            "speakers": [],
+            "presentationType": "",
+            "isOpenForRegistration": true,
+            "isWaitlistEnabled": false,
+            "displayPriority": 0,
+            "isFeatured": false,
+            "capacity": {
+                "inPerson": {
+                    "total": -1,
+                    "available": -1
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "waitlistCapacity": {
+                "inPerson": {
+                    "total": null,
+                    "available": null
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "sessionCustomFields": [
+                {
+                    "id": "1dbcd129-b118-4a51-aa59-8e6d13b7ed6d",
+                    "name": "Break session?",
+                    "type": "SingleChoice",
+                    "value": [
+                        "Yes"
+                    ]
+                },
+                {
+                    "id": "8d864a21-0cd5-45fb-a002-7634a1523fa3",
+                    "name": "Break Type",
+                    "type": "SingleChoice",
+                    "value": [
+                        "Networking"
+                    ]
+                }
+            ],
+            "associatedRegistrationTypes": [],
+            "locale": "pt-BR"
+        },
+        {
+            "id": "44c33183-3478-4b8b-9bfc-c5589848c44b",
+            "name": "Lunch Break",
+            "code": "",
+            "isIncludedSession": true,
+            "startDateTime": "2026-06-15T14:05:00.000Z",
+            "endDateTime": "2026-06-15T14:40:00.000Z",
+            "description": "",
+            "location": null,
+            "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
+                "name": "",
+                "description": ""
+            },
+            "speakers": [
+                {
+                    "id": "81889069-d453-4d67-ba46-af70e5c1d565",
+                    "firstName": "Mo",
+                    "lastName": "Haghbin",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/49bed229005f4667a7a64b0c3b7f22f9.png"
+                },
+                {
+                    "id": "4bc55224-1df8-4a0a-9a2c-0b1bf23aa95f",
+                    "firstName": "Tony",
+                    "lastName": "Kelly",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/8c2eff6aea4249e9b219aec7550bdcaa.jpg"
+                },
+                {
+                    "id": "12f4119a-ab10-4123-8da1-26d607fbd094",
+                    "firstName": "Alex",
+                    "lastName": "Morris",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/6fe3cc693daf4d9c92a30f8a9d078d6f.jpg"
+                },
+                {
+                    "id": "f1bccc6d-7cb4-412a-848c-60984d6bf2d0",
+                    "firstName": "Katie",
+                    "lastName": "Greifeld",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/0433d346499f4c3791a6542851c29e15.png"
+                }
+            ],
+            "presentationType": "",
+            "isOpenForRegistration": true,
+            "isWaitlistEnabled": false,
+            "displayPriority": 0,
+            "isFeatured": false,
+            "capacity": {
+                "inPerson": {
+                    "total": -1,
+                    "available": -1
+                },
+                "virtual": {
+                    "total": -1,
+                    "available": -1
+                }
+            },
+            "waitlistCapacity": {
+                "inPerson": {
+                    "total": null,
+                    "available": null
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "sessionCustomFields": [
+                {
+                    "id": "1dbcd129-b118-4a51-aa59-8e6d13b7ed6d",
+                    "name": "Break session?",
+                    "type": "SingleChoice",
+                    "value": [
+                        "Yes"
+                    ]
+                },
+                {
+                    "id": "8d864a21-0cd5-45fb-a002-7634a1523fa3",
+                    "name": "Break Type",
+                    "type": "SingleChoice",
+                    "value": [
+                        "Lunch"
+                    ]
+                }
+            ],
+            "associatedRegistrationTypes": [],
+            "locale": "pt-BR"
+        },
+        {
+            "id": "06c7a931-bb78-4193-983a-3a444c42c9c2",
+            "name": "FOCUS SESSION Closing Fireside Chat",
+            "code": "",
+            "isIncludedSession": true,
+            "startDateTime": "2026-06-15T14:40:00.000Z",
+            "endDateTime": "2026-06-15T15:00:00.000Z",
+            "description": "",
+            "location": {
+                "id": "03bf0b2c-884e-46db-80ad-86633f78c0e5",
+                "name": "Test Location",
+                "code": "Test Location"
+            },
+            "category": {
+                "id": "655614a2-e3e3-4f44-97e1-2e414fdd49d9",
+                "name": "Activity",
+                "description": ""
+            },
+            "speakers": [
+                {
+                    "id": "425a86da-d1d8-4171-897d-8fd5f691eb1c",
+                    "firstName": "Gregory",
+                    "lastName": "Peters",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/19cfb3edf70a48929625704ec7f8148a.jpg"
+                },
+                {
+                    "id": "0f9009f5-5188-4a50-a800-82b50c1a9a0c",
+                    "firstName": "Scarlet",
+                    "lastName": "Fu",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/7ea077e5c2044e2ebe0443acc90aa2ac.png"
+                }
+            ],
+            "presentationType": "",
+            "isOpenForRegistration": true,
+            "isWaitlistEnabled": false,
+            "displayPriority": 0,
+            "isFeatured": false,
+            "capacity": {
+                "inPerson": {
+                    "total": -1,
+                    "available": -1
+                },
+                "virtual": {
+                    "total": -1,
+                    "available": -1
+                }
+            },
+            "waitlistCapacity": {
+                "inPerson": {
+                    "total": null,
+                    "available": null
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "sessionCustomFields": [
+                {
+                    "id": "f052b1d8-ce52-449c-ae9d-abe95195df0c",
+                    "name": "Focus session?",
+                    "type": "SingleChoice",
+                    "value": [
+                        "Yes"
+                    ]
+                }
+            ],
+            "associatedRegistrationTypes": [],
+            "locale": "pt-BR"
+        },
+        {
+            "id": "f83cfd00-1402-4945-9ca4-a74128ef6923",
+            "name": "Networking Reception",
+            "code": "",
+            "isIncludedSession": true,
+            "startDateTime": "2026-06-15T15:00:00.000Z",
+            "endDateTime": "2026-06-15T16:30:00.000Z",
+            "description": "",
+            "location": null,
+            "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
+                "name": "",
+                "description": ""
+            },
+            "speakers": [],
+            "presentationType": "",
+            "isOpenForRegistration": true,
+            "isWaitlistEnabled": false,
+            "displayPriority": 0,
+            "isFeatured": false,
+            "capacity": {
+                "inPerson": {
+                    "total": -1,
+                    "available": -1
+                },
+                "virtual": {
+                    "total": -1,
+                    "available": -1
+                }
+            },
+            "waitlistCapacity": {
+                "inPerson": {
+                    "total": null,
+                    "available": null
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "sessionCustomFields": [
+                {
+                    "id": "1dbcd129-b118-4a51-aa59-8e6d13b7ed6d",
+                    "name": "Break session?",
+                    "type": "SingleChoice",
+                    "value": [
+                        "Yes"
+                    ]
+                },
+                {
+                    "id": "8d864a21-0cd5-45fb-a002-7634a1523fa3",
+                    "name": "Break Type",
+                    "type": "SingleChoice",
+                    "value": [
+                        "Networking"
+                    ]
+                }
+            ],
+            "associatedRegistrationTypes": [],
+            "locale": "pt-BR"
+        },
+        {
+            "id": "91adc977-6c82-4e09-8cfb-f05171b0534f",
+            "name": "Opening Fireside Chat (allow reg = no)",
+            "code": "",
+            "isIncludedSession": false,
+            "startDateTime": "2026-12-22T13:05:00.000Z",
+            "endDateTime": "2026-12-22T13:25:00.000Z",
+            "description": "",
+            "location": null,
+            "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
+                "name": "",
+                "description": ""
+            },
+            "speakers": [
+                {
+                    "id": "931f6bc5-e631-4d05-969c-0c78c5f46268",
+                    "firstName": "Romaine",
+                    "lastName": "Bostick",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/f8d56c8b0893405885ba63897ccb74c6.jpeg"
+                },
+                {
+                    "id": "f7d7e2dd-812d-4ecd-b432-8a3594a63b0c",
+                    "firstName": "Tony",
+                    "lastName": "Minella",
+                    "profilePictureUri": null
+                }
+            ],
+            "presentationType": "",
+            "isOpenForRegistration": false,
+            "isWaitlistEnabled": false,
+            "displayPriority": 0,
+            "isFeatured": false,
+            "capacity": {
+                "inPerson": {
+                    "total": -1,
+                    "available": -1
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "waitlistCapacity": {
+                "inPerson": {
+                    "total": null,
+                    "available": null
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "sessionCustomFields": [],
+            "associatedRegistrationTypes": [],
+            "locale": "pt-BR"
+        },
+        {
+            "id": "d2adfa25-6c60-4356-bffb-663230e663d3",
+            "name": "Opening Fireside Chat (allow reg AH = no)",
+            "code": "",
+            "isIncludedSession": false,
+            "startDateTime": "2026-12-23T13:05:00.000Z",
+            "endDateTime": "2026-12-23T13:25:00.000Z",
+            "description": "",
+            "location": null,
+            "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
+                "name": "",
+                "description": ""
+            },
+            "speakers": [
+                {
+                    "id": "931f6bc5-e631-4d05-969c-0c78c5f46268",
+                    "firstName": "Romaine",
+                    "lastName": "Bostick",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/f8d56c8b0893405885ba63897ccb74c6.jpeg"
+                },
+                {
+                    "id": "f7d7e2dd-812d-4ecd-b432-8a3594a63b0c",
+                    "firstName": "Tony",
+                    "lastName": "Minella",
+                    "profilePictureUri": null
+                }
+            ],
+            "presentationType": "",
+            "isOpenForRegistration": true,
+            "isWaitlistEnabled": false,
+            "displayPriority": 0,
+            "isFeatured": false,
+            "capacity": {
+                "inPerson": {
+                    "total": -1,
+                    "available": -1
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "waitlistCapacity": {
+                "inPerson": {
+                    "total": null,
+                    "available": null
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "sessionCustomFields": [],
+            "associatedRegistrationTypes": [],
+            "locale": "pt-BR"
+        },
+        {
+            "id": "a892fb9a-27e6-4540-8452-80f7ab0405dd",
+            "name": "Opening Fireside Chat (restrict session vis test)",
+            "code": "",
+            "isIncludedSession": false,
+            "startDateTime": "2026-12-31T13:05:00.000Z",
+            "endDateTime": "2026-12-31T13:25:00.000Z",
+            "description": "",
+            "location": null,
+            "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
+                "name": "",
+                "description": ""
+            },
+            "speakers": [
+                {
+                    "id": "931f6bc5-e631-4d05-969c-0c78c5f46268",
+                    "firstName": "Romaine",
+                    "lastName": "Bostick",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/f8d56c8b0893405885ba63897ccb74c6.jpeg"
+                },
+                {
+                    "id": "f7d7e2dd-812d-4ecd-b432-8a3594a63b0c",
+                    "firstName": "Tony",
+                    "lastName": "Minella",
+                    "profilePictureUri": null
+                }
+            ],
+            "presentationType": "",
+            "isOpenForRegistration": true,
+            "isWaitlistEnabled": false,
+            "displayPriority": 0,
+            "isFeatured": false,
+            "capacity": {
+                "inPerson": {
+                    "total": -1,
+                    "available": -1
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "waitlistCapacity": {
+                "inPerson": {
+                    "total": null,
+                    "available": null
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "sessionCustomFields": [],
+            "associatedRegistrationTypes": [],
+            "locale": "pt-BR"
+        },
+        {
+            "id": "a63958fd-eb53-4a6b-ade6-704df6f5a476",
+            "name": "Lightning Talk: Bloomberg on Private Markets",
+            "code": "",
+            "isIncludedSession": true,
+            "startDateTime": "2026-12-31T14:00:00.000Z",
+            "endDateTime": "2026-12-31T14:10:00.000Z",
+            "description": "",
+            "location": null,
+            "category": {
+                "id": "00000000-0000-0000-0000-000000000000",
+                "name": "",
+                "description": ""
+            },
+            "speakers": [
+                {
+                    "id": "3bb77e36-678b-4587-aeda-e5609bbbf88b",
+                    "firstName": "Brad",
+                    "lastName": "Foster",
+                    "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/42c03c43e44b406c8b3fd685976d17fd.png"
+                }
+            ],
+            "presentationType": "",
+            "isOpenForRegistration": true,
+            "isWaitlistEnabled": false,
+            "displayPriority": 0,
+            "isFeatured": false,
+            "capacity": {
+                "inPerson": {
+                    "total": -1,
+                    "available": -1
+                },
+                "virtual": {
+                    "total": -1,
+                    "available": -1
+                }
+            },
+            "waitlistCapacity": {
+                "inPerson": {
+                    "total": null,
+                    "available": null
+                },
+                "virtual": {
+                    "total": null,
+                    "available": null
+                }
+            },
+            "sessionCustomFields": [],
+            "associatedRegistrationTypes": [],
+            "locale": "pt-BR"
+        }
+    ],
+    "speakers": {
+        "3bb77e36-678b-4587-aeda-e5609bbbf88b": {
+            "id": "3bb77e36-678b-4587-aeda-e5609bbbf88b",
+            "prefix": null,
+            "firstName": "Brad",
+            "lastName": "Foster",
+            "designation": null,
+            "company": "Bloomberg",
+            "title": "Head of Fixed Income & Private Markets",
+            "emailAddress": null,
+            "category": {
+                "id": "f33ab2be-a82d-4620-8736-7d569d8a37ae",
+                "name": "Speakers"
+            },
+            "code": "BradFoster",
+            "facebookUrl": "",
+            "linkedInUrl": "",
+            "twitterUrl": "",
+            "displayOnWebsite": true,
+            "biography": null,
+            "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/42c03c43e44b406c8b3fd685976d17fd.png",
+            "documents": [],
+            "assignedSessions": [
+                {
+                    "id": "a63958fd-eb53-4a6b-ade6-704df6f5a476"
+                },
+                {
+                    "id": "5ebeca53-fb1b-42f5-9019-09b82784dd8f"
+                }
+            ]
+        },
+        "12f4119a-ab10-4123-8da1-26d607fbd094": {
+            "id": "12f4119a-ab10-4123-8da1-26d607fbd094",
+            "prefix": null,
+            "firstName": "Alex",
+            "lastName": "Morris",
+            "designation": null,
+            "company": "F/m Investments",
+            "title": "Co-Founder & CEO",
+            "emailAddress": null,
+            "category": {
+                "id": "f33ab2be-a82d-4620-8736-7d569d8a37ae",
+                "name": "Speakers"
+            },
+            "code": "AlexMorris",
+            "facebookUrl": "",
+            "linkedInUrl": "",
+            "twitterUrl": "",
+            "displayOnWebsite": true,
+            "biography": null,
+            "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/6fe3cc693daf4d9c92a30f8a9d078d6f.jpg",
+            "documents": [],
+            "assignedSessions": [
+                {
+                    "id": "db3c2083-8be6-4c98-8b90-1701bd287993"
+                },
+                {
+                    "id": "44c33183-3478-4b8b-9bfc-c5589848c44b"
+                },
+                {
+                    "id": "ee7abcc4-ea73-44a2-9960-c8e540cd6e05"
+                },
+                {
+                    "id": "5ebeca53-fb1b-42f5-9019-09b82784dd8f"
+                }
+            ]
+        },
+        "401dfe27-6ffb-42c3-9dce-f7f9f944027b": {
+            "id": "401dfe27-6ffb-42c3-9dce-f7f9f944027b",
+            "prefix": null,
+            "firstName": "John",
+            "lastName": "Cortese",
+            "designation": null,
+            "company": "Apollo Global Management",
+            "title": "Head of Portfolio Management",
+            "emailAddress": null,
+            "category": {
+                "id": "f33ab2be-a82d-4620-8736-7d569d8a37ae",
+                "name": "Speakers"
+            },
+            "code": "JohnCortese",
+            "facebookUrl": "",
+            "linkedInUrl": "",
+            "twitterUrl": "",
+            "displayOnWebsite": true,
+            "biography": null,
+            "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/f5813453be1f47148e89d2db6fe24e48.jpg",
+            "documents": [],
+            "assignedSessions": [
+                {
+                    "id": "c6b3213d-2fd5-4ec2-97aa-731596e82e2b"
+                },
+                {
+                    "id": "ee7abcc4-ea73-44a2-9960-c8e540cd6e05"
+                },
+                {
+                    "id": "5ebeca53-fb1b-42f5-9019-09b82784dd8f"
+                },
+                {
+                    "id": "ded73b96-49e1-4264-b0df-86a40e58154e"
+                }
+            ]
+        },
+        "81889069-d453-4d67-ba46-af70e5c1d565": {
+            "id": "81889069-d453-4d67-ba46-af70e5c1d565",
+            "prefix": null,
+            "firstName": "Mo",
+            "lastName": "Haghbin",
+            "designation": null,
+            "company": "ProShares",
+            "title": "Managing Director",
+            "emailAddress": null,
+            "category": {
+                "id": "f33ab2be-a82d-4620-8736-7d569d8a37ae",
+                "name": "Speakers"
+            },
+            "code": "MoHaghbin",
+            "facebookUrl": "",
+            "linkedInUrl": "",
+            "twitterUrl": "",
+            "displayOnWebsite": true,
+            "biography": null,
+            "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/49bed229005f4667a7a64b0c3b7f22f9.png",
+            "documents": [],
+            "assignedSessions": [
+                {
+                    "id": "44c33183-3478-4b8b-9bfc-c5589848c44b"
+                },
+                {
+                    "id": "ee7abcc4-ea73-44a2-9960-c8e540cd6e05"
+                },
+                {
+                    "id": "5ebeca53-fb1b-42f5-9019-09b82784dd8f"
+                }
+            ]
+        },
+        "f1bccc6d-7cb4-412a-848c-60984d6bf2d0": {
+            "id": "f1bccc6d-7cb4-412a-848c-60984d6bf2d0",
+            "prefix": null,
+            "firstName": "Katie",
+            "lastName": "Greifeld",
+            "designation": null,
+            "company": "Bloomberg (Moderator)",
+            "title": "Anchor & Co-Host of The Close",
+            "emailAddress": null,
+            "category": {
+                "id": "f33ab2be-a82d-4620-8736-7d569d8a37ae",
+                "name": "Speakers"
+            },
+            "code": "KatieGreifeld",
+            "facebookUrl": "",
+            "linkedInUrl": "",
+            "twitterUrl": "",
+            "displayOnWebsite": true,
+            "biography": null,
+            "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/0433d346499f4c3791a6542851c29e15.png",
+            "documents": [],
+            "assignedSessions": [
+                {
+                    "id": "82ca84fd-7f6f-4a49-8f17-c8aad23e213d"
+                },
+                {
+                    "id": "44c33183-3478-4b8b-9bfc-c5589848c44b"
+                },
+                {
+                    "id": "5ebeca53-fb1b-42f5-9019-09b82784dd8f"
+                }
+            ]
+        },
+        "620494fa-c56d-4bde-b376-26cd185b6b19": {
+            "id": "620494fa-c56d-4bde-b376-26cd185b6b19",
+            "prefix": null,
+            "firstName": "Bradley",
+            "lastName": "Sullivan",
+            "designation": null,
+            "company": "State Street Investment Management",
+            "title": "VP & Senior Portfolio Manager",
+            "emailAddress": null,
+            "category": {
+                "id": "f33ab2be-a82d-4620-8736-7d569d8a37ae",
+                "name": "Speakers"
+            },
+            "code": "BradSullivan, CFA",
+            "facebookUrl": "",
+            "linkedInUrl": "",
+            "twitterUrl": "",
+            "displayOnWebsite": true,
+            "biography": null,
+            "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/1383ada2ec3742c398158ea5398127b8.jpg",
+            "documents": [],
+            "assignedSessions": [
+                {
+                    "id": "82ca84fd-7f6f-4a49-8f17-c8aad23e213d"
+                },
+                {
+                    "id": "ee7abcc4-ea73-44a2-9960-c8e540cd6e05"
+                },
+                {
+                    "id": "f353cfb4-3aff-4518-ba3e-a988ecd61f3d"
+                }
+            ]
+        },
+        "bf56c670-471a-450d-b064-841176bc2c94": {
+            "id": "bf56c670-471a-450d-b064-841176bc2c94",
+            "prefix": null,
+            "firstName": "Christina",
+            "lastName": "Lee",
+            "designation": null,
+            "company": "Oaktree Capital Management",
+            "title": "MD and Co-Portfolio Manager U.S. Private Debt Strategy",
+            "emailAddress": null,
+            "category": {
+                "id": "f33ab2be-a82d-4620-8736-7d569d8a37ae",
+                "name": "Speakers"
+            },
+            "code": "ChristinaLee",
+            "facebookUrl": "",
+            "linkedInUrl": "",
+            "twitterUrl": "",
+            "displayOnWebsite": true,
+            "biography": null,
+            "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/9160066492d5462f8719c3bd93f99cc1.jpg",
+            "documents": [],
+            "assignedSessions": [
+                {
+                    "id": "c6b3213d-2fd5-4ec2-97aa-731596e82e2b"
+                },
+                {
+                    "id": "f353cfb4-3aff-4518-ba3e-a988ecd61f3d"
+                }
+            ]
+        },
+        "825e573e-0a90-4a3d-815b-eb50c48e9985": {
+            "id": "825e573e-0a90-4a3d-815b-eb50c48e9985",
+            "prefix": null,
+            "firstName": "Russ",
+            "lastName": "Brownback",
+            "designation": null,
+            "company": "Blackrock",
+            "title": "Deputy CIO of Global Fixed Income",
+            "emailAddress": null,
+            "category": {
+                "id": "f33ab2be-a82d-4620-8736-7d569d8a37ae",
+                "name": "Speakers"
+            },
+            "code": "RussellBrownback",
+            "facebookUrl": "",
+            "linkedInUrl": "",
+            "twitterUrl": "",
+            "displayOnWebsite": true,
+            "biography": "Based in Seoul, Ali Izadi manages BloombergNEF's activities across Asia Pacific, focusing on the transition of the region's economies to a cleaner more competitive future. Prior to his current role, Ali managed BloombergNEF’s Intelligent Mobility team as well as Japan and Korea Research team. Prior to joining BloombergNEF in 2010, Ali had worked at Japan’s National Institute of Advanced Industrial Science and Technology, as well as fuel cell manufacturer, Ballard Power Systems.\r\n\r\nAli has an undergraduate degree in Engineering Physics and a Masters in Electrical Engineering from the University of British Columbia, and a Doctorate in Materials Science from Meijo University.",
+            "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/7ce8fa4dd1f84ed787b4280f0eb94d4a.jpg",
+            "documents": [],
+            "assignedSessions": [
+                {
+                    "id": "82ca84fd-7f6f-4a49-8f17-c8aad23e213d"
+                },
+                {
+                    "id": "3fd4339c-f1bf-47f3-a687-dd407e101f13"
+                },
+                {
+                    "id": "ee7abcc4-ea73-44a2-9960-c8e540cd6e05"
+                }
+            ]
+        },
+        "0f9009f5-5188-4a50-a800-82b50c1a9a0c": {
+            "id": "0f9009f5-5188-4a50-a800-82b50c1a9a0c",
+            "prefix": null,
+            "firstName": "Scarlet",
+            "lastName": "Fu",
+            "designation": null,
+            "company": "Bloomberg (Moderator)",
+            "title": "Anchor and Host of Real Yield",
+            "emailAddress": null,
+            "category": {
+                "id": "f33ab2be-a82d-4620-8736-7d569d8a37ae",
+                "name": "Speakers"
+            },
+            "code": "ScarletFu",
+            "facebookUrl": "",
+            "linkedInUrl": "",
+            "twitterUrl": "",
+            "displayOnWebsite": true,
+            "biography": null,
+            "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/7ea077e5c2044e2ebe0443acc90aa2ac.png",
+            "documents": [],
+            "assignedSessions": [
+                {
+                    "id": "06c7a931-bb78-4193-983a-3a444c42c9c2"
+                },
+                {
+                    "id": "3fd4339c-f1bf-47f3-a687-dd407e101f13"
+                }
+            ]
+        },
+        "4bc55224-1df8-4a0a-9a2c-0b1bf23aa95f": {
+            "id": "4bc55224-1df8-4a0a-9a2c-0b1bf23aa95f",
+            "prefix": null,
+            "firstName": "Tony",
+            "lastName": "Kelly",
+            "designation": null,
+            "company": "BondBloxx",
+            "title": "Co-Founder",
+            "emailAddress": null,
+            "category": {
+                "id": "f33ab2be-a82d-4620-8736-7d569d8a37ae",
+                "name": "Speakers"
+            },
+            "code": "TonyKelly",
+            "facebookUrl": "",
+            "linkedInUrl": "",
+            "twitterUrl": "",
+            "displayOnWebsite": true,
+            "biography": null,
+            "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/8c2eff6aea4249e9b219aec7550bdcaa.jpg",
+            "documents": [],
+            "assignedSessions": [
+                {
+                    "id": "44c33183-3478-4b8b-9bfc-c5589848c44b"
+                },
+                {
+                    "id": "3fd4339c-f1bf-47f3-a687-dd407e101f13"
+                }
+            ]
+        },
+        "498ccdf3-9e0b-4f02-8f51-74e1954c1677": {
+            "id": "498ccdf3-9e0b-4f02-8f51-74e1954c1677",
+            "prefix": null,
+            "firstName": "Priya",
+            "lastName": "Misra",
+            "designation": null,
+            "company": "JP Morgan",
+            "title": "Portfolio Manager Core Plus Bond Fund & ETF",
+            "emailAddress": null,
+            "category": {
+                "id": "f33ab2be-a82d-4620-8736-7d569d8a37ae",
+                "name": "Speakers"
+            },
+            "code": "PriyaMisra",
+            "facebookUrl": "",
+            "linkedInUrl": "",
+            "twitterUrl": "",
+            "displayOnWebsite": true,
+            "biography": null,
+            "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/79bdd676a466470889af03b1523e924d.png",
+            "documents": [],
+            "assignedSessions": [
+                {
+                    "id": "82ca84fd-7f6f-4a49-8f17-c8aad23e213d"
+                },
+                {
+                    "id": "0783397c-d928-4ae4-ae8c-9e28c845cd96"
+                }
+            ]
+        },
+        "f7d7e2dd-812d-4ecd-b432-8a3594a63b0c": {
+            "id": "f7d7e2dd-812d-4ecd-b432-8a3594a63b0c",
+            "prefix": null,
+            "firstName": "Tony",
+            "lastName": "Minella",
+            "designation": null,
+            "company": "Eldridge Capital Management",
+            "title": "President of Eldridge Industries and CEO",
+            "emailAddress": null,
+            "category": {
+                "id": "f33ab2be-a82d-4620-8736-7d569d8a37ae",
+                "name": "Speakers"
+            },
+            "code": "TonyMinella",
+            "facebookUrl": "",
+            "linkedInUrl": "",
+            "twitterUrl": "",
+            "displayOnWebsite": true,
+            "biography": null,
+            "profilePictureUri": null,
+            "documents": [],
+            "assignedSessions": [
+                {
+                    "id": "d2adfa25-6c60-4356-bffb-663230e663d3"
+                },
+                {
+                    "id": "0783397c-d928-4ae4-ae8c-9e28c845cd96"
+                },
+                {
+                    "id": "91adc977-6c82-4e09-8cfb-f05171b0534f"
+                },
+                {
+                    "id": "a892fb9a-27e6-4540-8452-80f7ab0405dd"
+                },
+                {
+                    "id": "b5fbcf6f-5d90-4d2e-aacb-8b58c915cf30"
+                }
+            ]
+        },
+        "c9abfd17-382f-4fdb-9db4-841a7945c977": {
+            "id": "c9abfd17-382f-4fdb-9db4-841a7945c977",
+            "prefix": null,
+            "firstName": "Noel",
+            "lastName": "Hebert",
+            "designation": null,
+            "company": "Bloomberg Intelligence (Moderator)",
+            "title": "Head of FICC Strategy",
+            "emailAddress": null,
+            "category": {
+                "id": "f33ab2be-a82d-4620-8736-7d569d8a37ae",
+                "name": "Speakers"
+            },
+            "code": "NoelHebert",
+            "facebookUrl": "",
+            "linkedInUrl": "",
+            "twitterUrl": "",
+            "displayOnWebsite": true,
+            "biography": null,
+            "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/5fe8585f19ab44a98d4624ab512079ff.png",
+            "documents": [],
+            "assignedSessions": [
+                {
+                    "id": "c6b3213d-2fd5-4ec2-97aa-731596e82e2b"
+                },
+                {
+                    "id": "ded73b96-49e1-4264-b0df-86a40e58154e"
+                }
+            ]
+        },
+        "c6c50f12-6354-4b7f-be2f-6885115872e8": {
+            "id": "c6c50f12-6354-4b7f-be2f-6885115872e8",
+            "prefix": null,
+            "firstName": "Paul",
+            "lastName": "Salerno",
+            "designation": null,
+            "company": "Bloomberg",
+            "title": "Global Head of Index Sales and Relationship Management",
+            "emailAddress": null,
+            "category": {
+                "id": "f33ab2be-a82d-4620-8736-7d569d8a37ae",
+                "name": "Speakers"
+            },
+            "code": "PaulSalerno",
+            "facebookUrl": "",
+            "linkedInUrl": "",
+            "twitterUrl": "",
+            "displayOnWebsite": true,
+            "biography": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque porttitor enim dignissim urna accumsan, quis scelerisque arcu vehicula. Sed quis urna sollicitudin, congue lorem et, mattis nisl. Nam non quam velit. Mauris tincidunt, urna sit amet tempor blandit, leo felis fringilla nisi, ornare vestibulum est risus sed dolor. Mauris at lorem odio. In tincidunt consectetur dolor, sed eleifend ex ornare sed. Etiam quis lacus id ex accumsan efficitur. Aliquam id iaculis erat. Ut congue erat at volutpat pharetra.",
+            "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/4ffd22aba6af41309c45cb0d292df06a.jpg",
+            "documents": [],
+            "assignedSessions": [
+                {
+                    "id": "031fc898-06ad-47ea-ac5e-5875bec19d30"
+                },
+                {
+                    "id": "ded73b96-49e1-4264-b0df-86a40e58154e"
+                }
+            ]
+        },
+        "425a86da-d1d8-4171-897d-8fd5f691eb1c": {
+            "id": "425a86da-d1d8-4171-897d-8fd5f691eb1c",
+            "prefix": null,
+            "firstName": "Gregory",
+            "lastName": "Peters",
+            "designation": null,
+            "company": "PGIM Fixed Income",
+            "title": "Co-Chief Investment Officer",
+            "emailAddress": null,
+            "category": {
+                "id": "f33ab2be-a82d-4620-8736-7d569d8a37ae",
+                "name": "Speakers"
+            },
+            "code": "GregoryPeters",
+            "facebookUrl": "",
+            "linkedInUrl": "",
+            "twitterUrl": "",
+            "displayOnWebsite": true,
+            "biography": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus cursus dolor in dolor finibus, ut finibus neque maximus. Donec non mattis mauris. Cras non eleifend sapien, a tincidunt mi. Aenean scelerisque dolor odio, sit amet lacinia ligula sodales eget. Donec ultrices turpis commodo erat commodo fringilla. Cras nec tristique purus, non fermentum erat. Nam sagittis venenatis turpis ac rutrum. Sed fermentum pulvinar sem, ut suscipit risus ullamcorper eu.",
+            "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/19cfb3edf70a48929625704ec7f8148a.jpg",
+            "documents": [],
+            "assignedSessions": [
+                {
+                    "id": "06c7a931-bb78-4193-983a-3a444c42c9c2"
+                },
+                {
+                    "id": "ee7abcc4-ea73-44a2-9960-c8e540cd6e05"
+                }
+            ]
+        },
+        "931f6bc5-e631-4d05-969c-0c78c5f46268": {
+            "id": "931f6bc5-e631-4d05-969c-0c78c5f46268",
+            "prefix": null,
+            "firstName": "Romaine",
+            "lastName": "Bostick",
+            "designation": null,
+            "company": "Bloomberg (Moderator)",
+            "title": "Anchor & Co-House of The Close",
+            "emailAddress": null,
+            "category": {
+                "id": "f33ab2be-a82d-4620-8736-7d569d8a37ae",
+                "name": "Speakers"
+            },
+            "code": "Romaine Bostick, Anchor, Bloom",
+            "facebookUrl": "",
+            "linkedInUrl": "",
+            "twitterUrl": "",
+            "displayOnWebsite": true,
+            "biography": null,
+            "profilePictureUri": "https://custom.cvent.com/437e6683a93144aaaee124507fc78642/files/event/287dc11e43f64fce8a1bc4ab59f2712c/f8d56c8b0893405885ba63897ccb74c6.jpeg",
+            "documents": [],
+            "assignedSessions": [
+                {
+                    "id": "db3c2083-8be6-4c98-8b90-1701bd287993"
+                },
+                {
+                    "id": "d2adfa25-6c60-4356-bffb-663230e663d3"
+                },
+                {
+                    "id": "91adc977-6c82-4e09-8cfb-f05171b0534f"
+                },
+                {
+                    "id": "a892fb9a-27e6-4540-8452-80f7ab0405dd"
+                },
+                {
+                    "id": "b5fbcf6f-5d90-4d2e-aacb-8b58c915cf30"
+                }
+            ]
+        },
+        "a2b2cf8d-daa7-4225-a6d3-fe975d330b2e": {
+            "id": "a2b2cf8d-daa7-4225-a6d3-fe975d330b2e",
+            "prefix": null,
+            "firstName": "Carlos",
+            "lastName": "Mendez",
+            "designation": null,
+            "company": "Crayhill Capital Management",
+            "title": "Co-Founder & Managing Partner",
+            "emailAddress": null,
+            "category": {
+                "id": "f33ab2be-a82d-4620-8736-7d569d8a37ae",
+                "name": "Speakers"
+            },
+            "code": "CarlosMendez",
+            "facebookUrl": "",
+            "linkedInUrl": "",
+            "twitterUrl": "",
+            "displayOnWebsite": true,
+            "biography": null,
+            "profilePictureUri": null,
+            "documents": [],
+            "assignedSessions": [
+                {
+                    "id": "c6b3213d-2fd5-4ec2-97aa-731596e82e2b"
+                }
+            ]
+        }
+    }
+}

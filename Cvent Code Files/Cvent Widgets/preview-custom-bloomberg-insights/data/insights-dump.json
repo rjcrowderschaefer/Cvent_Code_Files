@@ -1,0 +1,1207 @@
+{
+ "//": "Captured 2026-09-24 from https://www.bloomberg.com/professional/wp-json/wp/v2/ (posts + categories). Posts 17-18 are untagged (hand-picked mode); 19+ are other types/series (case studies, reports, Q&As, Asia Centric, Pricing Insights) so the Topic/Type/Series filters have something to match. mock-fetch.js serves these in the same shape as the live API.",
+ "capturedAt": "2026-09-24T12:33:21Z",
+ "eventInfo": {
+  "title": "Global Markets & Banking Summit",
+  "code": "GMBS26",
+  "timezone": "America/New_York",
+  "locales": [
+   {
+    "cultureCode": "en-US",
+    "isDefault": true
+   },
+   {
+    "cultureCode": "es",
+    "isDefault": false
+   },
+   {
+    "cultureCode": "pt-BR",
+    "isDefault": false
+   }
+  ]
+ },
+ "series": {
+  "id": 3931,
+  "slug": "global-markets-banking-summit",
+  "url": "https://www.bloomberg.com/professional/insights/series/global-markets-banking-summit/"
+ },
+ "posts": [
+  {
+   "id": 141663,
+   "date": "2026-07-01T13:38:41",
+   "slug": "the-next-chapter-for-trading-algorithms-insight-over-access",
+   "link": "https://www.bloomberg.com/professional/insights/trading/the-next-chapter-for-trading-algorithms-insight-over-access/",
+   "title": {
+    "rendered": "The next chapter for trading algorithms: Insight over access"
+   },
+   "excerpt": {
+    "rendered": "<p>How are leading firms redefining their competitive advantage in electronic fixed income trading? Explore the next frontier beyond algorithms.</p>\n"
+   },
+   "categories": [
+    453,
+    3661,
+    444
+   ],
+   "series": [
+    3931
+   ],
+   "class_list": [
+    "category-markets",
+    "category-technology",
+    "category-trading",
+    "post_series-global-markets-banking-summit",
+    "type-article"
+   ],
+   "featured_media": 39458,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/10/330560541.jpg",
+      "width": 1600,
+      "height": 1028,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 141629,
+   "date": "2026-06-30T16:31:47",
+   "slug": "capital-markets-show-resilience-despite-emerging-structural-risks",
+   "link": "https://www.bloomberg.com/professional/insights/markets/capital-markets-show-resilience-despite-emerging-structural-risks/",
+   "title": {
+    "rendered": "Capital markets show resilience despite emerging structural risks"
+   },
+   "excerpt": {
+    "rendered": "<p>Are capital markets built for resilience or heading toward a structural reckoning? Explore how shifting M&#038;A trends, private credit vulnerabilities and AI-driven disruption are reshaping global capital markets.</p>\n"
+   },
+   "categories": [
+    453,
+    469,
+    444
+   ],
+   "series": [
+    3931
+   ],
+   "class_list": [
+    "category-markets",
+    "category-risk",
+    "category-trading",
+    "post_series-global-markets-banking-summit",
+    "type-article"
+   ],
+   "featured_media": 141639,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/41/NELAKEKICEVENTPHOTOGRAPHYNYC-BLOOMBERG0547.jpg",
+      "width": 2048,
+      "height": 1366,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 141498,
+   "date": "2026-06-29T15:26:15",
+   "slug": "banking-leaders-describe-bullish-outlook-thanks-to-resilient-markets-ai-driven-productivity-gains",
+   "link": "https://www.bloomberg.com/professional/insights/markets/banking-leaders-describe-bullish-outlook-thanks-to-resilient-markets-ai-driven-productivity-gains/",
+   "title": {
+    "rendered": "Banking leaders describe bullish outlook thanks to resilient markets, AI-driven productivity gains"
+   },
+   "excerpt": {
+    "rendered": "<p>What&#8217;s fueling banking leaders&#8217; optimism despite ongoing market uncertainty? Explore how resilient markets and productivity gains are shaping the industry&#8217;s outlook.</p>\n"
+   },
+   "categories": [
+    457,
+    453,
+    444
+   ],
+   "series": [
+    3931
+   ],
+   "class_list": [
+    "category-financial-services",
+    "category-markets",
+    "category-trading",
+    "post_series-global-markets-banking-summit",
+    "type-article"
+   ],
+   "featured_media": 141504,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/41/NELAKEKICEVENTPHOTOGRAPHYNYC-BLOOMBERG0593-800x534.jpg",
+      "width": 800,
+      "height": 534,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 122339,
+   "date": "2025-07-14T14:31:25",
+   "slug": "what-is-the-state-of-play-in-global-markets-amid-volatility",
+   "link": "https://www.bloomberg.com/professional/insights/markets/what-is-the-state-of-play-in-global-markets-amid-volatility/",
+   "title": {
+    "rendered": "What is the state of play in global markets amid volatility?"
+   },
+   "excerpt": {
+    "rendered": "<p>In this Market Dialogues episode, Bernard Mensah, President of Bank of America International, and Francine Lacqua, Bloomberg TV Anchor and Editor-at-Large, discuss trade shifts, supply chain stress, and market adaptation.</p>\n"
+   },
+   "categories": [
+    457,
+    453,
+    444
+   ],
+   "series": [
+    3931
+   ],
+   "class_list": [
+    "category-financial-services",
+    "category-markets",
+    "category-trading",
+    "post_series-global-markets-banking-summit",
+    "type-podcast"
+   ],
+   "featured_media": 102820,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/41/930534_BBGT_Market_D930534_BBGT_Market_Dialogues_Podcast_Campaign_Thumbnail_Artwork_3x2.jpg",
+      "width": 1536,
+      "height": 1024,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 120246,
+   "date": "2025-07-11T14:00:54",
+   "slug": "what-will-the-next-wave-of-digital-banking-look-like",
+   "link": "https://www.bloomberg.com/professional/insights/financial-services/what-will-the-next-wave-of-digital-banking-look-like/",
+   "title": {
+    "rendered": "What will the next wave of digital banking look like?"
+   },
+   "excerpt": {
+    "rendered": "<p>What is the latest in the digital transformation of banks? At Bloomberg’s 2025 Sell-Side Leaders Forum, Lloyds’ Ron van Kemenade discussed AI, operating model changes, and leadership upskilling.</p>\n"
+   },
+   "categories": [
+    3715,
+    457,
+    453,
+    3661
+   ],
+   "series": [
+    3931
+   ],
+   "class_list": [
+    "category-artificial-intelligence",
+    "category-financial-services",
+    "category-markets",
+    "category-technology",
+    "post_series-global-markets-banking-summit",
+    "type-video"
+   ],
+   "featured_media": 40679,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/10/buildings121.jpg",
+      "width": 1200,
+      "height": 800,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 122120,
+   "date": "2025-07-11T13:29:15",
+   "slug": "liquidity-tested-how-tech-enables-sell-side-resilience",
+   "link": "https://www.bloomberg.com/professional/insights/financial-services/liquidity-tested-how-tech-enables-sell-side-resilience/",
+   "title": {
+    "rendered": "Liquidity tested: How tech enables sell-side resilience"
+   },
+   "excerpt": {
+    "rendered": "<p>Recent volatility reinforced the case for strengthening sell-side infrastructure. We examine how such technology is providing the sell-side with market visibility and tools to better withstand future shocks.</p>\n"
+   },
+   "categories": [
+    457,
+    453,
+    3661
+   ],
+   "series": [
+    3931
+   ],
+   "class_list": [
+    "category-financial-services",
+    "category-markets",
+    "category-technology",
+    "post_series-global-markets-banking-summit",
+    "type-article"
+   ],
+   "featured_media": 110302,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/41/Display.jpg",
+      "width": 1200,
+      "height": 800,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 118023,
+   "date": "2025-06-09T13:57:17",
+   "slug": "what-trends-are-shaping-the-sell-side-in-2025",
+   "link": "https://www.bloomberg.com/professional/insights/financial-services/what-trends-are-shaping-the-sell-side-in-2025/",
+   "title": {
+    "rendered": "What trends are shaping the sell-side in 2025?"
+   },
+   "excerpt": {
+    "rendered": "<p>From AI applications at scale to modernizing trading desks, we look at key themes discussed by C-suite speakers during Bloomberg’s Sell-Side Leaders Forum, held in New York and London.</p>\n"
+   },
+   "categories": [
+    457,
+    453,
+    3661
+   ],
+   "series": [
+    3931
+   ],
+   "class_list": [
+    "category-financial-services",
+    "category-markets",
+    "category-technology",
+    "post_series-global-markets-banking-summit",
+    "type-article"
+   ],
+   "featured_media": 118037,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/41/408970031resiz.jpg",
+      "width": 1200,
+      "height": 800,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 116700,
+   "date": "2025-06-05T12:23:21",
+   "slug": "what-is-ais-strategic-play-in-finance",
+   "link": "https://www.bloomberg.com/professional/insights/technology/what-is-ais-strategic-play-in-finance/",
+   "title": {
+    "rendered": "What is AI&#8217;s strategic play in finance?"
+   },
+   "excerpt": {
+    "rendered": "<p>What lies ahead for generative AI? At Bloomberg’s 2025 Sell-Side Leaders Forum in New York, experts discussed opportunities and key considerations around AI integration and scaling innovation across today’s complex financial ecosystems.</p>\n"
+   },
+   "categories": [
+    3715,
+    457,
+    453,
+    3661
+   ],
+   "series": [
+    3931
+   ],
+   "class_list": [
+    "category-artificial-intelligence",
+    "category-financial-services",
+    "category-markets",
+    "category-technology",
+    "post_series-global-markets-banking-summit",
+    "type-video"
+   ],
+   "featured_media": 97866,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/41/3908784921.jpg",
+      "width": 1200,
+      "height": 800,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 116609,
+   "date": "2025-05-22T15:13:03",
+   "slug": "leadership-among-volatility-how-firms-respond-to-structural-disruption",
+   "link": "https://www.bloomberg.com/professional/insights/markets/leadership-among-volatility-how-firms-respond-to-structural-disruption/",
+   "title": {
+    "rendered": "Leadership among volatility: How firms respond to structural disruption"
+   },
+   "excerpt": {
+    "rendered": "<p>As the rules of the global economy shift and the future remains uncertain, this article examines how leaders adapt, redefining strategy, decision-making, and trust to navigate trade tensions, deficits, and geopolitical shocks.</p>\n"
+   },
+   "categories": [
+    457,
+    453
+   ],
+   "series": [
+    3931
+   ],
+   "class_list": [
+    "category-financial-services",
+    "category-markets",
+    "post_series-global-markets-banking-summit",
+    "type-article"
+   ],
+   "featured_media": 102066,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/41/367026036-22.jpeg",
+      "width": 1200,
+      "height": 800,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 99636,
+   "date": "2024-11-18T14:11:16",
+   "slug": "seizing-opportunities-in-asias-high-growth-markets",
+   "link": "https://www.bloomberg.com/professional/insights/regional-analysis/seizing-opportunities-in-asias-high-growth-markets/",
+   "title": {
+    "rendered": "Seizing opportunities in Asia’s high-growth markets"
+   },
+   "excerpt": {
+    "rendered": "<p>As the global economy experiences varying growth outlooks in 2024 — with pressures from inflation and geopolitical tensions — what are investors&#8217; perceptions of Asia&#8217;s high-growth markets?  We look at diverse opportunities in high-yield credit markets, local currency bonds and more.</p>\n"
+   },
+   "categories": [
+    457,
+    453,
+    534
+   ],
+   "series": [
+    3931
+   ],
+   "class_list": [
+    "category-financial-services",
+    "category-markets",
+    "category-regional-analysis",
+    "post_series-global-markets-banking-summit",
+    "type-article"
+   ],
+   "featured_media": 99890,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/41/324202420-1.jpg",
+      "width": 1200,
+      "height": 800,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 72136,
+   "date": "2024-07-08T13:16:40",
+   "slug": "optimizing-multi-asset-trading-with-single-platform-solutions",
+   "link": "https://www.bloomberg.com/professional/insights/financial-services/optimizing-multi-asset-trading-with-single-platform-solutions/",
+   "title": {
+    "rendered": "Optimizing multi-asset trading with single platform solutions"
+   },
+   "excerpt": {
+    "rendered": "<p>Bloomberg&#8217;s David Allright, Global Head of Trader Services, and Rohit Tak, Global Product Manager, Cash &amp; Derivative Risk &amp; Risk Compliance, explore how single platform solutions can help financial services professionals navigate segregated sell-side infrastructure.</p>\n"
+   },
+   "categories": [
+    457,
+    453,
+    469,
+    3661
+   ],
+   "series": [
+    3931
+   ],
+   "class_list": [
+    "category-financial-services",
+    "category-markets",
+    "category-risk",
+    "category-technology",
+    "post_series-global-markets-banking-summit",
+    "type-article"
+   ],
+   "featured_media": 72142,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/41/366809363.jpg",
+      "width": 1200,
+      "height": 800,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 76005,
+   "date": "2024-07-03T13:20:59",
+   "slug": "expansion-into-new-markets-and-offerings-where-will-citadel-securities-go-next",
+   "link": "https://www.bloomberg.com/professional/insights/markets/expansion-into-new-markets-and-offerings-where-will-citadel-securities-go-next/",
+   "title": {
+    "rendered": "Expansion into new markets and offerings: Where will Citadel Securities go next?"
+   },
+   "excerpt": {
+    "rendered": "<p>At Bloomberg’s 2024 Sell-Side Leaders Forum in New York, Peng Zhao, CEO at Citadel Securities spoke with Erik Schatzker, Editorial Director at Bloomberg New Economy on the company&#8217;s entry into the credit market, Asian expansion plans, and support for new equity exchanges</p>\n"
+   },
+   "categories": [
+    457,
+    453,
+    444
+   ],
+   "series": [
+    3931
+   ],
+   "class_list": [
+    "category-financial-services",
+    "category-markets",
+    "category-trading",
+    "post_series-global-markets-banking-summit",
+    "type-video"
+   ],
+   "featured_media": 77410,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/41/365376363-1-800x533.jpg",
+      "width": 800,
+      "height": 533,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 76403,
+   "date": "2024-07-02T08:47:10",
+   "slug": "the-rise-of-nlp-enhanced-solutions-for-financial-professionals",
+   "link": "https://www.bloomberg.com/professional/insights/trading/the-rise-of-nlp-enhanced-solutions-for-financial-professionals/",
+   "title": {
+    "rendered": "The rise of NLP-enhanced solutions for financial professionals"
+   },
+   "excerpt": {
+    "rendered": "<p>Digital transformation has brought huge efficiency gains to workflows all along the trade lifecycle. One critical part of the chain of actions that has been ripe for improvement, however, is now benefiting from Bloomberg’s enhanced application of artificial intelligence.</p>\n"
+   },
+   "categories": [
+    453,
+    3661,
+    444
+   ],
+   "series": [
+    3931
+   ],
+   "class_list": [
+    "category-markets",
+    "category-technology",
+    "category-trading",
+    "post_series-global-markets-banking-summit",
+    "type-article"
+   ],
+   "featured_media": 76545,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/41/366809132-800x533.jpg",
+      "width": 800,
+      "height": 533,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 74245,
+   "date": "2024-06-17T13:39:32",
+   "slug": "what-are-the-main-leadership-challenges-in-a-shifting-global-landscape",
+   "link": "https://www.bloomberg.com/professional/insights/markets/what-are-the-main-leadership-challenges-in-a-shifting-global-landscape/",
+   "title": {
+    "rendered": "What are the main leadership challenges in a shifting global landscape?"
+   },
+   "excerpt": {
+    "rendered": "<p>Can AI lead to a revolution in workforce productivity? How can leaders adapt to changing demographics in the workforce? What other challenges do sell-side leaders need to prepare for in a changing global landscape?</p>\n"
+   },
+   "categories": [
+    3715,
+    457,
+    453,
+    3661
+   ],
+   "series": [
+    3931
+   ],
+   "class_list": [
+    "category-artificial-intelligence",
+    "category-financial-services",
+    "category-markets",
+    "category-technology",
+    "post_series-global-markets-banking-summit",
+    "type-video"
+   ],
+   "featured_media": 74821,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/41/408969694-1-800x533.jpg",
+      "width": 800,
+      "height": 533,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 73644,
+   "date": "2024-06-12T12:27:37",
+   "slug": "electronic-trading-and-automation-evolution-of-trading-workflow-automation",
+   "link": "https://www.bloomberg.com/professional/insights/trading/electronic-trading-and-automation-evolution-of-trading-workflow-automation/",
+   "title": {
+    "rendered": "Electronic trading and automation: Evolution of trading workflow automation"
+   },
+   "excerpt": {
+    "rendered": "<p>The increased use of electronic trading has shaped how different markets and asset classes operate. Will upcoming regulatory changes lead to a next wave of electronic trading? What are some of the most recent advances in electronic trading?</p>\n"
+   },
+   "categories": [
+    453,
+    444
+   ],
+   "series": [
+    3931
+   ],
+   "class_list": [
+    "category-markets",
+    "category-trading",
+    "post_series-global-markets-banking-summit",
+    "type-article"
+   ],
+   "featured_media": 73654,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/41/364745101-800x533.jpg",
+      "width": 800,
+      "height": 533,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 73844,
+   "date": "2024-06-12T12:00:21",
+   "slug": "ai-digital-transformation-in-sell-side",
+   "link": "https://www.bloomberg.com/professional/insights/markets/ai-digital-transformation-in-sell-side/",
+   "title": {
+    "rendered": "AI &amp; digital transformation in the sell-side"
+   },
+   "excerpt": {
+    "rendered": "<p>AI is not a silver bullet that will solve every problem and many organizations might find it challenging to harness its potential. What are some challenges in integrating AI into business?</p>\n"
+   },
+   "categories": [
+    3715,
+    453,
+    3661,
+    444
+   ],
+   "series": [
+    3931
+   ],
+   "class_list": [
+    "category-artificial-intelligence",
+    "category-markets",
+    "category-technology",
+    "category-trading",
+    "post_series-global-markets-banking-summit",
+    "type-article"
+   ],
+   "featured_media": 73853,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/41/372415790-800x533.jpg",
+      "width": 800,
+      "height": 533,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 140774,
+   "date": "2026-06-04T17:12:55",
+   "slug": "three-forces-reshaping-bank-liquidity-and-risk-management",
+   "link": "https://www.bloomberg.com/professional/insights/risk/three-forces-reshaping-bank-liquidity-and-risk-management/",
+   "title": {
+    "rendered": "Three forces reshaping bank liquidity and risk management"
+   },
+   "excerpt": {
+    "rendered": "<p>Banks are rethinking liquidity management as regulation, technology and market dynamics reshape risk. Learn how banking execs are responding to the forces impacting liquidity while strengthening resilience.</p>\n"
+   },
+   "categories": [
+    453,
+    469,
+    444
+   ],
+   "series": [],
+   "class_list": [
+    "category-markets",
+    "category-risk",
+    "category-trading",
+    "type-article"
+   ],
+   "featured_media": 92130,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/41/394408763.jpg",
+      "width": 800,
+      "height": 533,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 139401,
+   "date": "2026-04-29T06:36:16",
+   "slug": "tradings-next-era-how-tech-and-client-demands-are-reshaping-market-structure",
+   "link": "https://www.bloomberg.com/professional/insights/technology/tradings-next-era-how-tech-and-client-demands-are-reshaping-market-structure/",
+   "title": {
+    "rendered": "Trading’s next era: How tech and client demands are reshaping market structure"
+   },
+   "excerpt": {
+    "rendered": "<p>Trading is entering an arms race where speed, AI and automation are no longer advantages &#8211; they’re the cost of staying in the game. Learn how firms are rebuilding their tech stacks and workflows to compete in this real-time, data-driven market.</p>\n"
+   },
+   "categories": [
+    457,
+    453,
+    3661,
+    444
+   ],
+   "series": [],
+   "class_list": [
+    "category-financial-services",
+    "category-markets",
+    "category-technology",
+    "category-trading",
+    "type-article"
+   ],
+   "featured_media": 139411,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/41/dan-resize.jpg",
+      "width": 1600,
+      "height": 1200,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 142583,
+   "date": "2026-08-25T12:54:48",
+   "slug": "how-alicorp-transformed-commodity-risk-management-with-b-pipe",
+   "link": "https://www.bloomberg.com/professional/insights/data/how-alicorp-transformed-commodity-risk-management-with-b-pipe/",
+   "title": {
+    "rendered": "How Alicorp transformed commodity risk management with B-PIPE"
+   },
+   "excerpt": {
+    "rendered": "<p>Alicorp turned to Bloomberg B-PIPE to bring real-time commodity pricing into its internal risk management system, reducing reporting time and improving visibility into commodity and FX positions.</p>\n"
+   },
+   "categories": [
+    435,
+    457,
+    453
+   ],
+   "series": [],
+   "class_list": [
+    "category-data",
+    "category-financial-services",
+    "category-markets",
+    "type-case-study"
+   ],
+   "featured_media": 0,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/41/367026036-22.jpeg",
+      "width": 1200,
+      "height": 800,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 142263,
+   "date": "2026-08-11T17:22:32",
+   "slug": "empowering-dynamic-portfolio-construction-with-a-risk-adjusted-momentum-model",
+   "link": "https://www.bloomberg.com/professional/insights/financial-services/empowering-dynamic-portfolio-construction-with-a-risk-adjusted-momentum-model/",
+   "title": {
+    "rendered": "Empowering Dynamic Portfolio Construction with a Risk-Adjusted Momentum Model"
+   },
+   "excerpt": {
+    "rendered": "<p>Garanti BBVA Portföy used BQuant Desktop to transform a spreadsheet-based investment research process into a scalable, risk-adjusted momentum framework, cutting processing time while expanding its investment universe.</p>\n"
+   },
+   "categories": [
+    435,
+    457
+   ],
+   "series": [],
+   "class_list": [
+    "category-data",
+    "category-financial-services",
+    "type-case-study"
+   ],
+   "featured_media": 0,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/41/3604425001.jpg",
+      "width": 800,
+      "height": 533,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 139240,
+   "date": "2026-05-28T07:11:10",
+   "slug": "meiji-yasuda-enhancing-fx-operations-with-fxgo-and-mars",
+   "link": "https://www.bloomberg.com/professional/insights/trading/meiji-yasuda-enhancing-fx-operations-with-fxgo-and-mars/",
+   "title": {
+    "rendered": "Meiji Yasuda: Enhancing FX operations with FXGO and MARS"
+   },
+   "excerpt": {
+    "rendered": "<p>Learn how Meiji Yasuda Life modernized FX swaps and options execution using Bloomberg FXGO and MARS to improve accuracy, risk visibility, and front‑to‑back efficiency.</p>\n"
+   },
+   "categories": [
+    457,
+    3661,
+    444
+   ],
+   "series": [],
+   "class_list": [
+    "category-financial-services",
+    "category-technology",
+    "category-trading",
+    "type-case-study"
+   ],
+   "featured_media": 0,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/41/Modern_Skyscrapers.jpg",
+      "width": 2736,
+      "height": 1816,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 126143,
+   "date": "2025-09-15T04:32:23",
+   "slug": "us-market-economy-hit-from-trump-era-still-looms",
+   "link": "https://www.bloomberg.com/professional/insights/regional-analysis/us-market-economy-hit-from-trump-era-still-looms/",
+   "title": {
+    "rendered": "Asia Centric: US Market, Economy Hit From Trump Era Still Looms"
+   },
+   "excerpt": {
+    "rendered": "<p>The decline in US shipbuilding and China&#8217;s global dominance has Washington worried. This has also become a national security issue, with US shipyards struggling to meet the demands of the navy.</p>\n"
+   },
+   "categories": [
+    453,
+    534
+   ],
+   "series": [
+    3751
+   ],
+   "class_list": [
+    "category-markets",
+    "category-regional-analysis",
+    "post_series-asia-centric",
+    "type-podcast"
+   ],
+   "featured_media": 0,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/41/BI-Podcast_Asia-Centric_Feature-Image.png",
+      "width": 1536,
+      "height": 1024,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 143214,
+   "date": "2026-09-22T11:06:52",
+   "slug": "redrawing-the-institutional-investment-map-shifting-beyond-legacy-benchmarks",
+   "link": "https://www.bloomberg.com/professional/insights/markets/redrawing-the-institutional-investment-map-shifting-beyond-legacy-benchmarks/",
+   "title": {
+    "rendered": "Redrawing the Institutional Investment Map: Shifting Beyond Legacy Benchmarks"
+   },
+   "excerpt": {
+    "rendered": "<p>From AI infrastructure to strategic autonomy, this report looks at the forces redefining equity markets and influencing how institutional investors think about benchmarks in a more fragmented world.</p>\n"
+   },
+   "categories": [
+    453,
+    3661,
+    444
+   ],
+   "series": [],
+   "class_list": [
+    "category-markets",
+    "category-technology",
+    "category-trading",
+    "type-report"
+   ],
+   "featured_media": 0,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/41/408970037.jpeg",
+      "width": 1200,
+      "height": 800,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 143533,
+   "date": "2026-09-21T05:05:00",
+   "slug": "moderna-merck-cancer-vaccine-in-the-balance",
+   "link": "https://www.bloomberg.com/professional/insights/markets/moderna-merck-cancer-vaccine-in-the-balance/",
+   "title": {
+    "rendered": "Moderna-Merck Cancer Vaccine in the Balance"
+   },
+   "excerpt": {
+    "rendered": "<p>Personalized cancer vaccines are attracting growing attention as advances in mRNA technology open up new possibilities across oncology.</p>\n"
+   },
+   "categories": [
+    453,
+    3661
+   ],
+   "series": [],
+   "class_list": [
+    "category-markets",
+    "category-technology",
+    "type-report"
+   ],
+   "featured_media": 0,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/41/Office-building-at-dusk-1.jpg",
+      "width": 1583,
+      "height": 1076,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 143135,
+   "date": "2026-09-08T07:22:27",
+   "slug": "best-execution-beyond-compliance",
+   "link": "https://www.bloomberg.com/professional/insights/regulation/best-execution-beyond-compliance/",
+   "title": {
+    "rendered": "Best execution: Beyond compliance"
+   },
+   "excerpt": {
+    "rendered": "<p>Explore why best execution goes beyond compliance and how independent execution analytics can support better trading decisions, oversight and investor trust.</p>\n"
+   },
+   "categories": [
+    486,
+    469,
+    3661,
+    444
+   ],
+   "series": [],
+   "class_list": [
+    "category-regulation",
+    "category-risk",
+    "category-technology",
+    "category-trading",
+    "type-report"
+   ],
+   "featured_media": 0,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/41/3671316331.jpg",
+      "width": 800,
+      "height": 533,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 143409,
+   "date": "2026-09-15T17:23:49",
+   "slug": "qa-with-ruben-bombardi-general-counsel-and-head-of-regulatory-enablement-vara",
+   "link": "https://www.bloomberg.com/professional/insights/markets/qa-with-ruben-bombardi-general-counsel-and-head-of-regulatory-enablement-vara/",
+   "title": {
+    "rendered": "Q&#038;A with Ruben Bombardi, General Counsel and Head of Regulatory Enablement, VARA"
+   },
+   "excerpt": {
+    "rendered": "<p>Ruben Bombardi, General Counsel and Head of Regulatory Enablement, VARA shares his thoughts on emerging regulatory trends, biggest lessons learned and advice to the younger generation.</p>\n"
+   },
+   "categories": [
+    453,
+    534,
+    486,
+    469
+   ],
+   "series": [],
+   "class_list": [
+    "category-markets",
+    "category-regional-analysis",
+    "category-regulation",
+    "category-risk",
+    "type-qa"
+   ],
+   "featured_media": 0,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/41/uuy6.png",
+      "width": 1080,
+      "height": 1080,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 141364,
+   "date": "2026-06-23T13:55:34",
+   "slug": "bloomberg-bringing-efficiency-to-structured-credit-trading",
+   "link": "https://www.bloomberg.com/professional/insights/trading/bloomberg-bringing-efficiency-to-structured-credit-trading/",
+   "title": {
+    "rendered": "How to bring efficiency to structured credit trading"
+   },
+   "excerpt": {
+    "rendered": "<p>How can structured credit desks reduce manual workflows while improving execution efficiency? Explore electronic trading solutions for fixed income and structured products.</p>\n"
+   },
+   "categories": [
+    457,
+    453,
+    444
+   ],
+   "series": [],
+   "class_list": [
+    "category-financial-services",
+    "category-markets",
+    "category-trading",
+    "type-qa"
+   ],
+   "featured_media": 0,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/10/322136573.jpg",
+      "width": 1600,
+      "height": 1066,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 126474,
+   "date": "2025-10-14T06:18:37",
+   "slug": "qa-with-dr-jin-lung-peng",
+   "link": "https://www.bloomberg.com/professional/insights/markets/qa-with-dr-jin-lung-peng/",
+   "title": {
+    "rendered": "Q&#038;A with Chairperson, Financial Supervisory Commission (Taiwan), Dr. Jin-Lung Peng"
+   },
+   "excerpt": {
+    "rendered": "<p>Dr. Jin-Lung Peng shares his vision for a resilient and innovative financial future in Taiwan, emphasizing the importance of balancing sound regulation with forward-looking growth.</p>\n"
+   },
+   "categories": [
+    453,
+    486
+   ],
+   "series": [],
+   "class_list": [
+    "category-markets",
+    "category-regulation",
+    "type-qa"
+   ],
+   "featured_media": 0,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/41/uuy6.png",
+      "width": 1080,
+      "height": 1080,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  },
+  {
+   "id": 140090,
+   "date": "2026-05-14T13:47:27",
+   "slug": "rethinking-price-discovery-in-fixed-income-markets-report",
+   "link": "https://www.bloomberg.com/professional/insights/data/rethinking-price-discovery-in-fixed-income-markets-report/",
+   "title": {
+    "rendered": "Pricing Insights: Rethinking Price Discovery in Fixed Income Markets"
+   },
+   "excerpt": {
+    "rendered": "<p>This report shares insights into how pricing data, from quotes to executed trades, is evolving across global credit markets, and how traders can use these inputs to inform pre-trade decision-making and execution outcomes.</p>\n"
+   },
+   "categories": [
+    435,
+    444
+   ],
+   "series": [
+    3798
+   ],
+   "class_list": [
+    "category-data",
+    "category-trading",
+    "post_series-pricing-insights",
+    "type-report"
+   ],
+   "featured_media": 0,
+   "yoast_head_json": {
+    "og_image": [
+     {
+      "url": "https://assets.bbhub.io/professional/sites/41/408969611-11.jpeg",
+      "width": 1200,
+      "height": 800,
+      "type": "image/jpeg"
+     }
+    ]
+   }
+  }
+ ],
+ "categories": [
+  {
+   "id": 3715,
+   "name": "Artificial Intelligence",
+   "slug": "artificial-intelligence"
+  },
+  {
+   "id": 540,
+   "name": "Commodities",
+   "slug": "commodities"
+  },
+  {
+   "id": 435,
+   "name": "Data",
+   "slug": "data"
+  },
+  {
+   "id": 457,
+   "name": "Financial Services",
+   "slug": "financial-services"
+  },
+  {
+   "id": 453,
+   "name": "Markets",
+   "slug": "markets"
+  },
+  {
+   "id": 3814,
+   "name": "Press announcement",
+   "slug": "press-announcement"
+  },
+  {
+   "id": 534,
+   "name": "Regional Analysis",
+   "slug": "regional-analysis"
+  },
+  {
+   "id": 486,
+   "name": "Regulation",
+   "slug": "regulation"
+  },
+  {
+   "id": 469,
+   "name": "Risk",
+   "slug": "risk"
+  },
+  {
+   "id": 524,
+   "name": "Sustainable Finance",
+   "slug": "sustainable-finance"
+  },
+  {
+   "id": 3661,
+   "name": "Technology",
+   "slug": "technology"
+  },
+  {
+   "id": 444,
+   "name": "Trading",
+   "slug": "trading"
+  },
+  {
+   "id": 449,
+   "name": "Treasury",
+   "slug": "treasury"
+  }
+ ],
+ "types": [
+  {
+   "id": 3762,
+   "name": "Article",
+   "slug": "article"
+  },
+  {
+   "id": 3763,
+   "name": "Case Study",
+   "slug": "case-study"
+  },
+  {
+   "id": 3765,
+   "name": "Podcast",
+   "slug": "podcast"
+  },
+  {
+   "id": 3815,
+   "name": "Press Release",
+   "slug": "press-release"
+  },
+  {
+   "id": 3766,
+   "name": "Q&amp;A",
+   "slug": "qa"
+  },
+  {
+   "id": 3767,
+   "name": "Report",
+   "slug": "report"
+  },
+  {
+   "id": 3768,
+   "name": "Video",
+   "slug": "video"
+  }
+ ],
+ "sessions": [],
+ "speakers": {}
+}

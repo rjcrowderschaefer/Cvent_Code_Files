@@ -1,0 +1,214 @@
+/* =====================================================================
+   BLOOMBERG LIVE — NATIVE NAV OVERRIDE  (NYCW / GRF look)
+   v1 · 2026-09-25
+   Paste into: Website > Custom CSS. Cvent prefixes every rule with
+   .custom-css-scope automatically — don't add it yourself.
+
+   Native Website Navigator only: pages, links and the Register button
+   stay Cvent's, so registration type / path logic is untouched.
+   Needs the nav SECTION's existing custom class "cus_nav" (already set).
+
+   STEP 1  Event name beside the logo  -> content: "…" in section B
+   STEP 2  Accent colour               -> --bbg-nav-accent
+   ===================================================================== */
+
+/* ---------- A. tokens + bar ---------- */
+.cus_nav {
+  --bbg-nav-bg: #0B0B0C;
+  --bbg-nav-text: #FFFFFF;
+  --bbg-nav-muted: rgba(255, 255, 255, .62);
+  --bbg-nav-hair: rgba(255, 255, 255, .14);
+  --bbg-nav-accent: #F7A325;                 /* STEP 2 */
+  --bbg-nav-accent-h: #E8951B;
+  --bbg-nav-accent-text: #0B0B0C;
+  --bbg-nav-font: "AvenirNextPForBBG", "AvenirNextforBBG", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background: var(--bbg-nav-bg) !important;
+  box-shadow: inset 0 -1px 0 var(--bbg-nav-hair);
+}
+.cus_nav [class*="WebsiteNavigator__container"] {
+  background: transparent !important;
+  max-width: 1240px;
+  width: 100%;
+  margin: 0 auto;
+  min-height: 66px;
+  padding: 0 clamp(20px, 4vw, 48px) !important;
+  box-sizing: border-box;
+  display: flex !important;
+  align-items: center !important;
+  gap: 28px;
+  font-family: var(--bbg-nav-font);
+}
+
+/* ---------- B. brand: Bloomberg logo | amber hairline | event name ---------- */
+.cus_nav [class*="WebsiteNavigator__leftContent"] {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px;
+  flex: 0 0 auto;
+  width: auto !important;
+  max-width: none !important;
+  min-width: 0;
+  white-space: nowrap;
+}
+.cus_nav [class*="WebsiteNavigator__leftContent"] img {
+  width: 104px !important;
+  max-width: 104px !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block;
+  flex: none;
+}
+.cus_nav [class*="WebsiteNavigator__leftContent"]::after {
+  content: "AI in Finance Summit";           /* STEP 1 — "" hides it */
+  font-family: var(--bbg-nav-font);
+  font-size: 17px;
+  font-weight: 400;
+  letter-spacing: -.02em;
+  line-height: 22px;
+  color: var(--bbg-nav-muted);
+  padding-left: 14px;
+  border-left: 1px solid var(--bbg-nav-accent);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- C. desktop links ---------- */
+.cus_nav [class*="WebsiteNavigator__navigation"] {
+  margin-left: auto !important;              /* cancels the 70px template offset */
+  display: flex;
+  justify-content: flex-end;
+}
+.cus_nav [class*="WebsiteNavigator__horizontalMenu"] ul {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  white-space: nowrap;
+}
+.cus_nav li[class*="WebsiteNavigator__horizontal"] {
+  padding: 0 !important;
+  margin: 0 0 0 28px !important;
+}
+.cus_nav li[class*="WebsiteNavigator__horizontal"]:first-child { margin-left: 0 !important; }
+.cus_nav li[class*="WebsiteNavigator__horizontal"] > div {
+  font-family: var(--bbg-nav-font) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  color: var(--bbg-nav-muted) !important;
+  opacity: 1 !important;
+  padding: 6px 0 !important;
+  border-bottom: 2px solid transparent !important;
+  transition: color .15s, border-color .15s;
+}
+.cus_nav li[class*="WebsiteNavigator__horizontal"] > div:hover,
+.cus_nav li[class*="WebsiteNavigator__horizontal"] > div[class*="WebsiteNavigator__selected"] {
+  color: var(--bbg-nav-text) !important;
+  border-bottom: 2px solid var(--bbg-nav-accent) !important;
+}
+
+/* ---------- D. native Register button -> amber CTA ---------- */
+.cus_nav [class*="WebsiteNavigator__rightContent"] { flex: 0 0 auto; }
+.cus_nav [class*="WebsiteNavigator__rightContent"] button {
+  background: var(--bbg-nav-accent) !important;
+  color: var(--bbg-nav-accent-text) !important;
+  border: 0 !important;
+  border-radius: 2px !important;
+  font-family: var(--bbg-nav-font) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 11px 18px !important;
+  box-shadow: none !important;
+  transition: background .15s;
+}
+.cus_nav [class*="WebsiteNavigator__rightContent"] button span {
+  font: inherit !important; color: inherit !important; line-height: 1 !important;
+}
+.cus_nav [class*="WebsiteNavigator__rightContent"] button:hover,
+.cus_nav [class*="WebsiteNavigator__rightContent"] button:focus-visible {
+  background: var(--bbg-nav-accent-h) !important;
+}
+/* Cvent disables the button while registration is closed — keep it on-brand */
+.cus_nav [class*="WebsiteNavigator__rightContent"] button[class*="Button__disabled"] {
+  background: transparent !important;
+  color: var(--bbg-nav-muted) !important;
+  box-shadow: inset 0 0 0 1px var(--bbg-nav-hair) !important;
+  cursor: default;
+}
+.cus_nav :focus-visible { outline: 3px solid #6FA0FF !important; outline-offset: 2px; }
+
+/* ---------- E. sticky state (template JS adds .scroll) ---------- */
+.cus_nav.scroll { box-shadow: inset 0 -1px 0 var(--bbg-nav-hair), 0 8px 24px rgba(0, 0, 0, .35); }
+
+/* ---------- F. narrow desktop / tablet: keep one line ---------- */
+@media screen and (max-width: 1180px) {
+  .cus_nav li[class*="WebsiteNavigator__horizontal"] { margin-left: 20px !important; }
+  .cus_nav [class*="WebsiteNavigator__leftContent"]::after { font-size: 15px; }
+}
+@media screen and (max-width: 1024px) {
+  .cus_nav [class*="WebsiteNavigator__container"] { gap: 20px; }
+  .cus_nav [class*="WebsiteNavigator__leftContent"] img { width: 96px !important; max-width: 96px !important; padding-top: 0 !important; }
+  .cus_nav [class*="WebsiteNavigator__leftContent"]::after { display: none; }   /* name returns on phones */
+  .cus_nav li[class*="WebsiteNavigator__horizontal"] { margin-left: 18px !important; }
+  .cus_nav li[class*="WebsiteNavigator__horizontal"] > div { font-size: 13px !important; }
+}
+
+/* ---------- G. phone layout (Cvent switches to WebsiteNavigator__sm) ---------- */
+.cus_nav [class*="WebsiteNavigator__sm"] {
+  min-height: 60px;
+  padding: 0 20px !important;
+  gap: 12px;
+  justify-content: space-between;
+}
+.cus_nav [class*="WebsiteNavigator__sm"] [class*="WebsiteNavigator__leftContent"] {
+  order: 0; flex: 1 1 auto; width: auto !important; gap: 10px; overflow: hidden;
+}
+.cus_nav [class*="WebsiteNavigator__sm"] [class*="WebsiteNavigator__leftContent"] img {
+  width: 86px !important; max-width: 86px !important;
+}
+.cus_nav [class*="WebsiteNavigator__sm"] [class*="WebsiteNavigator__leftContent"]::after {
+  display: block; font-size: 14px; line-height: 18px; padding-left: 10px;
+}
+.cus_nav [class*="WebsiteNavigator__sm"] [class*="WebsiteNavigator__group"] {
+  order: 1; flex: 0 0 auto; width: auto !important; padding-top: 0 !important; margin: 0 -8px 0 0;
+}
+.cus_nav [class*="WebsiteNavigator__sm"] [class*="WebsiteNavigator__menuIcon"] {
+  width: 40px !important; height: 40px !important; color: var(--bbg-nav-text) !important;
+}
+.cus_nav [class*="WebsiteNavigator__sm"] [class*="WebsiteNavigator__menuIcon"] path { fill: var(--bbg-nav-text) !important; }
+
+/* ---------- H. phone menu (Cvent renders it in a full-screen dialog) ---------- */
+[class*="Dialog__dragContainer"]:has([class*="WebsiteNavigator__vertical"]) {
+  background: #0B0B0C !important;
+}
+[class*="WebsiteNavigator__menu"]:has(> [class*="WebsiteNavigator__vertical"]) {
+  padding: 8px 20px 24px !important;
+  box-sizing: border-box;
+}
+li[class*="WebsiteNavigator__vertical"] {
+  margin: 0 !important;
+  padding: 0 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, .14);
+}
+li[class*="WebsiteNavigator__vertical"] > div {
+  display: block !important;
+  font-family: "AvenirNextPForBBG", "AvenirNextforBBG", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+  color: #FFFFFF !important;
+  opacity: 1 !important;
+  padding: 15px 0 15px 12px !important;
+  border: 0 !important;
+  border-left: 2px solid transparent !important;
+}
+li[class*="WebsiteNavigator__vertical"] > div[class*="WebsiteNavigator__selected"] {
+  border-left-color: #F7A325 !important;
+  border-bottom: 0 !important;
+  font-weight: 700 !important;
+}
+
+@media (prefers-reduced-motion: reduce) { .cus_nav * { transition: none !important; } }

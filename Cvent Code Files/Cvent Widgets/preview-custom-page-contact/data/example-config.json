@@ -1,0 +1,32 @@
+{
+ "banner": {
+  "intro": "Questions about the summit or about Bloomberg. Reach the right team directly."
+ },
+ "cards": {
+  "items": [
+   {
+    "email": "event-team@example.com"
+   },
+   {
+    "buttonUrl": "https://www.bloomberg.com/professional/request-demo/"
+   },
+   {}
+  ]
+ },
+ "faq": {
+  "items": [
+   {
+    "a": "[Sample answer] Attendance is by invitation and complimentary for approved guests."
+   },
+   {
+    "a": "[Sample answer] Colleagues are welcome to request an invitation of their own."
+   },
+   {
+    "a": "[Sample answer] Business attire."
+   },
+   {
+    "a": "[Sample answer] Selected sessions will be recorded.\n\nRecordings will be shared with attendees after the event."
+   }
+  ]
+ }
+}

@@ -1,0 +1,1185 @@
+/* === DEFAULT CVENT CSS - DO NOT EDIT === */
+
+.main-nav,
+.main-nav .website_navigation {
+  transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1) 0s;
+}
+
+.speaker-space > div {
+  padding-top: 0px !important;
+}
+
+.max_width_main > div {
+  max-width: 1400px !important;
+}
+
+.section_full_fluid > div {
+  max-width: 100% !important;
+}
+
+.interior_nav_bar img,
+.website_navigation img {
+  max-width: 280px !important;
+  height: auto !important;
+}
+
+.nav_links {
+  text-transform: uppercase;
+}
+
+.website_navigation ul > li {
+  padding-right: 8px !important;
+}
+
+.website_navigation ul > li:last-child {
+  padding-right: 0 !important;
+}
+
+.website_navigation nav > ul > li > div {
+  padding-top: 5px !important;
+  opacity: 0.5;
+}
+
+.footer_logo img {
+  max-width: 90px !important;
+  height: auto !important;
+}
+
+.link_color_white a {
+  color: #fff;
+}
+
+.text_dec_none a {
+  text-decoration: none !important;
+}
+
+.text_dec_undr {
+  text-decoration: underline !important;
+}
+
+.img_display_mobile_only img {
+  display: none;
+}
+
+.head_txt_center {
+  margin: 0 auto !important;
+}
+
+.divider_light > div {
+  border-top: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+.max_width_reduced,
+.max_width_reduced_1,
+.max_width_reduced_2,
+.max_width_reduced_3,
+.max_width_reduced_4 {
+  margin: 0 auto;
+}
+
+.max_width_reduced {
+  max-width: 57%;
+}
+
+.max_width_reduced_1 {
+  max-width: 50%;
+}
+
+.max_width_reduced_2 {
+  max-width: 80%;
+}
+
+.max_width_reduced_3 {
+  max-width: 60%;
+}
+
+.max_width_reduced_4 {
+  max-width: 70%;
+}
+
+.reg_field_display_horz {
+  display: flex;
+  flex-direction: column;
+}
+
+.mrg_left_0 {
+  margin-left: 0 !important;
+}
+
+.line_height_sm {
+  line-height: 1.1 !important;
+}
+
+.line_height_smd {
+  line-height: 1.4 !important;
+}
+
+.line_height_md {
+  line-height: 1.5 !important;
+}
+
+.letter_space_md {
+  letter-spacing: 0.1em;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-inverse {
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.section_hero_main,
+.section_hero_conf {
+  background-size: contain;
+}
+
+.section_home_2_col > div > div:first-child {
+  max-width: 42%;
+}
+
+.section_home_2_col > div > div:last-child {
+  max-width: 58%;
+  margin-left: auto;
+}
+
+.main_lockup img {
+  max-width: 620px !important;
+}
+
+.footer_lockup img {
+  max-width: 250px !important;
+}
+
+.text_01 {
+  border-bottom: 1px solid #888 !important;
+}
+
+.speaker_default_widget [class*="SpeakersStyles__speakersContainer"] > div {
+  width: 25%;
+}
+
+.speaker_default_widget
+  [class*="SpeakersStyles__speakersContainer"]
+  > div
+  [class*="SpeakersStyles__speakerImageContainer"] {
+  max-width: 90% !important;
+  width: 90% !important;
+  height: auto;
+}
+
+.sponsor_logo img {
+  transition: 0.5s ease;
+}
+
+.sponsor_logo img:hover {
+  transform: translate(0px, -15px);
+}
+
+@media only screen and (min-width: 1024px) and (max-width: 1440px) {
+  .section_main_middle > div {
+    max-width: 1140px !important;
+  }
+}
+
+@media only screen and (min-width: 768px) and (max-width: 1024px) {
+  .section_main_middle > div {
+    max-width: 90% !important;
+  }
+}
+
+@media only screen and (max-width: 600px) {
+  .font_16 {
+    font-size: 16px !important;
+  }
+  .font_18 {
+    font-size: 18px !important;
+  }
+  .font_20 {
+    font-size: 20px !important;
+  }
+
+  .font_28 {
+    font-size: 28px !important;
+  }
+  .header_2_fix {
+    padding-bottom: 5px !important;
+  }
+  .header_2_fix > div {
+    font-size: 28px !important;
+  }
+  .text_center_mb {
+    text-align: center !important;
+  }
+  .btn_center_mb > div {
+    text-align: center !important;
+  }
+  .p_top_mobile_0 {
+    padding-top: 0 !important;
+  }
+  .p_top_mobile_reduced {
+    padding-top: 20px !important;
+  }
+  .p_bottom_mobile_reduced {
+    padding-bottom: 25px !important;
+  }
+
+  [class*="WebsiteNavigator__group"] {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    padding-top: 15px;
+  }
+
+  [class*="WebsiteNavigator__rightContent"] .button {
+    font-size: 14px !important;
+    padding: 10px 1.5rem !important;
+  }
+
+  [class*="WebsiteNavigator__rightContent"] .already_reg_nav {
+    font-size: 12px !important;
+  }
+
+  .website_navigation {
+    padding: 0px 0 10px !important;
+    flex-direction: row-reverse;
+    display: flex !important;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+  }
+
+  .website_navigation > div {
+    width: 50%;
+  }
+
+  .website_navigation > div:last-of-type {
+    width: 40%;
+  }
+
+  .align_left_mb,
+  .align_left_mb > div,
+  .website_navigation > div:last-of-type > div {
+    text-align: left !important;
+  }
+
+  [class*="Icons-All__menuFilled"] {
+    padding: 0 !important;
+    font-size: 2.3em;
+  }
+
+  .interior_nav_bar img,
+  .website_navigation img {
+    max-width: 100px !important;
+  }
+
+  .interior_nav_bar {
+    justify-content: center !important;
+  }
+
+  .img_display_mobile_only img {
+    display: block;
+  }
+
+  .eliminate_spacer_mb {
+    padding: 0 !important;
+  }
+
+  .padding_l_r_0 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .already_reg_link {
+    display: block !important;
+    padding-left: 0 !important;
+    text-align: center !important;
+  }
+
+  .hide_img_mb {
+    display: none;
+  }
+
+  .max_width_reduced,
+  .max_width_reduced_1,
+  .max_width_reduced_2,
+  .max_width_reduced_3,
+  .max_width_reduced_4 {
+    max-width: 100%;
+  }
+
+  .img_width_reduced_1 img {
+    max-width: 80% !important;
+  }
+
+  .btn_inline {
+    width: auto !important;
+    padding: 14px 2.8rem !important;
+  }
+
+  .section_home_2_col > div > div {
+    max-width: 100% !important;
+  }
+
+  .b_lockup img {
+    max-width: 220px !important;
+  }
+
+  .widget_align_fix_01 {
+    padding: 0 15px 0 15px !important;
+  }
+
+  .speaker_default_widget [class*="SpeakersStyles__speakersContainer"] > div {
+    width: 100%;
+  }
+
+  .navigation-mobile > div:nth-child(1) {
+    float: right;
+    padding-top: 5px !important;
+  }
+
+  .navigation-mobile img {
+    max-width: 160px;
+    margin: -20px 0 0 0 !important;
+  }
+
+  .navigation-mobile div {
+    text-align: left !important;
+  }
+
+  .title {
+    font-size: 40px !important;
+  }
+}
+
+/* === END DEFAULT CVENT CSS === */
+
+/* === CUSTOM BLOOMBERG CSS === */
+
+.font-color-white {
+  color: #ffffff !important;
+}
+
+.margin-left {
+  margin-left: 50px;
+}
+
+/* ///////START NAVIGATION/////// */
+
+/* START: sticky nav on scroll - no update */
+div.scroll {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 99;
+  width: 100%;
+  height: auto;
+  transform: translateY(0px) !important;
+}
+
+.cus_nav.scroll {
+  opacity: 1 !important;
+}
+
+.cus_nav {
+  display: flex;
+  align-items: center;
+  transition: .5s;
+}
+
+.cus_nav img {
+  transition: .5s;
+}
+/* END: sticky nav */
+
+
+
+/* START: nav logo size, mobile <601px */
+@media screen and (max-width: 600px) {
+  .reg-header-mobile {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+
+  .hide-mobile-reg-button {
+    display: none !important;
+  }
+
+  .navigation-mobile [class*="WebsiteNavigator__menuIcon"] {
+    display: flex;
+    align-items: center;
+    line-height: 1;
+  }
+}
+/* END: mobile nav logo */
+
+/* //////END NAVIGATION////// */
+
+/* //////START HERO & PAGE HEADER MOBILE STYLING - NO UPDATE////// */
+
+.hero-text-bg {
+  width: 90% !important;
+  max-width: 875px !important;
+}
+
+@media screen and (max-width: 900px) {
+  .hero-text-bg {
+    width: 100% !important;
+    max-width: none !important;
+  }
+}
+
+@media screen and (max-width: 800px) {
+  .hero-spacer-padding {
+    display: none !important;
+  }
+
+  .display-none {
+    display: none !important;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .hero-padding {
+    padding-top: 25px !important;
+    padding-bottom: 25px !important;
+  }
+
+  .bg-mb {
+    background-size: cover !important;
+    background-position: right bottom !important;
+  }
+
+  h1 {
+    font-size: 28px !important;
+  }
+
+  .page-titles {
+    font-size: 24px !important;
+  }
+
+  .h2-section-titles {
+    font-size: 24px !important;
+  }
+
+  .event-title {
+    font-size: 28px !important;
+  }
+
+  .event-description {
+    font-size: 18px !important;
+  }
+
+  .description-padding {
+    padding-top: 15px !important;
+    padding-bottom: 15px !important;
+  }
+
+  h2 {
+    font-size: 24px !important;
+  }
+
+  h3 {
+    font-size: 20px !important;
+  }
+
+  .speaker-category {
+    font-size: 24px !important;
+  }
+
+  .speaker-name {
+    font-size: 18px !important;
+  }
+
+  [data-cvent-id="IdentityConfirmation-headerText"] {
+    padding-left: 0px !important;
+  }
+
+  [data-cvent-id="IdentityConfirmation-instructionalText"] {
+    padding-left: 0px !important;
+  }
+
+  /* 1. Form spans its full column */
+  .identity-confirmation {
+    width: 100% !important;
+  }
+
+  /* 2. Each field widget full width */
+  .identity-confirmation
+    [data-cvent-id="widget-content-EventStandardContactFieldText"] {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  /* 3. Drop width constraints on Cvent input containers (prefix match) */
+  .identity-confirmation [class*="Forms__inputContainerGuestSide___"],
+  .identity-confirmation [class*="Forms__textboxContainer___"] {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  /* 4. All text inputs fill their container */
+  .identity-confirmation input[data-cvent-id="input"] {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* //////END HERO & PAGE HEADER MOBILE STYLING - NO UPDATE////// */
+
+/* //////START COUNT DOWN CLOCK////// */
+
+/* START: countdown clock colors + size */
+[class*="Countdown-Circle-structure__digit"] {
+  color: #787b80 !important;
+  font-size: 2rem !important;
+}
+
+[class*="Countdown-Circle-structure__label"] {
+  color: #000000 !important;
+}
+
+[class*="Countdown-Circle-structure__border"] {
+  border-color: #787b80 !important;
+  color: #787b80 !important;
+  border-width: 4px !important;
+}
+
+@media screen and (max-width: 600px) {
+  [class*="Countdown-Circle-structure__digit"] {
+    font-size: 1rem !important;
+  }
+}
+/* END: countdown clock */
+/* ///////END COUNT DOWN CLOCK/////// */
+
+/* ///////START FOOTER/////// */
+/* ///////END FOOTER/////// */
+
+/* ///////START SPEAKER WIDGET LAYOUT/////// */
+
+/* START: speaker cards */
+[data-cvent-id="speakers-speakersContainer"] {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 30px;
+  justify-content: center;
+  justify-items: center;
+  align-items: stretch;
+  padding: 20px;
+  list-style: none;
+  overflow-x: visible;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 0 auto;
+}
+
+[data-cvent-id="speakers-speakerCard"] {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;
+  max-width: 320px;
+  padding: 20px;
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 12px;
+  box-sizing: border-box;
+  min-height: 300px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+[data-cvent-id="speakers-speakerCard"] img {
+  width: 210px;
+  height: 210px;
+  object-fit: cover;
+  display: block;
+  margin: 0 auto 0px;
+  border-radius: 5%;
+}
+
+/* Responsive: 2 Columns */
+@media screen and (max-width: 1024px) {
+  [data-cvent-id="speakers-speakersContainer"] {
+    grid-template-columns: repeat(2, 1fr);
+    justify-items: center;
+  }
+}
+
+/* Responsive: 1 Column */
+@media (max-width: 600px) {
+  [data-cvent-id="speakers-speakersContainer"] {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  [data-cvent-id="speakers-speakerCard"] {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  [data-cvent-id="speakers-speakerCard"] img {
+    width: 100%;
+    max-width: 225px;
+    height: auto;
+  }
+}
+
+[data-cvent-id="speakers-speakerCard"] h3 {
+  margin: 0px;
+  font-size: 1.375rem;
+  text-align: center;
+  padding: 0px;
+}
+/* END: speaker cards */
+/* ///////END SPEAKER WIDGET LAYOUT/////// */
+
+/* ///////START REGISTRATION LAYOUT/////// */
+
+/* Hide reg type for Organic path; still assigns on the back end */
+div[data-cvent-id="widget-content-RegistrationType"] p {
+  display: none !important;
+}
+/* ///////END REGISTRATION LAYOUT/////// */
+
+/* /////// START GLOBAL REGISTRATION BUTTON VISIBILITY /////// */
+/* Keeps the reg button area from being hidden by default Cvent behavior */
+[class*="WebsiteNavigator__rightContent"],
+[class*="WebsiteNavigator__registrationAction"],
+[data-cvent-id="website-navigation-registration-action"] {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Target the nav button across all viewports */
+[role="navigation"] button[type="button"],
+[class*="WebsiteNavigator__rightContent"] .button {
+  display: block !important;
+}
+
+/* Mobile nav group */
+@media only screen and (max-width: 600px) {
+  [class*="WebsiteNavigator__group"] {
+    display: flex !important;
+  }
+}
+/* /////// END GLOBAL REGISTRATION BUTTON VISIBILITY /////// */
+
+/* === END CUSTOM BLOOMBERG CSS === */
+
+.location-target {
+  height: 1px;
+}
+
+/* START: equal-height cards, button row pinned to bottom */
+.equal-height-cards [data-element-type="FlexRow"] {
+  align-items: stretch;
+}
+
+.equal-height-cards [class*="Grid__column"] {
+  display: flex;
+  flex-direction: column;
+}
+
+.equal-height-cards [class*="Content__widgetIdcontainer"],
+.equal-height-cards [data-cvent-id="containerParent"],
+.equal-height-cards [data-cvent-id="containerChild"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1 1 auto;
+}
+
+.equal-height-cards [data-element-type="FlexRow"]:only-child {
+  flex: 1 1 auto;
+}
+
+/* Push the button row to the bottom of the card */
+.equal-height-cards [data-element-type="FlexRow"]:last-child:not(:only-child) {
+  margin-top: auto;
+}
+
+/* Stack cards at <=700px (Cvent defaults to ~480px) */
+/* 501-700px: one per row at ~70% width, left-aligned */
+@media (max-width: 700px) {
+  .equal-height-cards [data-element-type="FlexRow"] {
+    flex-wrap: wrap;
+    justify-content: flex-start; /* keep the 70% cards pinned left */
+  }
+  .equal-height-cards [class*="Grid__column"][class*="Grid__col_4"] {
+    flex: 0 0 70%;
+    max-width: 70%;
+  }
+}
+
+/* 500px and below: full width */
+@media (max-width: 550px) {
+  .equal-height-cards [class*="Grid__column"][class*="Grid__col_4"] {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+/* END: Equal-height cards */
+
+.custom-css-scope [class*="WebsiteNavigator__container"].navigation-mobile {
+  max-width: 1280px !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+/* logo left, hamburger right */
+.navigation-mobile [class*="WebsiteNavigator__leftContent"] {
+  order: -1;
+}
+
+.spaced {
+  letter-spacing: 0.1em !important;
+}
+
+input[data-cvent-id="input"] {
+  border: 1px solid #C9C7BE !important;
+  border-radius: 0px !important;
+}
+
+input[data-cvent-id="input"]:focus {
+  border: 1.5px solid #E8590C !important;
+  box-shadow: 0 0 0 3px rgba(232, 89, 12, 0.12) !important;
+  outline: none !important;
+}
+
+.input-bottom {
+  border-radius: 12px !important;
+  border: 1px solid #E5E3DA !important;
+  border-bottom: 3px solid #FF9E24 !important;
+  border-right: 3px solid #FF9E24 !important;
+}
+
+.flex-start {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.align-items {
+  display: flex;
+  align-items: center;
+}
+
+.width-150 {
+  width: 150px !important;
+}
+
+.left-align-fields [data-element-type="FlexRow"] {
+  justify-content: flex-start !important;
+}
+
+.left-align-fields div:has(> div[data-cvent-id^="widget-EventStandardContactFieldText-"]) {
+  margin-left: 0 !important;
+  margin-inline-start: 0 !important;
+  left: 0 !important;
+  transform: none !important;
+}
+
+/* START 2nd page reg styling */
+
+.left-align-fields [class*="Grid__offset_1"][class*="Grid__push_1"] {
+  margin-left: 0 !important;
+  margin-inline-start: 0 !important;
+  left: 0 !important;
+  transform: none !important;
+}
+
+@media (min-width: 768px) {
+
+  .left-align-fields input[data-cvent-id="input"] {
+    width: 60% !important;
+  }
+
+  .left-align-fields .react-international-phone-input-container {
+    width: 60% !important;
+  }
+
+  .left-align-fields div:has(> [data-cvent-id="async-dropdown-wrapper"]) {
+    width: 60% !important;
+    max-width: 60% !important;
+  }
+
+  .left-align-fields [data-cvent-id="async-dropdown-wrapper"] {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .left-align-fields [data-cvent-id="async-dropdown-wrapper"] > div {
+    width: 100% !important;
+  }
+
+}
+/* END 2nd page reg styling */
+
+.left-align-fields input[data-cvent-id="input"]::placeholder {
+  color: #888680;
+  font-style: italic;
+}
+
+.button-group-left > ul {
+  text-align: left !important;
+}
+
+.navigation-header img {
+  max-width: 200px !important;
+}
+
+div[data-color-style-scheme="mood-background"]:first-of-type {
+  position: -webkit-sticky;
+  position: sticky;
+  z-index: 10;
+}
+
+
+.js-name,
+.js-company,
+.js-city,
+.js-email {
+  padding-top: 0px;/* intentionally empty — JS hook only */
+}
+
+/* START: Button hover — amber fill, black text */
+
+/* Top-level stub so the class appears in Cvent's class picker */
+.btn-hover-amber {
+  transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out;
+}
+
+/* Doubled class = (0,3,0), beats Cvent's hashed :hover (0,2,0).
+   .hover is Cvent's editor preview hook. */
+.btn-hover-amber.btn-hover-amber:hover,
+.btn-hover-amber.btn-hover-amber:focus-visible,
+.btn-hover-amber.btn-hover-amber.hover {
+  background-color: #ffa300 !important;
+  border-color: #ffa300 !important;
+  color: #000000 !important;
+}
+
+.btn-cta:hover {
+  background-color: #000000 !important;
+  color: #ffffff !important
+}
+
+/* Catches inner text nodes with their own color (e.g. .font-color-white) */
+.btn-hover-amber.btn-hover-amber:hover *,
+.btn-hover-amber.btn-hover-amber:focus-visible *,
+.btn-hover-amber.btn-hover-amber.hover * {
+  color: #000000 !important;
+}
+
+/* END: Button hover */
+
+
+/* =====================================================================
+   BLOOMBERG LIVE — NATIVE NAV OVERRIDE  (NYCW / GRF look)
+   v1 · 2026-09-25
+   Paste into: Website > Custom CSS. Cvent prefixes every rule with
+   .custom-css-scope automatically — don't add it yourself.
+
+   Native Website Navigator only: pages, links and the Register button
+   stay Cvent's, so registration type / path logic is untouched.
+   Needs the nav SECTION's existing custom class "cus_nav" (already set).
+
+   STEP 1  Event name beside the logo  -> content: "…" in section B
+   STEP 2  Accent colour               -> --na
+   ===================================================================== */
+
+/* ---------- A. tokens + bar ---------- */
+.cus_nav {
+  --nb: #0B0B0C;
+  --nt: #FFFFFF;
+  --nm: rgba(255, 255, 255, .62);
+  --nh: rgba(255, 255, 255, .14);
+  --na: #F7A325;                 /* STEP 2 */
+  --nah: #E8951B;
+  --nat: #0B0B0C;
+  --nf: "AvenirNextPForBBG", "AvenirNextforBBG", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background: var(--nb) !important;
+  box-shadow: inset 0 -1px 0 var(--nh);
+}
+.cus_nav [class*=Navigator__container] {
+  background: transparent !important;
+  max-width: 1240px;
+  width: 100%;
+  margin: 0 auto;
+  min-height: 66px;
+  padding: 0 clamp(20px, 4vw, 48px) !important;
+  box-sizing: border-box;
+  display: flex !important;
+  align-items: center !important;
+  gap: 28px;
+  font-family: var(--nf);
+}
+
+/* ---------- B. brand: Bloomberg logo | amber hairline | event name ---------- */
+.cus_nav [class*=Navigator__leftContent] {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px;
+  flex: 0 0 auto;
+  width: auto !important;
+  max-width: none !important;
+  min-width: 0;
+  white-space: nowrap;
+}
+.cus_nav [class*=Navigator__leftContent] img {
+  width: 104px !important;
+  max-width: 104px !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block;
+  flex: none;
+}
+.cus_nav [class*=Navigator__leftContent]::after {
+  content: "AI in Finance Summit";           /* STEP 1 — "" hides it */
+  font-family: var(--nf);
+  font-size: 17px;
+  font-weight: 400;
+  letter-spacing: -.02em;
+  line-height: 22px;
+  color: var(--nm);
+  padding-left: 14px;
+  border-left: 1px solid var(--na);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- C. desktop links ---------- */
+.cus_nav [class*=Navigator__navigation] {
+  margin-left: auto !important;              /* cancels the 70px template offset */
+  display: flex;
+  justify-content: flex-end;
+}
+.cus_nav [class*=Navigator__horizontalMenu] ul {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  white-space: nowrap;
+}
+.cus_nav li[class*=Navigator__horizontal] {
+  padding: 0 !important;
+  margin: 0 0 0 28px !important;
+}
+.cus_nav li[class*=Navigator__horizontal]:first-child { margin-left: 0 !important; }
+.cus_nav li[class*=Navigator__horizontal] > div {
+  font-family: var(--nf) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  color: var(--nm) !important;
+  opacity: 1 !important;
+  padding: 6px 0 !important;
+  border-bottom: 2px solid transparent !important;
+  transition: color .15s, border-color .15s;
+}
+.cus_nav li[class*=Navigator__horizontal] > div:hover,
+.cus_nav li[class*=Navigator__horizontal] > div[class*=Navigator__selected] {
+  color: var(--nt) !important;
+  border-bottom: 2px solid var(--na) !important;
+}
+
+/* ---------- D. native Register button -> amber CTA ---------- */
+.cus_nav [class*=Navigator__rightContent] { flex: 0 0 auto; }
+.cus_nav [class*=Navigator__rightContent] button {
+  background: var(--na) !important;
+  color: var(--nat) !important;
+  border: 0 !important;
+  border-radius: 2px !important;
+  font-family: var(--nf) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 11px 18px !important;
+  box-shadow: none !important;
+  transition: background .15s;
+}
+.cus_nav [class*=Navigator__rightContent] button span {
+  font: inherit !important; color: inherit !important; line-height: 1 !important;
+}
+.cus_nav [class*=Navigator__rightContent] button:hover,
+.cus_nav [class*=Navigator__rightContent] button:focus-visible {
+  background: var(--nah) !important;
+}
+/* Cvent disables the button while registration is closed — keep it on-brand */
+.cus_nav [class*=Navigator__rightContent] button[class*=Button__disabled] {
+  background: transparent !important;
+  color: var(--nm) !important;
+  box-shadow: inset 0 0 0 1px var(--nh) !important;
+  cursor: default;
+}
+.cus_nav :focus-visible { outline: 3px solid #6FA0FF !important; outline-offset: 2px; }
+
+/* ---------- E. sticky state (template JS adds .scroll) ---------- */
+.cus_nav.scroll { box-shadow: inset 0 -1px 0 var(--nh), 0 8px 24px rgba(0, 0, 0, .35); }
+
+/* ---------- F. narrow desktop / tablet: keep one line ---------- */
+@media screen and (max-width: 1180px) {
+  .cus_nav li[class*=Navigator__horizontal] { margin-left: 20px !important; }
+  .cus_nav [class*=Navigator__leftContent]::after { font-size: 15px; }
+}
+@media screen and (max-width: 1024px) {
+  .cus_nav [class*=Navigator__container] { gap: 20px; }
+  .cus_nav [class*=Navigator__leftContent] img { width: 96px !important; max-width: 96px !important; padding-top: 0 !important; }
+  .cus_nav [class*=Navigator__leftContent]::after { display: none; }   /* name returns on phones */
+  .cus_nav li[class*=Navigator__horizontal] { margin-left: 18px !important; }
+  .cus_nav li[class*=Navigator__horizontal] > div { font-size: 13px !important; }
+}
+
+/* ---------- G. phone layout (Cvent switches to WebsiteNavigator__sm) ---------- */
+.cus_nav [class*=Navigator__sm] {
+  min-height: 60px;
+  padding: 0 20px !important;
+  gap: 12px;
+  justify-content: space-between;
+}
+.cus_nav [class*=Navigator__sm] [class*=Navigator__leftContent] {
+  order: 0; flex: 1 1 auto; width: auto !important; gap: 10px; overflow: hidden;
+}
+.cus_nav [class*=Navigator__sm] [class*=Navigator__leftContent] img {
+  width: 86px !important; max-width: 86px !important;
+}
+.cus_nav [class*=Navigator__sm] [class*=Navigator__leftContent]::after {
+  display: block; font-size: 14px; line-height: 18px; padding-left: 10px;
+}
+.cus_nav [class*=Navigator__sm] [class*=Navigator__group] {
+  order: 1; flex: 0 0 auto; width: auto !important; padding-top: 0 !important; margin: 0 -8px 0 0;
+}
+.cus_nav [class*=Navigator__sm] [class*=Navigator__menuIcon] {
+  width: 40px !important; height: 40px !important; color: var(--nt) !important;
+}
+.cus_nav [class*=Navigator__sm] [class*=Navigator__menuIcon] path { fill: var(--nt) !important; }
+
+/* ---------- H. phone menu (Cvent renders it in a full-screen dialog) ---------- */
+[class*=Dialog__dragContainer]:has([class*=Navigator__vertical]) {
+  background: #0B0B0C !important;
+}
+[class*=Navigator__menu]:has(> [class*=Navigator__vertical]) {
+  padding: 8px 20px 24px !important;
+  box-sizing: border-box;
+}
+li[class*=Navigator__vertical] {
+  margin: 0 !important;
+  padding: 0 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, .14);
+}
+li[class*=Navigator__vertical] > div {
+  display: block !important;
+  font-family: "AvenirNextPForBBG", "AvenirNextforBBG", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+  color: #FFFFFF !important;
+  opacity: 1 !important;
+  padding: 15px 0 15px 12px !important;
+  border: 0 !important;
+  border-left: 2px solid transparent !important;
+}
+li[class*=Navigator__vertical] > div[class*=Navigator__selected] {
+  border-left-color: #F7A325 !important;
+  border-bottom: 0 !important;
+  font-weight: 700 !important;
+}
+
+
+/* =====================================================================
+   BLOOMBERG LIVE — NATIVE FOOTER OVERRIDE · v3 (compact) · theme B + split
+   Black #0B0B0C, 3px amber top edge, amber link hover; social icons on the
+   right, level with Request a Demo. Nothing in the footer is edited or
+   removed: colour, spacing and arrangement only.
+   OUTER below = [class*=Grid__grid]:has(.site-footer) [data-cvent-id=containerChild]:has(>[class*=Grid__row] [data-cvent-id=containerChild])
+   (the footer's row list; BRAND = the nested container with Bloomberg /
+   description / Request a Demo)
+   ===================================================================== */
+
+/* ground + amber edge: the section box on the live site, and the inner
+   box Cvent paints white in Site Designer */
+[class*=Grid__grid]:has(.site-footer) > div,
+[class*=Grid__grid]:has(.site-footer) [class*=SectionsBase__sectionContainer] > [role=button] > div { background: #0B0B0C !important; box-shadow: inset 0 3px 0 #F7A325; }
+
+/* text: brand font, 72% white body, white "Bloomberg" heading */
+[class*=Grid__grid]:has(.site-footer) [data-cvent-id^=widget-NucleusText] :is(a, p, span) { font-family: AvenirNextPForBBG, AvenirNextforBBG, Helvetica, Arial, sans-serif !important; }
+[class*=Grid__grid]:has(.site-footer) [data-cvent-id^=widget-NucleusText] :is(p, span) { color: rgba(255,255,255,.72) !important; }
+[class*=Grid__grid]:has(.site-footer) [data-cvent-id=containerChild] [data-cvent-id=containerChild] > [class*=Grid__row]:first-child :is(p, span) { color: #FFF !important; }
+[class*=Grid__grid]:has(.site-footer) [data-cvent-id=containerChild] [data-cvent-id=containerChild] [data-cvent-id^=widget-NucleusText] span { line-height: 1.55 !important; }
+
+/* legal links: even 24px gaps instead of typed-in spaces */
+[class*=Grid__grid]:has(.site-footer) .site-footer p { font-size: 0 !important; line-height: 0 !important; }
+[class*=Grid__grid]:has(.site-footer) .site-footer a { display: inline-block; font-size: 12px !important; line-height: 20px !important; margin: 0 24px 4px 0; text-decoration: none !important; color: rgba(255,255,255,.55) !important; transition: color .15s; }
+[class*=Grid__grid]:has(.site-footer) .site-footer a:hover { color: #F7A325 !important; }
+
+/* bottom row: © line muted, container inset removed so it lines up */
+[class*=Grid__grid]:has(.site-footer) [data-cvent-id=containerChild]:has(>[class*=Grid__row] [data-cvent-id=containerChild]) > [class*=Grid__row]:last-child [data-cvent-id=containerParent] { padding-left: 0 !important; padding-right: 0 !important; }
+[class*=Grid__grid]:has(.site-footer) [data-cvent-id=containerChild]:has(>[class*=Grid__row] [data-cvent-id=containerChild]) > [class*=Grid__row]:last-child [data-cvent-id^=widget-NucleusText]:not(:has(.site-footer)) :is(p, span) { color: rgba(255,255,255,.55) !important; }
+
+/* code widgets (Request a Demo, social icons) are black on transparent:
+   flip to white without editing them; hue-rotate keeps the arrow blue */
+[class*=Grid__grid]:has(.site-footer) iframe { filter: invert(1) hue-rotate(180deg); }
+/* social icons: a compact 5-icon group */
+[class*=Grid__grid]:has(.site-footer) [data-cvent-id=containerChild]:has(>[class*=Grid__row] [data-cvent-id=containerChild]) > [class*=Grid__row]:has(iframe):not(:has([data-cvent-id=containerChild])) iframe { width: 240px !important; max-width: 100%; display: block; }
+/* bottom-right logo: white, a touch smaller */
+[class*=Grid__grid]:has(.site-footer) [data-cvent-id^=widget-NucleusImage] img { max-width: 96px !important; height: auto !important; filter: brightness(0) invert(1); }
+[class*=Grid__grid]:has(.site-footer) [data-cvent-id^=widget-NucleusDivider] div { border-color: rgba(255,255,255,.16) !important; }
+
+/* split layout (768px+): icons move up beside the brand block; the divider
+   that sat above them is hidden (decorative only) */
+@media (min-width: 768px) {
+  [class*=Grid__grid]:has(.site-footer) [data-cvent-id=containerChild]:has(>[class*=Grid__row] [data-cvent-id=containerChild]) { display: grid !important; grid-template-columns: minmax(0,1fr) 240px; column-gap: 48px; align-items: end; }
+  [class*=Grid__grid]:has(.site-footer) [data-cvent-id=containerChild]:has(>[class*=Grid__row] [data-cvent-id=containerChild]) > [class*=Grid__row] { grid-column: 1 / -1; width: auto !important; }
+  [class*=Grid__grid]:has(.site-footer) [data-cvent-id=containerChild] > [class*=Grid__row]:has([data-cvent-id=containerChild] iframe) { grid-column: 1; grid-row: 2; }
+  [class*=Grid__grid]:has(.site-footer) [data-cvent-id=containerChild]:has(>[class*=Grid__row] [data-cvent-id=containerChild]) > [class*=Grid__row]:has(iframe):not(:has([data-cvent-id=containerChild])) { grid-column: 2; grid-row: 2; align-self: end; margin-bottom: 18px; }
+  [class*=Grid__grid]:has(.site-footer) [data-cvent-id=containerChild] > [class*=Grid__row]:has([data-cvent-id^=widget-NucleusDivider]):has(+ [class*=Grid__row] iframe) { display: none !important; }
+}
+
+
+/* =====================================================================
+   CVENT DIALOGS (e.g. "Would you like to start another registration?")
+   Bloomberg treatment: dark scrim, black header, amber edge, amber Yes.
+   Applies to every Cvent confirmation dialog, not just this one.
+   ===================================================================== */
+[class*=Dialog__overlay] { background: rgba(11,11,12,.72) !important; }
+[class*=Dialog__dragContainer]:has([class*=Confirmation__dialogContainer]) {
+  width: min(560px, calc(100vw - 32px)) !important;
+  border-top: 3px solid #F7A325;
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0,0,0,.4);
+}
+/* Cvent sizes the inner box at 768px; let it follow the 560px dialog */
+[class*=Confirmation__dialogContainer] { width: 100% !important; max-width: 100% !important; }
+/* header bar (Cvent paints it orange inline) */
+[class*=Confirmation__dialogContainer] div:is(:has(>h3), :has(>div>h3)) { background: #0B0B0C !important; }
+[class*=Confirmation__dialogContainer] h3 { color: #FFF !important; font-weight: 700 !important; font-size: 17px !important; }
+[class*=Confirmation__closeDialog] svg { fill: #FFF !important; color: #FFF !important; }
+[class*=Confirmation__closeDialog] path { fill: #FFF !important; }
+/* message + buttons */
+[class*=Confirmation__dialogContainer] :is(legend, div, button, span) { font-family: AvenirNextPForBBG, AvenirNextforBBG, Helvetica, Arial, sans-serif !important; }
+[class*=Confirmation__cancelRegistrationModalText] { font-size: 17px !important; color: #141416 !important; }
+[class*=EventStatusDialog__primaryButton], [class*=EventStatusDialog__secondaryButton] {
+  border-radius: 2px !important; font-size: 14px !important; font-weight: 700 !important;
+  padding: 12px 22px !important; min-width: 96px;
+}
+[class*=EventStatusDialog__primaryButton] { background: #F7A325 !important; color: #0B0B0C !important; border: 0 !important; }
+[class*=EventStatusDialog__primaryButton]:hover { background: #E8951B !important; }
+[class*=EventStatusDialog__secondaryButton] { background: #FFF !important; color: #141416 !important; border: 1px solid #D9D9D4 !important; }
+[class*=EventStatusDialog__secondaryButton]:hover { border-color: #141416 !important; }
+
+/* PAGE LOADING — Cvent shows the footer before the page content arrives, so it
+   briefly sits under the nav and then jumps. Holding the main region at a
+   screen tall (minus the 66px nav) keeps the footer below the fold. */
+#main { min-height: calc(100vh - 66px); }

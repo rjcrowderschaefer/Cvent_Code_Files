@@ -1,0 +1,51 @@
+{
+ "banner": {
+  "intro": "The summit takes place at Bloomberg\u2019s global headquarters on Lexington Avenue in Midtown Manhattan."
+ },
+ "location": {
+  "address": "731 Lexington Avenue\nNew York, NY 10022",
+  "imageUrl": "/preview-custom-page-venue/data/test-bg.jpg"
+ },
+ "gettingHere": {
+  "heading": "Four subway stations within an eight-minute walk",
+  "groups": [
+   {
+    "title": "Subway",
+    "items": "Lexington Ave / 59th St | 1 min \u00b7 4, 5, 6, N, R, W\nLexington Ave / 63rd St | 4 min \u00b7 F, Q\n5th Ave / 53rd St | 8 min \u00b7 E, M\n51st St / Lexington Ave | 8 min \u00b7 6, E"
+   },
+   {
+    "title": "Airports",
+    "items": "LaGuardia (LGA) | 9 miles / 14 km\nJohn F. Kennedy (JFK) | 17 miles / 27 km\nNewark Liberty (EWR) | 16 miles / 26 km"
+   },
+   {
+    "title": "Parking",
+    "items": "122 East 60th Street | 2 min walk\n150 East 58th Street | 2 min walk\n206 East 59th Street | 3 min walk\n135 East 57th Street | 3 min walk"
+   },
+   {
+    "title": "Bus",
+    "items": "Local MTA bus routes M101, M102, M103, M57 and M31 stop within one to two blocks of the entrance. For up-to-date service, plan your route with the MTA Trip Planner or Citymapper."
+   }
+  ]
+ },
+ "accessibility": {
+  "heading": "An inclusive experience for every attendee",
+  "items": [
+   {
+    "title": "Wheelchair access",
+    "body": "The event venue is fully wheelchair accessible, including entrances, seating areas and restrooms."
+   },
+   {
+    "title": "Closed captioning",
+    "body": "Live closed captioning will be available for all sessions."
+   },
+   {
+    "title": "Additional support",
+    "body": "If you require further accommodations, please contact us in advance so we can best support your needs."
+   },
+   {
+    "title": "",
+    "body": ""
+   }
+  ]
+ }
+}
