@@ -1,0 +1,17 @@
+/* Registration pages widget: no flash of Cvent's own design on load.
+   Paste into the website theme's Custom CSS (with the rest of the site CSS)
+   FIRST: Cvent only offers class names that appear in the theme CSS.
+   Works on pages whose form section has the CSS class "bbg-reg-page" (set in
+   Cvent's section settings). Until the widget has styled the page, Cvent's
+   step bar and the page body stay hidden (at most 3 s, then shown anyway, so a
+   widget that fails to load never hides the form). Light theme; for the dark
+   theme change #fff to #0B0B0C.
+   2026-09-28: also covers Cvent's newer step bar (in the nav section). */
+/* Declares the class so Cvent lists it in the section's CSS class picker. */
+.bbg-reg-page{--bbg-reg-page:1}
+@keyframes bbgRegIn{to{opacity:1}}
+@keyframes bbgRegBarIn{to{max-height:400px;opacity:1}}
+[class*=AppContainer__container]:has(.bbg-reg-page){background-color:#fff!important}
+[class*=AppContainer__container]:has(.bbg-reg-page:not(.bbg-reg-ready)) :is([role=main],[class*=Grid__sectionContainer]:has([class*=ProgressBar__wrapper])){opacity:0;animation:bbgRegIn .2s ease 3s forwards}
+/* Newer Cvent step bar: collapsed (no space, no flash) until the widget draws its own. */
+[class*=AppContainer__container]:has(.bbg-reg-page:not(.bbg-reg-ready)) [data-cvent-id*=ProgressBar-widget]{max-height:0;padding-top:0!important;padding-bottom:0!important;overflow:hidden;opacity:0;animation:bbgRegBarIn 0s linear 3s forwards}

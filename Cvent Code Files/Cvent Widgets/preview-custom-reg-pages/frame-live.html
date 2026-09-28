@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>widget frame (2026-09-28 Cvent markup)</title>
+<style>
+  /* Stand-in for the live registration page as of 2026-09-28: the newer Cvent
+     step bar in the nav section, the identity-confirmation form with a 8/4
+     column row (form | side panel), Cvent's 15px paddings, site CSS quirks. */
+  body { margin: 0; font: 16px/1.4 Arial, sans-serif; background: #000; color: #fff; }
+  [class*=Grid__sectionContainer] { padding: 0; }
+  [class*=Grid__row] { display: flex; flex-wrap: wrap; }
+  [class*=Grid__col_12] { width: 100%; } [class*=Grid__col_8] { width: 66.66%; } [class*=Grid__col_4] { width: 33.33%; } [class*=Grid__col_6] { width: 50%; }
+  .sec-inner { max-width: 1280px; margin: 0 auto; }
+  .cus_nav { background: #0B0B0C; }
+  .navbar { height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 96px; font: 600 15px Arial; color: #ddd; }
+  .pb ul { list-style: none; margin: 0; padding: 12px 0 20px; display: flex; }
+  .pb li { width: 33.3%; text-align: center; position: relative; }
+  .pb span.c { display: flex; width: 30px; height: 30px; margin: 0 auto 5px; border-radius: 50%; align-items: center; justify-content: center; background: #F7A325; color: #000; position: relative; z-index: 1; }
+  .pb li[aria-current] span.c { background: #fff; border: 3px solid #F7A325; }
+  .pb .bar { position: absolute; width: calc(100% - 28px); margin-left: 14px; height: 8px; top: 11px; left: -50%; background: #000; }
+  .form-sec { background: #000 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect width='60' height='60' fill='%23222'/%3E%3C/svg%3E"); padding: 40px 0; }
+  .identity-confirmation { padding: 15px; }
+  [class*=TextWidget__container] { padding: 15px; }
+  [class*=Forms__container] { padding: 15px; }
+  label { display: block; color: #fff; font-size: 16px; }
+  [class*=QuestionText__required] { position: absolute; margin-left: -11px; color: #F7A325; }
+  input[class*=TextInput__textbox] { display: block; width: 100%; height: 44px; background: #191919; border: 1px solid #555; color: #fff; margin-bottom: 5px; box-sizing: border-box; }
+  .left-align-fields input[data-cvent-id=input] { width: 60% !important; }
+  .button-group-left { padding: 15px; }
+  [class*=ButtonGroup__buttonGroup] { list-style: none; padding: 0; display: flex; justify-content: center; gap: 8px; }
+  button[class*=LinearNavigator__button] { background: #F7A325; color: #000; border: 0; height: 44px; padding: 0 28px; font: 600 18px Arial; }
+  button#exit { background: #e7e8e8; }
+  .site-footer { background: #000; color: #999; padding: 40px 24px; border-top: 3px solid #F7A325; }
+  #slot-banner:empty { display: none; }
+</style>
+</head>
+<body>
+<div class="custom-css-scope"><div class="AppContainer__container___9f2a">
+  <div role="banner">
+    <div class="Grid__grid___g"><div class="Grid__sectionContainer___s Grid__small___s cus_nav"><div class="sec-inner">
+      <div class="Grid__row___r"><div class="Grid__column___c Grid__col_12___c"><div class="navbar"><span>Bloomberg | AI in Finance Summit</span><span>Home Agenda Speakers Venue <span role="link" tabindex="0">Contact Us</span></span></div></div></div>
+      <div class="Grid__row___r Grid__small___r"><div class="Grid__column___c Grid__small___c Grid__col_12___c">
+        <div class="flex-auto ma-custom-element ma-widget77-container pb" data-cvent-id="site-designer-ProgressBar-widget:widget:77-container"><div><div class="hidden sm:block"><div class="w-full">
+          <ul class="list-none p-0 m-0" aria-label="Progress Bar">
+            <li class="inline-block" aria-current="step"><span class="c ma-widget77-currentCircle">1</span><div class="pt-[5px] ma-widget77-progressTextStyle">Your details</div></li>
+            <li class="inline-block"><span class="c ma-widget77-pendingCircle">2</span><div class="pt-[5px] ma-widget77-progressTextStyle">About you</div><span class="bar ma-widget77-pendingBar"></span></li>
+            <li class="inline-block"><span class="c ma-widget77-pendingCircle">3</span><div class="pt-[5px] ma-widget77-progressTextStyle">Review</div><span class="bar ma-widget77-pendingBar"></span></li>
+          </ul></div></div></div>
+        </div>
+      </div></div>
+    </div></div></div>
+  </div>
+  <div role="main">
+    <div class="Grid__grid___g"><div class="Grid__sectionContainer___s"><div class="sec-inner"><div class="Grid__row___r"><div class="Grid__column___c Grid__col_12___c"><div id="slot-banner"></div></div></div></div></div></div>
+    <div class="Grid__grid___g"><div class="Grid__sectionContainer___s form-sec"><div class="sec-inner">
+      <div class="Grid__row___r"><div class="Grid__column___c Grid__col_12___c">
+        <div class="GuestSideFormElement__container___x identity-confirmation" data-cvent-id="widget-EventIdentityConfirmation-x">
+          <div class="Grid__row___r Grid__small___r">
+            <div class="Grid__column___c Grid__small___c Grid__col_8___c">
+              <div class="Container__container___k left-align-fields bbg-reg-page" data-cvent-id="containerParent"><div class="Container__childContainer___k" data-cvent-id="containerChild">
+                <div class="Grid__row___r"><div class="Grid__column___c Grid__col_12___c"><div class="TextWidget__container___t" data-cvent-id="widget-NucleusText-widget:1"><div><div><p><span style="font-size:20px">Start with your contact details</span></p><p><span style="font-size:18px">We’ll use these to send you a decision on your request.</span></p></div></div></div></div></div>
+                <div class="Grid__row___r Grid__small___r"><div class="Grid__column___c Grid__small___c Grid__col_6___c"><div class="Forms__container___f js-name" data-cvent-id="widget-EventStandardContactFieldText-1"><div class="Forms__element___e"><label class="QuestionText__labelOnTop___q QuestionText__label___q"><span class=""><span class="QuestionText__required___q">*&nbsp;</span><span data-cvent-id="label"><span>First name</span></span></span></label><div class="Forms__inputContainerGuestSide___g"><div class="Forms__textboxContainer___t"><input class="TextInput__textbox___i" data-cvent-id="input"></div></div></div></div></div><div class="Grid__column___c Grid__small___c Grid__col_6___c"><div class="Forms__container___f js-name" data-cvent-id="widget-EventStandardContactFieldText-2"><div class="Forms__element___e"><label class="QuestionText__labelOnTop___q QuestionText__label___q"><span class=""><span class="QuestionText__required___q">*&nbsp;</span><span data-cvent-id="label"><span>Last name</span></span></span></label><div class="Forms__inputContainerGuestSide___g"><div class="Forms__textboxContainer___t"><input class="TextInput__textbox___i" data-cvent-id="input"></div></div></div></div></div></div><div class="Grid__row___r"><div class="Grid__column___c Grid__col_8___c Grid__offset_2___c"><div class="Forms__container___f js-email" data-cvent-id="widget-EventStandardContactFieldText-3"><div class="Forms__element___e"><label class="QuestionText__labelOnTop___q QuestionText__label___q"><span class=""><span class="QuestionText__required___q">*&nbsp;</span><span data-cvent-id="label">Email Address</span></span></label><div class="Forms__inputContainerGuestSide___g"><div class="Forms__textboxContainer___t"><input class="TextInput__textbox___i" data-cvent-id="input"></div></div></div></div></div></div>
+                <div class="Grid__row___r"><div class="Grid__column___c Grid__col_12___c"><div class="button-group-left"><ul class="ButtonGroup__buttonGroup___b ButtonGroup__center___b">
+                  <li><button id="exit" type="button" class="LinearNavigator__button___l letter_space_md">CANCEL</button></li>
+                  <li><button id="forward" type="submit" class="LinearNavigator__button___l letter_space_md">GET STARTED</button></li>
+                </ul></div></div></div>
+                <div class="Grid__row___r"><div class="Grid__column___c Grid__col_12___c"><div data-cvent-id="widget-RegistrationType-widget:1"><div class="GuestSideFormElement__element___x"><span class="RegistrationTypeWidget__labelOnLeft___r">Registration Type</span><div><p data-cvent-id="read-only-view">Apply to attend</p></div></div></div></div></div>
+              </div></div>
+            </div>
+            <div class="Grid__column___c Grid__small___c Grid__col_4___c"><div><div class="Grid__column___c Grid__col_4___c"><div class="Content__widgetIdcontainer___w"><div style="width:100%" id="slot-panel"></div></div></div></div></div>
+          </div>
+        </div>
+      </div></div>
+      <div id="slot-confirm"></div>
+    </div></div></div>
+    <div class="Grid__grid___g"><div class="Grid__sectionContainer___s"><div class="site-footer">Black site footer (never restyled)</div></div></div>
+  </div>
+</div></div>
+<script type="module">import(`./frame.js?v=${Date.now()}`);</script>
+</body>
+</html>

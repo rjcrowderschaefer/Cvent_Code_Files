@@ -8,16 +8,26 @@
 // match on the stable prefix: [class*=Forms__container]. Form widgets render in
 // [role=main]; the header region (nav, step bar) is [role=banner]; the black
 // site footer is a section in [role=main] holding .site-footer and is skipped.
+// Site Designer builds the page without those role attributes and wraps the
+// whole canvas (header and body) in one grid, so no rule depends on either:
+// a body section is a Cvent section (Grid__sectionContainer) that is not in
+// the header and holds no nav / step bar / footer. That keeps the editor
+// canvas and the live page looking the same.
 //
 // Checked against the live registration pages on 2026-09-26: step 1 (contact
 // fields), step 2 (text, phone, dropdowns, radio questions, errors).
 
 const FONT = `"AvenirNextforBBG","AvenirNextPForBBG","Avenir Next",Helvetica,Arial,sans-serif`;
-const R = "html.bbg-reg";
-// Sections of the page body that hold the form (not the site footer).
-const BODY = `${R} :where([role=main] [class*=Grid__grid]:not(:has(.site-footer)))`;
-
-export const REG_FORM_CSS = `
+// R is the element that carries the widget's state classes: <html> on the live
+// page; when the page sits in a shadow root, the root's top-level elements.
+export function regFormCss(R = "html.bbg-reg") {
+// Sections of the page body that hold the form (not the site footer). A
+// section with the CSS class "bbg-reg-page" (set in Cvent) always counts.
+const BODY_SEC = `:is(.bbg-reg-page, [class*=Grid__sectionContainer]:not([role=banner] *):not(.site-footer *):not(:has(.site-footer, .cus_nav, #navigationContainer, [class*=ProgressBar__wrapper], [data-cvent-id*=ProgressBar-widget])))`;
+const BODY = `${R} :where(${BODY_SEC})`;
+// Step-bar section of the registration header (live page and Site Designer).
+const STEPS_SEC = `[class*=Grid__sectionContainer]:has([class*=ProgressBar__wrapper])`;
+return `
 ${R} {
   --r-bg: #FFFFFF; --r-ink: #141416; --r-body: #3F3F3D; --r-muted: #5C5C5A; --r-hair: #E4E4E0;
   --r-ctl: #8A8A86; --r-field: #FFFFFF; --r-ph: #8C8C88; --r-accent: #9C5F00;
@@ -35,22 +45,82 @@ ${R}.bbg-reg--dark {
 
 /* ---------- grounds: no photos behind the form ---------- */
 ${R} [class*=AppContainer__container] { background-color: var(--r-bg) !important; }
-${BODY} [class*=Grid__sectionContainer] { background-color: var(--r-bg) !important; background-image: none !important; }
+${R} ${BODY_SEC} { background-color: var(--r-bg) !important; background-image: none !important; }
 
 /* Base text colour for everything Cvent draws in the form area (low
    specificity on purpose: the specific rules below win). */
-${BODY} :where(p, span, div, h1, h2, h3, h4, h5, h6, label, legend, li, dt, dd, td, th, strong, b, em) { color: var(--r-ink) !important; }
+${BODY} :where(p, span, div, h1, h2, h3, h4, h5, h6, label, legend, li, dt, dd, td, th, strong, b, em):not(.site-footer *) { color: var(--r-ink) !important; }
 ${BODY} a { color: var(--r-accent) !important; }
 
 /* ---------- header: the step bar sits on the page ground under the banner ---------- */
-${R} [role=banner] [class*=Grid__sectionContainer]:has([class*=ProgressBar__wrapper]) {
+${R} ${STEPS_SEC} {
   background-color: var(--r-bg) !important; background-image: none !important; padding: 0 !important;
   border-bottom: 1px solid var(--r-hair) !important; }
-${R} [role=banner] .hero-text-bg, ${R} [role=banner] [class*=Grid__sectionContainer]:has([class*=ProgressBar__wrapper]) [data-cvent-id=containerParent] {
+${R} ${STEPS_SEC} .hero-text-bg, ${R} ${STEPS_SEC} [data-cvent-id=containerParent] {
   background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
   border: 0 !important; border-radius: 0 !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important; max-width: none !important; }
 /* The old "Event registration / title / date / city" text box. */
-${R}.bbg-reg--hide-old [role=banner] [data-cvent-id=containerParent]:has(.event-title):not(:has([class*=ProgressBar])) { display: none !important; }
+${R}.bbg-reg--hide-old ${STEPS_SEC} [data-cvent-id=containerParent]:has(.event-title):not(:has([class*=ProgressBar])) { display: none !important; }
+/* The banner copy draws its own step bar under the banner (Cvent keeps its step
+   bar in the header, above any page content): hide Cvent's, and the whole
+   header section once nothing visible is left in it. Cvent's bar stays in the
+   page, so the widget can read it and pass clicks through to it. */
+${R}.bbg-reg--own-steps :is([class*=ProgressBar__wrapper], [data-cvent-id*=ProgressBar-widget]) { display: none !important; }
+/* Newer Cvent step bar placed in the nav section: drop the empty column/row it leaves. */
+${R}.bbg-reg--own-steps [class*=Grid__row]:has(> [class*=Grid__column] > [data-cvent-id*=ProgressBar-widget]):not(:has(nav, img, [class*=navigation])) { display: none !important; }
+/* Cvent's read-only "Registration Type · Apply to attend" line (one type only). */
+${R}.bbg-reg--hide-regtype [data-cvent-id^=widget-RegistrationType]:has([data-cvent-id=read-only-view]) { display: none !important; }
+${R}.bbg-reg--own-steps.bbg-reg--hide-old ${STEPS_SEC}:not(:has([data-bbg-reg])) { display: none !important; }
+
+/* ---------- side panel copy: let it use its whole column ----------
+   Placed in a nested half-width column, the panel was squeezed to ~300px. The
+   innermost Cvent column holding the panel copy takes the full row instead;
+   the panel itself caps its width at 420px. */
+${R} [class*=Grid__column]:has([data-bbg-reg-mode=panel]):not(:has([class*=Grid__column] [data-bbg-reg-mode=panel])) {
+  flex: 1 1 100% !important; max-width: 100% !important; width: 100% !important; }
+
+/* ---------- form + side panel layout (mockup: form, 64px gap, 340px panel) ----------
+   The panel copy marks its own row and column (data-bbg-reg-row / -panelcol):
+   CSS alone can't tell that row from the rows around it. */
+@media (min-width: 1024px) {
+  /* 1144px = the banner's 1240px column less its 48px side padding, so the
+     form lines up under the banner title. */
+  ${R} [data-bbg-reg-row] { display: grid !important; grid-template-columns: minmax(0, 1fr) 380px; column-gap: 56px; align-items: start !important; width: 100% !important; max-width: 1144px !important; margin-left: auto !important; margin-right: auto !important; }
+  ${R} [data-bbg-reg-row] > * { width: auto !important; max-width: none !important; min-width: 0 !important; flex: none !important; margin: 0 !important; left: auto !important; right: auto !important; }
+  ${R} [data-bbg-reg-row] > [data-bbg-reg-panelcol] { position: sticky; top: 96px; z-index: 3; align-self: start; margin-top: var(--bbg-reg-panel-top, 0px) !important; }
+  ${R} [data-bbg-reg-row] :is(.left-align-fields, [data-bbg-form]) { padding-left: 0 !important; padding-right: 0 !important; }
+  /* Review page: the form box sits in a second Cvent container, padded too. */
+  ${R} [data-bbg-reg-formcol] [data-cvent-id=containerParent]:has([data-bbg-form]) { padding-left: 0 !important; padding-right: 0 !important; }
+  /* Site Designer wraps each column for drag and drop, so the marked children
+     can be wrappers: the Cvent columns inside them fill the wrapper. */
+  ${R} :is([data-bbg-reg-formcol], [data-bbg-reg-panelcol]) [class*=Grid__column]:has(.left-align-fields, [data-bbg-form], [data-bbg-reg-mode=panel], [class*=Forms__container]):not(:is(.left-align-fields, [data-bbg-form]) *) { width: 100% !important; max-width: 100% !important; flex: 0 0 100% !important; margin-left: 0 !important; margin-inline-start: 0 !important; left: auto !important; right: auto !important; }
+}
+
+/* Narrower screens: form first, then the panel, both full width. */
+@media (max-width: 1023px) {
+  ${R} [data-bbg-reg-row] { display: block !important; }
+  ${R} [data-bbg-reg-row] > * { width: 100% !important; max-width: 100% !important; flex: none !important; margin: 0 !important; }
+  ${R} [data-bbg-reg-row] > [data-bbg-reg-panelcol] { margin-top: 32px !important; }
+}
+
+/* Site Designer: a drag-and-drop wrapper around a Cvent column behaves like the
+   column (fills its share of the row) instead of shrinking to its content. */
+${BODY} [class*=Grid__row] > :not([class*=Grid__column]):has(> [class*=Grid__column]) { flex: 1 1 0; min-width: 0; }
+
+/* ---------- side-by-side fields (marked by the widget) ----------
+   data-bbg-pairrow: fields that share a Cvent row; data-bbg-halves: pairs from
+   the "Fields side by side" setting. Equal columns, 20px gap; stacked on phones. */
+${BODY} [data-bbg-pairrow] { display: flex !important; flex-wrap: nowrap !important; gap: 0 20px !important; }
+${BODY} [data-bbg-pairrow] > * { min-width: 0 !important; }
+${BODY} [data-bbg-pairrow] > [data-bbg-cell] { flex: 1 1 0 !important; width: auto !important; max-width: none !important; margin-left: 0 !important; margin-inline-start: 0 !important; left: auto !important; right: auto !important; }
+${BODY} [data-bbg-cell] [class*=Grid__column], ${BODY} [data-bbg-half] [class*=Grid__column] { width: 100% !important; max-width: 100% !important; flex: 1 1 auto !important; margin-left: 0 !important; margin-inline-start: 0 !important; left: auto !important; }
+${BODY} [data-bbg-halves] { display: grid !important; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 20px; }
+${BODY} [data-bbg-halves] > * { grid-column: 1 / -1; min-width: 0; }
+${BODY} [data-bbg-halves] > [data-bbg-half] { grid-column: auto; }
+@media (max-width: 600px) {
+  ${BODY} [data-bbg-pairrow] { flex-direction: column !important; }
+  ${BODY} [data-bbg-halves] > [data-bbg-half] { grid-column: 1 / -1; }
+}
 
 /* ---------- step bar ---------- */
 ${R} [class*=ProgressBar__wrapper] { max-width: 1240px; margin: 0 auto !important; padding: 22px clamp(20px, 4vw, 48px) 18px !important; background: transparent !important; }
@@ -72,26 +142,74 @@ ${R} [class*=ProgressBar__indicator] { height: 4px !important; border-radius: 2p
 ${R} [class*=ProgressBar__bar] { height: 100% !important; background: var(--r-accent) !important; border-radius: 2px !important; }
 
 /* ---------- form column ---------- */
-${BODY} .left-align-fields { max-width: 660px; }
-${BODY} [class*=TextWidget__container] :is(p, span) { font-family: ${FONT} !important; font-size: 17px !important; line-height: 1.55 !important; color: var(--r-body) !important; letter-spacing: 0 !important; }
-${BODY} [class*=TextWidget__container] :is(h1, h2, h3) { font-family: ${FONT} !important; color: var(--r-ink) !important; letter-spacing: -0.01em !important; }
-${BODY} [class*=Forms__container] { margin-top: 22px !important; }
+${BODY} :is(.left-align-fields, [data-bbg-form]) { max-width: 620px; }
+/* One left edge for intro text, fields and buttons (Cvent pads each by 15px). */
+${BODY} :is(:is(.left-align-fields, [data-bbg-form]) [data-cvent-id^=widget-NucleusText], .button-group-left) { padding-left: 0 !important; padding-right: 0 !important; }
+${BODY} :is(.left-align-fields, [data-bbg-form]) [data-cvent-id^=widget-NucleusText] { padding-top: 0 !important; padding-bottom: 0 !important; }
+${R} [data-bbg-reg-row] .identity-confirmation { padding-left: 0 !important; padding-right: 0 !important; }
+/* Intro text. Spans inside a heading are left to the heading rule below (a
+   span rule here used to shrink the Heading 2 text to body size). */
+${BODY} [data-cvent-id^=widget-NucleusText] :is(p, li, span):not(:is(h1, h2, h3, h4) *) { font-family: ${FONT} !important; font-size: 16.5px !important; line-height: 1.55 !important; color: var(--r-body) !important; letter-spacing: 0 !important; }
+${BODY} [data-cvent-id^=widget-NucleusText] p { margin: 0 !important; }
+${BODY} [data-cvent-id^=widget-NucleusText] :is(h1, h2, h3, h4) { font-family: ${FONT} !important; color: var(--r-ink) !important; letter-spacing: -0.01em !important; font-size: 28px !important; line-height: 1.2 !important; font-weight: 700 !important; margin: 0 0 8px !important; padding: 0 !important; text-transform: none !important; }
+${BODY} [data-cvent-id^=widget-NucleusText] :is(h1, h2, h3, h4) * { font-family: inherit !important; font-size: inherit !important; font-weight: inherit !important; line-height: inherit !important; letter-spacing: inherit !important; color: inherit !important; text-transform: none !important; }
+/* Intro heading: a Heading 2 in the text block is styled by the rule above.
+   Written as plain paragraphs instead, the widget marks the heading
+   (data-bbg-intro-h): a first text block followed by another one, or the first
+   paragraph of a block that has two or more. */
+${R}.bbg-reg--intro-heading :is([data-bbg-intro-h=line], [data-bbg-intro-h=block] :is(p, h1, h2, h3, h4, div)),
+${R}.bbg-reg--intro-heading :is([data-bbg-intro-h=line], [data-bbg-intro-h=block]) * {
+  font-family: ${FONT} !important; font-size: 28px !important; line-height: 1.2 !important; font-weight: 700 !important; letter-spacing: -0.01em !important; color: var(--r-ink) !important; text-transform: none !important; }
+${R}.bbg-reg--intro-heading :is([data-bbg-intro-h=line], [data-bbg-intro-h=block] p:last-child) { margin: 0 0 8px !important; }
+${R}.bbg-reg--intro-heading [data-bbg-intro-h=block] { padding: 0 !important; }
+@media (max-width: 767px) {
+  ${R}.bbg-reg--intro-heading :is([data-bbg-intro-h=line], [data-bbg-intro-h=block] :is(p, h1, h2, h3, h4, div)),
+  ${R}.bbg-reg--intro-heading :is([data-bbg-intro-h=line], [data-bbg-intro-h=block]) * { font-size: 23px !important; }
+}
+/* Intro text blocks (marked data-bbg-intro) start on the fields' left edge. */
+${R} [data-bbg-intro] { padding: 0 !important; margin-left: var(--bbg-intro-shift, 0px) !important; margin-top: var(--bbg-intro-gap, 0px) !important; margin-bottom: var(--bbg-intro-after, 0px) !important; }
+${R} [data-bbg-intro] :is(p, h1, h2, h3, h4):last-child { margin-bottom: 0 !important; }
+${R} [data-cvent-id^=widget-NucleusText] [data-bbg-empty] { display: none !important; }
+${R} [data-bbg-intro] :is(div, p, h1, h2, h3, h4) { padding-left: 0 !important; margin-left: 0 !important; text-indent: 0 !important; }
+/* "* Required" under the last intro text block (marked data-bbg-req). */
+/* z-index: the spacing fix can pull the next row up over the note's line; the
+   note must paint above that row's background. */
+${R}.bbg-reg--req-note [data-bbg-req] { position: relative !important; z-index: 2; padding-bottom: 26px !important; }
+${R}.bbg-reg--req-note [data-bbg-req]::after {
+  content: var(--bbg-reg-req, "Required"); position: absolute; left: 11px; bottom: 0; font-family: ${FONT}; font-size: 13px; line-height: 20px; font-weight: 400; color: var(--r-muted); }
+${R}.bbg-reg--req-note [data-bbg-req] > :first-child::after {
+  content: "*"; position: absolute; left: 0; bottom: 0; font-family: ${FONT}; font-size: 13px; line-height: 20px; font-weight: 700; color: var(--r-accent); }
+${BODY} [class*=Forms__container] { margin-top: 22px !important; padding: 0 !important; }
+${BODY} input[class*=TextInput__textbox] { margin: 0 !important; }
 ${BODY} [data-cvent-id^=widget-RegistrationType] :is(span, p) { font-size: 14px !important; color: var(--r-muted) !important; font-family: ${FONT} !important; }
 
 /* labels + legends */
 ${BODY} :is([class*=QuestionText__label], [class*=RegistrationTypeWidget__label], fieldset > legend),
 ${BODY} :is([class*=QuestionText__label], fieldset > legend) span {
-  font-family: ${FONT} !important; font-size: 15px !important; line-height: 1.4 !important; font-weight: 600 !important;
+  font-family: ${FONT} !important; font-size: 14.5px !important; line-height: 1.4 !important; font-weight: 600 !important;
   letter-spacing: 0 !important; text-transform: none !important; color: var(--r-ink) !important; }
-${BODY} :is([class*=QuestionText__label], fieldset > legend) { display: block !important; margin: 0 0 8px !important; padding: 0 !important; }
+${BODY} :is([class*=QuestionText__label], fieldset > legend) { display: block !important; margin: 0 0 7px !important; padding: 0 !important; }
 ${BODY} :is([class*=QuestionText__label], fieldset > legend) [class*=QuestionText__required] { color: var(--r-accent) !important; font-weight: 700 !important; }
 
 /* The site's custom CSS narrows fields to 60% and nudges them right; inside the
    660px form column they read better full width, lined up with their labels. */
-${R} [role=main] .left-align-fields :is(input[data-cvent-id=input], .react-international-phone-input-container, div:has(> [data-cvent-id=async-dropdown-wrapper])) { width: 100% !important; max-width: 100% !important; }
-${R} [role=main] .left-align-fields [class*=Forms__inputContainerGuestSide] { padding-left: 0 !important; padding-right: 0 !important; }
-${R} [role=main] .left-align-fields input[data-cvent-id=input]::placeholder { font-style: normal !important; }
-${BODY} :is([class*=QuestionText__label], fieldset > legend) [class*=QuestionText__required] { position: static !important; margin: 0 3px 0 0 !important; }
+${R} .left-align-fields.left-align-fields :is(input[data-cvent-id=input], .react-international-phone-input-container, div:has(> [data-cvent-id=async-dropdown-wrapper])) { width: 100% !important; max-width: 100% !important; }
+/* Cvent narrows the field column (10 of 12 grid columns, offset by 1): use the
+   whole form column so fields line up with the intro text. Columns sharing a
+   row are sized by the side-by-side rules (data-bbg-cell). */
+${R} :is(.left-align-fields, [data-bbg-form]):is(.left-align-fields, [data-bbg-form]) [class*=Grid__column]:not([data-bbg-cell]) { width: 100% !important; max-width: 100% !important; flex: 0 0 100% !important; margin-left: 0 !important; margin-inline-start: 0 !important; left: auto !important; right: auto !important; }
+${R} .left-align-fields.left-align-fields [class*=Forms__inputContainerGuestSide] { padding-left: 0 !important; padding-right: 0 !important; }
+${R} .left-align-fields.left-align-fields input[data-cvent-id=input]::placeholder { font-style: normal !important; }
+/* Mockup: "First name *", the asterisk after the label. */
+/* Cvent puts the "*" before the words; it is drawn after the last word instead
+   (so a long, wrapping question keeps it on its last line). */
+${BODY} :is(label[class*=QuestionText__label], fieldset > legend) :has(> [class*=QuestionText__required]) { display: inline !important; }
+${BODY} :is([class*=QuestionText__label], fieldset > legend) [class*=QuestionText__required] { display: none !important; }
+${BODY} :is([class*=QuestionText__label], fieldset > legend) :has(> [class*=QuestionText__required]) > [data-cvent-id=label]::after {
+  content: "*"; margin-left: 3px; color: var(--r-accent); font-weight: 700; }
+/* Yes/No questions: the question reads as a sentence (mockup: 15.5px, 52ch). */
+${BODY} fieldset > legend, ${BODY} fieldset > legend span, ${BODY} [class*=radioLabelStyles] { font-size: 15.5px !important; }
+${BODY} fieldset > legend { max-width: 52ch; }
 
 /* text inputs, phone, dropdowns: one field style */
 ${BODY} [class*=Forms__textboxContainer], ${BODY} [class*=Forms__inputContainer] { width: 100% !important; max-width: 100% !important; }
@@ -117,6 +235,7 @@ ${BODY} .react-international-phone-input { flex: 1 !important; padding: 0 14px !
 ${BODY} .react-international-phone-country-selector-dropdown { background: var(--r-menu) !important; border: 1px solid var(--r-hair) !important; box-shadow: 0 14px 32px rgba(11,11,12,.16) !important; }
 ${BODY} .react-international-phone-country-selector-dropdown__list-item:hover { background: var(--r-menu-h) !important; }
 /* dropdowns (react-select) */
+${BODY} [data-cvent-id=async-dropdown-wrapper] > div { margin: 0 !important; }
 ${BODY} [data-cvent-id=async-dropdown-wrapper] > div > div:first-child { padding: 0 12px !important; }
 ${BODY} [data-cvent-id=async-dropdown-wrapper] :is([class*=singleValue], [class*=placeholder], input) { color: var(--r-ink) !important; font-family: ${FONT} !important; font-size: 16px !important; }
 ${BODY} [data-cvent-id=async-dropdown-wrapper] [class*=placeholder] { color: var(--r-ph) !important; }
@@ -124,7 +243,9 @@ ${BODY} [data-cvent-id=async-dropdown-wrapper] [class*=indicatorSeparator] { dis
 ${BODY} [data-cvent-id=async-dropdown-wrapper] [class*=indicatorContainer] { color: var(--r-muted) !important; }
 ${BODY} [data-cvent-id=async-dropdown-wrapper] svg { fill: currentColor !important; }
 ${BODY} [class*=Forms__inputContainer] [class*=-menu] { margin-top: 4px !important; background: var(--r-menu) !important; border: 1px solid var(--r-hair) !important; border-radius: 2px !important; box-shadow: 0 14px 32px rgba(11,11,12,.16) !important; }
-${BODY} [class*=Forms__inputContainer] [class*=-option] { background: transparent !important; color: var(--r-ink) !important; font-family: ${FONT} !important; font-size: 15px !important; padding: 10px 14px !important; }
+/* Cvent paints the menu's inner list dark (#191919): the list and each option get the menu colour. */
+${BODY} [class*=Forms__inputContainer] [class*=-menu] > div { background: var(--r-menu) !important; }
+${BODY} [class*=Forms__inputContainer] [class*=-option] { background: var(--r-menu) !important; color: var(--r-ink) !important; font-family: ${FONT} !important; font-size: 15px !important; padding: 10px 14px !important; }
 ${BODY} [class*=Forms__inputContainer] [class*=-option]:hover, ${BODY} [class*=Forms__inputContainer] [class*=-option][class*=focused] { background: var(--r-menu-h) !important; }
 ${BODY} [class*=Forms__inputContainer] [class*=-option][aria-selected=true] { background: var(--r-sel) !important; font-weight: 600 !important; }
 
@@ -134,6 +255,8 @@ ${BODY} [class*=Forms__additionalText]:first-of-type { display: inline-block !im
 ${BODY} [class*=Forms__additionalText] + [class*=Forms__additionalText]::before { content: " · "; }
 /* "…only contain the following special characters:" then the list */
 ${BODY} [class*=Forms__additionalText]:first-of-type + [class*=Forms__additionalText]::before { content: " "; }
+
+${R}.bbg-reg--no-hints [data-bbg-hint] { display: none !important; }
 
 /* errors */
 ${BODY} input[class*=Forms__error],
@@ -161,7 +284,87 @@ ${BODY} fieldset { border: 0 !important; margin: 0 !important; padding: 0 !impor
    plain heading so the divider above the question stays a clean rule. */
 ${BODY} fieldset > legend { float: left !important; width: 100% !important; }
 ${BODY} fieldset > legend + * { clear: both; }
-${BODY} [data-cvent-id=attendeeListOptIn], ${BODY} fieldset[class*=Forms__element] { margin-top: 22px !important; padding-top: 22px !important; border-top: 1px solid var(--r-hair) !important; }
+${BODY} :is([data-cvent-id=attendeeListOptIn], [data-cvent-id*=AttendeeListOptIn-widget]), ${BODY} fieldset[class*=Forms__element] { margin-top: 22px !important; padding-top: 22px !important; border-top: 1px solid var(--r-hair) !important; }
+/* A fieldset sits in a Forms__container that already has the 22px above it
+   (Cvent's flex rows don't collapse the two margins): mockup, 22px to the rule. */
+${BODY} [class*=Forms__container] > fieldset[class*=Forms__element] { margin-top: 0 !important; }
+
+/* "Show your profile in the event app?" (newer Carina widget): same look as
+   the other Yes/No questions, on the form's left edge. */
+${BODY} [data-cvent-id*=AttendeeListOptIn-widget] :is(.carina-row, .carina-column) { margin: 0 !important; max-width: 100% !important; width: 100% !important; flex: 1 1 100% !important; padding: 0 !important; }
+${BODY} [data-cvent-id*=AttendeeListOptIn-widget] .carina-column > div, ${BODY} [data-cvent-id*=AttendeeListOptIn-widget] .carina-column > div > div { margin: 0 !important; padding: 0 !important; }
+${BODY} [data-cvent-id*=AttendeeListOptIn-widget] [class*=radioLabelStyles] {
+  display: block; max-width: 52ch; margin: 0 !important; padding: 0 !important; font-family: ${FONT} !important; line-height: 1.4 !important; font-weight: 600 !important; letter-spacing: 0 !important; text-transform: none !important; color: var(--r-ink) !important; }
+${BODY} [data-cvent-id*=AttendeeListOptIn-widget] .carina-radiogroup { display: flex !important; flex-wrap: wrap !important; gap: 10px !important; margin: 12px 0 0 !important; padding: 0 !important; }
+${BODY} [data-cvent-id*=AttendeeListOptIn-widget] .carina-radiogroup__button { position: relative !important; padding: 0 !important; margin: 0 !important; }
+${BODY} [data-cvent-id*=AttendeeListOptIn-widget] .carina-radiogroup__button-label {
+  position: relative !important; display: inline-flex !important; align-items: center !important; gap: 10px !important; box-sizing: border-box !important;
+  min-width: 96px; height: 44px; margin: 0 !important; padding: 0 18px !important; cursor: pointer;
+  border: 1px solid var(--r-ctl) !important; border-radius: 2px !important; background: var(--r-field) !important;
+  font-family: ${FONT} !important; font-size: 15px !important; line-height: 1 !important; font-weight: 600 !important; letter-spacing: 0 !important; text-transform: none !important; color: var(--r-ink) !important; }
+${BODY} [data-cvent-id*=AttendeeListOptIn-widget] .carina-radiogroup__button-label::before {
+  content: "" !important; position: static !important; display: block !important; box-sizing: border-box !important; width: 18px !important; height: 18px !important; flex-shrink: 0;
+  border-radius: 50% !important; border: 1.5px solid var(--r-ctl) !important; background: var(--r-field) !important; box-shadow: none !important; left: auto !important; top: auto !important; transform: none !important; }
+${BODY} [data-cvent-id*=AttendeeListOptIn-widget] .carina-radiogroup__button-label::after { display: none !important; content: none !important; }
+${BODY} [data-cvent-id*=AttendeeListOptIn-widget] .carina-radiogroup__button-label:is([class*=--checked], :has(input:checked)) { border-color: var(--r-ink) !important; box-shadow: inset 0 0 0 1px var(--r-ink) !important; }
+${BODY} [data-cvent-id*=AttendeeListOptIn-widget] .carina-radiogroup__button-label:is([class*=--checked], :has(input:checked))::before { border: 5px solid var(--r-ink) !important; }
+${BODY} [data-cvent-id*=AttendeeListOptIn-widget] .carina-radiogroup__button-label:has(input:focus-visible) { outline: 3px solid var(--r-focus) !important; outline-offset: 2px; }
+/* help line under it (setting: "Help under the event-app question") */
+${BODY} [data-cvent-id*=AttendeeListOptIn-widget] .carina-radiogroup::after { content: var(--bbg-reg-optin-help, none); flex: 1 1 100%; margin-top: -2px; font-family: ${FONT}; font-size: 13px; line-height: 1.5; font-weight: 400; color: var(--r-muted); }
+
+
+/* ---------- review page (Cvent's Registration Summary) ----------
+   Mockup: a "Contact details" card (name, work email, Edit) and an "About you"
+   card with the answers in two columns. Cvent draws one box: the attendee
+   header (name, email, Edit, a collapse arrow) and the answers below it; the
+   header becomes the first card and the answers the second. */
+${BODY} [data-cvent-id^=widget-RegistrationSummary],
+${BODY} [data-cvent-id^=widget-RegistrationSummary] :is([data-cvent-id=attendee-details], [data-dd-privacy], [class*=RegistrationSummary__body], [class*=Grid__grid], [class*=Grid__row], [class*=Grid__column]) {
+  background: transparent !important; background-image: none !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; border-radius: 0 !important; }
+${BODY} [data-cvent-id^=widget-RegistrationSummary] { padding: 0 !important; }
+${BODY} [data-cvent-id^=widget-RegistrationSummary] > :is(h2, [data-cvent-id=RegistrationSummary-instructionalText]):empty,
+${BODY} [data-cvent-id^=widget-RegistrationSummary] [class*=RegistrationSummary__separator],
+${BODY} [data-cvent-id^=widget-RegistrationSummary] [class*=RegistrationSummary__accordionHeaderIcon] { display: none !important; }
+${BODY} [data-cvent-id^=widget-RegistrationSummary] [data-cvent-id=attendee-details] { padding: 0 !important; border: 0 !important; }
+/* card 1: Contact details */
+${BODY} [class*=RegistrationSummary__attendee] {
+  position: relative !important; display: grid !important; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 28px; row-gap: 0;
+  margin: 0 !important; padding: 0 22px 20px !important; border: 1px solid var(--r-hair) !important; border-radius: 2px !important; background: var(--r-bg) !important; }
+${BODY} [class*=RegistrationSummary__attendee]::before {
+  content: var(--bbg-sum-contact, "Contact details"); grid-column: 1 / -1; display: block; margin: 0 -22px 18px; padding: 16px 22px; border-bottom: 1px solid var(--r-hair);
+  font-family: ${FONT}; font-size: 16px; line-height: 1.4; font-weight: 700; color: var(--r-ink); }
+${BODY} [class*=RegistrationSummary__attendee] > :is(h4, [class*=fieldStyles]) {
+  margin: 0 !important; padding: 0 !important; font-family: ${FONT} !important; font-size: 15.5px !important; line-height: 1.45 !important; font-weight: 400 !important; color: var(--r-ink) !important; text-align: left !important; letter-spacing: 0 !important; overflow-wrap: anywhere; }
+${BODY} [class*=RegistrationSummary__attendee] > :is(h4, [class*=fieldStyles])::before {
+  display: block; margin-bottom: 2px; font-family: ${FONT}; font-size: 12.5px; line-height: 1.4; font-weight: 600; color: var(--r-muted); }
+${BODY} [class*=RegistrationSummary__attendee] > h4::before { content: var(--bbg-sum-name, "Name"); }
+${BODY} [class*=RegistrationSummary__attendee] > [class*=fieldStyles]::before { content: var(--bbg-sum-email, "Work email"); }
+${BODY} [class*=RegistrationSummary__attendee] > div:has(> [class*=summaryHeaderActionLinks]) { position: absolute !important; top: 15px; right: 22px; margin: 0 !important; padding: 0 !important; }
+${BODY} [class*=RegistrationSummary__attendee] [class*=summaryHeaderActionLinks] {
+  padding: 0 !important; cursor: pointer; font-family: ${FONT} !important; font-size: 14px !important; line-height: 1.4 !important; font-weight: 700 !important; color: var(--r-accent) !important; text-decoration: none !important; }
+${BODY} [class*=RegistrationSummary__attendee] [class*=summaryHeaderActionLinks]:hover { text-decoration: underline !important; text-underline-offset: 3px; }
+/* card 2: About you (the answers) */
+${BODY} [data-cvent-id^=widget-RegistrationSummary] [class*=RegistrationSummary__body] { margin-top: 16px !important; border: 1px solid var(--r-hair) !important; border-radius: 2px !important; background: var(--r-bg) !important; }
+${BODY} [data-cvent-id^=widget-RegistrationSummary] [class*=RegistrationSummary__body]::before {
+  content: var(--bbg-sum-about, "About you"); display: block; padding: 16px 22px; border-bottom: 1px solid var(--r-hair);
+  font-family: ${FONT}; font-size: 16px; line-height: 1.4; font-weight: 700; color: var(--r-ink); }
+${BODY} [data-cvent-id^=widget-RegistrationSummary] [class*=RegistrationSummary__body] [class*=Grid__grid] { display: grid !important; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px 28px; padding: 18px 22px 20px !important; margin: 0 !important; }
+${BODY} [data-cvent-id^=widget-RegistrationSummary] [class*=RegistrationSummary__body] [class*=Grid__row] { display: contents !important; }
+${BODY} [data-cvent-id^=widget-RegistrationSummary] [class*=RegistrationSummary__body] [class*=Grid__column] { width: auto !important; max-width: none !important; flex: none !important; margin: 0 !important; padding: 0 !important; min-width: 0; }
+${BODY} [data-bbg-sum-label] { padding: 0 !important; font-size: 0 !important; line-height: 0 !important; }
+${BODY} [data-bbg-sum-label]::before { content: attr(data-bbg-sum-label); display: block; font-family: ${FONT}; font-size: 12.5px; line-height: 1.4; font-weight: 600; color: var(--r-muted); }
+${BODY} [data-bbg-sum-value], ${BODY} [data-bbg-sum-value] * {
+  margin: 0 !important; padding: 0 !important; font-family: ${FONT} !important; font-size: 15.5px !important; line-height: 1.45 !important; font-weight: 400 !important; color: var(--r-ink) !important; letter-spacing: 0 !important; overflow-wrap: anywhere; }
+${BODY} [data-bbg-sum-value] { margin-top: 2px !important; }
+/* consent line above the buttons */
+${BODY} [data-bbg-consent] { margin-top: 20px !important; padding: 0 !important; }
+${BODY} [data-bbg-consent][data-bbg-consent] :is(p, span, div) { max-width: 62ch; font-family: ${FONT} !important; font-size: 14px !important; line-height: 1.55 !important; color: var(--r-body) !important; text-align: left !important; }
+${BODY} [data-bbg-consent][data-bbg-consent] a { color: var(--r-accent) !important; font-weight: 600 !important; }
+@media (max-width: 600px) {
+  ${BODY} [class*=RegistrationSummary__attendee] { grid-template-columns: minmax(0, 1fr); row-gap: 12px; }
+  ${BODY} [class*=RegistrationSummary__attendee]::before { margin-bottom: 6px; }
+  ${BODY} [data-cvent-id^=widget-RegistrationSummary] [class*=RegistrationSummary__body] [class*=Grid__grid] { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+}
 
 /* ---------- buttons: Back · Continue ····· Cancel ----------
    Each button sits in its own <li>: order and spacing are set on the <li>. */
@@ -177,11 +380,14 @@ ${BODY} button[class*=LinearNavigator__button] {
   font-family: ${FONT} !important; font-size: 15px !important; font-weight: 700 !important; letter-spacing: 0 !important; text-transform: none !important;
   transition: background-color .15s ease, border-color .15s ease, color .15s ease; }
 ${BODY} button[class*=LinearNavigator__button] * { color: inherit !important; font: inherit !important; letter-spacing: 0 !important; text-transform: none !important; }
+${BODY} button[class*=LinearNavigator__button]#complete { background: var(--r-primary) !important; border: 1px solid var(--r-primary) !important; color: var(--r-primary-ink) !important; }
+${BODY} button[class*=LinearNavigator__button]#complete:hover { background: var(--r-primary-h) !important; border-color: var(--r-primary-h) !important; }
 ${BODY} button[class*=LinearNavigator__button][type=submit] { background: var(--r-primary) !important; border: 1px solid var(--r-primary) !important; color: var(--r-primary-ink) !important; }
 ${BODY} button[class*=LinearNavigator__button][type=submit]:hover { background: var(--r-primary-h) !important; border-color: var(--r-primary-h) !important; }
 ${BODY} button[class*=LinearNavigator__button][type=button] { background: transparent !important; border: 1px solid var(--r-ink) !important; color: var(--r-ink) !important; }
 ${BODY} button[class*=LinearNavigator__button][type=button]:hover { background: var(--r-menu-h) !important; }
 /* Cancel (id="exit"): a quiet link, far right. */
+${BODY} ul[class*=ButtonGroup__buttonGroup] > li:has(> button#complete) { order: 1; }
 ${BODY} ul[class*=ButtonGroup__buttonGroup] > li:has(> button#exit) { order: 3; margin-left: auto !important; }
 ${BODY} button#exit[class*=LinearNavigator__button] {
   height: auto !important; padding: 8px 4px !important; border: 0 !important; background: transparent !important;
@@ -190,13 +396,18 @@ ${BODY} :is(button, a, input):focus-visible { outline: 3px solid var(--r-focus) 
 
 @media (max-width: 767px) {
   ${R} [class*=ProgressBar__wrapper] { padding: 16px 20px !important; }
-  ${BODY} [class*=TextWidget__container] :is(p, span) { font-size: 16px !important; }
+  ${BODY} [data-cvent-id^=widget-NucleusText] :is(p, li, span):not(:is(h1, h2, h3, h4) *) { font-size: 15.5px !important; }
+  ${BODY} [data-cvent-id^=widget-NucleusText] :is(h1, h2, h3, h4) { font-size: 23px !important; }
   ${BODY} ul[class*=ButtonGroup__buttonGroup] { flex-direction: column !important; align-items: stretch !important; }
   ${BODY} ul[class*=ButtonGroup__buttonGroup] > li { width: 100% !important; }
   ${BODY} ul[class*=ButtonGroup__buttonGroup] > li > button[class*=LinearNavigator__button] { width: 100% !important; }
   ${BODY} ul[class*=ButtonGroup__buttonGroup] > li:has(> button[type=submit]) { order: 0; }
   ${BODY} ul[class*=ButtonGroup__buttonGroup] > li:has(> button[type=button]) { order: 1; }
+  ${BODY} ul[class*=ButtonGroup__buttonGroup] > li:has(> button#complete) { order: 0; }
   ${BODY} ul[class*=ButtonGroup__buttonGroup] > li:has(> button#exit) { order: 2; margin: 4px 0 0 !important; text-align: center; }
   ${BODY} button#exit[class*=LinearNavigator__button] { width: auto !important; }
 }
 `;
+}
+
+export const REG_FORM_CSS = regFormCss();
