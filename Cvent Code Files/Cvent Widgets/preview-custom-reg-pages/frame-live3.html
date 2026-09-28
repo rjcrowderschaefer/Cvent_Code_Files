@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>widget frame (2026-09-28 Cvent markup, page 3 review)</title>
+<style>
+  /* Stand-in for the live registration page as of 2026-09-28: the newer Cvent
+     step bar in the nav section, the identity-confirmation form with a 8/4
+     column row (form | side panel), Cvent's 15px paddings, site CSS quirks. */
+  body { margin: 0; font: 16px/1.4 Arial, sans-serif; background: #000; color: #fff; }
+  [class*=Grid__sectionContainer] { padding: 0; }
+  [class*=Grid__row] { display: flex; flex-wrap: wrap; }
+  [class*=Grid__col_12] { width: 100%; } [class*=Grid__col_8] { width: 66.66%; } [class*=Grid__col_4] { width: 33.33%; } [class*=Grid__col_6] { width: 50%; }
+  .sec-inner { max-width: 1280px; margin: 0 auto; }
+  .cus_nav { background: #0B0B0C; }
+  .navbar { height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 96px; font: 600 15px Arial; color: #ddd; }
+  .pb ul { list-style: none; margin: 0; padding: 12px 0 20px; display: flex; }
+  .pb li { width: 33.3%; text-align: center; position: relative; }
+  .pb span.c { display: flex; width: 30px; height: 30px; margin: 0 auto 5px; border-radius: 50%; align-items: center; justify-content: center; background: #F7A325; color: #000; position: relative; z-index: 1; }
+  .pb li[aria-current] span.c { background: #fff; border: 3px solid #F7A325; }
+  .pb .bar { position: absolute; width: calc(100% - 28px); margin-left: 14px; height: 8px; top: 11px; left: -50%; background: #000; }
+  .form-sec { background: #000 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect width='60' height='60' fill='%23222'/%3E%3C/svg%3E"); padding: 40px 0; }
+  .identity-confirmation { padding: 15px; }
+  [class*=TextWidget__container] { padding: 15px; }
+  [class*=Forms__container] { padding: 15px; }
+  label { display: block; color: #fff; font-size: 16px; }
+  [class*=QuestionText__required] { position: absolute; margin-left: -11px; color: #F7A325; }
+  input[class*=TextInput__textbox] { display: block; width: 100%; height: 44px; background: #191919; border: 1px solid #555; color: #fff; margin-bottom: 5px; box-sizing: border-box; }
+  .left-align-fields input[data-cvent-id=input] { width: 60% !important; }
+  .button-group-left { padding: 15px; }
+  [class*=ButtonGroup__buttonGroup] { list-style: none; padding: 0; display: flex; justify-content: center; gap: 8px; }
+  button[class*=LinearNavigator__button] { background: #F7A325; color: #000; border: 0; height: 44px; padding: 0 28px; font: 600 18px Arial; }
+  button#exit { background: #e7e8e8; }
+  .site-footer { background: #000; color: #999; padding: 40px 24px; border-top: 3px solid #F7A325; }
+  #slot-banner:empty { display: none; }
+</style>
+</head>
+<body>
+<div class="custom-css-scope"><div class="AppContainer__container___9f2a">
+  <div role="banner">
+    <div class="Grid__grid___g"><div class="Grid__sectionContainer___s Grid__small___s cus_nav"><div class="sec-inner">
+      <div class="Grid__row___r"><div class="Grid__column___c Grid__col_12___c"><div class="navbar"><span>Bloomberg | AI in Finance Summit</span><span>Home Agenda Speakers Venue <span role="link" tabindex="0">Contact Us</span></span></div></div></div>
+      <div class="Grid__row___r Grid__small___r"><div class="Grid__column___c Grid__small___c Grid__col_12___c">
+        <div class="flex-auto ma-custom-element ma-widget77-container pb" data-cvent-id="site-designer-ProgressBar-widget:widget:77-container"><div><div class="hidden sm:block"><div class="w-full">
+          <ul class="list-none p-0 m-0" aria-label="Progress Bar">
+            <li class="inline-block" aria-current="step"><span class="c ma-widget77-currentCircle">1</span><div class="pt-[5px] ma-widget77-progressTextStyle">Your details</div></li>
+            <li class="inline-block"><span class="c ma-widget77-pendingCircle">2</span><div class="pt-[5px] ma-widget77-progressTextStyle">About you</div><span class="bar ma-widget77-pendingBar"></span></li>
+            <li class="inline-block"><span class="c ma-widget77-pendingCircle">3</span><div class="pt-[5px] ma-widget77-progressTextStyle">Review</div><span class="bar ma-widget77-pendingBar"></span></li>
+          </ul></div></div></div>
+        </div>
+      </div></div>
+    </div></div></div>
+  </div>
+  <div role="main">
+    <div class="Grid__grid___g"><div class="Grid__sectionContainer___s"><div class="sec-inner"><div class="Grid__row___r"><div class="Grid__column___c Grid__col_12___c"><div id="slot-banner"></div></div></div></div></div></div>
+    <div class="Grid__grid___g"><div class="Grid__sectionContainer___s form-sec"><div class="sec-inner">
+      <div class="Grid__row___c7dc Grid__small___c7dc" style="width:100%"><div class="Grid__column___c7dc Grid__small___c7dc Grid__col_12___c7dc" id="widget:a6b1"><div class="Container__container___fbab" data-cvent-id="containerParent" style="padding:15px"><div class="Container__childContainer___fbab" data-cvent-id="containerChild"><div class="Grid__row___c7dc Grid__small___c7dc" style="width:100%"><div class="Grid__column___c7dc Grid__small___c7dc Grid__col_12___c7dc" id="widget:ed52"><div class="Container__container___fbab bbg-reg-page" data-cvent-id="containerParent" style="padding:15px"><div class="Container__childContainer___fbab" data-cvent-id="containerChild"><div class="Grid__row___c7dc Grid__small___c7dc" style="width:100%"><div class="Grid__column___c7dc Grid__small___c7dc Grid__col_12___c7dc" id="widget:b9a6"><div data-cvent-id="widget-NucleusText-widget:b9a6" class="TextWidget__container___c031" style="padding:15px"><div class="css-umqnq5" style="font-size:1.25rem;color:#fff"><div class="css-vsf5of"><p class="carina-rte-public-DraftStyleDefault-block">Review your request</p><p class="carina-rte-public-DraftStyleDefault-block">Check your details, then send your request.</p></div></div></div></div></div><div class="Grid__row___c7dc Grid__small___c7dc" style="width:100%"><div class="Grid__column___c7dc Grid__small___c7dc Grid__col_12___c7dc" id="widget:1a02"><div data-cvent-id="widget-RegistrationSummary-widget:1a02" style="padding:0 15px 15px;border-radius:24px"><h2 class="css-87ndg2"></h2><div class="css-87ndg2" data-cvent-id="RegistrationSummary-instructionalText" style="padding:10px 0 1.25rem"></div><div></div><div class=""><div data-dd-privacy="mask"><div data-cvent-id="attendee-details" class="css-87ndg2" style="padding:1.875rem 2.5rem 2.5rem;background:rgba(60,60,60,.85);border-radius:24px"><div class=""><div><div><div class="RegistrationSummary__attendee___685c"><h4 class="css-87ndg2" style="font-size:1.875rem;color:rgb(255,158,36)">Test Registrant</h4><div class="RegistrationSummary__fieldStyles___685c css-87ndg2" style="font-size:16px;color:#fff;padding:0 0 15px">aif.test.registrant@example.com</div><div><a aria-label="Edit Test Registrant" class="RegistrationSummary__summaryHeaderActionLinks___685c" tabindex="0" role="link" style="font-size:14px;color:rgb(62,118,215);padding:0 10px 0 0">Edit</a></div><div aria-expanded="true" role="button" class="RegistrationSummary__accordionHeaderIcon___685c" style="color:rgb(255,158,36)">^</div></div></div></div><div class="RegistrationSummary__body___685c" role="region"><div class=""><div class="Grid__grid___c7dc"><div class="Grid__row___c7dc Grid__small___c7dc" data-element-type="FlexRow"><div class="Grid__column___c7dc Grid__col_6___c7dc Grid__small___c7dc"><div class=""><div class="css-87ndg2" style="font-size:16px;color:#fff;padding:10px 0 5px">*Company</div><div class="RegistrationSummary__fieldStyles___685c css-87ndg2" style="font-size:16px;color:#fff;padding:0 0 15px"><div>BLP</div></div></div></div><div class="Grid__column___c7dc Grid__col_6___c7dc Grid__small___c7dc"><div class=""><div class="css-87ndg2" style="font-size:16px;color:#fff;padding:10px 0 5px">Mobile phone</div><div class="RegistrationSummary__fieldStyles___685c css-87ndg2" style="font-size:16px;color:#fff;padding:0 0 15px"><div>+12125550100</div></div></div></div></div><div class="Grid__row___c7dc Grid__small___c7dc" data-element-type="FlexRow"><div class="Grid__column___c7dc Grid__col_6___c7dc Grid__small___c7dc"><div class=""><div class="css-87ndg2" style="font-size:16px;color:#fff;padding:10px 0 5px">**Industry</div><div class="RegistrationSummary__fieldStyles___685c css-87ndg2" style="font-size:16px;color:#fff;padding:0 0 15px"><div>Agency Broker</div></div></div></div><div class="Grid__column___c7dc Grid__col_6___c7dc Grid__small___c7dc"><div class=""><div class="css-87ndg2" style="font-size:16px;color:#fff;padding:10px 0 5px">**Job Role</div><div class="RegistrationSummary__fieldStyles___685c css-87ndg2" style="font-size:16px;color:#fff;padding:0 0 15px"><div>Accountant / Controller</div></div></div></div></div><div class="Grid__row___c7dc Grid__small___c7dc" data-element-type="FlexRow"><div class="Grid__column___c7dc Grid__col_6___c7dc Grid__small___c7dc"><div class=""><div class="css-87ndg2" style="font-size:16px;color:#fff;padding:10px 0 5px">**Country</div><div class="RegistrationSummary__fieldStyles___685c css-87ndg2" style="font-size:16px;color:#fff;padding:0 0 15px"><div>United States</div></div></div></div><div class="Grid__column___c7dc Grid__col_6___c7dc Grid__small___c7dc"><div class=""><div class="css-87ndg2" style="font-size:16px;color:#fff;padding:10px 0 5px">*State</div><div class="RegistrationSummary__fieldStyles___685c css-87ndg2" style="font-size:16px;color:#fff;padding:0 0 15px"><div>Alabama</div></div></div></div></div><div class="Grid__row___c7dc Grid__small___c7dc" data-element-type="FlexRow"><div class="Grid__column___c7dc Grid__col_6___c7dc Grid__small___c7dc"><div class=""><div class="css-87ndg2" style="font-size:16px;color:#fff;padding:10px 0 5px">*City</div><div class="RegistrationSummary__fieldStyles___685c css-87ndg2" style="font-size:16px;color:#fff;padding:0 0 15px"><div>NYC</div></div></div></div><div class="Grid__column___c7dc Grid__col_6___c7dc Grid__small___c7dc"><div class=""><div class="css-87ndg2" style="font-size:16px;color:#fff;padding:10px 0 5px">*Handraiser</div><div class="RegistrationSummary__fieldStyles___685c css-87ndg2" style="font-size:16px;color:#fff;padding:0 0 15px"><div>No</div></div></div></div></div></div></div></div></div></div><div class="RegistrationSummary__separator___685c"></div></div></div></div></div></div><div class="Grid__row___c7dc Grid__small___c7dc" style="width:100%"><div class="Grid__column___c7dc Grid__small___c7dc Grid__col_12___c7dc" id="widget:822d"><div data-cvent-id="widget-NucleusText-widget:822d" class="TextWidget__container___c031" style="padding:15px"><div class="css-umqnq5" style="font-size:14px;color:#fff;text-align:center"><div class="css-vsf5of"><p style="text-align:left;" class="carina-rte-public-DraftStyleDefault-block">By submitting this information, I agree to the Bloomberg&nbsp;<a href="#">privacy policy</a>,&nbsp;<a href="#">terms and conditions</a><span style="color: rgb(0,153,224);"> </span>and to learn more about products and services from Bloomberg.</p></div></div></div></div></div><div class="Grid__row___c7dc Grid__small___c7dc" style="width:100%"><div class="Grid__column___c7dc Grid__small___c7dc Grid__col_12___c7dc" id="widget:2873"><div><div style="position:relative"><div><div class="button-group-left" style="padding:15px"><ul class="ButtonGroup__buttonGroup___a3c7 ButtonGroup__center___a3c7"><li><button id="backward" class="LinearNavigator__button___4f58" type="button">Back</button></li><li><button id="exit" class="LinearNavigator__button___4f58" type="button">Cancel registration</button></li><li><button id="complete" class="LinearNavigator__button___4f58" type="button">Send request</button></li></ul></div></div></div></div></div></div></div></div></div></div></div></div></div><div class="Grid__column___c7dc Grid__small___c7dc" id="widget:1950"><div><div class="Grid__column___c7dc"><div class="Content__widgetIdcontainer___ca74"><div style="width:100%" id="slot-panel"></div></div></div></div></div></div>
+      <div id="slot-confirm"></div>
+    </div></div></div>
+    <div class="Grid__grid___g"><div class="Grid__sectionContainer___s"><div class="site-footer">Black site footer (never restyled)</div></div></div>
+  </div>
+</div></div>
+<script type="module">import(`./frame.js?v=${Date.now()}`);</script>
+</body>
+</html>
