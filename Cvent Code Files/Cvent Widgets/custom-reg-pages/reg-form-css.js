@@ -294,6 +294,8 @@ ${BODY} fieldset { border: 0 !important; margin: 0 !important; padding: 0 !impor
 ${BODY} fieldset > legend { float: left !important; width: 100% !important; }
 ${BODY} fieldset > legend + * { clear: both; }
 ${BODY} :is([data-cvent-id=attendeeListOptIn], [data-cvent-id*=AttendeeListOptIn-widget]), ${BODY} fieldset[class*=Forms__element] { margin-top: 22px !important; padding-top: 22px !important; border-top: 1px solid var(--r-hair) !important; }
+/* Cvent pads the opt-in wrapper 15px on each side; every other question sits flush. */
+${BODY} [data-cvent-id=attendeeListOptIn] { padding-left: 0 !important; padding-right: 0 !important; }
 /* A fieldset sits in a Forms__container that already has the 22px above it
    (Cvent's flex rows don't collapse the two margins): mockup, 22px to the rule. */
 ${BODY} [class*=Forms__container] > fieldset[class*=Forms__element] { margin-top: 0 !important; }
@@ -401,7 +403,10 @@ ${BODY} ul[class*=ButtonGroup__buttonGroup] > li:has(> button#exit) { order: 3; 
 ${BODY} button#exit[class*=LinearNavigator__button] {
   height: auto !important; padding: 8px 4px !important; border: 0 !important; background: transparent !important;
   color: var(--r-muted) !important; font-size: 14px !important; font-weight: 600 !important; text-decoration: underline !important; text-underline-offset: 3px; }
-${BODY} :is(button, a, input):focus-visible { outline: 3px solid var(--r-focus) !important; outline-offset: 2px !important; }
+/* Not the dropdown's own search input: it is a few px wide inside the
+   control, so an outline on it draws two blue bars. The control shows focus. */
+${BODY} :is(button, a, input):not([class*=-control] input, [data-cvent-id=async-dropdown-wrapper] input):focus-visible { outline: 3px solid var(--r-focus) !important; outline-offset: 2px !important; }
+${BODY} :is([class*=-control], [data-cvent-id=async-dropdown-wrapper]) input:is(:focus, :focus-visible, .focus-visible) { outline: none !important; box-shadow: none !important; }
 
 @media (max-width: 767px) {
   ${R} [class*=ProgressBar__wrapper] { padding: 16px 20px !important; }
