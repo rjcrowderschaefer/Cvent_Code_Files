@@ -21,7 +21,7 @@ import {
 } from "./page-kit.js";
 import { REG_FORM_CSS, regFormCss } from "./reg-form-css.js";
 
-export const BUILD = "reg-2026-10-01d";
+export const BUILD = "reg-2026-10-01e";
 
 export const REG_DEFAULTS = {
   mode: "banner",            // "banner" | "panel" | "confirmation"
@@ -33,6 +33,13 @@ export const REG_DEFAULTS = {
   showRequiredNote: true,    // "* Required" under the form's intro text
   requiredNote: "Required",
   hideFieldHints: true,      // hide Cvent's "Your answer can only contain…" line under text fields
+  // State / region: Cvent's own display logic shows it only for countries with
+  // a state list, but it renders it while Country is still empty. Keep it out
+  // of view until Country has an answer; Cvent decides from there. The widget
+  // only reads the Country value: it never opens or answers a dropdown.
+  stateAfterCountry: true,
+  countryLabel: "Country",
+  stateLabel: "State / region",
   optInHelp: "You can change this later in the app.", // under the event-app networking question; blank = none
   // Fields shown side by side: one pair per line, "Label A + Label B" (Cvent's
   // field labels, any case). Both must be on the page, one right after the other.
@@ -538,6 +545,7 @@ export default class extends HTMLElement {
   }
   _markLayout() {
     this._markFields();
+    this._syncStateField();
     if (this._cfg.mode !== "panel") return;
     if (this._rendered && this._person.first && this._greetBlocked !== undefined && this._greetBlocked !== this._nameOnPage()) {
       const root = this.shadowRoot.querySelector(".pk");
@@ -578,6 +586,42 @@ export default class extends HTMLElement {
       }
       return;
     }
+  }
+  // ---- State / region waits for Country (see stateAfterCountry) ----------
+  // A field by its Cvent label: any case, asterisks, spacing around "/" and the
+  // "This question is required." message ignored.
+  _fieldByLabel(label) {
+    const t = this._target || this._doc;
+    const norm = (s) => String(s || "").replace(/\*/g, "").replace(/this question is required\.?/i, "").replace(/\s*\/\s*/g, "/").replace(/\s+/g, " ").trim().toLowerCase();
+    const want = norm(label);
+    if (!want) return null;
+    return [...t.querySelectorAll("[class*=Forms__container]")].find((f) => {
+      const l = f.querySelector("[data-cvent-id=label]") || f.querySelector("[class*=QuestionText__label], legend, label");
+      return l && norm(l.textContent) === want;
+    }) || null;
+  }
+  _syncStateField() {
+    const t = this._target || this._doc;
+    const off = this._cfg.stateAfterCountry !== false;
+    const country = off ? this._fieldByLabel(this._cfg.countryLabel || "Country") : null;
+    const state = off ? this._fieldByLabel(this._cfg.stateLabel || "State / region") : null;
+    let hide = null;
+    if (country && state) {
+      const answered = !!(country.querySelector("[class*=singleValue]")?.textContent || "").trim()
+        || !!country.querySelector("select")?.value;
+      // Hide the field's own slot: its half of a paired row, else the largest
+      // wrapper that holds nothing but this field.
+      if (!answered) {
+        hide = state.closest("[data-bbg-half], [data-bbg-cell]");
+        if (!hide) {
+          hide = state;
+          while (hide.parentElement && hide.parentElement.querySelectorAll("[class*=Forms__container]").length === 1
+            && !hide.parentElement.matches("[data-bbg-reg-formcol], [class*=Container__childContainer]")) hide = hide.parentElement;
+        }
+      }
+    }
+    t.querySelectorAll("[data-bbg-state-wait]").forEach((e) => { if (e !== hide) { e.removeAttribute("data-bbg-state-wait"); e.removeAttribute("aria-hidden"); } });
+    if (hide && !hide.hasAttribute("data-bbg-state-wait")) { hide.setAttribute("data-bbg-state-wait", ""); hide.setAttribute("aria-hidden", "true"); }
   }
   _observeTarget() {
     if (!this._checkSteps || typeof MutationObserver === "undefined") return;
