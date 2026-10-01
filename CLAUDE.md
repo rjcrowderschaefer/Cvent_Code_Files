@@ -178,7 +178,7 @@ The page widgets (`custom-page-*`, `custom-reg-pages`) and the bbg-live CSS
 follow `Widget Playbook & Boilerplate/FLAGSHIP_TEMPLATE_DESIGN_RULES.md`:
 blue `#0062DD` for every button / link / clickable hover, amber `#FF9D00` only
 for labels and decoration, labels 20% larger (`LABEL_PX`), one full-bleed
-black closing band on every page, company as plain text after the title, Home
+black closing band on every page, company as plain text on its own line (demi) under the title, Home
 order hero → facts → about → speakers (carousel). `page-kit.js`,
 `editor-kit.js` and the page copy of `FeaturedSpeaker.js` are identical in
 every page-widget folder: edit the canonical copy, then copy it to each folder.

@@ -357,7 +357,7 @@ Design lead review, 2026-10-01. Full rules: `FLAGSHIP_TEMPLATE_DESIGN_RULES.md`.
 - **One closing band**: `regBand()` is always the full-bleed black section;
   `closingBandCopy()` gives every page the same default copy. The old
   `cta.style` light/dark option is retired (a saved value is ignored).
-- **Company is text after the title** on speaker cards and pop-ups
+- **Company is text on its own line under the title, demi weight** on speaker cards and pop-ups
   (`companyStyle: "text"` via `pageCardBase()`).
 - **Home**: About before Speakers (a saved order equal to the old default
   migrates via `LEGACY_ORDERS`), speakers carousel, no hero date line, no

@@ -21,7 +21,7 @@ import {
 const CARD_TAG = "bbg-agenda-speaker-card";
 // Bump on every change. Shown in the editor footer and as data-build on the
 // widget root, so a stale Cvent/CDN copy is obvious (Playbook §0).
-export const BUILD = "agenda-2026-10-01b";
+export const BUILD = "agenda-2026-10-01c";
 
 export const SECTION_LABELS = {
   banner: "Page banner",

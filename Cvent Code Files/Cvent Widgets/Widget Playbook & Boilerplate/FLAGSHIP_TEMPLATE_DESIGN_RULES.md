@@ -66,9 +66,10 @@ the speakers.
 
 ## 6. Speakers
 
-- **Company is plain text after the title**: "Chief AI Officer, Balyasny
-  Asset Management". No grey company pill on cards or in the bio pop-up. A
-  pill reads as a button.
+- **Company is plain text on its own line under the title**, in demi
+  (600) against the title's regular weight, same colour: "Chief AI Officer" /
+  "**Balyasny Asset Management**". No grey company pill on cards or in the bio
+  pop-up. A pill reads as a button.
 - **Home shows speakers in a carousel**, not a "See all speakers" link: the
   picked speakers first, then everyone else in program order; four in view
   on desktop, three on tablet, about 1.6 on phones so the next card peeks.

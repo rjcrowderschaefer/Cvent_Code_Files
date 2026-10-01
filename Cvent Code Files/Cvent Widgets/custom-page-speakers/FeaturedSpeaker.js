@@ -161,7 +161,7 @@ export class FeaturedSpeaker extends HTMLElement {
       .role { font-size: 14px; color: ${c.muted}; min-height: calc(2 * 1.45em); margin-bottom: 8px; }
       .tagWrap { display: flex; align-items: flex-start; }
       /* Company as plain text after the title, demi weight (flagship template). */
-      .role .co, .mRole .co { font-weight: 600; }
+      .role .co, .mRole .co { display: block; font-weight: 600; }
       .name, .role, .tag { overflow-wrap: break-word; min-width: 0; }
       .tag {
         display: inline-block; max-width: 100%;
@@ -730,13 +730,13 @@ export class FeaturedSpeaker extends HTMLElement {
   }
 
   // "Title, Company" (aliases apply to the company, as they did to the pill).
-  // Writes "Title, <span class=co>Company</span>": company in demi (600),
+  // Writes the title, then the company on its own line in demi (600):
   // plain text, no pill. Built with DOM nodes, never innerHTML.
   _fillRole(el, sp) {
     el.textContent = "";
     const title = this._jobTitle(sp);
     const co = this._tagLabel(sp);
-    if (title) el.append(document.createTextNode(co ? `${title}, ` : title));
+    if (title) el.append(document.createTextNode(title));
     if (co) {
       const span = document.createElement("span");
       span.className = "co";
