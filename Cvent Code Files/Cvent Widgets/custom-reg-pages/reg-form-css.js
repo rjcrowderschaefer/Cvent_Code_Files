@@ -30,18 +30,18 @@ const STEPS_SEC = `[class*=Grid__sectionContainer]:has([class*=ProgressBar__wrap
 return `
 ${R} {
   --r-bg: #FFFFFF; --r-ink: #141416; --r-body: #3F3F3D; --r-muted: #5C5C5A; --r-hair: #E4E4E0;
-  --r-ctl: #8A8A86; --r-field: #FFFFFF; --r-ph: #8C8C88; --r-accent: #9C5F00;
+  --r-ctl: #8A8A86; --r-field: #FFFFFF; --r-ph: #8C8C88; --r-accent: #FF9D00; --r-accent-ink: #0B0B0C;
   /* Flagship rule: buttons and links are BLUE (functional); amber is decoration only. */
   --r-primary: #0062DD; --r-primary-h: #0050B5; --r-primary-ink: #FFFFFF; --r-link: #0062DD;
   --r-err: #B42318; --r-focus: #2B6CE8; --r-focus-ring: rgba(43,108,232,.22);
-  --r-menu: #FFFFFF; --r-menu-h: #F5F5F3; --r-sel: rgba(156,95,0,.10);
+  --r-menu: #FFFFFF; --r-menu-h: #F5F5F3; --r-sel: rgba(0,98,221,.08);
 }
 ${R}.bbg-reg--dark {
   --r-bg: #0B0B0C; --r-ink: #FFFFFF; --r-body: rgba(255,255,255,.80); --r-muted: rgba(255,255,255,.66); --r-hair: rgba(255,255,255,.14);
-  --r-ctl: rgba(255,255,255,.38); --r-field: #17181C; --r-ph: rgba(255,255,255,.45); --r-accent: #FF9D00;
+  --r-ctl: rgba(255,255,255,.38); --r-field: #17181C; --r-ph: rgba(255,255,255,.45); --r-accent: #FF9D00; --r-accent-ink: #0B0B0C;
   --r-primary: #0062DD; --r-primary-h: #0050B5; --r-primary-ink: #FFFFFF; --r-link: #4D94FF;
   --r-err: #FF8A7A; --r-focus: #6FA0FF; --r-focus-ring: rgba(111,160,255,.3);
-  --r-menu: #17181C; --r-menu-h: rgba(255,255,255,.08); --r-sel: rgba(247,163,37,.16);
+  --r-menu: #17181C; --r-menu-h: rgba(255,255,255,.08); --r-sel: rgba(77,148,255,.18);
 }
 
 /* ---------- grounds: no photos behind the form ---------- */
@@ -130,7 +130,7 @@ ${R} [class*=ProgressBar__before] {
   width: 30px !important; height: 30px !important; line-height: 27px !important; box-sizing: border-box !important;
   border: 1.5px solid var(--r-ctl) !important; background: var(--r-bg) !important; color: var(--r-muted) !important;
   font-family: ${FONT} !important; font-size: 13px !important; font-weight: 700 !important; box-shadow: none !important; }
-${R} [class*=ProgressBar__progressbar] li[aria-current=step] [class*=ProgressBar__before] { background: var(--r-accent) !important; border-color: var(--r-accent) !important; color: var(--r-primary-ink) !important; }
+${R} [class*=ProgressBar__progressbar] li[aria-current=step] [class*=ProgressBar__before] { background: var(--r-accent) !important; border-color: var(--r-accent) !important; color: var(--r-accent-ink) !important; }
 ${R} [class*=ProgressBar__progressbar] li:has(~ li[aria-current=step]) [class*=ProgressBar__before] { background: var(--r-ink) !important; border-color: var(--r-ink) !important; color: var(--r-bg) !important; }
 ${R} [class*=ProgressBar__progressText] { margin-top: 8px !important; font-family: ${FONT} !important; font-size: 14px !important; font-weight: 600 !important; letter-spacing: 0 !important; text-transform: none !important; color: var(--r-muted) !important; }
 ${R} [class*=ProgressBar__progressbar] li[aria-current=step] [class*=ProgressBar__progressText],

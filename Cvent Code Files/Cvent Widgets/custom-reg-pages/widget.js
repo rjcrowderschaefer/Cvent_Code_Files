@@ -21,7 +21,7 @@ import {
 } from "./page-kit.js";
 import { REG_FORM_CSS, regFormCss } from "./reg-form-css.js";
 
-export const BUILD = "reg-2026-10-01a";
+export const BUILD = "reg-2026-10-01b";
 
 export const REG_DEFAULTS = {
   mode: "banner",            // "banner" | "panel" | "confirmation"
@@ -743,7 +743,7 @@ export default class extends HTMLElement {
 // ---------------------------------------------------------------------------
 const t = TOKENS;
 const WIDGET_CSS = `
-  .rg { --rg-ink: ${t.ink}; --rg-body: ${t.body}; --rg-muted: ${t.muted}; --rg-hair: ${t.hair}; --rg-panel: ${t.tint}; --rg-accent: ${t.amberInk}; --rg-link: ${t.action}; --rg-label: ${t.amber}; --rg-dot-bg: #fff; --rg-ground: #FFFFFF; --rg-ctl: #8A8A86; --rg-accent-ink: #FFFFFF; --rg-faint: #6F6F6D; }
+  .rg { --rg-ink: ${t.ink}; --rg-body: ${t.body}; --rg-muted: ${t.muted}; --rg-hair: ${t.hair}; --rg-panel: ${t.tint}; --rg-accent: ${t.amber}; --rg-link: ${t.action}; --rg-label: ${t.amber}; --rg-dot-bg: #fff; --rg-ground: #FFFFFF; --rg-ctl: #8A8A86; --rg-accent-ink: #0B0B0C; --rg-faint: #6F6F6D; }
   .rg--dark { --rg-ink: #fff; --rg-body: rgba(255,255,255,.78); --rg-muted: rgba(255,255,255,.66); --rg-hair: rgba(255,255,255,.14); --rg-panel: ${t.panel}; --rg-accent: ${t.amberOnDark}; --rg-link: ${t.linkOnDark}; --rg-label: ${t.amber}; --rg-dot-bg: transparent; --rg-ground: #0B0B0C; --rg-ctl: rgba(255,255,255,.38); --rg-accent-ink: #0B0B0C; --rg-faint: rgba(255,255,255,.55); }
   .rg { color: var(--rg-ink); }
 
@@ -761,7 +761,7 @@ const WIDGET_CSS = `
   .rg-eb { font-size: ${LABEL_PX.small}px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--rg-label); }
   .rg-ph { margin-top: 8px; font-size: 21px; line-height: 1.25; font-weight: 700; letter-spacing: -0.01em; color: var(--rg-ink); }
   .rg-dl { margin: 18px 0 0; display: grid; gap: 14px; }
-  .rg-dl dt { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--rg-muted); }
+  .rg-dl dt { font-size: ${LABEL_PX.small}px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--rg-label); }
   .rg-dl dd { margin: 2px 0 0; font-size: 15.5px; color: var(--rg-ink); }
   .rg-dl dd span { display: block; font-size: 14px; color: var(--rg-body); }
   .rg-next { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--rg-hair); }
@@ -775,8 +775,8 @@ const WIDGET_CSS = `
 
   /* confirmation */
   .rg-done { max-width: 680px; padding: 8px 0; }
-  .rg-tick { width: 52px; height: 52px; border-radius: 50%; background: rgba(156,95,0,.12); display: grid; place-items: center; margin-bottom: 18px; }
-  .rg--dark .rg-tick { background: rgba(247,163,37,.16); }
+  .rg-tick { width: 52px; height: 52px; border-radius: 50%; background: rgba(255,157,0,.16); display: grid; place-items: center; margin-bottom: 18px; }
+  .rg--dark .rg-tick { background: rgba(255,157,0,.16); }
   .rg-tick svg { width: 24px; height: 24px; stroke: var(--rg-accent); stroke-width: 2.5; fill: none; }
   .rg-dh { font-size: clamp(26px, 3vw, 34px); line-height: 1.15; font-weight: 700; letter-spacing: -0.02em; color: var(--rg-ink); }
   .rg-dp { margin-top: 12px; font-size: 17px; line-height: 1.6; color: var(--rg-body); }
