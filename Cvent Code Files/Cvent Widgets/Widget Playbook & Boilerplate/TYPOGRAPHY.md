@@ -63,6 +63,21 @@ Accent text derived from a session colour (the agenda's "Speaker" /
 brightness is above 130 is pulled 45% toward black (`#F7A325` → `#885A14`);
 darker accents are used as-is.
 
+### Page widgets (Flagship Event Template) override two things
+
+The page widgets (Home, Agenda, Speakers, Venue, Contact, registration pages)
+follow `FLAGSHIP_TEMPLATE_DESIGN_RULES.md` (design lead review, 2026-10-01):
+
+- **Labels are amber `#FF9D00` and 20% larger**, from `LABEL_PX` in
+  `page-kit.js`: 14.4px for section / banner / band eyebrows (was 12px), 13.2px
+  for small labels (was the 11px `label` role). The `label` role itself is
+  unchanged, so the standalone agenda and featured-speakers widgets are not
+  affected. `pageCardTypography()` applies the 13.2px amber label to the bio
+  pop-up's typography.
+- **Buttons, links and clickable hovers are blue** (`TOKENS.action #0062DD`,
+  hover `#0050B5`, links on black `#4D94FF`). `accentInk` is no longer used
+  for anything clickable on page widgets.
+
 ## 3. Font
 
 `FONT_STACK` is `"AvenirNextforBBG", "Helvetica Neue", Helvetica, Arial, …`.

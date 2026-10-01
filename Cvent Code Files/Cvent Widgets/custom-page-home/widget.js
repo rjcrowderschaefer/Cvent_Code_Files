@@ -21,12 +21,13 @@ import {
   TOKENS, esc, safeUrl, cleanRichText, paragraphs, lines, tzNormalize, resolveLang, fixed,
   plannerText, fmtTime, fmtTimeRange, fmtDate, tzName, eyebrow, button, arrowLink,
   sectionHead, regBand, kitCss, applyFullBleed, registerButton, wireRegister, cleanLabel, isExternal, isHiddenSession,
+  closingBandCopy, eventFacts, pageCardBase, pageCardTypography, LABEL_PX,
 } from "./page-kit.js";
 
 const CARD_TAG = "bbg-home-speaker-card";
 // Bump on every change. Shown in the editor footer and as data-build on the
 // widget root, so a stale Cvent/CDN copy is obvious (Playbook §0).
-export const BUILD = "home-2026-09-26d";
+export const BUILD = "home-2026-10-01a";
 
 // ---------------------------------------------------------------------------
 // Defaults (exported for editor.js). Copy defaults are GENERIC on purpose:
@@ -43,7 +44,8 @@ export const HOME_DEFAULTS = {
   fullBleed: true,       // section backgrounds run edge to edge of the window
   // Section order, top to bottom. Planners reorder in the editor; any section
   // missing from a saved order is appended in its default position.
-  order: ["hero", "facts", "speakers", "about", "themes", "program", "cta", "more"],
+  // Flagship review (2026-10-01): About the event sits ABOVE the speakers.
+  order: ["hero", "facts", "about", "speakers", "themes", "program", "cta", "more"],
   sectionSpacing: 100,   // % of the default space between sections (the default is already 50% of the original)
   hero: {
     show: true,
@@ -60,7 +62,7 @@ export const HOME_DEFAULTS = {
     titleStrong: "",      // blank = event title minus its last word
     titleLight: "",       // blank = last word of the event title
     eyebrow: "",
-    showFacts: true,
+    showFacts: false,     // off: the facts card right under the hero already says when and where (flagship review)
     lede: "",
     primaryLabel: "Request to attend",
     secondaryLabel: "View the program",
@@ -78,12 +80,15 @@ export const HOME_DEFAULTS = {
     venueLabel: "Venue", venueValue: "", venueDetail: "",
     programLabel: "Program", programValue: "", programDetail: "",
     speakersLabel: "Speakers", speakersValue: "", speakersDetail: "",
+    showSpeakers: false,  // the Speakers cell repeats the speakers section below it (flagship review)
   },
   speakers: {
     show: true,
     eyebrow: "Speakers",
     heading: "Featured speakers",
-    linkLabel: "See all speakers",
+    layout: "carousel",   // "carousel" (flagship default: arrows, swipe) | "grid" (static row + "See all" link)
+    includeAll: true,     // carousel: after the picked speakers, the rest of the event's speakers
+    linkLabel: "See all speakers",   // grid layout only
     linkUrl: "",
     featuredSpeakerIds: [],
     modalEyebrowText: "Speaker",
@@ -150,6 +155,9 @@ export const HOME_DEFAULTS = {
 };
 
 const SECTIONS = ["hero", "facts", "speakers", "about", "themes", "program", "cta", "more"];
+// Every default order this widget has shipped. A saved order that is exactly
+// one of these was never customised, so it follows the current default.
+const LEGACY_ORDERS = [["hero", "facts", "speakers", "about", "themes", "program", "cta", "more"]];
 
 // Deep-merge a saved config over the defaults (section objects + item arrays).
 export { SECTIONS };
@@ -163,7 +171,8 @@ export function mergeHomeConfig(incoming = {}) {
     out[k].items = base.map((b, i) => ({ ...b, ...(inc[i] || {}) }));
   });
   const seen = new Set();
-  const saved = Array.isArray(incoming.order) ? incoming.order : [];
+  let saved = Array.isArray(incoming.order) ? incoming.order : [];
+  if (LEGACY_ORDERS.some((o) => o.length === saved.length && o.every((k, i) => k === saved[i]))) saved = d.order;
   out.order = [...saved, ...d.order].filter((k) => SECTIONS.includes(k) && !seen.has(k) && seen.add(k));
   out.translations = { ...(incoming.translations || {}) };
   return out;
@@ -247,6 +256,7 @@ export default class extends HTMLElement {
 
   disconnectedCallback() {
     this._stopCountdown();
+    this._carouselCleanup?.();
     this._bleedCleanup?.();
     this._bleedCleanup = null;
     this._registerCleanup?.();
@@ -361,6 +371,8 @@ export default class extends HTMLElement {
       url: cfg.registerUrl,
     });
     this._mountVideo(root, cfg);
+    this._carouselCleanup?.();
+    this._carouselCleanup = null;
     this._mountSpeakers(root, ctx);
     this._startCountdown(root, ctx);
   }
@@ -533,8 +545,8 @@ export default class extends HTMLElement {
       [P("facts", "dateLabel", f.dateLabel), P("facts", "dateValue", f.dateValue) || facts.dateShort, P("facts", "dateDetail", f.dateDetail) || [facts.timeRange, facts.tzLong].filter(Boolean).join(" ")],
       [P("facts", "venueLabel", f.venueLabel), P("facts", "venueValue", f.venueValue) || facts.venueName, P("facts", "venueDetail", f.venueDetail) || facts.street],
       [P("facts", "programLabel", f.programLabel), P("facts", "programValue", f.programValue) || (facts.sessionCount ? fixed(lang, "sessions", { n: facts.sessionCount }) : ""), P("facts", "programDetail", f.programDetail)],
-      [P("facts", "speakersLabel", f.speakersLabel), P("facts", "speakersValue", f.speakersValue) || (facts.speakerCount ? fixed(lang, "speakers", { n: facts.speakerCount }) : ""), P("facts", "speakersDetail", f.speakersDetail) || autoSpkDetail],
-    ].filter((c) => c[1]);
+      f.showSpeakers ? [P("facts", "speakersLabel", f.speakersLabel), P("facts", "speakersValue", f.speakersValue) || (facts.speakerCount ? fixed(lang, "speakers", { n: facts.speakerCount }) : ""), P("facts", "speakersDetail", f.speakersDetail) || autoSpkDetail] : null,
+    ].filter((c) => c && c[1]);
     if (!cells.length) return "";
     return `
     <section class="facts pk-bleed${dock ? " facts--docked" : ""}" aria-label="${esc(facts.title)}">
@@ -549,6 +561,20 @@ export default class extends HTMLElement {
   // ---- FEATURED SPEAKERS (cards mounted after innerHTML) --------------------
   _speakersShell({ cfg, lang, P }) {
     const s = cfg.speakers;
+    if (s.layout !== "grid") {
+      // Carousel (flagship default): the arrows replace the "See all" link.
+      const arrows = `<div class="spk-nav" data-spk-nav hidden>
+          <button type="button" class="spk-arrow" data-dir="-1" aria-controls="home-spk-track" aria-label="${esc(fixed(lang, "prevSpeakers"))}"><span aria-hidden="true">←</span></button>
+          <button type="button" class="spk-arrow" data-dir="1" aria-controls="home-spk-track" aria-label="${esc(fixed(lang, "nextSpeakers"))}"><span aria-hidden="true">→</span></button>
+        </div>`;
+      return `
+    <section class="pk-section pk-bleed pk-ground-white spk-sec--carousel" aria-labelledby="home-speakers-h">
+      <div class="pk-inner">
+        <div class="pk-head">${sectionHead({ eyebrowText: P("speakers", "eyebrow", s.eyebrow), heading: P("speakers", "heading", s.heading) }).replace("<h2 ", '<h2 id="home-speakers-h" ')}${arrows}</div>
+        <ul class="spk-grid spk-track" id="home-spk-track" role="list" data-speakers data-carousel></ul>
+      </div>
+    </section>`;
+    }
     const link = arrowLink({ label: P("speakers", "linkLabel", s.linkLabel), href: s.linkUrl, lang });
     return `
     <section class="pk-section pk-bleed pk-ground-white" aria-labelledby="home-speakers-h">
@@ -560,27 +586,62 @@ export default class extends HTMLElement {
     </section>`;
   }
 
+  // Carousel arrows: scroll one "page" of cards; hidden when everything fits,
+  // each arrow disabled at its end. Swipe / trackpad / keyboard scroll natively.
+  _wireCarousel(root) {
+    const track = root.querySelector("[data-carousel]");
+    const nav = root.querySelector("[data-spk-nav]");
+    if (!track || !nav) return;
+    const [prev, next] = nav.querySelectorAll(".spk-arrow");
+    const update = () => {
+      const max = track.scrollWidth - track.clientWidth;
+      nav.hidden = max <= 2;
+      prev.disabled = track.scrollLeft <= 2;
+      next.disabled = track.scrollLeft >= max - 2;
+    };
+    nav.addEventListener("click", (e) => {
+      const b = e.target.closest(".spk-arrow");
+      if (!b) return;
+      const item = track.querySelector("li");
+      const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+      const step = item ? item.getBoundingClientRect().width + gap : track.clientWidth;
+      const perView = Math.max(1, Math.floor((track.clientWidth + gap) / step));
+      track.scrollBy({ left: Number(b.dataset.dir) * perView * step, behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    });
+    track.addEventListener("scroll", () => requestAnimationFrame(update), { passive: true });
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(update) : null;
+    ro?.observe(track);
+    this._carouselCleanup?.();
+    this._carouselCleanup = () => ro?.disconnect();
+    update();
+    setTimeout(update, 300);
+  }
+
   _mountSpeakers(root, { cfg, lang, sessions, speakers, getSpeakers, eventTz, P }) {
     const grid = root.querySelector("[data-speakers]");
     if (!grid) return;
     const ids = (cfg.speakers.featuredSpeakerIds || []).map(String);
+    const carousel = cfg.speakers.layout !== "grid";
+    if (carousel && cfg.speakers.includeAll !== false) {
+      // Then everyone else, in the order they first appear in the program.
+      sessions.filter((s) => !isHiddenSession(s)).forEach((s) => (s.speakers || []).forEach((sp) => {
+        const id = String(sp?.id || sp?.speakerId || sp?.speaker?.id || "");
+        if (id && !ids.includes(id)) ids.push(id);
+      }));
+    }
     const list = ids.map((id) => speakers[id]).filter(Boolean);
     if (!list.length) {
       grid.outerHTML = `<p class="pk-empty spk-empty">${esc(fixed(lang, "noSpeakers"))}</p>`;
       return;
     }
     const cardCfg = {
-      colors: {
-        ink: TOKENS.ink, muted: TOKENS.muted, faint: TOKENS.faint, hair: TOKENS.hair, placeholder: TOKENS.placeholder,
-        accent: TOKENS.amberInk, tagBg: TOKENS.tagBg, tagInk: TOKENS.tagInk, modalBar: TOKENS.amberOnDark,
-        mainAccent: TOKENS.amberInk, accentRule: TOKENS.amberOnDark, bioInk: TOKENS.body, focus: TOKENS.focus,
-      },
+      ...pageCardBase(),           // blue hover, amber labels, company as text
       // Home page: names 18px, roles 15px in body grey (review rec 04).
       typography: (() => {
         const ty = speakerTypography();
         ty.speakerName = { ...ty.speakerName, fontSize: 18, fontSizeMd: 17, fontSizeSm: 15 };
         ty.speakerRole = { ...ty.speakerRole, fontSize: 15, fontSizeMd: 14, fontSizeSm: 13.5, color: TOKENS.body };
-        return ty;
+        return pageCardTypography(ty);
       })(),
       tileSize: 400,                // cards fill their grid column; the grid sets the width
       fontFamily: undefined,        // card default = brand stack
@@ -602,6 +663,7 @@ export default class extends HTMLElement {
       grid.append(li);
     });
     grid.dataset.count = String(list.length);
+    if (carousel) this._wireCarousel(root);
   }
 
   // ---- ABOUT ----------------------------------------------------------------
@@ -741,11 +803,10 @@ export default class extends HTMLElement {
   }
 
   // ---- REQUEST TO ATTEND PANEL ----------------------------------------------
-  _cta({ cfg, lang, facts, P }) {
-    const c = cfg.cta;
-    const heading = P("cta", "heading", c.heading) || (facts.dayMonth ? `Join us on ${facts.dayMonth}` : "");
-    const body = P("cta", "body", c.body) || [facts.dateShort, facts.timeRange && `${facts.timeRange} ${facts.tzLong}`.trim(), facts.venueLine].filter(Boolean).join(" · ");
-    return regBand({ eyebrowText: P("cta", "eyebrow", c.eyebrow), heading, body, buttonLabel: P("cta", "buttonLabel", c.buttonLabel), href: cfg.registerUrl, dark: true, lang, nativeRegister: cfg.registerMode !== "url" });
+  // Same band, same default copy as every inner page (flagship review).
+  _cta({ cfg, lang, P, eventInfo, sessions, speakers, eventTz }) {
+    const facts = eventFacts({ eventInfo, sessions, speakers, eventTz }, lang);
+    return regBand(closingBandCopy({ cfg, lang, facts, P }));
   }
 
   // ---- MORE FROM BLOOMBERG ---------------------------------------------------
@@ -833,7 +894,7 @@ export default class extends HTMLElement {
       padding: 72px clamp(20px, 4vw, 48px); display: flex; flex-direction: column; align-items: center;
       text-align: center; gap: 22px;
       text-shadow: 0 1px 2px rgba(0,0,0,.65), 0 0 18px rgba(0,0,0,.45), 0 0 42px rgba(0,0,0,.35); }
-    .hero .pk-eyebrow { margin: 0; color: rgba(255,255,255,.85); }
+    .hero .pk-eyebrow { margin: 0; color: ${t.amber}; }
     .hero-title { font-size: ${hero.fontSize}px; line-height: 1.04; letter-spacing: -0.02em; color: #fff; }
     .hero-title-strong { font-weight: 600; }
     .hero-title-light { font-weight: 400; }
@@ -856,7 +917,7 @@ export default class extends HTMLElement {
     .facts { background: #fff; border-bottom: 1px solid ${t.hair}; }
     .facts-grid { display: grid; grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); margin: 0; border-left: 1px solid ${t.hair}; }
     .facts-cell { padding: 28px; border-right: 1px solid ${t.hair}; display: flex; flex-direction: column; gap: 4px; }
-    .facts-cell .pk-eyebrow { margin: 0 0 4px; font-size: 11px; color: ${t.muted}; }
+    .facts-cell .pk-eyebrow { margin: 0 0 4px; font-size: ${LABEL_PX.small}px; color: ${t.amber}; }
     .facts-v { margin: 0; font-size: 20px; font-weight: 700; }
     .facts-d { margin: 0; font-size: 15px; color: ${t.body}; }
     /* Docked: the strip becomes a card overlapping the bottom of the hero. */
@@ -869,6 +930,20 @@ export default class extends HTMLElement {
       grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 40px 32px; }
     .spk-grid > li { min-width: 0; }
     .spk-empty { margin-top: 32px; }
+    /* Carousel: 4 cards in view (3 tablet, ~1.6 phone so the next one peeks) */
+    .spk-sec--carousel .pk-head { align-items: flex-end; }
+    .spk-track { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: calc((100% - 3 * 32px) / 4);
+      overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-behavior: smooth;
+      scrollbar-width: none; padding-bottom: 4px; }
+    .spk-track::-webkit-scrollbar { display: none; }
+    .spk-track > li { scroll-snap-align: start; }
+    .spk-nav { display: flex; gap: 8px; flex-shrink: 0; }
+    .spk-nav[hidden] { display: none; }
+    .spk-arrow { font-family: inherit; width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center;
+      border: 1px solid ${t.action}; border-radius: 2px; background: #fff; color: ${t.action}; font-size: 18px; font-weight: 700; cursor: pointer;
+      transition: background-color .15s ease, color .15s ease, opacity .15s ease; }
+    .spk-arrow:hover:not(:disabled) { background: ${t.action}; color: #fff; }
+    .spk-arrow:disabled { border-color: ${t.hair}; color: ${t.faint}; cursor: default; }
 
     /* ABOUT — eyebrow alone in row 1 so heading + list start on one line */
     .about { display: grid; grid-template-columns: .87fr 1.13fr; column-gap: clamp(36px, 8vw, 125px); }
@@ -895,7 +970,7 @@ export default class extends HTMLElement {
     /* THEMES */
     .themes-grid { margin-top: 48px; display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); gap: 24px; }
     .theme-card { background: ${t.panel}; border: 1px solid ${t.onDarkHair}; border-radius: 2px; padding: 36px; display: flex; flex-direction: column; gap: 14px; }
-    .theme-kicker { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: ${t.amberOnDark}; }
+    .theme-kicker { font-size: ${LABEL_PX.small}px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: ${t.amber}; }
     .theme-title { font-size: 22px; line-height: 1.25; font-weight: 700; color: #fff; }
     .theme-body { font-size: 15.5px; line-height: 1.6; color: rgba(255,255,255,.82); }
 
@@ -903,11 +978,11 @@ export default class extends HTMLElement {
     .prog { list-style: none; margin: 40px 0 0; padding: 0; border-bottom: 1px solid ${t.hair}; }
     .prog-row { display: grid; grid-template-columns: 140px minmax(0, 1fr) minmax(0, .8fr) 24px; gap: 24px; align-items: center;
       padding: 24px 0; border-top: 1px solid ${t.hair}; text-decoration: none; color: ${t.ink}; }
-    a.prog-row:hover .prog-title { color: ${t.amberInk}; }
+    a.prog-row:hover .prog-title { color: ${t.action}; }
     .prog-time { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
     .prog-title { font-size: 21px; line-height: 1.3; font-weight: 700; letter-spacing: -0.01em; transition: color .15s ease; }
     .prog-who { font-size: 15px; color: ${t.body}; }
-    .prog-go { color: ${t.amberInk}; font-weight: 700; }
+    .prog-go { color: ${t.action}; font-weight: 700; }
 
     /* MORE — three layouts share the grid, heading and link treatment */
     .more-intro { margin-top: 14px; max-width: 72ch; font-size: 18px; line-height: 1.5; color: ${t.body}; }
@@ -966,6 +1041,7 @@ export default class extends HTMLElement {
       .facts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .facts-cell { border-bottom: 1px solid ${t.hair}; }
       .spk-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px 24px; }
+      .spk-track { grid-template-columns: none; grid-auto-columns: calc((100% - 2 * 24px) / 3); }
       .about { grid-template-columns: minmax(0, 1fr); }
       .about-list { margin-top: 40px; }
       .themes-grid { grid-template-columns: minmax(0, 1fr); }
@@ -993,6 +1069,8 @@ export default class extends HTMLElement {
       .facts-cell { padding: 18px 0; border-right: 0; }
       .facts--docked .facts-cell { padding: 18px 20px; }
       .spk-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 16px; margin-top: 28px; }
+      .spk-track { grid-template-columns: none; grid-auto-columns: 62%; }
+      .spk-sec--carousel .pk-head { flex-wrap: wrap; gap: 16px; }
       .num-t { font-size: 16px; }
       .themes-grid { margin-top: 28px; gap: 16px; }
       .theme-card { padding: 28px; }

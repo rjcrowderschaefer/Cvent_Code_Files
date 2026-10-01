@@ -31,14 +31,15 @@ return `
 ${R} {
   --r-bg: #FFFFFF; --r-ink: #141416; --r-body: #3F3F3D; --r-muted: #5C5C5A; --r-hair: #E4E4E0;
   --r-ctl: #8A8A86; --r-field: #FFFFFF; --r-ph: #8C8C88; --r-accent: #9C5F00;
-  --r-primary: #9C5F00; --r-primary-h: #8F5700; --r-primary-ink: #FFFFFF;
+  /* Flagship rule: buttons and links are BLUE (functional); amber is decoration only. */
+  --r-primary: #0062DD; --r-primary-h: #0050B5; --r-primary-ink: #FFFFFF; --r-link: #0062DD;
   --r-err: #B42318; --r-focus: #2B6CE8; --r-focus-ring: rgba(43,108,232,.22);
   --r-menu: #FFFFFF; --r-menu-h: #F5F5F3; --r-sel: rgba(156,95,0,.10);
 }
 ${R}.bbg-reg--dark {
   --r-bg: #0B0B0C; --r-ink: #FFFFFF; --r-body: rgba(255,255,255,.80); --r-muted: rgba(255,255,255,.66); --r-hair: rgba(255,255,255,.14);
-  --r-ctl: rgba(255,255,255,.38); --r-field: #17181C; --r-ph: rgba(255,255,255,.45); --r-accent: #F7A325;
-  --r-primary: #F7A325; --r-primary-h: #E8951B; --r-primary-ink: #0B0B0C;
+  --r-ctl: rgba(255,255,255,.38); --r-field: #17181C; --r-ph: rgba(255,255,255,.45); --r-accent: #FF9D00;
+  --r-primary: #0062DD; --r-primary-h: #0050B5; --r-primary-ink: #FFFFFF; --r-link: #4D94FF;
   --r-err: #FF8A7A; --r-focus: #6FA0FF; --r-focus-ring: rgba(111,160,255,.3);
   --r-menu: #17181C; --r-menu-h: rgba(255,255,255,.08); --r-sel: rgba(247,163,37,.16);
 }
@@ -50,7 +51,7 @@ ${R} ${BODY_SEC} { background-color: var(--r-bg) !important; background-image: n
 /* Base text colour for everything Cvent draws in the form area (low
    specificity on purpose: the specific rules below win). */
 ${BODY} :where(p, span, div, h1, h2, h3, h4, h5, h6, label, legend, li, dt, dd, td, th, strong, b, em):not(.site-footer *) { color: var(--r-ink) !important; }
-${BODY} a { color: var(--r-accent) !important; }
+${BODY} a { color: var(--r-link) !important; }
 
 /* ---------- header: the step bar sits on the page ground under the banner ---------- */
 ${R} ${STEPS_SEC} {
@@ -341,7 +342,7 @@ ${BODY} [class*=RegistrationSummary__attendee] > h4::before { content: var(--bbg
 ${BODY} [class*=RegistrationSummary__attendee] > [class*=fieldStyles]::before { content: var(--bbg-sum-email, "Work email"); }
 ${BODY} [class*=RegistrationSummary__attendee] > div:has(> [class*=summaryHeaderActionLinks]) { position: absolute !important; top: 15px; right: 22px; margin: 0 !important; padding: 0 !important; }
 ${BODY} [class*=RegistrationSummary__attendee] [class*=summaryHeaderActionLinks] {
-  padding: 0 !important; cursor: pointer; font-family: ${FONT} !important; font-size: 14px !important; line-height: 1.4 !important; font-weight: 700 !important; color: var(--r-accent) !important; text-decoration: none !important; }
+  padding: 0 !important; cursor: pointer; font-family: ${FONT} !important; font-size: 14px !important; line-height: 1.4 !important; font-weight: 700 !important; color: var(--r-link) !important; text-decoration: none !important; }
 ${BODY} [class*=RegistrationSummary__attendee] [class*=summaryHeaderActionLinks]:hover { text-decoration: underline !important; text-underline-offset: 3px; }
 /* card 2: About you (the answers) */
 ${BODY} [data-cvent-id^=widget-RegistrationSummary] [class*=RegistrationSummary__body] { margin-top: 16px !important; border: 1px solid var(--r-hair) !important; border-radius: 2px !important; background: var(--r-bg) !important; }
@@ -359,7 +360,7 @@ ${BODY} [data-bbg-sum-value] { margin-top: 2px !important; }
 /* consent line above the buttons */
 ${BODY} [data-bbg-consent] { margin-top: 20px !important; padding: 0 !important; }
 ${BODY} [data-bbg-consent][data-bbg-consent] :is(p, span, div) { max-width: 62ch; font-family: ${FONT} !important; font-size: 14px !important; line-height: 1.55 !important; color: var(--r-body) !important; text-align: left !important; }
-${BODY} [data-bbg-consent][data-bbg-consent] a { color: var(--r-accent) !important; font-weight: 600 !important; }
+${BODY} [data-bbg-consent][data-bbg-consent] a { color: var(--r-link) !important; font-weight: 600 !important; }
 @media (max-width: 600px) {
   ${BODY} [class*=RegistrationSummary__attendee] { grid-template-columns: minmax(0, 1fr); row-gap: 12px; }
   ${BODY} [class*=RegistrationSummary__attendee]::before { margin-bottom: 6px; }

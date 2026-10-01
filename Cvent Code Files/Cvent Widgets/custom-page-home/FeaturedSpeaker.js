@@ -104,6 +104,10 @@ export class FeaturedSpeaker extends HTMLElement {
     const tile = Math.max(120, Math.min(400, tileRaw === 200 ? 250 : tileRaw));
     const hoverPrompt = cfg.hoverPrompt !== undefined ? cfg.hoverPrompt : "Click to view bio";
     const fontFamily = cfg.fontFamily || FONT_STACK;
+    // Company as plain text after the job title ("CEO, Bloomberg") by default;
+    // cfg.companyStyle "tag" brings back the grey pill.
+    const textCo = this._companyAsText();
+    const labelPx = Number(cfg.labelSize) || 11;
 
     const style = document.createElement("style");
     style.textContent = `
@@ -148,7 +152,7 @@ export class FeaturedSpeaker extends HTMLElement {
         color: ${c.ink}; margin-bottom: 3px; transition: color .15s ease;
       }
       .card:hover .name { color: ${c.mainAccent} !important; }
-      .cardEb { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: ${c.accent}; margin: -2px 0 3px; }
+      .cardEb { font-size: ${labelPx}px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: ${c.accent}; margin: -2px 0 3px; }
       /* The company tag hangs directly off the title (8px), never off the card
          bottom, so it reads as part of the speaker above it rather than a
          header for the row below. The role reserves two lines so tags still
@@ -187,7 +191,7 @@ export class FeaturedSpeaker extends HTMLElement {
       .mPhoto { width: 180px; aspect-ratio: 1 / 1; background: ${c.placeholder}; overflow: hidden; position: relative; }
       .mPhoto img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; }
       .mEyebrow {
-        font-size: 11px; line-height: 1.4; font-weight: 700; letter-spacing: .14em;
+        font-size: ${labelPx}px; line-height: 1.4; font-weight: 700; letter-spacing: .14em;
         text-transform: uppercase; color: ${c.accent}; margin: 0 0 12px;
       }
       .mName {
@@ -209,7 +213,7 @@ export class FeaturedSpeaker extends HTMLElement {
       .mBio > *:last-child { margin-bottom: 0 !important; }
       .mSessions { margin-top: 22px; padding-top: 20px; border-top: 1px solid ${c.hair}; }
       .mSessionsHdr {
-        font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+        font-size: ${labelPx}px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
         color: ${c.muted}; margin: 0 0 10px;
       }
       .mSessionsList { list-style: none; margin: 0; padding: 0; }
@@ -282,7 +286,7 @@ export class FeaturedSpeaker extends HTMLElement {
 
     const roleEl = document.createElement("p");
     roleEl.className = "role";
-    roleEl.textContent = this._jobTitle(sp);
+    roleEl.textContent = textCo ? this._roleLine(sp) : this._jobTitle(sp);
     this._applyTypographyOverrides(roleEl, cfg.typography?.speakerRole, true);
     // Kept in flow when empty so the reserved height still aligns the row.
     roleEl.setAttribute("aria-hidden", roleEl.textContent ? "false" : "true");
@@ -291,13 +295,13 @@ export class FeaturedSpeaker extends HTMLElement {
     tagEl.className = "tag";
     this._setTag(tagEl, this._tagLabel(sp));
     this._applyTypographyOverrides(tagEl, cfg.typography?.speakerTag, true);
-    tagEl.style.display = tagEl.title ? "" : "none";
+    tagEl.style.display = tagEl.title && !textCo ? "" : "none";
 
     const tagWrap = document.createElement("span");
     tagWrap.className = "tagWrap";
     tagWrap.append(tagEl);
 
-    card.append(...[photo, cardEb, nameEl, roleEl, tagWrap].filter(Boolean));
+    card.append(...[photo, cardEb, nameEl, roleEl, textCo ? null : tagWrap].filter(Boolean));
     this.shadowRoot.append(card);
 
     // Lazy hydration — fill role/company if missing from SDK
@@ -417,10 +421,12 @@ export class FeaturedSpeaker extends HTMLElement {
     m.photo.append(img);
 
     m.nameEl.textContent = fullName || "Speaker";
-    m.roleEl.textContent = jobTitle || "";
-    m.roleEl.style.display = jobTitle ? "" : "none";
+    const textCo = this._companyAsText();
+    const roleText = textCo ? this._roleLine(sp) : jobTitle;
+    m.roleEl.textContent = roleText || "";
+    m.roleEl.style.display = roleText ? "" : "none";
     m.tagEl.textContent = company || "";
-    m.tagEl.style.display = company ? "" : "none";
+    m.tagEl.style.display = company && !textCo ? "" : "none";
     m.bioEl.innerHTML = this._bioToHtml(bio);
     m.bioEl.style.display = bio ? "" : "none";
 
@@ -518,8 +524,13 @@ export class FeaturedSpeaker extends HTMLElement {
             const hTitle = this._jobTitle(full);
             const hCompany = this._company(full);
             const hBio = (full.biography ?? full.bio ?? full.about ?? "").toString();
-            if (hTitle && !jobTitle) { m.roleEl.textContent = hTitle; m.roleEl.style.display = ""; }
-            if (hCompany && !company) { m.tagEl.textContent = hCompany; m.tagEl.style.display = ""; }
+            if (textCo) {
+              const line = this._roleLine({ ...full, ...sp, title: jobTitle || hTitle, company: company || hCompany });
+              m.roleEl.textContent = line; m.roleEl.style.display = line ? "" : "none";
+            } else {
+              if (hTitle && !jobTitle) { m.roleEl.textContent = hTitle; m.roleEl.style.display = ""; }
+              if (hCompany && !company) { m.tagEl.textContent = hCompany; m.tagEl.style.display = ""; }
+            }
             if (hBio && !bio) { m.bioEl.innerHTML = this._bioToHtml(hBio); m.bioEl.style.display = ""; }
             if (full.category && !sp.category) {
               this.speaker = { ...this.speaker, category: full.category };
@@ -596,6 +607,11 @@ export class FeaturedSpeaker extends HTMLElement {
           biography: this.speaker.biography || full.biography };
         const hTitle = this._jobTitle(full);
         const hCompany = this._company(full);
+        if (this._companyAsText()) {
+          roleEl.textContent = this._roleLine(this.speaker);
+          roleEl.setAttribute("aria-hidden", roleEl.textContent ? "false" : "true");
+          return;
+        }
         if (hTitle && !hasTitle) { roleEl.textContent = hTitle; roleEl.style.display = ""; }
         if (hCompany && !hasCompany) { this._setTag(tagEl, this._tagLabel(full)); tagEl.style.display = ""; }
       })
@@ -703,6 +719,17 @@ export class FeaturedSpeaker extends HTMLElement {
 
   _company(sp) {
     return (sp?.company || sp?.organization || sp?.companyName || sp?.org || "").toString().trim();
+  }
+
+  // Flagship template (2026-10-01): company is plain text after the title,
+  // never a pill (a pill reads as a button). "tag" keeps the old pill.
+  _companyAsText() {
+    return (this.config || {}).companyStyle !== "tag";
+  }
+
+  // "Title, Company" (aliases apply to the company, as they did to the pill).
+  _roleLine(sp) {
+    return [this._jobTitle(sp), this._tagLabel(sp)].filter(Boolean).join(", ");
   }
 
   // Modal eyebrow. Default: the planner's fixed text (cfg.modalEyebrowText,

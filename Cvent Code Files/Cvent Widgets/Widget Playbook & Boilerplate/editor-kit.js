@@ -18,7 +18,7 @@ import { extractUrl, PAGE_KIT_BUILD } from "./page-kit.js";
 
 // Shown in the editor footer next to the widget build, so a stale copy of this
 // file in Cvent is visible (the banner image fields live here).
-export const EDITOR_KIT_BUILD = "kit-2026-09-26f";
+export const EDITOR_KIT_BUILD = "kit-2026-10-01a";
 
 export class PageEditor extends HTMLElement {
   constructor({ setConfiguration, initialConfiguration } = {}) {
@@ -361,7 +361,6 @@ export class PageEditor extends HTMLElement {
     const t = this._config.cta;
     const S = (p) => this._patchSection("cta", p);
     return this._sectionGroup("cta", [
-      this._select("Style", t.style, [["light", "Light: on the grey band (as designed)"], ["dark", "Dark: black panel"]], (v) => S({ style: v })),
       this._text("Eyebrow", t.eyebrow, (v) => S({ eyebrow: v })),
       this._text("Heading", t.heading, (v) => S({ heading: v }), { hint: "Blank = “Join us at <venue> on <date>”." }),
       this._text("Text", t.body, (v) => S({ body: v }), { hint: "Blank = day, time and address." }),

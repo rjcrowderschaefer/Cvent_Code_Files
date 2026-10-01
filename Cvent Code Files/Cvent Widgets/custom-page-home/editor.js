@@ -166,11 +166,12 @@ export default class HomePageEditor extends HTMLElement {
     i.onchange = () => onChange(allowBlank && i.value.trim() === "" ? "" : Number(i.value));
     return this._field(label, i, hint);
   }
-  _check(label, checked, onChange) {
+  _check(label, checked, onChange, { hint } = {}) {
     const c = this._el("input", { type: "checkbox" });
     c.checked = !!checked;
     c.onchange = () => onChange(c.checked);
-    return this._el("label", { class: "check" }, c, this._el("span", { text: label }));
+    const box = this._el("label", { class: "check" }, c, this._el("span", { text: label }));
+    return hint ? this._el("div", { class: "field" }, box, this._el("span", { class: "hint", text: hint })) : box;
   }
   _select(label, value, options, onChange, hint) {
     const s = this._el("select");
@@ -360,7 +361,7 @@ export default class HomePageEditor extends HTMLElement {
       this._text("Title, bold part", h.titleStrong, (v) => S("hero")({ titleStrong: v }), { hint: "Blank = event title minus its last word." }),
       this._text("Title, light part", h.titleLight, (v) => S("hero")({ titleLight: v }), { hint: "Blank = last word of the event title." }),
       this._text("Eyebrow", h.eyebrow, (v) => S("hero")({ eyebrow: v }), { placeholder: "Bloomberg Live · New York" }),
-      this._check("Show date, time and venue line", h.showFacts, (v) => S("hero")({ showFacts: v })),
+      this._check("Show date, time and venue line", h.showFacts, (v) => S("hero")({ showFacts: v }), { hint: "Off by default: the facts card under the hero already shows the date and venue. Use a lockup image without a date line too." }),
       this._area("Intro line", h.lede, (v) => S("hero")({ lede: v }), { rows: 2 }),
       this._text("Primary button label", h.primaryLabel, (v) => S("hero")({ primaryLabel: v })),
       this._text("Secondary button label", h.secondaryLabel, (v) => S("hero")({ secondaryLabel: v })),
@@ -371,6 +372,7 @@ export default class HomePageEditor extends HTMLElement {
     const f = c.facts;
     panel.append(this._group("facts", SECTION_LABELS.facts, f.show, (v) => S("facts")({ show: v }), [
       this._check("Dock onto the bottom of the hero", f.docked !== false, (v) => S("facts")({ docked: v })),
+      this._check("Show the Speakers cell", !!f.showSpeakers, (v) => S("facts")({ showSpeakers: v }), { hint: "Off by default: the speakers section already lists them." }),
       this._el("p", { class: "hint", text: "Docking works when this section sits directly under the hero. Values fill in from the event automatically. Type here only to override." }),
       ...[["date", "Date"], ["venue", "Venue"], ["program", "Program"], ["speakers", "Speakers"]].flatMap(([k, n]) => [
         this._el("p", { class: "sub", text: n }),
@@ -384,8 +386,13 @@ export default class HomePageEditor extends HTMLElement {
     panel.append(this._group("speakers", SECTION_LABELS.speakers, sp.show, (v) => S("speakers")({ show: v }), [
       this._text("Eyebrow", sp.eyebrow, (v) => S("speakers")({ eyebrow: v })),
       this._text("Heading", sp.heading, (v) => S("speakers")({ heading: v })),
-      this._text("Link label", sp.linkLabel, (v) => S("speakers")({ linkLabel: v })),
-      this._text("Link URL", sp.linkUrl, (v) => S("speakers")({ linkUrl: v.trim() }), { hint: "Usually the Speakers page." }),
+      this._select("Layout", sp.layout || "carousel", [["carousel", "Carousel (arrows and swipe)"], ["grid", "Grid with a “See all” link"]], (v) => S("speakers")({ layout: v })),
+      ...(sp.layout === "grid" ? [
+        this._text("Link label", sp.linkLabel, (v) => S("speakers")({ linkLabel: v })),
+        this._text("Link URL", sp.linkUrl, (v) => S("speakers")({ linkUrl: v.trim() }), { hint: "Usually the Speakers page." }),
+      ] : [
+        this._check("After the picked speakers, show everyone else", sp.includeAll !== false, (v) => S("speakers")({ includeAll: v }), { hint: "In program order. Off = only the speakers picked below." }),
+      ]),
       this._speakerPicker(),
       this._text("Bio pop-up eyebrow", sp.modalEyebrowText, (v) => S("speakers")({ modalEyebrowText: v })),
       this._check("List the speaker’s sessions in the bio pop-up", sp.showSessions, (v) => S("speakers")({ showSessions: v })),

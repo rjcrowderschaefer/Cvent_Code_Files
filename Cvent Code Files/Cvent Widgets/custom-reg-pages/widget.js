@@ -17,11 +17,11 @@
 import { ensureBrandFont } from "./type-scale.js";
 import {
   TOKENS, esc, safeUrl, isExternal, lines, fixed, resolveLang, loadEventData, eventFacts,
-  kitCss, applyFullBleed, mergePageConfig,
+  kitCss, applyFullBleed, mergePageConfig, LABEL_PX,
 } from "./page-kit.js";
 import { REG_FORM_CSS, regFormCss } from "./reg-form-css.js";
 
-export const BUILD = "reg-2026-09-28n";
+export const BUILD = "reg-2026-10-01a";
 
 export const REG_DEFAULTS = {
   mode: "banner",            // "banner" | "panel" | "confirmation"
@@ -743,8 +743,8 @@ export default class extends HTMLElement {
 // ---------------------------------------------------------------------------
 const t = TOKENS;
 const WIDGET_CSS = `
-  .rg { --rg-ink: ${t.ink}; --rg-body: ${t.body}; --rg-muted: ${t.muted}; --rg-hair: ${t.hair}; --rg-panel: ${t.tint}; --rg-accent: ${t.amberInk}; --rg-dot-bg: #fff; --rg-ground: #FFFFFF; --rg-ctl: #8A8A86; --rg-accent-ink: #FFFFFF; --rg-faint: #6F6F6D; }
-  .rg--dark { --rg-ink: #fff; --rg-body: rgba(255,255,255,.78); --rg-muted: rgba(255,255,255,.66); --rg-hair: rgba(255,255,255,.14); --rg-panel: ${t.panel}; --rg-accent: ${t.amberOnDark}; --rg-dot-bg: transparent; --rg-ground: #0B0B0C; --rg-ctl: rgba(255,255,255,.38); --rg-accent-ink: #0B0B0C; --rg-faint: rgba(255,255,255,.55); }
+  .rg { --rg-ink: ${t.ink}; --rg-body: ${t.body}; --rg-muted: ${t.muted}; --rg-hair: ${t.hair}; --rg-panel: ${t.tint}; --rg-accent: ${t.amberInk}; --rg-link: ${t.action}; --rg-label: ${t.amber}; --rg-dot-bg: #fff; --rg-ground: #FFFFFF; --rg-ctl: #8A8A86; --rg-accent-ink: #FFFFFF; --rg-faint: #6F6F6D; }
+  .rg--dark { --rg-ink: #fff; --rg-body: rgba(255,255,255,.78); --rg-muted: rgba(255,255,255,.66); --rg-hair: rgba(255,255,255,.14); --rg-panel: ${t.panel}; --rg-accent: ${t.amberOnDark}; --rg-link: ${t.linkOnDark}; --rg-label: ${t.amber}; --rg-dot-bg: transparent; --rg-ground: #0B0B0C; --rg-ctl: rgba(255,255,255,.38); --rg-accent-ink: #0B0B0C; --rg-faint: rgba(255,255,255,.55); }
   .rg { color: var(--rg-ink); }
 
   /* banner */
@@ -758,7 +758,7 @@ const WIDGET_CSS = `
 
   /* panel */
   .rg-panel { max-width: 420px; box-sizing: border-box; background: var(--rg-panel); border-top: 3px solid ${t.amberOnDark}; padding: 28px; }
-  .rg-eb { font-size: 11.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--rg-accent); }
+  .rg-eb { font-size: ${LABEL_PX.small}px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--rg-label); }
   .rg-ph { margin-top: 8px; font-size: 21px; line-height: 1.25; font-weight: 700; letter-spacing: -0.01em; color: var(--rg-ink); }
   .rg-dl { margin: 18px 0 0; display: grid; gap: 14px; }
   .rg-dl dt { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--rg-muted); }
@@ -769,9 +769,9 @@ const WIDGET_CSS = `
   .rg-next li { counter-increment: n; display: grid; grid-template-columns: 24px 1fr; gap: 8px; font-size: 14.5px; line-height: 1.45; color: var(--rg-body); }
   .rg-next li::before { content: counter(n); width: 22px; height: 22px; border-radius: 50%; background: var(--rg-dot-bg); border: 1px solid var(--rg-hair); display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--rg-ink); }
   .rg-ask { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--rg-hair); font-size: 14.5px; color: var(--rg-body); }
-  .rg-ask a { color: var(--rg-accent); font-weight: 700; text-decoration: none; }
+  .rg-ask a { color: var(--rg-link); font-weight: 700; text-decoration: none; }
   .rg-ask a:hover, .rg-ask-btn:hover { text-decoration: underline; }
-  .rg-ask-btn { font: inherit; font-weight: 700; color: var(--rg-accent); background: none; border: 0; padding: 0; cursor: pointer; }
+  .rg-ask-btn { font: inherit; font-weight: 700; color: var(--rg-link); background: none; border: 0; padding: 0; cursor: pointer; }
 
   /* confirmation */
   .rg-done { max-width: 680px; padding: 8px 0; }

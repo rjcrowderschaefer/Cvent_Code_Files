@@ -343,3 +343,25 @@ Learned building `custom-bloomberg-insights` (Sep 2026).
 - **Preview harness for non-SDK data:** mock `window.fetch` for the API's base
   URL in both the harness window (editor) and the frame (widget). See
   `preview-custom-bloomberg-insights/mock-fetch.js`.
+
+---
+
+## 13. Flagship Event Template design rules (page widgets)
+
+Design lead review, 2026-10-01. Full rules: `FLAGSHIP_TEMPLATE_DESIGN_RULES.md`.
+
+- **Blue is functional, amber is decorative.** Buttons, links and clickable
+  hovers use `TOKENS.action` (`#0062DD`); labels, rules and bars use
+  `TOKENS.amber` (`#FF9D00`). Never amber on something clickable.
+- **Labels 20% larger**: `LABEL_PX.section` 14.4px, `LABEL_PX.small` 13.2px.
+- **One closing band**: `regBand()` is always the full-bleed black section;
+  `closingBandCopy()` gives every page the same default copy. The old
+  `cta.style` light/dark option is retired (a saved value is ignored).
+- **Company is text after the title** on speaker cards and pop-ups
+  (`companyStyle: "text"` via `pageCardBase()`).
+- **Home**: About before Speakers (a saved order equal to the old default
+  migrates via `LEGACY_ORDERS`), speakers carousel, no hero date line, no
+  Speakers cell in the facts card.
+- These are template DEFAULTS, so they intentionally apply to existing events
+  without a toggle (the exception to the default-off rule in §7).
+

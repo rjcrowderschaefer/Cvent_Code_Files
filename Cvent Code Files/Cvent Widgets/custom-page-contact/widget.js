@@ -7,7 +7,7 @@
 // Shared building blocks: page-kit.js. NOTE: include the file extension in imports.
 import { PageWidget, PAGE_BASE_DEFAULTS, mergePageConfig, TOKENS, esc, eyebrow, safeUrl, button, paragraphs } from "./page-kit.js";
 
-export const BUILD = "contact-2026-09-26b";
+export const BUILD = "contact-2026-10-01a";
 
 export const SECTION_LABELS = {
   banner: "Page banner",
@@ -121,8 +121,8 @@ export default class extends PageWidget {
     .ct-h { font-size: 28px; line-height: 1.2; font-weight: 700; letter-spacing: -0.01em; }
     .ct-p { margin-top: 12px; font-size: 17px; line-height: 1.6; color: ${t.body}; max-width: 46ch; }
     .ct-contact { margin-top: 16px; display: flex; flex-direction: column; gap: 4px; font-size: 17px; font-weight: 700; }
-    .ct-contact a { color: ${t.ink}; text-decoration: none; overflow-wrap: anywhere; }
-    .ct-contact a:hover { color: ${t.amberInk}; text-decoration: underline; }
+    .ct-contact a { color: ${t.action}; text-decoration: none; overflow-wrap: anywhere; }
+    .ct-contact a:hover { color: ${t.actionH}; text-decoration: underline; }
     .ct-btn { margin-top: auto; padding-top: 28px; }
 
     .ct-split { display: grid; grid-template-columns: .87fr 1.13fr; column-gap: clamp(40px, 7vw, 96px); align-items: start; }
@@ -131,8 +131,8 @@ export default class extends PageWidget {
     .ct-q summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: flex-start; gap: 24px;
       padding: 22px 0; font-size: 19px; line-height: 1.35; font-weight: 700; }
     .ct-q summary::-webkit-details-marker { display: none; }
-    .ct-q summary:hover { color: ${t.amberInk}; }
-    .ct-arrow::before { content: "↓"; color: ${t.amberInk}; font-weight: 700; }
+    .ct-q summary:hover { color: ${t.action}; }
+    .ct-arrow::before { content: "↓"; color: ${t.action}; font-weight: 700; }
     .ct-q[open] .ct-arrow::before { content: "↑"; }
     .ct-a { padding: 0 0 24px; font-size: 17px; line-height: 1.65; color: ${t.body}; max-width: 64ch; }
     .ct-a p + p { margin-top: 12px; }

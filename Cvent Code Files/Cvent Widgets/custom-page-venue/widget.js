@@ -13,7 +13,7 @@ import {
   lines, paragraphs, button, mapsDirectionsUrl, mapsEmbedUrl, downloadIcs,
 } from "./page-kit.js";
 
-export const BUILD = "venue-2026-09-26c";
+export const BUILD = "venue-2026-10-01a";
 
 export const SECTION_LABELS = {
   banner: "Page banner",
