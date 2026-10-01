@@ -510,11 +510,11 @@ const WIDGET_CSS = `
   .row span { font: 400 12.5px/1.4 var(--f); color: #5C5C5A; }
   .row a {
     font: 700 13px/1.4 var(--f); font-variant-numeric: tabular-nums;
-    color: #0062DD; text-decoration: none; white-space: nowrap;
+    color: #141416; text-decoration: none; white-space: nowrap;
   }
-  .row a:hover { color: #0050B5; text-decoration: underline; }
-  .mail { font: 400 13px/1.5 var(--f); color: #0062DD; text-decoration: none; }
-  .mail:hover { color: #0050B5; text-decoration: underline; }
+  .row a:hover { color: #0062DD; text-decoration: underline; }
+  .mail { font: 400 13px/1.5 var(--f); color: #141416; text-decoration: none; }
+  .mail:hover { color: #0062DD; text-decoration: underline; }
 
   .support { display: block; background: #F4F4F7; padding: 16px; text-decoration: none; }
   .support:hover { background: #ECECF1; }
