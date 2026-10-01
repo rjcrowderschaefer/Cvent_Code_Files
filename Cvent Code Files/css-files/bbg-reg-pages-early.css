@@ -12,6 +12,7 @@
 @keyframes bbgRegIn{to{opacity:1}}
 @keyframes bbgRegBarIn{to{max-height:400px;opacity:1}}
 [class*=AppContainer__container]:has(.bbg-reg-page){background-color:#fff!important}
-[class*=AppContainer__container]:has(.bbg-reg-page:not(.bbg-reg-ready)) :is([role=main],[class*=Grid__sectionContainer]:has([class*=ProgressBar__wrapper])){opacity:0;animation:bbgRegIn .2s ease 3s forwards}
+/* Never the nav section: on some events Cvent puts its step bar inside it (2026-10-01). */
+[class*=AppContainer__container]:has(.bbg-reg-page:not(.bbg-reg-ready)) :is([role=main],[class*=Grid__sectionContainer]:has([class*=ProgressBar__wrapper]):not(.cus_nav):not(:has(.cus_nav,#navigationContainer,[class*=WebsiteNavigator__container]))){opacity:0;animation:bbgRegIn .2s ease 3s forwards}
 /* Newer Cvent step bar: collapsed (no space, no flash) until the widget draws its own. */
 [class*=AppContainer__container]:has(.bbg-reg-page:not(.bbg-reg-ready)) [data-cvent-id*=ProgressBar-widget]{max-height:0;padding-top:0!important;padding-bottom:0!important;overflow:hidden;opacity:0;animation:bbgRegBarIn 0s linear 3s forwards}

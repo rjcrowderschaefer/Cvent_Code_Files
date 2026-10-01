@@ -25,8 +25,14 @@ export function regFormCss(R = "html.bbg-reg") {
 // section with the CSS class "bbg-reg-page" (set in Cvent) always counts.
 const BODY_SEC = `:is(.bbg-reg-page, [class*=Grid__sectionContainer]:not([role=banner] *):not(.site-footer *):not(:has(.site-footer, .cus_nav, #navigationContainer, [class*=ProgressBar__wrapper], [data-cvent-id*=ProgressBar-widget])))`;
 const BODY = `${R} :where(${BODY_SEC})`;
-// Step-bar section of the registration header (live page and Site Designer).
-const STEPS_SEC = `[class*=Grid__sectionContainer]:has([class*=ProgressBar__wrapper])`;
+// The site nav section. On some events Cvent puts its step bar INSIDE this
+// section, so the step-bar rules below must never match it: hiding or
+// repainting "the section with the step bar" would take the nav with it
+// (bug seen 2026-10-01 on the Flagship template: nav missing on /register).
+const NAV_SEC = `:is(.cus_nav, :has(.cus_nav, #navigationContainer, [class*=WebsiteNavigator__container]))`;
+// Step-bar section of the registration header (live page and Site Designer),
+// never the nav section.
+const STEPS_SEC = `[class*=Grid__sectionContainer]:has([class*=ProgressBar__wrapper]):not(${NAV_SEC})`;
 return `
 ${R} {
   --r-bg: #FFFFFF; --r-ink: #141416; --r-body: #3F3F3D; --r-muted: #5C5C5A; --r-hair: #E4E4E0;
@@ -67,8 +73,10 @@ ${R}.bbg-reg--hide-old ${STEPS_SEC} [data-cvent-id=containerParent]:has(.event-t
    header section once nothing visible is left in it. Cvent's bar stays in the
    page, so the widget can read it and pass clicks through to it. */
 ${R}.bbg-reg--own-steps :is([class*=ProgressBar__wrapper], [data-cvent-id*=ProgressBar-widget]) { display: none !important; }
-/* Newer Cvent step bar placed in the nav section: drop the empty column/row it leaves. */
+/* Cvent step bar placed in the nav section: hide only the bar's own row, never
+   the nav (the nav row holds nav / img / navigation and is kept). */
 ${R}.bbg-reg--own-steps [class*=Grid__row]:has(> [class*=Grid__column] > [data-cvent-id*=ProgressBar-widget]):not(:has(nav, img, [class*=navigation])) { display: none !important; }
+${R}.bbg-reg--own-steps ${NAV_SEC} [class*=Grid__row]:has([class*=ProgressBar__wrapper]):not(:has(nav, img, [class*=navigation], [class*=WebsiteNavigator])) { display: none !important; }
 /* Cvent's read-only "Registration Type · Apply to attend" line (one type only). */
 ${R}.bbg-reg--hide-regtype [data-cvent-id^=widget-RegistrationType]:has([data-cvent-id=read-only-view]) { display: none !important; }
 ${R}.bbg-reg--own-steps.bbg-reg--hide-old ${STEPS_SEC}:not(:has([data-bbg-reg])) { display: none !important; }
