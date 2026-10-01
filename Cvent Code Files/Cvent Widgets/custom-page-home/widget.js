@@ -27,7 +27,7 @@ import {
 const CARD_TAG = "bbg-home-speaker-card";
 // Bump on every change. Shown in the editor footer and as data-build on the
 // widget root, so a stale Cvent/CDN copy is obvious (Playbook §0).
-export const BUILD = "home-2026-10-01a";
+export const BUILD = "home-2026-10-01b";
 
 // ---------------------------------------------------------------------------
 // Defaults (exported for editor.js). Copy defaults are GENERIC on purpose:

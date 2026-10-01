@@ -160,6 +160,8 @@ export class FeaturedSpeaker extends HTMLElement {
          bottom of the card, where it merges with the grid's row gap. */
       .role { font-size: 14px; color: ${c.muted}; min-height: calc(2 * 1.45em); margin-bottom: 8px; }
       .tagWrap { display: flex; align-items: flex-start; }
+      /* Company as plain text after the title, demi weight (flagship template). */
+      .role .co, .mRole .co { font-weight: 600; }
       .name, .role, .tag { overflow-wrap: break-word; min-width: 0; }
       .tag {
         display: inline-block; max-width: 100%;
@@ -286,7 +288,7 @@ export class FeaturedSpeaker extends HTMLElement {
 
     const roleEl = document.createElement("p");
     roleEl.className = "role";
-    roleEl.textContent = textCo ? this._roleLine(sp) : this._jobTitle(sp);
+    if (textCo) this._fillRole(roleEl, sp); else roleEl.textContent = this._jobTitle(sp);
     this._applyTypographyOverrides(roleEl, cfg.typography?.speakerRole, true);
     // Kept in flow when empty so the reserved height still aligns the row.
     roleEl.setAttribute("aria-hidden", roleEl.textContent ? "false" : "true");
@@ -423,7 +425,7 @@ export class FeaturedSpeaker extends HTMLElement {
     m.nameEl.textContent = fullName || "Speaker";
     const textCo = this._companyAsText();
     const roleText = textCo ? this._roleLine(sp) : jobTitle;
-    m.roleEl.textContent = roleText || "";
+    if (textCo) this._fillRole(m.roleEl, sp); else m.roleEl.textContent = roleText || "";
     m.roleEl.style.display = roleText ? "" : "none";
     m.tagEl.textContent = company || "";
     m.tagEl.style.display = company && !textCo ? "" : "none";
@@ -526,7 +528,7 @@ export class FeaturedSpeaker extends HTMLElement {
             const hBio = (full.biography ?? full.bio ?? full.about ?? "").toString();
             if (textCo) {
               const line = this._roleLine({ ...full, ...sp, title: jobTitle || hTitle, company: company || hCompany });
-              m.roleEl.textContent = line; m.roleEl.style.display = line ? "" : "none";
+              this._fillRole(m.roleEl, { ...full, ...sp, title: jobTitle || hTitle, company: company || hCompany }); m.roleEl.style.display = line ? "" : "none";
             } else {
               if (hTitle && !jobTitle) { m.roleEl.textContent = hTitle; m.roleEl.style.display = ""; }
               if (hCompany && !company) { m.tagEl.textContent = hCompany; m.tagEl.style.display = ""; }
@@ -608,7 +610,7 @@ export class FeaturedSpeaker extends HTMLElement {
         const hTitle = this._jobTitle(full);
         const hCompany = this._company(full);
         if (this._companyAsText()) {
-          roleEl.textContent = this._roleLine(this.speaker);
+          this._fillRole(roleEl, this.speaker);
           roleEl.setAttribute("aria-hidden", roleEl.textContent ? "false" : "true");
           return;
         }
@@ -728,6 +730,21 @@ export class FeaturedSpeaker extends HTMLElement {
   }
 
   // "Title, Company" (aliases apply to the company, as they did to the pill).
+  // Writes "Title, <span class=co>Company</span>": company in demi (600),
+  // plain text, no pill. Built with DOM nodes, never innerHTML.
+  _fillRole(el, sp) {
+    el.textContent = "";
+    const title = this._jobTitle(sp);
+    const co = this._tagLabel(sp);
+    if (title) el.append(document.createTextNode(co ? `${title}, ` : title));
+    if (co) {
+      const span = document.createElement("span");
+      span.className = "co";
+      span.textContent = co;
+      el.append(span);
+    }
+  }
+
   _roleLine(sp) {
     return [this._jobTitle(sp), this._tagLabel(sp)].filter(Boolean).join(", ");
   }
