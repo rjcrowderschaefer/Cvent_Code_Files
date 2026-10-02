@@ -378,32 +378,32 @@ reminder24 = doc(
     + signoff("See you tomorrow,"),
 )
 
-# ---------- 06 1-hour reminder ----------
-def countdown():
-    row = lambda lab, val: (
-        f'<tr><td class="lbl" valign="top" width="96" style="width:96px;padding:3px 16px 10px 0;font-family:{FONT};font-size:11px;line-height:16px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#A8A8A8;">{lab}</td>'
-        f'<td class="val" valign="top" style="padding:0 0 10px 0;font-family:{FONT};font-size:14.5px;line-height:22px;color:#FFFFFF;">{val}</td></tr>')
-    return (f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:{INK};">'
-            f'<tr><td class="px" style="padding:28px 28px 20px 28px;">'
-            f'<p style="margin:0 0 8px 0;font-family:{FONT};font-size:11px;line-height:16px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:{AMBER_DARK};">Program begins</p>'
-            f'<p class="big" style="margin:0 0 6px 0;font-family:{FONT};font-size:40px;line-height:1.05;font-weight:700;letter-spacing:-0.6px;color:#FFFFFF;">{T["start"]}</p>'
-            f'<p style="margin:0 0 20px 0;font-family:{FONT};font-size:13px;line-height:18px;color:#BDBDBD;">{T["tz"]}</p>'
-            f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="border-top:1px solid #3A3A3D;font-size:0;line-height:0;height:1px;padding:0 0 18px 0;">&nbsp;</td></tr></table>'
-            f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">'
-            + row("Where", f"{T['venue']}, {T['addr1']}")
-            + row("Entrance", "[[ENTRANCE DETAILS]]")
-            + row("Bring", "Government-issued photo ID and this email")
-            + '</table></td></tr></table>' + spacer())
-
-reminder1 = doc(
-    "Starting in one hour",
-    f"Check-in is open at {T['venue']}. Bring your photo ID.",
-    ("#FFFBF0", AMBER_INK, "Starting in 1 hour"),
-    h1("We&rsquo;re starting in one hour")
-    + p(f"Hi {T['first']}, check-in is open and we&rsquo;re getting ready to welcome you.", mb=22)
-    + countdown()
-    + buttons(("Get Directions", MAPS, True), ("View the Agenda", T["agenda"], False))
-    + signoff("See you shortly,"),
+# ---------- 06 1-week reminder ----------
+reminder7 = doc(
+    "One week to go",
+    f"{T['event']} is one week away. Here&rsquo;s what to know before you go.",
+    ("#FFFBF0", AMBER_INK, f"One week to go &middot; {T['date']}"),
+    h1(f"One week until {T['event']}")
+    + p(f"Hi {T['first']},")
+    + p(f"We&rsquo;re looking forward to welcoming you in {T['city']} next week. Here&rsquo;s a quick look at the day, and a few things to plan ahead.", mb=22)
+    + details([
+        ("Date", f"<strong>{T['date']}</strong>"),
+        ("Time", f"{T['start']} &ndash; {T['end']} {T['tz']}"),
+        ("Venue", f"<strong>{T['venue']}</strong><br>{T['addr1']}, {T['city']}, {T['state']} {T['zip']}"),
+        ("Confirmation", CONF),
+    ], header_label="Your event")
+    + buttons(("View the Agenda", T["agenda"], True), ("Manage Registration", T["modify"], False))
+    + rule()
+    + h2("Plan ahead")
+    + numbered([
+        "Add the event to your calendar so the time is held.",
+        "Bring a government-issued photo ID on the day. It&rsquo;s required for building security.",
+        "We&rsquo;ll send arrival details, including check-in time and entrance, the day before.",
+        "[[OPTIONAL: dress code, travel, hotel or accessibility note &mdash; delete if unused]]",
+    ])
+    + calendar()
+    + p(f'Plans changed? Please <a href="{T["unreg"]}" style="color:{INK};">cancel your registration</a> so we can offer your place to someone else.', muted=True, mb=22)
+    + signoff("See you next week,"),
 )
 
 FILES = {
@@ -412,7 +412,7 @@ FILES = {
     "03-approval-denied-notification.html": denied,
     "04-cancellation-confirmation.html": cancelled,
     "05-event-reminder-24-hours.html": reminder24,
-    "06-event-reminder-1-hour.html": reminder1,
+    "06-event-reminder-1-week.html": reminder7,
 }
 if __name__ == "__main__":
     for name, html in FILES.items():
