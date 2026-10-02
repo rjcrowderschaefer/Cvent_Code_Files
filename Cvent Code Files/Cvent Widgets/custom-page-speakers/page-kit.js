@@ -24,7 +24,7 @@
 import { FONT_STACK, TYPE_SCALE, ensureBrandFont } from "./type-scale.js";
 
 // Shown in the page widgets' editor footer, so a stale copy in Cvent is visible.
-export const PAGE_KIT_BUILD = "pagekit-2026-10-02b"; // + planner contact proxy, scroll hold
+export const PAGE_KIT_BUILD = "pagekit-2026-10-02c"; // + planner contact proxy, scroll hold
 
 // ---------------------------------------------------------------------------
 // Tokens
@@ -372,6 +372,9 @@ export function findPlannerContact(selector = "") {
       console.warn("[page-kit] invalid contact planner selector:", sel);
     }
   }
+  // Cvent tags the widget: data-cvent-id="widget-ContactPlanner-widget:<id>".
+  const own = document.querySelector("[data-cvent-id^='widget-ContactPlanner-'] button, [data-cvent-id^='widget-ContactPlanner-'] [role='button']");
+  if (own) return own;
   const box = document.querySelector("[class*='ContactPlanner'], [class*='contactPlanner'], [class*='PlannerContact'], [class*='plannerContact']");
   const inBox = box && (box.matches("button, [role='button']") ? box : box.querySelector("button, [role='button'], a"));
   if (inBox) return inBox;
@@ -421,7 +424,10 @@ export const PLANNER_MODAL_CSS = `
   display: flex !important; flex-wrap: wrap !important; align-items: baseline !important; gap: 0 8px !important; }
 [class*=ContactPlannerStyle__contactInfo] > div { font-size: 16px !important; line-height: 1.5 !important; color: #5C5C5A !important; }
 [class*=ContactPlannerStyle__contactInfo] > div:first-child { color: #141416 !important; font-weight: 600 !important; }
-[class*=ContactPlannerStyle__contactInfo] > div + div::before { content: "·"; margin-right: 8px; color: #8A8A86; }
+/* the planner's company repeats "Bloomberg": drop it, add a line on what happens */
+[class*=ContactPlannerStyle__contactInfo] > div + div { display: none !important; }
+[class*=ContactPlannerStyle__contactInfo]::after { content: "Submit your question to the Bloomberg Team and we’ll get back to you as soon as possible.";
+  flex: 1 1 100%; margin-top: 6px; font-size: 16px; line-height: 1.55; color: #3F3F3D; }
 /* labels + fields: the registration form's field style */
 [class*=ContactPlannerStyle__element] label { display: block !important; margin: 0 0 8px !important; padding: 0 !important;
   font-size: 15px !important; line-height: 1.3 !important; font-weight: 600 !important; color: #141416 !important; }
@@ -458,7 +464,9 @@ export const PLANNER_MODAL_CSS = `
   [class*=ContactPlannerStyle__panel] { padding: 0 24px 28px !important; }
   [class*=ContactPlanner__submitButton] { align-self: stretch !important; width: 100% !important; }
 }
-/* The native widget's own "Contact Us" button, once our links stand in for it. */
+/* The native widget's own "Contact Us" button (also hidden from first paint by
+   the site CSS, bbg-live-site-custom.css): visually gone, still clickable. */
+[id^="widget:"]:has(> [data-cvent-id^="widget-ContactPlanner-"]),
 [data-bbg-planner-src] { position: absolute !important; width: 1px !important; height: 1px !important; margin: -1px !important; padding: 0 !important;
   overflow: hidden !important; clip: rect(0 0 0 0) !important; clip-path: inset(50%) !important; white-space: nowrap !important; border: 0 !important; }
 `;
@@ -497,7 +505,11 @@ export function wirePlannerContact(root, { selector = "", enabled = true } = {})
       // Fall back to the element's own link; a bare "#" would jump to the top.
       if ((el.getAttribute("href") || "#") === "#") {
         e.preventDefault();
-        console.warn("[page-kit] Cvent Contact Planner widget not found on this page; add it in Site Designer.");
+        // Next best: the site menu's Contact page (menu items are role="link").
+        const site = [...document.querySelectorAll("[class*='WebsiteNavigator'] [role='link'], nav a[href]")]
+          .find((n) => /^\s*contact( us)?\s*$/i.test(n.textContent || ""));
+        if (site && !/contact/i.test(location.pathname)) site.click();
+        else console.warn("[page-kit] Cvent Contact Planner widget not found on this page; add it in Site Designer.");
       }
       return;
     }

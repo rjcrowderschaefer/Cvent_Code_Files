@@ -13,7 +13,18 @@ import {
   lines, paragraphs, button, mapsDirectionsUrl, mapsEmbedUrl, downloadIcs,
 } from "./page-kit.js";
 
-export const BUILD = "venue-2026-10-02a";
+export const BUILD = "venue-2026-10-02b";
+
+// "contact us" in an accessibility note opens Cvent's Contact Planner pop-up
+// (page-kit wirePlannerContact; falls back to the site's Contact page). Put
+// other words in [square brackets] to link those instead.
+function contactLink(text, cfg) {
+  const safe = esc(text);
+  if (cfg.plannerContact === false) return safe.replace(/\[([^\]]+)\]/g, "$1");
+  const a = (t) => `<a href="#" class="vn-link" data-planner-contact>${t}</a>`;
+  if (/\[[^\]]+\]/.test(safe)) return safe.replace(/\[([^\]]+)\]/g, (_, t) => a(t));
+  return safe.replace(/\bcontact us\b/i, (m) => a(m));
+}
 
 export const SECTION_LABELS = {
   banner: "Page banner",
@@ -205,7 +216,7 @@ export default class extends PageWidget {
       .filter((it) => it.title || it.body);
     const heading = P("accessibility", "heading", a.heading);
     const list = items.length
-      ? `<div class="vn-notes">${items.map((it) => `<div class="vn-note">${it.title ? `<h3 class="vn-note-h">${esc(it.title)}</h3>` : ""}${it.body ? `<p class="vn-note-p">${esc(it.body)}</p>` : ""}</div>`).join("")}</div>`
+      ? `<div class="vn-notes">${items.map((it) => `<div class="vn-note">${it.title ? `<h3 class="vn-note-h">${esc(it.title)}</h3>` : ""}${it.body ? `<p class="vn-note-p">${contactLink(it.body, cfg)}</p>` : ""}</div>`).join("")}</div>`
       : `<div class="pk-placeholder"><strong>Accessibility</strong>Add accessibility notes in the widget settings, or switch this section off.</div>`;
     return `
     <section class="pk-section pk-bleed pk-ground-tint" aria-label="${esc(heading || a.eyebrow)}">
@@ -269,6 +280,8 @@ export default class extends PageWidget {
     .vn-note { padding: 22px 0; border-top: 1px solid ${t.hair}; display: flex; flex-direction: column; gap: 6px; }
     .vn-note-h { font-size: 18px; font-weight: 700; }
     .vn-note-p { font-size: 16px; line-height: 1.6; color: ${t.body}; }
+    .vn-link { color: ${t.action}; text-decoration: underline; text-underline-offset: 2px; }
+    .vn-link:hover { color: ${t.actionH}; }
 
     @media (max-width: 1024px) {
       .vn-loc, .vn-split { grid-template-columns: minmax(0, 1fr); row-gap: 40px; }

@@ -105,7 +105,16 @@ the speakers.
   `page-kit.js`, injected by our widgets): white panel, 3px amber top edge,
   30px title, recipient line, full-width 48px fields like the registration
   form, red errors, blue square Send. The native widget's own "Contact Us"
-  button is hidden (visually, still clickable) once our links are on the page.
+  button is hidden from first paint by the site CSS
+  (`[data-cvent-id^="widget-ContactPlanner-"]`), still clickable. The pop-up
+  shows the planner name plus "Submit your question to the Bloomberg Team…";
+  the planner's company line is hidden.
+- **FAB "Submit a question"** sends through the same widget, unseen
+  (`sendViaPlanner` in `custom-fab/widget.js`): the FAB's email + topic +
+  question fill the pop-up's fields and press Send. Put the Contact Planner
+  widget in the site footer section so it exists on every page.
+- **Venue accessibility notes**: "contact us" (or any [bracketed] words)
+  links to the pop-up.
 - **Request-to-attend copy is soft**: "Places are limited, so our team
   confirms each request personally." Avoid "reviewed", "decision" and
   "under review" on the site and in the emails ("Status: Registration Pending").

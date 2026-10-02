@@ -1149,6 +1149,18 @@ li[class*=Navigator__vertical] > div[class*=Navigator__selected] {
 
 
 /* =====================================================================
+   CONTACT PLANNER WIDGET (native) - its own "Contact Us" button is never
+   shown: the site's contact links (Contact page, registration panel, FAB)
+   open its pop-up instead. Visually hidden from first paint, still
+   clickable. The pop-up itself is styled by the page widgets (page-kit.js).
+   ===================================================================== */
+[id^="widget:"]:has(> [data-cvent-id^="widget-ContactPlanner-"]),
+[data-cvent-id^="widget-ContactPlanner-"] {
+  position: absolute !important; width: 1px !important; height: 1px !important; margin: -1px !important; padding: 0 !important;
+  overflow: hidden !important; clip: rect(0 0 0 0) !important; clip-path: inset(50%) !important; white-space: nowrap !important; border: 0 !important;
+}
+
+/* =====================================================================
    CVENT DIALOGS (e.g. "Would you like to start another registration?")
    Bloomberg treatment: dark scrim, black header, amber edge, amber Yes.
    Applies to every Cvent confirmation dialog, not just this one.
