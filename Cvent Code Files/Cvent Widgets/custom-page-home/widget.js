@@ -28,7 +28,7 @@ import {
 const CARD_TAG = "bbg-home-speaker-card";
 // Bump on every change. Shown in the editor footer and as data-build on the
 // widget root, so a stale Cvent/CDN copy is obvious (Playbook §0).
-export const BUILD = "home-2026-10-02a";
+export const BUILD = "home-2026-10-02b";
 
 // ---------------------------------------------------------------------------
 // Defaults (exported for editor.js). Copy defaults are GENERIC on purpose:
@@ -228,6 +228,34 @@ function listMarker(style, i, icon) {
   if (style === "icons") return `<span class="mk mk--icon">${iconSvg(icon)}</span>`;
   if (style === "bullets") return '<span class="mk mk--dot" aria-hidden="true"></span>';
   return `<span class="mk mk--num" aria-hidden="true">${String(i + 1).padStart(2, "0")}</span>`;
+}
+
+// Facts card "Program" cell: what kind of program it is, not how many
+// sessions. Value = the first three session formats in program order, from the
+// Cvent session category ("Keynotes, fireside chats and panels"); detail =
+// "Closing with a networking reception" when the day ends with one. Breaks,
+// logistics and welcome remarks are not formats.
+const NOT_FORMAT = /^(break|logistics|networking|registration|arrivals?|meal|lunch|breakfast|dinner|reception|remarks|welcome|other)$/i;
+const plural = (w) => (/(s|x|ch|sh)$/i.test(w) ? w : /[^aeiou]y$/i.test(w) ? `${w.slice(0, -1)}ies` : `${w}s`);
+function programShape(sessions, lang) {
+  const sorted = [...sessions].filter((s) => !isHiddenSession(s)).sort((a, b) => new Date(a.startDateTime) - new Date(b.startDateTime));
+  const formats = [];
+  sorted.forEach((s) => {
+    const c = String(s?.category?.name || s?.categoryName || "").trim();
+    if (c && !NOT_FORMAT.test(c) && !formats.some((f) => f.toLowerCase() === c.toLowerCase())) formats.push(c);
+  });
+  const words = formats.slice(0, 3).map((f, i) => {
+    const w = plural(f);
+    if (/^[A-Z]{2}/.test(w)) return w; // "AI demos", "CEO interviews": keep the acronym
+    return i ? w.charAt(0).toLowerCase() + w.slice(1) : w.charAt(0).toUpperCase() + w.slice(1);
+  });
+  let programFormats = "";
+  if (words.length) {
+    try { programFormats = new Intl.ListFormat(lang, { style: "long", type: "conjunction" }).format(words); } catch (e) { programFormats = words.join(", "); }
+  }
+  const last = sorted[sorted.length - 1];
+  const closingReception = !!last && /reception|networking|cocktail|drinks/i.test(`${last?.category?.name || ""} ${last?.name || ""}`);
+  return { programFormats, closingReception };
 }
 
 // Speakers heading: always one line. 24 characters fit on one line at every
@@ -472,6 +500,7 @@ export default class extends HTMLElement {
       venueLine: [venueName, a.address1].filter(Boolean).join(", "),
       sessionCount: sessions.length,
       speakerCount: spk.length,
+      ...programShape(sessions, lang),
       companies,
       startMs: start ? new Date(start).getTime() : 0,
     };
@@ -617,7 +646,9 @@ export default class extends HTMLElement {
     const cells = [
       [P("facts", "dateLabel", f.dateLabel), P("facts", "dateValue", f.dateValue) || facts.dateShort, P("facts", "dateDetail", f.dateDetail) || [facts.timeRange, facts.tzLong].filter(Boolean).join(" ")],
       [P("facts", "venueLabel", f.venueLabel), P("facts", "venueValue", f.venueValue) || facts.venueName, P("facts", "venueDetail", f.venueDetail) || facts.street],
-      [P("facts", "programLabel", f.programLabel), P("facts", "programValue", f.programValue) || (facts.sessionCount ? fixed(lang, "sessions", { n: facts.sessionCount }) : ""), P("facts", "programDetail", f.programDetail)],
+      [P("facts", "programLabel", f.programLabel),
+        P("facts", "programValue", f.programValue) || facts.programFormats || (facts.speakerCount ? fixed(lang, "speakers", { n: facts.speakerCount }) : ""),
+        P("facts", "programDetail", f.programDetail) || (facts.closingReception ? fixed(lang, "closingReception") : facts.programFormats && facts.speakerCount ? fixed(lang, "speakers", { n: facts.speakerCount }) : "")],
       f.showSpeakers ? [P("facts", "speakersLabel", f.speakersLabel), P("facts", "speakersValue", f.speakersValue) || (facts.speakerCount ? fixed(lang, "speakers", { n: facts.speakerCount }) : ""), P("facts", "speakersDetail", f.speakersDetail) || autoSpkDetail] : null,
     ].filter((c) => c && c[1]);
     if (!cells.length) return "";
