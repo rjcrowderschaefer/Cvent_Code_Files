@@ -5,9 +5,9 @@
 // Everything here is planner copy (Cvent has no contact / FAQ data in the SDK);
 // the banner eyebrow and closing band still read the event (getEventInfo).
 // Shared building blocks: page-kit.js. NOTE: include the file extension in imports.
-import { PageWidget, PAGE_BASE_DEFAULTS, mergePageConfig, TOKENS, esc, eyebrow, safeUrl, button, paragraphs, wirePlannerContact } from "./page-kit.js";
+import { PageWidget, PAGE_BASE_DEFAULTS, mergePageConfig, TOKENS, esc, eyebrow, safeUrl, button, paragraphs, findPlannerContact } from "./page-kit.js";
 
-export const BUILD = "contact-2026-10-02a";
+export const BUILD = "contact-2026-10-02b";
 
 export const SECTION_LABELS = {
   banner: "Page banner",
@@ -59,6 +59,24 @@ export default class extends PageWidget {
 
   bannerDefaults() {
     return { title: "Contact", intro: "" };
+  }
+
+  // A button that only opens the Contact Planner pop-up (no page link, no
+  // email) does nothing when Cvent's Contact Planner widget is missing. Look
+  // for the widget for a few seconds (Cvent may draw it after us); if it never
+  // turns up, hide the button rather than leave a dead one on the page.
+  afterRender(root, { cfg }) {
+    const dead = [...root.querySelectorAll('.ct-btn a[data-planner-contact][href="#"]')];
+    if (!dead.length) return;
+    let tries = 0;
+    const check = () => {
+      if (findPlannerContact(cfg.plannerContactSelector)) { dead.forEach((a) => { a.closest(".ct-btn").hidden = false; }); return; }
+      if (++tries < 8) { timer = setTimeout(check, 500); return; }
+      dead.forEach((a) => { a.closest(".ct-btn").hidden = true; });
+      console.warn("[contact] Cvent Contact Planner widget not found on this page: add it in Site Designer, or give the card an email address or button URL. The button is hidden until then.");
+    };
+    let timer = setTimeout(check, 0);
+    this._cleanups.push(() => clearTimeout(timer));
   }
 
   sections(ctx) {
