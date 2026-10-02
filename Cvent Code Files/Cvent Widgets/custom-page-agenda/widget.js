@@ -15,12 +15,13 @@ import { FeaturedSpeaker, defaultTypography as speakerTypography } from "./Featu
 import {
   PageWidget, PAGE_BASE_DEFAULTS, mergePageConfig, TOKENS, esc, fixed, countSessions, cleanRichText,
   fmtTime, fmtTimeRange, fmtDate, tzName, lines, isHiddenSession, fieldIsYes, sessionField,
+  pageCardBase, pageCardTypography, LABEL_PX,
 } from "./page-kit.js";
 
 const CARD_TAG = "bbg-agenda-speaker-card";
 // Bump on every change. Shown in the editor footer and as data-build on the
 // widget root, so a stale Cvent/CDN copy is obvious (Playbook §0).
-export const BUILD = "agenda-2026-09-26f";
+export const BUILD = "agenda-2026-10-02b";
 
 export const SECTION_LABELS = {
   banner: "Page banner",
@@ -117,8 +118,11 @@ export default class extends PageWidget {
   get build() { return BUILD; }
   merge(cfg) { return mergeAgendaConfig(cfg); }
 
-  bannerDefaults({ lang, facts, sessions, eventTz }) {
-    const n = countSessions(lang, sessions.length);
+  bannerDefaults({ cfg, lang, facts, sessions, eventTz }) {
+    // Content sessions only: breaks, meals, registration and networking
+    // slots are left out of the count (same rule as the break rows).
+    const breakCats = String(cfg.program.breakCategories || "").split(",").map(norm).filter(Boolean);
+    const n = countSessions(lang, sessions.filter((s) => !isBreakSession(s, breakCats)).length);
     const tz = tzName(sessions[0]?.startDateTime || facts.startIso, eventTz, "longGeneric") || facts.tzLong;
     const intro = !sessions.length ? "" : facts.venueName
       ? fixed(lang, "agendaIntro", { n, place: facts.venueName, tz })
@@ -213,7 +217,7 @@ export default class extends PageWidget {
       const range = `${fmtTimeRange(first.startDateTime, last, eventTz)} ${tzName(first.startDateTime, eventTz, "shortGeneric")}`.trim();
       return `<div class="ag-day-text">
           <h2 class="ag-day-h">${esc(fmtDate(first.startDateTime, eventTz, lang, { weekday: "long", month: "long", day: "numeric" }))}</h2>
-          <p class="ag-day-meta" data-day-meta>${esc(countSessions(lang, d.rows.length))} · ${esc(range)}</p>
+          <p class="ag-day-meta" data-day-meta>${esc(countSessions(lang, d.rows.filter((r) => !r.isBreak).length))} · ${esc(range)}</p>
         </div>`;
     };
     const single = days.length === 1;
@@ -428,12 +432,8 @@ export default class extends PageWidget {
       card.speaker = sp;
       card.theme = this.theme || {};
       card.config = {
-        colors: {
-          ink: TOKENS.ink, muted: TOKENS.muted, faint: TOKENS.faint, hair: TOKENS.hair, placeholder: TOKENS.placeholder,
-          accent: TOKENS.amberInk, tagBg: TOKENS.tagBg, tagInk: TOKENS.tagInk, modalBar: TOKENS.amberOnDark,
-          mainAccent: TOKENS.amberInk, accentRule: TOKENS.amberOnDark, bioInk: TOKENS.body, focus: TOKENS.focus,
-        },
-        typography: speakerTypography(),
+        ...pageCardBase(),         // amber labels, blue hover, company as text
+        typography: pageCardTypography(speakerTypography()),
         tileSize: 120,
         allSessions: sessions,
         getSpeakers,
@@ -504,26 +504,27 @@ export default class extends PageWidget {
     .ag-desc { font-size: 16px; line-height: 1.6; color: ${t.body}; }
     .ag-desc p + p, .ag-desc ul, .ag-desc ol { margin-top: 10px; }
     .ag-desc ul, .ag-desc ol { padding-left: 20px; }
-    .ag-desc a { color: ${t.amberInk}; font-weight: 600; }
+    .ag-desc a { color: ${t.action}; font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
     .ag-desc--clamp:not(.is-open) { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: var(--lines, 2); line-clamp: var(--lines, 2); overflow: hidden; }
     .ag-desc--clamp:not(.is-open) > * { display: inline; }
     .ag-desc--clamp:not(.is-open) > * + *::before { content: " "; }
-    .ag-more { font-family: inherit; margin-top: 6px; padding: 0; border: 0; background: none; cursor: pointer; font-size: 15px; font-weight: 700; color: ${t.amberInk}; }
-    .ag-more:hover { text-decoration: underline; }
+    .ag-more { font-family: inherit; margin-top: 6px; padding: 0; border: 0; background: none; cursor: pointer; font-size: 15px; font-weight: 700; color: ${t.action}; }
+    .ag-more:hover { color: ${t.actionH}; text-decoration: underline; }
 
     .ag-spks { display: flex; flex-wrap: wrap; gap: 20px 32px; margin-top: 4px; }
-    .ag-spk { display: flex; gap: 12px; align-items: flex-start; max-width: 300px; text-align: left; color: ${t.ink};
+    .ag-spk { display: flex; gap: 14px; align-items: flex-start; max-width: 320px; text-align: left; color: ${t.ink};
       font-family: inherit; background: none; border: 0; padding: 0; margin: 0; }
     button.ag-spk { cursor: pointer; }
-    button.ag-spk:hover .ag-spk-n { color: ${t.amberInk}; }
-    .ag-av { width: 52px; height: 52px; flex-shrink: 0; background: ${t.placeholder}; overflow: hidden; display: flex; align-items: center; justify-content: center;
+    button.ag-spk:hover .ag-spk-n { color: ${t.action}; }
+    /* Speaker photos: 72px (was 52px; flagship review asked for larger). */
+    .ag-av { width: 72px; height: 72px; flex-shrink: 0; background: ${t.placeholder}; overflow: hidden; display: flex; align-items: center; justify-content: center;
       font-size: 14px; font-weight: 700; color: ${t.faint}; }
     .ag-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .ag-spk-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
     .ag-spk-n { font-size: 16px; font-weight: 700; line-height: 1.3; transition: color .15s ease; }
     .ag-spk-r { font-size: 14px; line-height: 1.4; color: ${t.body}; }
     .ag-spk-c { font-size: 14px; font-weight: 600; line-height: 1.4; }
-    .ag-spk-eb { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: ${t.amberInk}; margin-bottom: 1px; }
+    .ag-spk-eb { font-size: ${LABEL_PX.small}px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: ${t.amber}; margin-bottom: 1px; }
     .ag-mods { align-self: stretch; margin-top: 4px; padding-top: 18px; border-top: 1px solid ${t.hair}; }
     .ag-tba { font-size: 15px; font-style: italic; color: ${t.faint}; }
     .ag-nomatch { padding: 32px 0; }
@@ -554,6 +555,7 @@ export default class extends PageWidget {
       .ag-desc { font-size: 15.5px; }
       .ag-spks { flex-direction: column; gap: 16px; }
       .ag-spk { max-width: none; }
+      .ag-av { width: 60px; height: 60px; }
     }
     `;
   }

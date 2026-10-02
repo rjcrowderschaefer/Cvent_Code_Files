@@ -5,9 +5,9 @@
 // Everything here is planner copy (Cvent has no contact / FAQ data in the SDK);
 // the banner eyebrow and closing band still read the event (getEventInfo).
 // Shared building blocks: page-kit.js. NOTE: include the file extension in imports.
-import { PageWidget, PAGE_BASE_DEFAULTS, mergePageConfig, TOKENS, esc, eyebrow, safeUrl, button, paragraphs } from "./page-kit.js";
+import { PageWidget, PAGE_BASE_DEFAULTS, mergePageConfig, TOKENS, esc, eyebrow, safeUrl, button, paragraphs, findPlannerContact } from "./page-kit.js";
 
-export const BUILD = "contact-2026-09-26b";
+export const BUILD = "contact-2026-10-02d";
 
 export const SECTION_LABELS = {
   banner: "Page banner",
@@ -22,10 +22,15 @@ const qa = (q = "") => ({ q, a: "" });
 export const CONTACT_DEFAULTS = {
   ...PAGE_BASE_DEFAULTS,
   order: ["banner", "cards", "faq", "cta"],
+  // Email links and email buttons open Cvent's Contact Planner pop-up (the
+  // message goes to the Event Planner email in the event details) when that
+  // native widget is on the page; otherwise they open an email as before.
+  plannerContact: true,
+  plannerContactSelector: "",
   cards: {
     show: true,
     items: [
-      card({ eyebrow: "Event team", heading: "General inquiries", body: "Questions about the program, registration, travel or accessibility.", buttonLabel: "Contact the event team" }),
+      card({ eyebrow: "Event team", heading: "General inquiries", body: "Questions about the program, registration, travel or accessibility.", buttonLabel: "Contact the Bloomberg Team" }),
       card({ eyebrow: "Bloomberg", heading: "Talk to an account manager", body: "Speak directly with a Bloomberg account manager, or arrange a personalized demo.", buttonLabel: "Schedule a conversation", style: "secondary" }),
       card(),
     ],
@@ -43,7 +48,11 @@ export const CONTACT_DEFAULTS = {
 };
 
 export function mergeContactConfig(incoming = {}) {
-  return mergePageConfig(CONTACT_DEFAULTS, incoming, { lists: { "cards.items": 3, "faq.items": 8 } });
+  const out = mergePageConfig(CONTACT_DEFAULTS, incoming, { lists: { "cards.items": 3, "faq.items": 8 } });
+  // Earlier default label, saved into existing copies by the editor: update it.
+  const first = out.cards.items[0];
+  if (first && first.buttonLabel === "Contact the event team") first.buttonLabel = CONTACT_DEFAULTS.cards.items[0].buttonLabel;
+  return out;
 }
 
 export default class extends PageWidget {
@@ -56,11 +65,30 @@ export default class extends PageWidget {
     return { title: "Contact", intro: "" };
   }
 
+  // A button that only opens the Contact Planner pop-up (no page link, no
+  // email) does nothing when Cvent's Contact Planner widget is missing. Look
+  // for the widget for a few seconds (Cvent may draw it after us); if it never
+  // turns up, hide the button rather than leave a dead one on the page.
+  afterRender(root, { cfg }) {
+    const dead = [...root.querySelectorAll('.ct-btn a[data-planner-contact][href="#"]')];
+    if (!dead.length) return;
+    let tries = 0;
+    const check = () => {
+      if (findPlannerContact(cfg.plannerContactSelector)) { dead.forEach((a) => { a.closest(".ct-btn").hidden = false; }); return; }
+      if (++tries < 8) { timer = setTimeout(check, 500); return; }
+      dead.forEach((a) => { a.closest(".ct-btn").hidden = true; });
+      console.warn("[contact] Cvent Contact Planner widget not found on this page: add it in Site Designer, or give the card an email address or button URL. The button is hidden until then.");
+    };
+    let timer = setTimeout(check, 0);
+    this._cleanups.push(() => clearTimeout(timer));
+  }
+
   sections(ctx) {
     return { cards: () => this._cards(ctx), faq: () => this._faq(ctx) };
   }
 
   _cards({ cfg, lang, P }) {
+    const pc = cfg.plannerContact !== false;
     const items = cfg.cards.items
       .map((it, i) => {
         const T = (k) => P("cards", `items.${i}.${k}`, it[k]);
@@ -75,13 +103,16 @@ export default class extends PageWidget {
           ${items.map((it) => {
             const email = String(it.email || "").trim();
             const phone = String(it.phone || "").trim();
-            const href = safeUrl(it.buttonUrl, "") || (email ? `mailto:${email}` : "");
+            const own = safeUrl(it.buttonUrl, "");
+            const href = own || (email ? `mailto:${email}` : "");
+            // The button goes to the planner pop-up unless it links to a page.
+            const toPlanner = pc && (!own || /^mailto:/i.test(own));
             return `<article class="ct-card">
               ${eyebrow(it.eyebrow)}
               <h2 class="ct-h">${esc(it.heading)}</h2>
               ${it.body ? `<p class="ct-p">${esc(it.body)}</p>` : ""}
-              ${email || phone ? `<p class="ct-contact">${email ? `<a href="mailto:${esc(email)}">${esc(email)}</a>` : ""}${phone ? `<a href="tel:${esc(phone.replace(/[^\d+]/g, ""))}">${esc(phone)}</a>` : ""}</p>` : ""}
-              ${it.buttonLabel && href ? `<div class="ct-btn">${button({ label: it.buttonLabel, href, variant: it.style === "secondary" ? "secondary" : "primary", ground: "light", lang })}</div>` : ""}
+              ${email || phone ? `<p class="ct-contact">${email ? `<a href="mailto:${esc(email)}"${pc ? " data-planner-contact" : ""}>${esc(email)}</a>` : ""}${phone ? `<a href="tel:${esc(phone.replace(/[^\d+]/g, ""))}">${esc(phone)}</a>` : ""}</p>` : ""}
+              ${it.buttonLabel && (href || toPlanner) ? `<div class="ct-btn">${button({ label: it.buttonLabel, href: href || "#", variant: it.style === "secondary" ? "secondary" : "primary", ground: "light", lang }).replace("<a ", toPlanner ? "<a data-planner-contact " : "<a ")}</div>` : ""}
             </article>`;
           }).join("")}
         </div>
@@ -121,8 +152,8 @@ export default class extends PageWidget {
     .ct-h { font-size: 28px; line-height: 1.2; font-weight: 700; letter-spacing: -0.01em; }
     .ct-p { margin-top: 12px; font-size: 17px; line-height: 1.6; color: ${t.body}; max-width: 46ch; }
     .ct-contact { margin-top: 16px; display: flex; flex-direction: column; gap: 4px; font-size: 17px; font-weight: 700; }
-    .ct-contact a { color: ${t.ink}; text-decoration: none; overflow-wrap: anywhere; }
-    .ct-contact a:hover { color: ${t.amberInk}; text-decoration: underline; }
+    .ct-contact a { color: ${t.action}; text-decoration: none; overflow-wrap: anywhere; }
+    .ct-contact a:hover { color: ${t.actionH}; text-decoration: underline; }
     .ct-btn { margin-top: auto; padding-top: 28px; }
 
     .ct-split { display: grid; grid-template-columns: .87fr 1.13fr; column-gap: clamp(40px, 7vw, 96px); align-items: start; }
@@ -131,8 +162,8 @@ export default class extends PageWidget {
     .ct-q summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: flex-start; gap: 24px;
       padding: 22px 0; font-size: 19px; line-height: 1.35; font-weight: 700; }
     .ct-q summary::-webkit-details-marker { display: none; }
-    .ct-q summary:hover { color: ${t.amberInk}; }
-    .ct-arrow::before { content: "↓"; color: ${t.amberInk}; font-weight: 700; }
+    .ct-q summary:hover { color: ${t.action}; }
+    .ct-arrow::before { content: "↓"; color: ${t.action}; font-weight: 700; }
     .ct-q[open] .ct-arrow::before { content: "↑"; }
     .ct-a { padding: 0 0 24px; font-size: 17px; line-height: 1.65; color: ${t.body}; max-width: 64ch; }
     .ct-a p + p { margin-top: 12px; }

@@ -4,8 +4,11 @@
 // data (the same SDK calls the widget uses). Text fields commit on `change`
 // (blur / Enter), never `input`: the panel re-renders on every patch and would
 // otherwise steal focus mid-typing (Playbook §7).
-import { HOME_DEFAULTS, mergeHomeConfig, deriveAbout, BUILD, SECTIONS } from "./widget.js";
-import { extractUrl } from "./page-kit.js";
+import { HOME_DEFAULTS, mergeHomeConfig, deriveAbout, BUILD, SECTIONS, LIST_STYLES, ICONS, iconSvg, SPEAKER_HEADING_MAX } from "./widget.js";
+import { extractUrl, lines } from "./page-kit.js";
+
+// Cvent description list (one per line) -> About items.
+const toItems = (text) => lines(text || "").map((title) => ({ title, description: "", icon: "" }));
 
 const SECTION_LABELS = {
   hero: "Hero",
@@ -70,12 +73,12 @@ export default class HomePageEditor extends HTMLElement {
   // Runs once per widget (about.seeded); clearing the fields afterwards sticks.
   async _seedAbout() {
     const a = this._config.about || {};
-    if (a.seeded || a.body || a.listItems || a.listEyebrow) return;
+    if (a.seeded || a.body || a.listItems || a.listEyebrow || (a.items || []).length) return;
     try {
       const info = (await this._sdk("getEventInfo")?.()) || {};
       const d = deriveAbout(info.description);
       if (!d.body && !d.listItems) return;
-      this._patchSection("about", { ...d, seeded: true });
+      this._patchSection("about", { body: d.body, listEyebrow: d.listEyebrow, items: toItems(d.listItems), listItems: "", seeded: true });
     } catch (e) {
       console.warn("[home editor] getEventInfo error:", e);
     }
@@ -132,9 +135,22 @@ export default class HomePageEditor extends HTMLElement {
   _field(label, control, hint) {
     return this._el("label", { class: "field" }, this._el("span", { class: "lbl", text: label }), control, hint ? this._el("span", { class: "hint", text: hint }) : null);
   }
-  _text(label, value, onChange, { hint, placeholder } = {}) {
-    const i = this._el("input", { type: "text", placeholder: placeholder || "" });
+  _text(label, value, onChange, { hint, placeholder, maxLength } = {}) {
+    const i = this._el("input", { type: "text", placeholder: placeholder || "", maxlength: maxLength ? String(maxLength) : undefined });
     i.value = value ?? "";
+    if (maxLength) {
+      // Live count; a value saved before the cap existed is flagged, not cut.
+      const count = this._el("span", { class: "hint" });
+      const upd = () => {
+        const n = i.value.length;
+        count.textContent = n > maxLength ? `${n} / ${maxLength} characters: too long, it will be cut off on the page. Shorten it.` : `${n} / ${maxLength} characters`;
+        count.classList.toggle("warn", n > maxLength);
+      };
+      i.addEventListener("input", upd);
+      upd();
+      i.onchange = () => onChange(i.value);
+      return this._el("label", { class: "field" }, this._el("span", { class: "lbl", text: label }), i, count, hint ? this._el("span", { class: "hint", text: hint }) : null);
+    }
     // URL fields keep only the link, whatever was pasted (a <source> tag, a
     // whole code block, &amp; entities…).
     const isUrl = /URL/.test(label);
@@ -166,11 +182,12 @@ export default class HomePageEditor extends HTMLElement {
     i.onchange = () => onChange(allowBlank && i.value.trim() === "" ? "" : Number(i.value));
     return this._field(label, i, hint);
   }
-  _check(label, checked, onChange) {
+  _check(label, checked, onChange, { hint } = {}) {
     const c = this._el("input", { type: "checkbox" });
     c.checked = !!checked;
     c.onchange = () => onChange(c.checked);
-    return this._el("label", { class: "check" }, c, this._el("span", { text: label }));
+    const box = this._el("label", { class: "check" }, c, this._el("span", { text: label }));
+    return hint ? this._el("div", { class: "field" }, box, this._el("span", { class: "hint", text: hint })) : box;
   }
   _select(label, value, options, onChange, hint) {
     const s = this._el("select");
@@ -178,6 +195,36 @@ export default class HomePageEditor extends HTMLElement {
     s.onchange = () => onChange(s.value);
     return this._field(label, s, hint);
   }
+  _iconSelect(value, onChange) {
+    const s = this._el("select", { "aria-label": "Icon" });
+    Object.entries(ICONS).forEach(([k, [name]]) => { const o = this._el("option", { value: k, text: name }); if (k === (value || "check")) o.selected = true; s.append(o); });
+    s.onchange = () => onChange(s.value);
+    const prev = this._el("span", { class: "ico-prev" });
+    prev.innerHTML = iconSvg(value || "check", ""); // fixed, trusted markup from ICONS
+    return this._el("label", { class: "field" }, this._el("span", { class: "lbl", text: "Icon" }), this._el("span", { class: "ico-row" }, prev, s));
+  }
+  // About list editor: title, optional description (makes the item expand),
+  // icon when the list uses icons; reorder / remove / add.
+  _aboutItems(a) {
+    const items = a.items || [];
+    const set = (next) => this._patchSection("about", { items: next, seeded: true });
+    const at = (i, partial) => set(items.map((it, j) => (j === i ? { ...it, ...partial } : it)));
+    const wrap = this._el("div", { class: "items" });
+    items.forEach((it, i) => {
+      const head = this._el("div", { class: "item-h" },
+        this._el("span", { class: "sub", text: `Item ${i + 1}` }),
+        this._el("button", { type: "button", class: "mini", "aria-label": `Move item ${i + 1} up`, text: "↑", onclick: () => { if (i) { const n = [...items]; [n[i - 1], n[i]] = [n[i], n[i - 1]]; set(n); } } }),
+        this._el("button", { type: "button", class: "mini", "aria-label": `Move item ${i + 1} down`, text: "↓", onclick: () => { if (i < items.length - 1) { const n = [...items]; [n[i + 1], n[i]] = [n[i], n[i + 1]]; set(n); } } }),
+        this._el("button", { type: "button", class: "mini", "aria-label": `Remove item ${i + 1}`, text: "✕", onclick: () => set(items.filter((_, j) => j !== i)) }));
+      wrap.append(this._el("div", { class: "item" }, head,
+        this._text("Title", it.title, (v) => at(i, { title: v })),
+        this._area("Description (optional)", it.description, (v) => at(i, { description: v }), { rows: 3, hint: "Adds an arrow: visitors click the item to read this. Closed when the page loads." }),
+        a.listStyle === "icons" ? this._iconSelect(it.icon, (v) => at(i, { icon: v })) : null));
+    });
+    wrap.append(this._el("button", { type: "button", class: "link", text: "+ Add an item", onclick: () => set([...items, { title: "", description: "", icon: "" }]) }));
+    return wrap;
+  }
+
   _group(key, title, show, onToggle, body) {
     const d = this._el("details", { class: "grp" });
     d.open = this._open.has(key);
@@ -360,7 +407,7 @@ export default class HomePageEditor extends HTMLElement {
       this._text("Title, bold part", h.titleStrong, (v) => S("hero")({ titleStrong: v }), { hint: "Blank = event title minus its last word." }),
       this._text("Title, light part", h.titleLight, (v) => S("hero")({ titleLight: v }), { hint: "Blank = last word of the event title." }),
       this._text("Eyebrow", h.eyebrow, (v) => S("hero")({ eyebrow: v }), { placeholder: "Bloomberg Live · New York" }),
-      this._check("Show date, time and venue line", h.showFacts, (v) => S("hero")({ showFacts: v })),
+      this._check("Show date, time and venue line", h.showFacts, (v) => S("hero")({ showFacts: v }), { hint: "Off by default: the facts card under the hero already shows the date and venue. Use a lockup image without a date line too." }),
       this._area("Intro line", h.lede, (v) => S("hero")({ lede: v }), { rows: 2 }),
       this._text("Primary button label", h.primaryLabel, (v) => S("hero")({ primaryLabel: v })),
       this._text("Secondary button label", h.secondaryLabel, (v) => S("hero")({ secondaryLabel: v })),
@@ -371,6 +418,7 @@ export default class HomePageEditor extends HTMLElement {
     const f = c.facts;
     panel.append(this._group("facts", SECTION_LABELS.facts, f.show, (v) => S("facts")({ show: v }), [
       this._check("Dock onto the bottom of the hero", f.docked !== false, (v) => S("facts")({ docked: v })),
+      this._check("Show the Speakers cell", !!f.showSpeakers, (v) => S("facts")({ showSpeakers: v }), { hint: "Off by default: the speakers section already lists them." }),
       this._el("p", { class: "hint", text: "Docking works when this section sits directly under the hero. Values fill in from the event automatically. Type here only to override." }),
       ...[["date", "Date"], ["venue", "Venue"], ["program", "Program"], ["speakers", "Speakers"]].flatMap(([k, n]) => [
         this._el("p", { class: "sub", text: n }),
@@ -383,10 +431,19 @@ export default class HomePageEditor extends HTMLElement {
     const sp = c.speakers;
     panel.append(this._group("speakers", SECTION_LABELS.speakers, sp.show, (v) => S("speakers")({ show: v }), [
       this._text("Eyebrow", sp.eyebrow, (v) => S("speakers")({ eyebrow: v })),
-      this._text("Heading", sp.heading, (v) => S("speakers")({ heading: v })),
-      this._text("Link label", sp.linkLabel, (v) => S("speakers")({ linkLabel: v })),
-      this._text("Link URL", sp.linkUrl, (v) => S("speakers")({ linkUrl: v.trim() }), { hint: "Usually the Speakers page." }),
+      this._text("Heading", sp.heading, (v) => S("speakers")({ heading: v }), { maxLength: SPEAKER_HEADING_MAX, hint: "Always one line, so it is capped to fit the smallest screen." }),
+      this._select("Layout", sp.layout || "carousel", [["carousel", "Carousel (arrows and swipe)"], ["grid", "Grid with a “See all” link"]], (v) => S("speakers")({ layout: v })),
+      ...(sp.layout === "grid" ? [
+        this._text("Link label", sp.linkLabel, (v) => S("speakers")({ linkLabel: v })),
+        this._text("Link URL", sp.linkUrl, (v) => S("speakers")({ linkUrl: v.trim() }), { hint: "Usually the Speakers page." }),
+      ] : [
+        this._check("After the picked speakers, show everyone else", sp.includeAll !== false, (v) => S("speakers")({ includeAll: v }), { hint: "In program order. Off = only the speakers picked below." }),
+      ]),
       this._speakerPicker(),
+      this._check("Show a “Moderator” label on their card", sp.showModeratorLabel !== false, (v) => S("speakers")({ showModeratorLabel: v }), { hint: "Same label as the Speakers page, for speakers in a moderator category." }),
+      ...(sp.showModeratorLabel !== false ? [
+        this._text("Moderator categories", sp.moderatorCategories, (v) => S("speakers")({ moderatorCategories: v }), { hint: "Cvent speaker category names, separated by commas." }),
+      ] : []),
       this._text("Bio pop-up eyebrow", sp.modalEyebrowText, (v) => S("speakers")({ modalEyebrowText: v })),
       this._check("List the speaker’s sessions in the bio pop-up", sp.showSessions, (v) => S("speakers")({ showSessions: v })),
     ]));
@@ -395,14 +452,18 @@ export default class HomePageEditor extends HTMLElement {
     panel.append(this._group("about", SECTION_LABELS.about, a.show, (v) => S("about")({ show: v }), [
       this._text("Eyebrow", a.eyebrow, (v) => S("about")({ eyebrow: v })),
       this._text("Heading", a.heading, (v) => S("about")({ heading: v })),
-      this._area("Body", a.body, (v) => S("about")({ body: v, seeded: true }), { rows: 9, hint: "Filled from the Cvent event description the first time; edit freely. Leave a blank line between paragraphs. The first paragraph is set larger." }),
+      this._area("Body", a.body, (v) => S("about")({ body: v, seeded: true }), { rows: 9, hint: "Filled from the Cvent event description the first time; edit freely. Leave a blank line between paragraphs." }),
+      this._el("p", { class: "sub", text: "List beside the body" }),
       this._text("List eyebrow", a.listEyebrow, (v) => S("about")({ listEyebrow: v, seeded: true }), { placeholder: "The program will explore" }),
-      this._area("Numbered list", a.listItems, (v) => S("about")({ listItems: v, seeded: true }), { rows: 4, hint: "One item per line, shown as a numbered list beside the body. Blank = one column." }),
+      this._select("List style", a.listStyle || "numbered", LIST_STYLES, (v) => S("about")({ listStyle: v })),
+      this._aboutItems(a),
+      this._el("p", { class: "hint", text: "No items = the body runs in one column." }),
       this._el("button", { type: "button", class: "link", text: "Refill from the Cvent event description",
         onclick: async () => {
           try {
             const info = (await this._sdk("getEventInfo")?.()) || {};
-            this._patchSection("about", { ...deriveAbout(info.description), seeded: true });
+            const d = deriveAbout(info.description);
+            this._patchSection("about", { body: d.body, listEyebrow: d.listEyebrow, items: toItems(d.listItems), listItems: "", seeded: true });
           } catch (e) { console.warn("[home editor] getEventInfo error:", e); }
         } }),
     ]));
@@ -420,9 +481,12 @@ export default class HomePageEditor extends HTMLElement {
         this._num("Focal point, % from top", t.bgFocalY, (v) => S("themes")({ bgFocalY: v })),
         this._num("Darken image (%)", t.bgOverlay, (v) => S("themes")({ bgOverlay: v }), { max: 90, hint: "Keeps the heading and cards readable. 60–80 suits most photos." }),
       ] : []),
+      this._select("Card marker", t.listStyle || "numbered", LIST_STYLES, (v) => S("themes")({ listStyle: v }),
+        "Numbered: the kicker replaces the number. Bullets and icons sit beside the kicker."),
       ...t.items.flatMap((it, i) => [
         this._el("p", { class: "sub", text: `Theme ${i + 1}` }),
-        this._text("Kicker", it.kicker, (v) => this._patchItem("themes", i, { kicker: v }), { placeholder: `0${i + 1} / Short label` }),
+        ...(t.listStyle === "icons" ? [this._iconSelect(it.icon, (v) => this._patchItem("themes", i, { icon: v }))] : []),
+        this._text("Kicker", it.kicker, (v) => this._patchItem("themes", i, { kicker: v }), { placeholder: t.listStyle === "numbered" || !t.listStyle ? `0${i + 1} / Short label` : "Short label (optional)" }),
         this._text("Title", it.title, (v) => this._patchItem("themes", i, { title: v })),
         this._area("Text", it.body, (v) => this._patchItem("themes", i, { body: v }), { rows: 3 }),
       ]),
@@ -509,5 +573,12 @@ const EDITOR_CSS = `
   .chosen li { display: flex; align-items: center; gap: 4px; }
   .chosen .nm { flex: 1; }
   .mini { font: inherit; font-size: 12px; width: 26px; height: 24px; border: 1px solid #ccc; border-radius: 4px; background: #fafafa; cursor: pointer; }
+  .items { display: flex; flex-direction: column; gap: 10px; }
+  .item { border: 1px solid #e3e3e3; border-radius: 4px; padding: 8px 10px 10px; display: flex; flex-direction: column; gap: 8px; background: #fcfcfc; }
+  .item-h { display: flex; align-items: center; gap: 4px; }
+  .item-h .sub { flex: 1; margin: 0; }
+  .ico-row { display: flex; align-items: center; gap: 8px; }
+  .ico-prev { width: 28px; height: 28px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #ddd; border-radius: 4px; color: #141416; }
+  .ico-prev svg { width: 20px; height: 20px; }
   .roster { list-style: none; margin: 0; padding: 6px; max-height: 220px; overflow: auto; border: 1px solid #e3e3e3; border-radius: 4px; display: flex; flex-direction: column; gap: 4px; }
 `;

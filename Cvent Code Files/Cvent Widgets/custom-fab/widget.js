@@ -41,6 +41,7 @@ const DEFAULTS = {
   demoCtaText: "Open the contact form",
   contactLabel: "Contact Bloomberg",
   questionLabel: "Submit a question",
+  questionIntro: "Submit your question to the Bloomberg Team and we'll get back to you as soon as possible.",
 
   tacticId: "",
 
@@ -61,6 +62,78 @@ const DEFAULTS = {
 
   questionTopics: "Fixed income, Macro & policy, Sustainable finance, Market structure, Technology & data, Other",
 };
+
+// Cvent's native Contact Planner widget button (same rules as page-kit.js
+// findPlannerContact; the FAB does not import the page kit).
+const PLANNER_TEXT = /^\s*(contact( us| the( event)? planner| planner| the organi[sz]er)?|email the planner)\s*$/i;
+function findPlannerContact() {
+  const own = document.querySelector("[data-cvent-id^='widget-ContactPlanner-'] button");
+  if (own) return own;
+  const box = document.querySelector("[class*='ContactPlanner'], [class*='contactPlanner'], [class*='PlannerContact'], [class*='plannerContact']");
+  const inBox = box && (box.matches("button, [role='button']") ? box : box.querySelector("button, [role='button'], a"));
+  if (inBox) return inBox;
+  return [...document.querySelectorAll("button, [role='button']")].find((el) =>
+    PLANNER_TEXT.test(el.textContent || "") && !el.closest("[class*='WebsiteNavigator'], nav")) || null;
+}
+
+// "Submit a question" goes through the same Contact Planner widget, unseen:
+// open its pop-up hidden, fill its email + message fields from the FAB form,
+// press its Send, read the result, close it. Resolves "sent", "invalid"
+// (Cvent rejected a field, e.g. the email) or "unknown" (pop-up revealed so the
+// visitor sees Cvent's own result). Rejects when the widget isn't on the page.
+const SILENT_CSS = `
+html.bbg-planner-silent [class*=Dialog__placeholder]:has([class*=ContactPlannerStyle__dialogContainer]),
+html.bbg-planner-silent [class*=Dialog__overlay] { opacity: 0 !important; pointer-events: none !important; }`;
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+async function until(fn, ms = 3000, step = 100) {
+  for (let t = 0; t < ms; t += step) { const v = fn(); if (v) return v; await wait(step); }
+  return fn();
+}
+function setNativeValue(el, value) {
+  const proto = el.tagName === "TEXTAREA" ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+  Object.getOwnPropertyDescriptor(proto, "value").set.call(el, value); // React tracks the native setter
+  el.dispatchEvent(new Event("input", { bubbles: true }));
+  el.dispatchEvent(new Event("change", { bubbles: true }));
+  el.dispatchEvent(new Event("blur", { bubbles: true }));
+}
+async function sendViaPlanner({ email, message }) {
+  const native = findPlannerContact();
+  if (!native) throw new Error("no-planner-widget");
+  if (!document.getElementById("bbg-planner-silent-css")) {
+    const st = document.createElement("style"); st.id = "bbg-planner-silent-css"; st.textContent = SILENT_CSS; document.head.append(st);
+  }
+  const root = document.documentElement;
+  root.classList.add("bbg-planner-silent");
+  const dialog = () => document.querySelector("[class*=ContactPlannerStyle__dialogContainer]");
+  try {
+    native.click();
+    const box = await until(dialog);
+    if (!box) throw new Error("no-dialog");
+    const from = box.querySelector("#senderEmailAddress, input[type=email], input");
+    const msg = box.querySelector("#message, textarea");
+    const send = box.querySelector("[class*=ContactPlanner__submitButton]") || [...box.querySelectorAll("button")].pop();
+    if (!from || !msg || !send) throw new Error("no-fields");
+    setNativeValue(from, email);
+    setNativeValue(msg, message);
+    await wait(60);
+    send.click();
+    const result = await until(() => {
+      const d = dialog();
+      if (!d) return "sent";
+      if (d.querySelector("[class*=Forms__errorText]")) return "invalid";
+      if (/thank|sent|received/i.test(d.textContent || "") && !d.querySelector("textarea")) return "sent";
+      return "";
+    }, 8000, 150);
+    const d = dialog();
+    if (result === "sent" || result === "invalid") {
+      d?.closest("[role=dialog]")?.querySelector("[class*=closeDialog]")?.click();
+      return result;
+    }
+    return "unknown"; // leave it open and visible
+  } finally {
+    root.classList.remove("bbg-planner-silent");
+  }
+}
 
 // Bloomberg Terminal mark, inlined so there is no external asset to host.
 // Source artwork is #231f20; currentColor lets the CSS paint it white.
@@ -142,8 +215,10 @@ const WIDGET_CSS = `
   }
   * { box-sizing: border-box; font-family: var(--f); }
 
-  /* Wireframe tokens: hairline #E4E4E0, blue #0362DD (open state #0254BC),
-     ink #141416, muted #5C5C5A, label grey #6F6F6D, hover wash #F5F5F3. */
+  /* Flagship Event Template tokens (2026-10-01): BLUE #0062DD (hover / open
+     #0050B5) for everything clickable; AMBER #FF9D00 only for labels and
+     markers, never on a button or link. Hairline #E4E4E0, ink #141416,
+     muted #5C5C5A, hover wash #F5F5F3. Labels are 13.2px (20% up from 11px). */
   .wrap {
     position: fixed;
     right: clamp(16px, 4vw, 32px);
@@ -199,19 +274,19 @@ const WIDGET_CSS = `
     width: auto; min-width: 56px; height: 56px;
     margin: 0; padding: 0; border: 0;
     border-radius: 2px;
-    background: #0362DD;
+    background: #0062DD;
     color: #fff;
     cursor: pointer;
-    box-shadow: 0 0 0 4px rgba(3, 98, 221, .26), 0 8px 24px rgba(0, 0, 0, .3);
+    box-shadow: 0 0 0 4px rgba(0, 98, 221, .26), 0 8px 24px rgba(0, 0, 0, .3);
     transition: background 160ms ease, box-shadow 220ms ease;
   }
   /* :hover only. The reference paired it with :focus, but clicking a
      button focuses it - and close() calls fab.focus() - so :focus latched
      the expanded ring on after any click. Keyboard users still get a ring
      from :focus-visible below. */
-  .fab:hover { box-shadow: 0 0 0 8px rgba(3, 98, 221, .3), 0 8px 24px rgba(0, 0, 0, .3); }
-  .is-open .fab { background: #0254BC; animation: bbgPulse .6s forwards linear; }
-  .fab:focus-visible { outline: none; box-shadow: 0 0 0 3px #fff, 0 0 0 6px #0362DD; }
+  .fab:hover { box-shadow: 0 0 0 8px rgba(0, 98, 221, .3), 0 8px 24px rgba(0, 0, 0, .3); }
+  .is-open .fab { background: #0050B5; animation: bbgPulse .6s forwards linear; }
+  .fab:focus-visible { outline: none; box-shadow: 0 0 0 3px #fff, 0 0 0 6px #0062DD; }
 
   /* The mark keeps its own square box, so the icon and the X stay centred
      on it no matter how wide the pill grows. */
@@ -251,7 +326,7 @@ const WIDGET_CSS = `
     overflow: hidden;
     background: #ffffff;
     color: #141416;
-    box-shadow: inset 0 0 0 2px #0362DD;
+    box-shadow: inset 0 0 0 2px #0062DD;
     /* The roll-out: the panel is clipped to its right edge and unrolls
        leftwards, like a blind coming down sideways. Clipping rather than
        scaling keeps the text crisp - scaleX would smear it. */
@@ -286,7 +361,7 @@ const WIDGET_CSS = `
 
   /* Blue, matching the border. Brand amber reaches only ~2:1 on white -
      under the 3:1 floor for graphical elements - so it can't be used here. */
-  .fab-cta svg { width: 16px; height: 16px; flex: 0 0 16px; display: block; color: #0362DD; }
+  .fab-cta svg { width: 16px; height: 16px; flex: 0 0 16px; display: block; color: #0062DD; }
   /* Attention nudge: a radar ping off the button's edge plus a small
      wobble, to catch a scrolling visitor's eye. Deliberately finite - it
      runs a set number of times and stops for good once the visitor hovers
@@ -301,8 +376,8 @@ const WIDGET_CSS = `
      it does tall; an animated box-shadow spread grows evenly on every side,
      so the ripple keeps the pill's shape. */
   @keyframes bbgPing {
-    0%   { box-shadow: 0 0 0 0 rgba(3, 98, 221, .5); }
-    100% { box-shadow: 0 0 0 20px rgba(3, 98, 221, 0); }
+    0%   { box-shadow: 0 0 0 0 rgba(0, 98, 221, .5); }
+    100% { box-shadow: 0 0 0 20px rgba(0, 98, 221, 0); }
   }
   /* Horizontal shake rather than the old rotate: rotating a wide pill by
      5 degrees swings its far end a long way and reads as a wobble, not a
@@ -326,9 +401,9 @@ const WIDGET_CSS = `
      The reference animates box-shadow alone, so the drop shadow is carried
      through every stop here - otherwise it would blink out mid-pulse. */
   @keyframes bbgPulse {
-    0%   { box-shadow: 0 0 0 0px rgba(3, 98, 221, .3),  0 8px 24px rgba(0, 0, 0, .3); }
-    50%  { box-shadow: 0 0 0 12px rgba(3, 98, 221, .1), 0 8px 24px rgba(0, 0, 0, .3); }
-    100% { box-shadow: 0 0 0 4px rgba(3, 98, 221, .26), 0 8px 24px rgba(0, 0, 0, .3); }
+    0%   { box-shadow: 0 0 0 0px rgba(0, 98, 221, .3),  0 8px 24px rgba(0, 0, 0, .3); }
+    50%  { box-shadow: 0 0 0 12px rgba(0, 98, 221, .1), 0 8px 24px rgba(0, 0, 0, .3); }
+    100% { box-shadow: 0 0 0 4px rgba(0, 98, 221, .26), 0 8px 24px rgba(0, 0, 0, .3); }
   }
   /* --- card: menu and panels share one anchor -------------------------- */
   .card {
@@ -414,9 +489,9 @@ const WIDGET_CSS = `
     font: 400 13.5px/1.3 var(--f);
     transition: background 150ms cubic-bezier(.2,0,.2,1), color 150ms cubic-bezier(.2,0,.2,1);
   }
-  .menu button:hover { background: #F5F5F3; color: #0362DD; }
+  .menu button:hover { background: #F5F5F3; color: #0062DD; }
   .menu button:focus-visible {
-    outline: none; background: #F5F5F3; color: #0362DD; box-shadow: inset 0 0 0 2px #0362DD;
+    outline: none; background: #F5F5F3; color: #0062DD; box-shadow: inset 0 0 0 2px #0062DD;
   }
   /* Without an explicit size an inline SVG renders at its intrinsic size -
      which for these is enormous. Sizing here is load-bearing, not cosmetic. */
@@ -432,9 +507,10 @@ const WIDGET_CSS = `
   }
   .back {
     margin: 0; padding: 0; border: 0; background: none; cursor: pointer;
-    font: 700 13px/1 var(--f); color: #9C5F00;
+    font: 700 13px/1 var(--f); color: #0062DD;
   }
-  .back:focus-visible { outline: none; box-shadow: 0 0 0 2px #0362DD; }
+  .back:hover { color: #0050B5; }
+  .back:focus-visible { outline: none; box-shadow: 0 0 0 2px #0062DD; }
   .ptitle { margin: 0; font: 700 14px/1.2 var(--f); color: #141416; }
   .ptitle:focus { outline: none; }
 
@@ -450,7 +526,7 @@ const WIDGET_CSS = `
     display: block; margin-bottom: 6px;
     font: 700 11px/1 var(--f); letter-spacing: .06em; text-transform: uppercase; color: #141416;
   }
-  .f label em { font-style: normal; color: #9C5F00; }
+  .f label em { font-style: normal; color: #FF9D00; }
   .f input, .f select, .f textarea {
     width: 100%; padding: 8px 9px;
     font: 400 13px/1.35 var(--f); color: #141416;
@@ -459,19 +535,19 @@ const WIDGET_CSS = `
   }
   .f textarea { min-height: 58px; resize: vertical; }
   .view-question .f textarea { min-height: 74px; }
-  .f input:focus, .f select:focus, .f textarea:focus { box-shadow: inset 0 0 0 1px #0362DD; border-color: #0362DD; }
+  .f input:focus, .f select:focus, .f textarea:focus { box-shadow: inset 0 0 0 1px #0062DD; border-color: #0062DD; }
   .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .check { display: flex; align-items: flex-start; gap: 8px; font: 400 12.5px/1.35 var(--f); color: #141416; }
-  .check input { width: 15px; height: 15px; flex: 0 0 15px; margin: 1px 0 0; accent-color: #0362DD; }
+  .check input { width: 15px; height: 15px; flex: 0 0 15px; margin: 1px 0 0; accent-color: #0062DD; }
   .counter { margin-top: 6px; font: 400 11.5px/1.35 var(--f); color: #6F6F6D; }
 
   .btn {
     width: 100%; padding: 10px 14px; border: 0; border-radius: 0;
-    background: #0362DD; color: #fff; cursor: pointer;
+    background: #0062DD; color: #fff; cursor: pointer;
     font: 700 13px/1.35 var(--f);
     transition: background 150ms ease;
   }
-  .btn:hover { background: #0254BC; }
+  .btn:hover { background: #0050B5; }
   /* The primary action in the Contact Us panel is a real link, not a button,
      because it navigates. It still has to look like .btn. */
   a.btn { display: block; text-align: center; text-decoration: none; }
@@ -481,26 +557,23 @@ const WIDGET_CSS = `
     margin: -1px; padding: 0; overflow: hidden;
     clip: rect(0 0 0 0); white-space: nowrap; border: 0;
   }
-  .btn:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #0362DD; }
-  /* Amber highlight per the wireframe's brand ladder. Two different ambers
-     on purpose: #FF9D00 is the brand colour and carries the border, but it
-     only reaches ~2:1 as text on white, so the label uses the
-     accessibility-tuned amber-as-text-on-light token instead. */
+  .btn:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #0062DD; }
+  /* Secondary action: a button, so blue (flagship rule), as an outline. */
   .btn-secondary {
     background: #fff;
-    color: #9C5F00;
-    box-shadow: inset 0 0 0 1px #FF9D00;
+    color: #0062DD;
+    box-shadow: inset 0 0 0 1px #0062DD;
   }
-  .btn-secondary:hover { background: #FFF8EC; box-shadow: inset 0 0 0 1px #E8951B; }
+  .btn-secondary:hover { background: rgba(0, 98, 221, .08); color: #0050B5; box-shadow: inset 0 0 0 1px #0050B5; }
   .btn-secondary:focus-visible {
     outline: none;
-    box-shadow: inset 0 0 0 1px #FF9D00, 0 0 0 3px rgba(255, 157, 0, .35);
+    box-shadow: inset 0 0 0 1px #0062DD, 0 0 0 2px #fff, 0 0 0 4px #0062DD;
   }
 
   /* --- contact panel ---------------------------------------------------- */
   .glabel {
     margin: 0 0 9px;
-    font: 700 11px/1 var(--f); letter-spacing: .14em; text-transform: uppercase; color: #6F6F6D;
+    font: 700 13.2px/1.2 var(--f); letter-spacing: .14em; text-transform: uppercase; color: #FF9D00;
   }
   .rows { margin: 0; }
   .row {
@@ -512,31 +585,33 @@ const WIDGET_CSS = `
     font: 700 13px/1.4 var(--f); font-variant-numeric: tabular-nums;
     color: #141416; text-decoration: none; white-space: nowrap;
   }
-  .row a:hover { color: #0362DD; text-decoration: underline; }
+  .row a:hover { color: #0062DD; text-decoration: underline; }
   .mail { font: 400 13px/1.5 var(--f); color: #141416; text-decoration: none; }
-  .mail:hover { color: #0362DD; text-decoration: underline; }
+  .mail:hover { color: #0062DD; text-decoration: underline; }
 
   .support { display: block; background: #F4F4F7; padding: 16px; text-decoration: none; }
   .support:hover { background: #ECECF1; }
-  .support .glabel { letter-spacing: .06em; color: #0362DD; margin-bottom: 10px; }
+  .support .glabel { letter-spacing: .06em; margin-bottom: 10px; }
   .support strong { display: block; font: 700 17px/1.2 var(--f); letter-spacing: -.01em; color: #141416; }
   .support-cta {
     margin-top: 12px; display: flex; align-items: center; gap: 8px;
     font: 700 13px/1.3 var(--f); color: #141416;
   }
-  .support-cta i { font-style: normal; color: #0362DD; }
+  .support-cta i { font-style: normal; color: #0062DD; }
 
   /* --- confirmation (mocked submit) ------------------------------------ */
   .done { padding: 20px 16px; text-align: center; }
   .done strong { display: block; margin-bottom: 8px; font: 700 15px/1.3 var(--f); color: #141416; }
   .done p { margin: 0 0 10px; font: 400 12.5px/1.45 var(--f); color: #5C5C5A; }
-  .done .fine { color: #9C5F00; }
+  .done .fine { color: #FF9D00; }
+  .ferr { margin: 0; font: 400 12px/1.4 var(--f); color: #B42318; }
+  .btn:disabled { opacity: .7; cursor: default; }
 
   /* --- mobile ----------------------------------------------------------- */
   .mclose {
     order: 4; display: none;
     height: 48px; width: 100%; margin: 0; border: 0; border-radius: 2px;
-    background: #0254BC; color: #fff; cursor: pointer;
+    background: #0050B5; color: #fff; cursor: pointer;
     font: 700 13px/1 var(--f);
   }
   @media (max-width: 640px) {
@@ -685,7 +760,7 @@ export default class BbgContactWidget extends HTMLElement {
             </div>
             <div>
               <p class="glabel">Event team</p>
-              <a class="mail" href="mailto:${escapeHtml(c.eventEmail)}">${escapeHtml(c.eventEmail)}</a>
+              <a class="mail" data-planner-contact href="mailto:${escapeHtml(c.eventEmail)}">${escapeHtml(c.eventEmail)}</a>
             </div>
             ${showDemo ? `<button type="button" class="btn btn-secondary" data-go="demo">Contact a specialist</button>` : ""}
             ${supportHref ? `<a class="support" href="${escapeHtml(supportHref)}" target="_blank" rel="noopener noreferrer">
@@ -703,7 +778,8 @@ export default class BbgContactWidget extends HTMLElement {
             <h2 class="ptitle" tabindex="-1">${escapeHtml(c.questionLabel)}</h2>
           </div>
           <form class="pbody" data-form="question" novalidate>
-            <p class="lede">Questions are put to the relevant moderator ahead of the event.</p>
+            <p class="lede">${escapeHtml(c.questionIntro)}</p>
+            <div class="f"><label for="q-em">Your email ${rq}</label><input id="q-em" name="email" type="email" autocomplete="email" required></div>
             <div class="f"><label for="q-tp">Topic or focus area</label><select id="q-tp" name="topic"><option value="">Select a topic</option>${optionList(c.questionTopics)}</select></div>
             <div class="f">
               <label for="q-qq">Your question ${rq}</label>
@@ -767,6 +843,12 @@ export default class BbgContactWidget extends HTMLElement {
     card.addEventListener("click", (event) => {
       const go = event.target.closest("[data-go]");
       if (go) setView(go.getAttribute("data-go"));
+      // Event team email: Cvent's Contact Planner pop-up (sends to the Event
+      // Planner email in the event details) when that widget is on the page;
+      // otherwise the mailto link opens as before.
+      const mail = event.target.closest("[data-planner-contact]");
+      const native = mail && findPlannerContact();
+      if (native) { event.preventDefault(); close(); native.click(); }
     });
 
     const counter = card.querySelector("[data-counter]");
@@ -782,16 +864,36 @@ export default class BbgContactWidget extends HTMLElement {
     // out. Validates, then swaps the form for a confirmation. Deliberately
     // makes no network request: a form that appears to send while discarding
     // input is worse than one that says plainly it is a preview.
+    // Sent through Cvent's Contact Planner widget (to the Event Planner email
+    // in the event details), using the FAB's own fields; see sendViaPlanner.
     card.querySelectorAll("[data-submit]").forEach((btn) => {
-      btn.addEventListener("click", () => {
+      btn.addEventListener("click", async () => {
         const form = card.querySelector(`[data-form="${btn.getAttribute("data-submit")}"]`);
-        if (!form || !form.reportValidity()) return;
+        if (!form || !form.reportValidity() || btn.disabled) return;
+        const v = (n) => String(form.elements[n]?.value || "").trim();
+        const topic = v("topic");
+        const message = [`Question from the event website${document.title ? ` (${document.title})` : ""}`, topic ? `Topic: ${topic}` : "", "", v("question")]
+          .filter((l, i) => l || i === 2).join("\n");
+        const label = btn.textContent;
+        btn.disabled = true; btn.textContent = "Sending…";
+        form.querySelector(".ferr")?.remove();
+        const fail = (text) => {
+          btn.disabled = false; btn.textContent = label;
+          const p = document.createElement("p"); p.className = "ferr"; p.setAttribute("role", "alert"); p.textContent = text;
+          btn.before(p);
+        };
+        let result;
+        try { result = await sendViaPlanner({ email: v("email"), message }); } catch (e) {
+          console.warn("[fab] question not sent:", e.message);
+          fail(`Sorry, questions can't be sent from this page. Email us at ${c.eventEmail}.`);
+          return;
+        }
+        if (result === "invalid") { fail("Please check your email address and try again."); return; }
+        if (result === "unknown") { close(); return; } // Cvent's pop-up is showing its own result
         form.innerHTML = `
-          <div class="done">
+          <div class="done" role="status">
             <strong>Thank you.</strong>
-            <p>Your question has been noted for the moderator.</p>
-            <p class="fine">Preview only - this form is not yet connected to a destination,
-            so nothing was sent.</p>
+            <p>Your question has been sent to the Bloomberg Team. We'll get back to you as soon as possible.</p>
           </div>`;
       });
     });

@@ -50,7 +50,8 @@ export default class RegPagesEditor extends PageEditor {
         ] : []),
         this._text("Contact text", p.contactText, (v) => P({ contactText: v })),
         this._text("Contact link label", p.contactLabel, (v) => P({ contactLabel: v })),
-        this._text("Contact link URL", p.contactUrl, (v) => P({ contactUrl: v.trim() }), { hint: "A page link or mailto:address. Blank = the site menu’s “Contact” item." }),
+        this._text("Contact link URL", p.contactUrl, (v) => P({ contactUrl: v.trim() }), { hint: "Blank = Cvent’s Contact Planner pop-up (messages go to the Event Planner email) when that widget is on the page, else the site menu’s “Contact” page. A mailto: address also opens the pop-up when it’s there; a page link opens that page." }),
+        this._text("Contact Planner button: CSS selector (advanced)", p.plannerContactSelector, (v) => P({ plannerContactSelector: v.trim() }), { hint: "Only if the widget’s button isn’t found automatically." }),
       ]));
     }
     if (c.mode === "confirmation") {
@@ -85,6 +86,7 @@ export default class RegPagesEditor extends PageEditor {
       this._check("Show “* Required” under the form’s intro text", c.showRequiredNote !== false, (v) => this._patch({ showRequiredNote: v })),
       ...(c.showRequiredNote !== false ? [this._text("“Required” wording", c.requiredNote, (v) => this._patch({ requiredNote: v }), { url: false })] : []),
       this._check("Hide Cvent’s “Your answer can only contain…” line under text fields", c.hideFieldHints !== false, (v) => this._patch({ hideFieldHints: v })),
+      this._check("Hide State / region until a country is chosen (Cvent shows it for countries with states)", c.stateAfterCountry !== false, (v) => this._patch({ stateAfterCountry: v })),
       this._text("Help under the event-app networking question", c.optInHelp, (v) => this._patch({ optInHelp: v }), { url: false, hint: "Shown under Yes / No. Blank = no help line." }),
       this._area("Fields side by side", c.pairFields, (v) => this._patch({ pairFields: v }), { rows: 3,
         hint: "One pair per line: Label + Label, using the field labels as they appear on the page. The two fields must follow each other in Cvent. Phones show them one under the other." }),

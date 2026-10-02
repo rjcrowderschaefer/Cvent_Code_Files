@@ -10,10 +10,10 @@
 // Cards + bio pop-up are the shared FeaturedSpeaker component (same as Home).
 // Shared building blocks: page-kit.js. NOTE: include the file extension in imports.
 import { FeaturedSpeaker, defaultTypography as speakerTypography } from "./FeaturedSpeaker.js";
-import { PageWidget, PAGE_BASE_DEFAULTS, mergePageConfig, TOKENS, esc, fixed, eyebrow, isHiddenSession } from "./page-kit.js";
+import { PageWidget, PAGE_BASE_DEFAULTS, mergePageConfig, TOKENS, esc, fixed, eyebrow, isHiddenSession, pageCardBase, pageCardTypography } from "./page-kit.js";
 
 const CARD_TAG = "bbg-speakers-page-card";
-export const BUILD = "speakers-2026-09-26e";
+export const BUILD = "speakers-2026-10-02a";
 
 export const SECTION_LABELS = {
   banner: "Page banner",
@@ -190,12 +190,8 @@ export default class extends PageWidget {
     ty.speakerRole = { ...ty.speakerRole, fontSize: 15, fontSizeMd: 14, fontSizeSm: 13.5, color: TOKENS.body };
     const b = cfg.bios;
     return {
-      colors: {
-        ink: TOKENS.ink, muted: TOKENS.muted, faint: TOKENS.faint, hair: TOKENS.hair, placeholder: TOKENS.placeholder,
-        accent: TOKENS.amberInk, tagBg: TOKENS.tagBg, tagInk: TOKENS.tagInk, modalBar: TOKENS.amberOnDark,
-        mainAccent: TOKENS.amberInk, accentRule: TOKENS.amberOnDark, bioInk: TOKENS.body, focus: TOKENS.focus,
-      },
-      typography: ty,
+      ...pageCardBase(),           // amber labels, blue hover, company as text
+      typography: pageCardTypography(ty),
       tileSize: 400,
       hoverPrompt: P("bios", "hoverPrompt", b.hoverPrompt),
       allSessions: sessions.filter((s) => !isHiddenSession(s)),   // sessions hidden from the agenda stay out of bios

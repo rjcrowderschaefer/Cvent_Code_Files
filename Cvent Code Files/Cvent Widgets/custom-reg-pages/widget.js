@@ -17,11 +17,12 @@
 import { ensureBrandFont } from "./type-scale.js";
 import {
   TOKENS, esc, safeUrl, isExternal, lines, fixed, resolveLang, loadEventData, eventFacts,
-  kitCss, applyFullBleed, mergePageConfig,
+  kitCss, applyFullBleed, mergePageConfig, LABEL_PX, holdHeight, trackScroll, noteConfig, restoreScroll,
+  findPlannerContact, wirePlannerContact,
 } from "./page-kit.js";
 import { REG_FORM_CSS, regFormCss } from "./reg-form-css.js";
 
-export const BUILD = "reg-2026-09-28n";
+export const BUILD = "reg-2026-10-02b";
 
 export const REG_DEFAULTS = {
   mode: "banner",            // "banner" | "panel" | "confirmation"
@@ -33,6 +34,13 @@ export const REG_DEFAULTS = {
   showRequiredNote: true,    // "* Required" under the form's intro text
   requiredNote: "Required",
   hideFieldHints: true,      // hide Cvent's "Your answer can only contain…" line under text fields
+  // State / region: Cvent's own display logic shows it only for countries with
+  // a state list, but it renders it while Country is still empty. Keep it out
+  // of view until Country has an answer; Cvent decides from there. The widget
+  // only reads the Country value: it never opens or answers a dropdown.
+  stateAfterCountry: true,
+  countryLabel: "Country",
+  stateLabel: "State / region",
   optInHelp: "You can change this later in the app.", // under the event-app networking question; blank = none
   // Fields shown side by side: one pair per line, "Label A + Label B" (Cvent's
   // field labels, any case). Both must be on the page, one right after the other.
@@ -67,20 +75,21 @@ export const REG_DEFAULTS = {
     showVenue: true,
     showNext: true,
     nextHeading: "What happens next",
-    nextSteps: "Send your request. It takes about two minutes.\nOur team reviews every request to attend.\nYou’ll get an email with our decision and your event details.",
+    nextSteps: "Share a few details. It takes about two minutes.\nPlaces are limited, so our team confirms each request personally.\nYou’ll hear from us by email soon, with your event details once your place is confirmed.",
     contactText: "Questions?",
-    contactLabel: "Contact the Bloomberg team",
-    contactUrl: "",          // a page link or mailto:; blank = the site's "Contact" menu item
+    contactLabel: "Contact the Bloomberg Team",
+    contactUrl: "",          // a page link or mailto:; blank = Cvent's Contact Planner pop-up, else the site's "Contact" menu item
+    plannerContactSelector: "", // advanced: the Contact Planner widget's button, if not found automatically
   },
   confirmation: {
     heading: "Thanks, {first}. Your request is in.",
     headingNoName: "Thanks. Your request is in.",
-    body: "All requests to attend are reviewed by the Bloomberg team. We’ll email you at {email} with our decision.",
-    bodyNoEmail: "All requests to attend are reviewed by the Bloomberg team. We’ll email you with our decision.",
-    steps: "Request received | Today\nReview by our team | We aim to reply within a few business days.\nConfirmation and event details | If approved, you’ll get your confirmation and a calendar invitation.",
+    body: "Places are limited, so our team confirms each request personally. We’ll be in touch at {email} soon.",
+    bodyNoEmail: "Places are limited, so our team confirms each request personally. We’ll be in touch by email soon.",
+    steps: "Request received | Today\nConfirming places | We aim to reply within a few business days.\nYour event details | Once your place is confirmed, you’ll get your confirmation and a calendar invitation.",
     primaryLabel: "Explore the program",
     primaryUrl: "",
-    secondaryLabel: "Contact the event team",
+    secondaryLabel: "Contact the Bloomberg Team",
     secondaryUrl: "",
   },
   translations: {},
@@ -89,7 +98,20 @@ export const REG_DEFAULTS = {
 export function mergeRegConfig(incoming = {}) {
   const out = mergePageConfig(REG_DEFAULTS, incoming);
   // Earlier default, saved into existing copies by the editor: update it.
-  if (out.panel.contactLabel === "Contact the event team") out.panel.contactLabel = REG_DEFAULTS.panel.contactLabel;
+  if (["Contact the event team", "Contact the Bloomberg team"].includes(out.panel.contactLabel)) out.panel.contactLabel = REG_DEFAULTS.panel.contactLabel;
+  if (out.confirmation.secondaryLabel === "Contact the event team") out.confirmation.secondaryLabel = REG_DEFAULTS.confirmation.secondaryLabel;
+  // Softer request-to-attend copy (2026-10-02): saved copies of the old
+  // defaults follow the new ones; edited copy is left alone.
+  const OLD = {
+    "panel.nextSteps": "Send your request. It takes about two minutes.\nOur team reviews every request to attend.\nYou’ll get an email with our decision and your event details.",
+    "confirmation.body": "All requests to attend are reviewed by the Bloomberg team. We’ll email you at {email} with our decision.",
+    "confirmation.bodyNoEmail": "All requests to attend are reviewed by the Bloomberg team. We’ll email you with our decision.",
+    "confirmation.steps": "Request received | Today\nReview by our team | We aim to reply within a few business days.\nConfirmation and event details | If approved, you’ll get your confirmation and a calendar invitation.",
+  };
+  Object.entries(OLD).forEach(([k, v]) => {
+    const [sec, key] = k.split(".");
+    if (String(out[sec][key] || "").replace(/\r/g, "") === v) out[sec][key] = REG_DEFAULTS[sec][key];
+  });
   return out;
 }
 
@@ -241,9 +263,13 @@ export default class extends HTMLElement {
     this._watchPerson();
     this._watchSteps();
     await this._renderInto(root);
+    const tag = `reg-${this._cfg.mode}`;
+    restoreScroll(this, tag, this.configuration);
+    this._scrollCleanup = trackScroll(this, tag, this.configuration);
   }
 
   disconnectedCallback() {
+    this._scrollCleanup?.();
     clearTimeout(this._retry);
     this._hasSteps = false;
     if (this._target) { registry(this._target).delete(this); syncPageStyles(this._target); }
@@ -259,6 +285,7 @@ export default class extends HTMLElement {
   onConfigurationUpdate(newConfig) {
     this.configuration = newConfig || {};
     this._cfg = mergeRegConfig(this.configuration);
+    noteConfig(this, this.configuration);
     syncPageStyles(this._target || this._doc);
     const root = this.shadowRoot?.querySelector(".pk");
     if (root) this._renderInto(root);
@@ -538,6 +565,7 @@ export default class extends HTMLElement {
   }
   _markLayout() {
     this._markFields();
+    this._syncStateField();
     if (this._cfg.mode !== "panel") return;
     if (this._rendered && this._person.first && this._greetBlocked !== undefined && this._greetBlocked !== this._nameOnPage()) {
       const root = this.shadowRoot.querySelector(".pk");
@@ -578,6 +606,42 @@ export default class extends HTMLElement {
       }
       return;
     }
+  }
+  // ---- State / region waits for Country (see stateAfterCountry) ----------
+  // A field by its Cvent label: any case, asterisks, spacing around "/" and the
+  // "This question is required." message ignored.
+  _fieldByLabel(label) {
+    const t = this._target || this._doc;
+    const norm = (s) => String(s || "").replace(/\*/g, "").replace(/this question is required\.?/i, "").replace(/\s*\/\s*/g, "/").replace(/\s+/g, " ").trim().toLowerCase();
+    const want = norm(label);
+    if (!want) return null;
+    return [...t.querySelectorAll("[class*=Forms__container]")].find((f) => {
+      const l = f.querySelector("[data-cvent-id=label]") || f.querySelector("[class*=QuestionText__label], legend, label");
+      return l && norm(l.textContent) === want;
+    }) || null;
+  }
+  _syncStateField() {
+    const t = this._target || this._doc;
+    const off = this._cfg.stateAfterCountry !== false;
+    const country = off ? this._fieldByLabel(this._cfg.countryLabel || "Country") : null;
+    const state = off ? this._fieldByLabel(this._cfg.stateLabel || "State / region") : null;
+    let hide = null;
+    if (country && state) {
+      const answered = !!(country.querySelector("[class*=singleValue]")?.textContent || "").trim()
+        || !!country.querySelector("select")?.value;
+      // Hide the field's own slot: its half of a paired row, else the largest
+      // wrapper that holds nothing but this field.
+      if (!answered) {
+        hide = state.closest("[data-bbg-half], [data-bbg-cell]");
+        if (!hide) {
+          hide = state;
+          while (hide.parentElement && hide.parentElement.querySelectorAll("[class*=Forms__container]").length === 1
+            && !hide.parentElement.matches("[data-bbg-reg-formcol], [class*=Container__childContainer]")) hide = hide.parentElement;
+        }
+      }
+    }
+    t.querySelectorAll("[data-bbg-state-wait]").forEach((e) => { if (e !== hide) { e.removeAttribute("data-bbg-state-wait"); e.removeAttribute("aria-hidden"); } });
+    if (hide && !hide.hasAttribute("data-bbg-state-wait")) { hide.setAttribute("data-bbg-state-wait", ""); hide.setAttribute("aria-hidden", "true"); }
   }
   _observeTarget() {
     if (!this._checkSteps || typeof MutationObserver === "undefined") return;
@@ -634,12 +698,16 @@ export default class extends HTMLElement {
     const dark = cfg.theme === "dark";
     const body = cfg.mode === "panel" ? this._panel(ctx) : cfg.mode === "confirmation" ? this._confirmation(ctx) : this._banner(ctx);
     this.setAttribute("data-bbg-reg-mode", cfg.mode);
+    const release = holdHeight(root);
     root.className = `pk rg rg--${cfg.mode} ${dark ? "rg--dark" : ""} ${cfg.fullBleed !== false && cfg.mode === "banner" ? "pk--bleed" : ""}`;
     root.innerHTML = `${css}${body}`;
     this._cleanups.forEach((fn) => { try { fn(); } catch (e) { /* noop */ } });
     this._cleanups = [];
     if (cfg.mode === "banner" && cfg.fullBleed !== false) this._cleanups.push(applyFullBleed(root));
-    root.querySelectorAll("[data-site-contact]").forEach((b) => b.addEventListener("click", () => this._siteContactLink()?.click()));
+    // Contact: Cvent's Contact Planner pop-up when that widget is on the page,
+    // else the site menu's Contact page.
+    this._cleanups.push(wirePlannerContact(root, { selector: cfg.panel.plannerContactSelector }));
+    root.querySelectorAll("[data-site-contact]").forEach((b) => b.addEventListener("click", () => { if (!findPlannerContact(cfg.panel.plannerContactSelector)) this._siteContactLink()?.click(); }));
     this._rendered = true;
     syncPageStyles(this._target || this._doc);
     // Draw the step bar straight away from what was last read, so a redraw
@@ -647,6 +715,7 @@ export default class extends HTMLElement {
     this._paintSteps();
     this._stepsSig = null;
     this._checkSteps?.();
+    release();
   }
 
   // ---- BANNER -----------------------------------------------------------------
@@ -695,8 +764,8 @@ export default class extends HTMLElement {
         ${p.showVenue !== false && (facts.venueName || addr) ? `<div><dt>Venue</dt><dd>${esc(facts.venueName || addr)}${facts.venueName && addr ? `<span>${esc(addr)}</span>` : ""}</dd></div>` : ""}
       </dl>` : ""}
       ${p.showNext !== false && steps.length ? `<div class="rg-next"><p class="rg-eb">${esc(P("panel", "nextHeading", p.nextHeading))}</p><ol>${steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol></div>` : ""}
-      ${cLabel && cUrl ? `<p class="rg-ask">${esc(P("panel", "contactText", p.contactText))} <a href="${esc(cUrl)}"${isExternal(cUrl) ? ' target="_blank" rel="noopener"' : ""}>${esc(cLabel)}</a></p>`
-        : cLabel && this._siteContactLink() ? `<p class="rg-ask">${esc(P("panel", "contactText", p.contactText))} <button type="button" class="rg-ask-btn" data-site-contact>${esc(cLabel)}</button></p>` : ""}
+      ${cLabel && cUrl ? `<p class="rg-ask">${esc(P("panel", "contactText", p.contactText))} <a href="${esc(cUrl)}"${/^mailto:/i.test(cUrl) ? " data-planner-contact" : ""}${isExternal(cUrl) ? ' target="_blank" rel="noopener"' : ""}>${esc(cLabel)}</a></p>`
+        : cLabel && (this._siteContactLink() || findPlannerContact(p.plannerContactSelector)) ? `<p class="rg-ask">${esc(P("panel", "contactText", p.contactText))} <button type="button" class="rg-ask-btn" data-site-contact data-planner-contact>${esc(cLabel)}</button></p>` : ""}
     </aside>`;
   }
 
@@ -724,7 +793,7 @@ export default class extends HTMLElement {
       const u = safeUrl(url, "");
       if (!label || !u) return "";
       const ext = isExternal(u);
-      return `<a class="pk-btn pk-btn--lg ${primary ? "pk-btn--primary" : "pk-btn--secondary"} ${cfg.theme === "dark" ? "pk-btn--on-dark" : "pk-btn--on-light"}" href="${esc(u)}"${ext ? ' target="_blank" rel="noopener"' : ""}>${esc(label)}${ext ? `<span class="pk-sr"> ${esc(fixed(lang, "opensNewTab"))}</span>` : ""}</a>`;
+      return `<a${/^mailto:/i.test(u) ? " data-planner-contact" : ""} class="pk-btn pk-btn--lg ${primary ? "pk-btn--primary" : "pk-btn--secondary"} ${cfg.theme === "dark" ? "pk-btn--on-dark" : "pk-btn--on-light"}" href="${esc(u)}"${ext ? ' target="_blank" rel="noopener"' : ""}>${esc(label)}${ext ? `<span class="pk-sr"> ${esc(fixed(lang, "opensNewTab"))}</span>` : ""}</a>`;
     };
     const btns = btn(P("confirmation", "primaryLabel", c.primaryLabel), c.primaryUrl, true) + btn(P("confirmation", "secondaryLabel", c.secondaryLabel), c.secondaryUrl, false);
     return `
@@ -743,8 +812,8 @@ export default class extends HTMLElement {
 // ---------------------------------------------------------------------------
 const t = TOKENS;
 const WIDGET_CSS = `
-  .rg { --rg-ink: ${t.ink}; --rg-body: ${t.body}; --rg-muted: ${t.muted}; --rg-hair: ${t.hair}; --rg-panel: ${t.tint}; --rg-accent: ${t.amberInk}; --rg-dot-bg: #fff; --rg-ground: #FFFFFF; --rg-ctl: #8A8A86; --rg-accent-ink: #FFFFFF; --rg-faint: #6F6F6D; }
-  .rg--dark { --rg-ink: #fff; --rg-body: rgba(255,255,255,.78); --rg-muted: rgba(255,255,255,.66); --rg-hair: rgba(255,255,255,.14); --rg-panel: ${t.panel}; --rg-accent: ${t.amberOnDark}; --rg-dot-bg: transparent; --rg-ground: #0B0B0C; --rg-ctl: rgba(255,255,255,.38); --rg-accent-ink: #0B0B0C; --rg-faint: rgba(255,255,255,.55); }
+  .rg { --rg-ink: ${t.ink}; --rg-body: ${t.body}; --rg-muted: ${t.muted}; --rg-hair: ${t.hair}; --rg-panel: ${t.tint}; --rg-accent: ${t.amber}; --rg-link: ${t.action}; --rg-label: ${t.amber}; --rg-dot-bg: #fff; --rg-ground: #FFFFFF; --rg-ctl: #8A8A86; --rg-accent-ink: #0B0B0C; --rg-faint: #6F6F6D; }
+  .rg--dark { --rg-ink: #fff; --rg-body: rgba(255,255,255,.78); --rg-muted: rgba(255,255,255,.66); --rg-hair: rgba(255,255,255,.14); --rg-panel: ${t.panel}; --rg-accent: ${t.amberOnDark}; --rg-link: ${t.linkOnDark}; --rg-label: ${t.amber}; --rg-dot-bg: transparent; --rg-ground: #0B0B0C; --rg-ctl: rgba(255,255,255,.38); --rg-accent-ink: #0B0B0C; --rg-faint: rgba(255,255,255,.55); }
   .rg { color: var(--rg-ink); }
 
   /* banner */
@@ -758,10 +827,10 @@ const WIDGET_CSS = `
 
   /* panel */
   .rg-panel { max-width: 420px; box-sizing: border-box; background: var(--rg-panel); border-top: 3px solid ${t.amberOnDark}; padding: 28px; }
-  .rg-eb { font-size: 11.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--rg-accent); }
+  .rg-eb { font-size: ${LABEL_PX.small}px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--rg-label); }
   .rg-ph { margin-top: 8px; font-size: 21px; line-height: 1.25; font-weight: 700; letter-spacing: -0.01em; color: var(--rg-ink); }
   .rg-dl { margin: 18px 0 0; display: grid; gap: 14px; }
-  .rg-dl dt { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--rg-muted); }
+  .rg-dl dt { font-size: ${LABEL_PX.small}px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--rg-label); }
   .rg-dl dd { margin: 2px 0 0; font-size: 15.5px; color: var(--rg-ink); }
   .rg-dl dd span { display: block; font-size: 14px; color: var(--rg-body); }
   .rg-next { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--rg-hair); }
@@ -769,14 +838,14 @@ const WIDGET_CSS = `
   .rg-next li { counter-increment: n; display: grid; grid-template-columns: 24px 1fr; gap: 8px; font-size: 14.5px; line-height: 1.45; color: var(--rg-body); }
   .rg-next li::before { content: counter(n); width: 22px; height: 22px; border-radius: 50%; background: var(--rg-dot-bg); border: 1px solid var(--rg-hair); display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--rg-ink); }
   .rg-ask { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--rg-hair); font-size: 14.5px; color: var(--rg-body); }
-  .rg-ask a { color: var(--rg-accent); font-weight: 700; text-decoration: none; }
+  .rg-ask a { color: var(--rg-link); font-weight: 700; text-decoration: none; }
   .rg-ask a:hover, .rg-ask-btn:hover { text-decoration: underline; }
-  .rg-ask-btn { font: inherit; font-weight: 700; color: var(--rg-accent); background: none; border: 0; padding: 0; cursor: pointer; }
+  .rg-ask-btn { font: inherit; font-weight: 700; color: var(--rg-link); background: none; border: 0; padding: 0; cursor: pointer; }
 
   /* confirmation */
   .rg-done { max-width: 680px; padding: 8px 0; }
-  .rg-tick { width: 52px; height: 52px; border-radius: 50%; background: rgba(156,95,0,.12); display: grid; place-items: center; margin-bottom: 18px; }
-  .rg--dark .rg-tick { background: rgba(247,163,37,.16); }
+  .rg-tick { width: 52px; height: 52px; border-radius: 50%; background: rgba(255,157,0,.16); display: grid; place-items: center; margin-bottom: 18px; }
+  .rg--dark .rg-tick { background: rgba(255,157,0,.16); }
   .rg-tick svg { width: 24px; height: 24px; stroke: var(--rg-accent); stroke-width: 2.5; fill: none; }
   .rg-dh { font-size: clamp(26px, 3vw, 34px); line-height: 1.15; font-weight: 700; letter-spacing: -0.02em; color: var(--rg-ink); }
   .rg-dp { margin-top: 12px; font-size: 17px; line-height: 1.6; color: var(--rg-body); }

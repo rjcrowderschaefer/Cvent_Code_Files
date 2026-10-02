@@ -5,10 +5,18 @@
 // Every page widget folder carries an IDENTICAL copy (Cvent only lets a widget
 // import files uploaded alongside it) — same rule as type-scale.js.
 //
-// Design source: Bloomberg Design System (Live / events register):
-// Avenir Next for BBG, near-black ink ladder, amber picked by ground
-// (#F7A325 on dark, #9C5F00 on light), 2px radii, 11px tracked eyebrows,
-// hairline borders, two section grounds (white + tint) plus dark inversion.
+// Design source: Bloomberg Design System (Live / events register), as revised
+// for the FLAGSHIP EVENT TEMPLATE (design lead review, 2026-10-01):
+//   - Colour has two jobs. BLUE (#0062DD, as on professional.bloomberg.com) is
+//     FUNCTIONAL: every button, text link, arrow link and clickable hover.
+//     AMBER (#FF9D00) is DECORATIVE only: labels (eyebrows), rules, dots,
+//     bars. Never use amber for something you click; never use blue to decorate.
+//   - Labels (eyebrows) are amber and 20% larger than before (LABEL_PX).
+//   - The closing "Request to attend" band is the same on every page: a
+//     full-bleed black section, blue button.
+//   - Company names are plain text after the job title, never a pill.
+// Plus: Avenir Next for BBG, near-black ink ladder, 2px radii, hairline
+// borders, two section grounds (white + tint) plus dark inversion.
 //
 // Everything that renders planner- or Cvent-supplied text goes through esc()
 // or cleanRichText(). Never interpolate raw config into innerHTML.
@@ -16,7 +24,7 @@
 import { FONT_STACK, TYPE_SCALE, ensureBrandFont } from "./type-scale.js";
 
 // Shown in the page widgets' editor footer, so a stale copy in Cvent is visible.
-export const PAGE_KIT_BUILD = "pagekit-2026-09-26f";
+export const PAGE_KIT_BUILD = "pagekit-2026-10-02c"; // + planner contact proxy, scroll hold
 
 // ---------------------------------------------------------------------------
 // Tokens
@@ -33,16 +41,55 @@ export const TOKENS = {
   placeholder: "#EDEDEA",
   tagBg: "#F0F0EE",
   tagInk: "#3F3F3D",
-  amberOnDark: "#F7A325",   // amber on dark grounds (label = deep)
+  // DECORATIVE amber: labels, rules, dots, bars. Never on a clickable thing.
+  amber: "#FF9D00",
+  amberOnDark: "#FF9D00",   // alias kept for older call sites (rules, bars, dots)
   amberOnDarkH: "#E8951B",
-  amberInk: "#9C5F00",      // amber as text / fill on light grounds (label = white)
+  amberInk: "#9C5F00",      // legacy: amber TEXT that must pass 4.5:1 on white (agenda topic tags only)
   amberInkH: "#8F5700",
+  // FUNCTIONAL blue: buttons, links, clickable hovers (professional.bloomberg.com).
+  action: "#0062DD",        // button fill (white label, 5.5:1) on any ground; link text on light (5.5:1 white, 5.1:1 tint)
+  actionH: "#0050B5",       // hover / pressed
+  linkOnDark: "#4D94FF",    // link TEXT on black (6.6:1); buttons stay #0062DD
+  linkOnDarkH: "#7AB0FF",
   onDark: "rgba(255,255,255,.72)",
   onDarkFaint: "rgba(255,255,255,.66)",
   onDarkHair: "rgba(255,255,255,.16)",
   focus: "#2B6CE8",
   focusOnPhoto: "#6FA0FF",
 };
+
+// Label (eyebrow) sizes, px. Flagship review: 20% larger than the previous
+// 12px section eyebrow and the 11px "label" role of type-scale.js.
+export const LABEL_PX = {
+  section: 14.4,  // section / banner / band eyebrows (was 12)
+  small: 13.2,    // facts-card labels, theme kickers, card + modal labels (was 11)
+};
+
+// Shared look for the FeaturedSpeaker card + bio pop-up on page widgets.
+// Spread into each widget's card config; pass the widget's typography through
+// pageCardTypography() so the pop-up labels follow the same rules.
+export function pageCardBase() {
+  const t = TOKENS;
+  return {
+    colors: {
+      ink: t.ink, muted: t.muted, faint: t.faint, hair: t.hair, placeholder: t.placeholder,
+      accent: t.amber,           // card + pop-up labels ("Moderator", "Speaker")
+      tagBg: t.tagBg, tagInk: t.tagInk,
+      modalBar: t.amber, accentRule: t.amber,
+      mainAccent: t.action,      // name hover: the card is a button, so blue
+      bioInk: t.body, focus: t.focus,
+    },
+    companyStyle: "text",        // "CEO, Bloomberg" — no company pill
+    labelSize: LABEL_PX.small,
+  };
+}
+export function pageCardTypography(ty) {
+  const lbl = (e) => ({ ...e, fontSize: LABEL_PX.small, fontSizeMd: LABEL_PX.small, fontSizeSm: LABEL_PX.small, color: TOKENS.amber });
+  if (ty?.modalEyebrow) ty.modalEyebrow = lbl(ty.modalEyebrow);
+  if (ty?.modalSessionsHeader) ty.modalSessionsHeader = lbl(ty.modalSessionsHeader);
+  return ty;
+}
 
 // ---------------------------------------------------------------------------
 // Escaping / sanitising
@@ -168,11 +215,11 @@ export const capFirst = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
 const FIXED = {
   en: { days: "Days", hours: "Hours", mins: "Min", countdownAria: "{d} days, {h} hours, {m} minutes until the event", sessions: "{n} sessions", session1: "1 session", speakers: "{n} speakers", tba: "Speakers to be announced", andMore: "and more", opensNewTab: "(opens in a new tab)", loading: "Loading…", noSpeakers: "No speakers have been selected. Use the editor to choose the speakers to feature here.", until: "Until {t}",
-    toTime: "to {t}", readMore: "Read more", readLess: "Show less", allSessions: "All sessions", filterSessions: "Filter sessions", noMatch: "No sessions match this filter.", noSessions: "The program will be announced soon.", getDirections: "Get directions", addToCalendar: "Add to calendar", moreTba: "More speakers to be announced.", featured: "Featured", speakersLabel: "Speakers", viewBio: "View bio for {name}", mapTitle: "Map of {place}", regOpens: "Registration opens at {t} {tz}", joinUsAt: "Join us at {place} on {date}", joinUsOn: "Join us on {date}", noSpeakersYet: "Speakers will be announced soon.", email: "Email", sessionsAcrossDays: "{n} sessions across {d} days", agendaIntro: "{n} at {place}. All times are {tz}.", agendaIntroNoPlace: "{n}. All times are {tz}.", sessionHdr1: "Session", sessionHdrN: "Sessions", filterLocation: "Location", filterTopics: "Topics", clearFilters: "Clear filters", moderator: "Moderator", speakerOne: "Speaker" },
+    toTime: "to {t}", readMore: "Read more", readLess: "Show less", allSessions: "All sessions", filterSessions: "Filter sessions", noMatch: "No sessions match this filter.", noSessions: "The program will be announced soon.", getDirections: "Get directions", addToCalendar: "Add to calendar", moreTba: "More speakers to be announced.", featured: "Featured", speakersLabel: "Speakers", viewBio: "View bio for {name}", mapTitle: "Map of {place}", regOpens: "Registration opens at {t} {tz}", joinUsAt: "Join us at {place} on {date}", joinUsOn: "Join us on {date}", noSpeakersYet: "Speakers will be announced soon.", email: "Email", sessionsAcrossDays: "{n} sessions across {d} days", agendaIntro: "{n} at {place}. All times are {tz}.", agendaIntroNoPlace: "{n}. All times are {tz}.", sessionHdr1: "Session", sessionHdrN: "Sessions", filterLocation: "Location", filterTopics: "Topics", clearFilters: "Clear filters", moderator: "Moderator", speakerOne: "Speaker", prevSpeakers: "Previous speakers", nextSpeakers: "Next speakers" },
   es: { days: "Días", hours: "Horas", mins: "Min", countdownAria: "Faltan {d} días, {h} horas y {m} minutos para el evento", sessions: "{n} sesiones", session1: "1 sesión", speakers: "{n} ponentes", tba: "Ponentes por anunciar", andMore: "y más", opensNewTab: "(se abre en una pestaña nueva)", loading: "Cargando…", noSpeakers: "No se han seleccionado ponentes.", until: "Hasta las {t}",
-    toTime: "hasta las {t}", readMore: "Leer más", readLess: "Mostrar menos", allSessions: "Todas las sesiones", filterSessions: "Filtrar sesiones", noMatch: "Ninguna sesión coincide con este filtro.", noSessions: "El programa se anunciará pronto.", getDirections: "Cómo llegar", addToCalendar: "Añadir al calendario", moreTba: "Más ponentes por anunciar.", featured: "Destacados", speakersLabel: "Ponentes", viewBio: "Ver la biografía de {name}", mapTitle: "Mapa de {place}", regOpens: "La acreditación abre a las {t} {tz}", joinUsAt: "Acompáñenos en {place} el {date}", joinUsOn: "Acompáñenos el {date}", noSpeakersYet: "Los ponentes se anunciarán pronto.", email: "Correo electrónico", sessionsAcrossDays: "{n} sesiones en {d} días", agendaIntro: "{n} en {place}. Todos los horarios son en {tz}.", agendaIntroNoPlace: "{n}. Todos los horarios son en {tz}.", sessionHdr1: "Sesión", sessionHdrN: "Sesiones", filterLocation: "Ubicación", filterTopics: "Temas", clearFilters: "Borrar filtros", moderator: "Moderador", speakerOne: "Ponente" },
+    toTime: "hasta las {t}", readMore: "Leer más", readLess: "Mostrar menos", allSessions: "Todas las sesiones", filterSessions: "Filtrar sesiones", noMatch: "Ninguna sesión coincide con este filtro.", noSessions: "El programa se anunciará pronto.", getDirections: "Cómo llegar", addToCalendar: "Añadir al calendario", moreTba: "Más ponentes por anunciar.", featured: "Destacados", speakersLabel: "Ponentes", viewBio: "Ver la biografía de {name}", mapTitle: "Mapa de {place}", regOpens: "La acreditación abre a las {t} {tz}", joinUsAt: "Acompáñenos en {place} el {date}", joinUsOn: "Acompáñenos el {date}", noSpeakersYet: "Los ponentes se anunciarán pronto.", email: "Correo electrónico", sessionsAcrossDays: "{n} sesiones en {d} días", agendaIntro: "{n} en {place}. Todos los horarios son en {tz}.", agendaIntroNoPlace: "{n}. Todos los horarios son en {tz}.", sessionHdr1: "Sesión", sessionHdrN: "Sesiones", filterLocation: "Ubicación", filterTopics: "Temas", clearFilters: "Borrar filtros", moderator: "Moderador", speakerOne: "Ponente", prevSpeakers: "Ponentes anteriores", nextSpeakers: "Más ponentes" },
   pt: { days: "Dias", hours: "Horas", mins: "Min", countdownAria: "Faltam {d} dias, {h} horas e {m} minutos para o evento", sessions: "{n} sessões", session1: "1 sessão", speakers: "{n} palestrantes", tba: "Palestrantes a anunciar", andMore: "e mais", opensNewTab: "(abre em uma nova aba)", loading: "Carregando…", noSpeakers: "Nenhum palestrante foi selecionado.", until: "Até {t}",
-    toTime: "até {t}", readMore: "Leia mais", readLess: "Mostrar menos", allSessions: "Todas as sessões", filterSessions: "Filtrar sessões", noMatch: "Nenhuma sessão corresponde a este filtro.", noSessions: "A programação será anunciada em breve.", getDirections: "Como chegar", addToCalendar: "Adicionar à agenda", moreTba: "Mais palestrantes a anunciar.", featured: "Destaques", speakersLabel: "Palestrantes", viewBio: "Ver a biografia de {name}", mapTitle: "Mapa de {place}", regOpens: "O credenciamento abre às {t} {tz}", joinUsAt: "Junte-se a nós em {place} em {date}", joinUsOn: "Junte-se a nós em {date}", noSpeakersYet: "Os palestrantes serão anunciados em breve.", email: "E-mail", sessionsAcrossDays: "{n} sessões em {d} dias", agendaIntro: "{n} em {place}. Todos os horários estão em {tz}.", agendaIntroNoPlace: "{n}. Todos os horários estão em {tz}.", sessionHdr1: "Sessão", sessionHdrN: "Sessões", filterLocation: "Local", filterTopics: "Temas", clearFilters: "Limpar filtros", moderator: "Moderador", speakerOne: "Palestrante" },
+    toTime: "até {t}", readMore: "Leia mais", readLess: "Mostrar menos", allSessions: "Todas as sessões", filterSessions: "Filtrar sessões", noMatch: "Nenhuma sessão corresponde a este filtro.", noSessions: "A programação será anunciada em breve.", getDirections: "Como chegar", addToCalendar: "Adicionar à agenda", moreTba: "Mais palestrantes a anunciar.", featured: "Destaques", speakersLabel: "Palestrantes", viewBio: "Ver a biografia de {name}", mapTitle: "Mapa de {place}", regOpens: "O credenciamento abre às {t} {tz}", joinUsAt: "Junte-se a nós em {place} em {date}", joinUsOn: "Junte-se a nós em {date}", noSpeakersYet: "Os palestrantes serão anunciados em breve.", email: "E-mail", sessionsAcrossDays: "{n} sessões em {d} dias", agendaIntro: "{n} em {place}. Todos os horários estão em {tz}.", agendaIntroNoPlace: "{n}. Todos os horários estão em {tz}.", sessionHdr1: "Sessão", sessionHdrN: "Sessões", filterLocation: "Local", filterTopics: "Temas", clearFilters: "Limpar filtros", moderator: "Moderador", speakerOne: "Palestrante", prevSpeakers: "Palestrantes anteriores", nextSpeakers: "Mais palestrantes" },
 };
 export const countSessions = (lang, n) => (n === 1 ? fixed(lang, "session1") : fixed(lang, "sessions", { n }));
 export function fixed(lang, key, vars = {}) {
@@ -303,6 +350,176 @@ export function wireRegister(root, { mode = "native", label = "", selector = "",
   return () => root.removeEventListener("click", onClick);
 }
 
+// ---------------------------------------------------------------------------
+// Cvent's native "Contact Planner" widget
+// Placed in Site Designer, it shows a "Contact Us" button whose pop-up lets a
+// visitor message the planner (the Event Planner email in the event details).
+// Our contact areas ([data-planner-contact]) click that button, exactly like
+// the register proxy above. Not on the page = the link behaves as before
+// (mailto, page link), so nothing breaks while the widget is missing.
+// Found by: a planner-set CSS selector, else a Cvent class naming the widget,
+// else a button labelled "Contact us / Contact the planner / Contact planner".
+// The site nav's "Contact Us" item is a page link (role="link") and is skipped.
+// ---------------------------------------------------------------------------
+const PLANNER_TEXT = /^\s*(contact( us| the( event)? planner| planner| the organi[sz]er)?|email the planner)\s*$/i;
+export function findPlannerContact(selector = "") {
+  const sel = String(selector || "").trim();
+  if (sel) {
+    try {
+      const el = document.querySelector(sel);
+      if (el) return el.matches("button, a, [role='button']") ? el : el.querySelector("button, a, [role='button']") || el;
+    } catch (e) {
+      console.warn("[page-kit] invalid contact planner selector:", sel);
+    }
+  }
+  // Cvent tags the widget: data-cvent-id="widget-ContactPlanner-widget:<id>".
+  const own = document.querySelector("[data-cvent-id^='widget-ContactPlanner-'] button, [data-cvent-id^='widget-ContactPlanner-'] [role='button']");
+  if (own) return own;
+  const box = document.querySelector("[class*='ContactPlanner'], [class*='contactPlanner'], [class*='PlannerContact'], [class*='plannerContact']");
+  const inBox = box && (box.matches("button, [role='button']") ? box : box.querySelector("button, [role='button'], a"));
+  if (inBox) return inBox;
+  return [...document.querySelectorAll("button, [role='button']")].find((el) =>
+    PLANNER_TEXT.test(el.textContent || "") && !el.closest("[class*='WebsiteNavigator'], nav")) || null;
+}
+
+// The Contact Planner pop-up, Flagship treatment. Cvent renders it in the
+// page (outside our shadow roots) with an orange header bar, a centred 384px
+// form and a pill button; this restyles it: white panel with an amber edge,
+// big title, recipient line, full-width fields like the registration form,
+// blue square Send. Injected once per page by wirePlannerContact().
+const PM_FONT = 'AvenirNextPForBBG, AvenirNextforBBG, "Avenir Next", Helvetica, Arial, sans-serif';
+export const PLANNER_MODAL_CSS = `
+[class*=Dialog__dragContainer]:has([class*=ContactPlannerStyle__dialogContainer]) {
+  width: min(600px, calc(100vw - 32px)) !important; max-width: none !important;
+  border-top: 3px solid #FF9D00 !important; border-radius: 2px !important; overflow: hidden !important;
+  background: #FFFFFF !important; box-shadow: 0 30px 80px rgba(0,0,0,.40) !important; }
+[class*=Dialog__dragContainer]:has([class*=ContactPlannerStyle__dialogContainer]) [class*=Dialog__content] { width: 100% !important; max-width: 100% !important; background: #FFFFFF !important; }
+[class*=ContactPlannerStyle__dialogContainer] { width: 100% !important; max-width: 100% !important; }
+[class*=ContactPlannerStyle__dialogContainer], [class*=ContactPlannerStyle__dialogContainer] :is(h3, div, span, label, input, textarea, button) {
+  font-family: ${PM_FONT} !important; }
+/* header: Cvent paints it orange inline */
+[class*=ContactPlannerStyle__dialogContainer] > div:first-child,
+[class*=ContactPlannerStyle__dialogContainer] #dialogHeader {
+  background: #FFFFFF !important; color: #141416 !important; position: relative !important; }
+[class*=ContactPlannerStyle__dialogContainer] #dialogHeader { padding: 36px 88px 0 44px !important; min-height: 0 !important; }
+[class*=ContactPlannerStyle__dialogContainer] #dialogHeader h3 {
+  margin: 0 !important; padding: 0 !important; color: #141416 !important; font-size: 30px !important; line-height: 1.15 !important;
+  font-weight: 700 !important; letter-spacing: -0.02em !important; text-align: left !important; }
+[class*=ContactPlannerStyle__closeDialog] {
+  position: absolute !important; top: 18px !important; right: 18px !important; width: 44px !important; height: 44px !important;
+  display: flex !important; align-items: center !important; justify-content: center !important; border-radius: 2px !important;
+  cursor: pointer !important; transition: background-color .15s ease !important; }
+[class*=ContactPlannerStyle__closeDialog]:hover { background: #F5F5F3 !important; }
+[class*=ContactPlannerStyle__closeDialog] svg { width: 18px !important; height: 18px !important; fill: #141416 !important; color: #141416 !important; }
+[class*=ContactPlannerStyle__closeDialog] path { fill: currentColor !important; }
+[class*=ContactPlannerStyle__closeDialog]:hover svg { fill: #0062DD !important; color: #0062DD !important; }
+/* body */
+[class*=ContactPlannerStyle__panel] { background: #FFFFFF !important; padding: 0 44px 44px !important; }
+[class*=ContactPlannerStyle__panel] > div { width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important;
+  display: flex !important; flex-direction: column !important; align-items: stretch !important; }
+[class*=ContactPlannerStyle__element] { width: 100% !important; max-width: none !important; margin: 0 0 22px !important; padding: 0 !important; text-align: left !important; }
+/* recipient: who the message goes to */
+[class*=ContactPlannerStyle__contactInfo] {
+  margin: 10px 0 28px !important; padding: 0 0 24px !important; border-bottom: 1px solid #E4E4E0 !important;
+  display: flex !important; flex-wrap: wrap !important; align-items: baseline !important; gap: 0 8px !important; }
+[class*=ContactPlannerStyle__contactInfo] > div { font-size: 16px !important; line-height: 1.5 !important; color: #5C5C5A !important; }
+[class*=ContactPlannerStyle__contactInfo] > div:first-child { color: #141416 !important; font-weight: 600 !important; }
+/* the planner's company repeats "Bloomberg": drop it, add a line on what happens */
+[class*=ContactPlannerStyle__contactInfo] > div + div { display: none !important; }
+[class*=ContactPlannerStyle__contactInfo]::after { content: "Submit your question to the Bloomberg Team and we’ll get back to you as soon as possible.";
+  flex: 1 1 100%; margin-top: 6px; font-size: 16px; line-height: 1.55; color: #3F3F3D; }
+/* labels + fields: the registration form's field style */
+[class*=ContactPlannerStyle__element] label { display: block !important; margin: 0 0 8px !important; padding: 0 !important;
+  font-size: 15px !important; line-height: 1.3 !important; font-weight: 600 !important; color: #141416 !important; }
+[class*=ContactPlannerStyle__element] [class*=QuestionText__required] { position: static !important; left: auto !important; width: auto !important;
+  margin: 0 4px 0 0 !important; color: #B42318 !important; }
+[class*=ContactPlannerStyle__element] [class*=Forms__inputContainer], [class*=ContactPlannerStyle__element] [class*=Forms__textboxContainer],
+[class*=ContactPlannerStyle__element] [class*=Forms__inputContainer] > span { display: block !important; width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important; }
+/* Specific enough to beat the site's ".custom-css-scope input[data-cvent-id=input]" */
+[class*=ContactPlannerStyle__dialogContainer] [class*=ContactPlannerStyle__element] input[class*=ContactPlannerStyle__textbox], [class*=ContactPlannerStyle__dialogContainer] [class*=ContactPlannerStyle__element] textarea[class*=ContactPlannerStyle__textarea] {
+  box-sizing: border-box !important; width: 100% !important; max-width: none !important; margin: 0 !important;
+  border: 1px solid #8A8A86 !important; border-radius: 2px !important; background: #FFFFFF !important; box-shadow: none !important; outline: none !important;
+  color: #141416 !important; font-size: 16px !important; line-height: 1.5 !important; }
+[class*=ContactPlannerStyle__dialogContainer] [class*=ContactPlannerStyle__element] input[class*=ContactPlannerStyle__textbox] { height: 48px !important; padding: 0 14px !important; }
+[class*=ContactPlannerStyle__dialogContainer] [class*=ContactPlannerStyle__element] textarea[class*=ContactPlannerStyle__textarea] { min-height: 148px !important; padding: 12px 14px !important; resize: vertical !important; }
+[class*=ContactPlannerStyle__dialogContainer] [class*=ContactPlannerStyle__element] :is(input, textarea)[class*=TextInput__error], [class*=ContactPlannerStyle__dialogContainer] [class*=ContactPlannerStyle__element] :is(input, textarea)[aria-invalid=true] {
+  border-color: #B42318 !important; box-shadow: none !important; }
+[class*=ContactPlannerStyle__dialogContainer] [class*=ContactPlannerStyle__element] :is(input, textarea)[class*=ContactPlannerStyle__]:focus {
+  border-color: #2B6CE8 !important; box-shadow: 0 0 0 3px rgba(43,108,232,.22) !important; }
+[class*=ContactPlannerStyle__element] [class*=Forms__errorText] {
+  margin: 8px 0 0 !important; padding: 0 !important; font-size: 14px !important; line-height: 1.4 !important; color: #B42318 !important; }
+[class*=ContactPlannerStyle__element] [class*=Forms__errorContainer] { margin: 0 !important; padding: 0 !important; background: transparent !important; }
+/* Send: blue, square */
+[class*=ContactPlanner__submitButton] {
+  align-self: flex-start !important; margin: 6px 0 0 !important; height: 48px !important; min-width: 0 !important; padding: 0 32px !important;
+  border: 0 !important; border-radius: 2px !important; background: #0062DD !important; color: #FFFFFF !important;
+  font-size: 16px !important; font-weight: 600 !important; letter-spacing: 0 !important; cursor: pointer !important; box-shadow: none !important;
+  transition: background-color .15s ease !important; }
+[class*=ContactPlanner__submitButton]:hover { background: #0050B5 !important; }
+[class*=ContactPlanner__submitButton]:focus-visible { outline: 3px solid rgba(43,108,232,.45) !important; outline-offset: 2px !important; }
+@media (max-width: 600px) {
+  [class*=ContactPlannerStyle__dialogContainer] #dialogHeader { padding: 28px 72px 0 24px !important; }
+  [class*=ContactPlannerStyle__dialogContainer] #dialogHeader h3 { font-size: 24px !important; }
+  [class*=ContactPlannerStyle__closeDialog] { top: 12px !important; right: 12px !important; }
+  [class*=ContactPlannerStyle__panel] { padding: 0 24px 28px !important; }
+  [class*=ContactPlanner__submitButton] { align-self: stretch !important; width: 100% !important; }
+}
+/* The native widget's own "Contact Us" button (also hidden from first paint by
+   the site CSS, bbg-live-site-custom.css): visually gone, still clickable. */
+[id^="widget:"]:has(> [data-cvent-id^="widget-ContactPlanner-"]),
+[data-bbg-planner-src] { position: absolute !important; width: 1px !important; height: 1px !important; margin: -1px !important; padding: 0 !important;
+  overflow: hidden !important; clip: rect(0 0 0 0) !important; clip-path: inset(50%) !important; white-space: nowrap !important; border: 0 !important; }
+`;
+function ensurePlannerModalCss() {
+  if (document.getElementById("bbg-planner-modal-css")) return;
+  const st = document.createElement("style");
+  st.id = "bbg-planner-modal-css";
+  st.textContent = PLANNER_MODAL_CSS;
+  document.head.append(st);
+}
+// Hide the native widget's button (its Site Designer column) when the page
+// has our contact links: the links open the same pop-up. Only a column that
+// holds nothing but that one button is hidden.
+function hidePlannerSource(native) {
+  const col = native?.closest?.("[id^='widget:']");
+  if (!col || col.hasAttribute("data-bbg-planner-src")) return;
+  if (col.querySelectorAll("button, a, input").length !== 1) return;
+  col.setAttribute("data-bbg-planner-src", "");
+}
+
+// Wire every [data-planner-contact] link / button inside `root`. Returns a cleanup fn.
+export function wirePlannerContact(root, { selector = "", enabled = true } = {}) {
+  if (!root || !enabled) return () => {};
+  ensurePlannerModalCss();
+  if (root.querySelector("[data-planner-contact]")) {
+    // Cvent may draw the native widget after us: look for a few seconds.
+    let n = 0;
+    const look = () => { const nat = findPlannerContact(selector); if (nat) hidePlannerSource(nat); else if (++n < 10) setTimeout(look, 500); };
+    look();
+  }
+  const onClick = (e) => {
+    const el = e.target.closest?.("[data-planner-contact]");
+    if (!el || !root.contains(el)) return;
+    const native = findPlannerContact(selector);
+    if (!native) {
+      // Fall back to the element's own link; a bare "#" would jump to the top.
+      if ((el.getAttribute("href") || "#") === "#") {
+        e.preventDefault();
+        // Next best: the site menu's Contact page (menu items are role="link").
+        const site = [...document.querySelectorAll("[class*='WebsiteNavigator'] [role='link'], nav a[href]")]
+          .find((n) => /^\s*contact( us)?\s*$/i.test(n.textContent || ""));
+        if (site && !/contact/i.test(location.pathname)) site.click();
+        else console.warn("[page-kit] Cvent Contact Planner widget not found on this page; add it in Site Designer.");
+      }
+      return;
+    }
+    e.preventDefault();
+    native.click();
+  };
+  root.addEventListener("click", onClick);
+  return () => root.removeEventListener("click", onClick);
+}
+
 // Eyebrow + proposition heading, optional right-aligned link (desktop) that
 // drops below the content on mobile (render `link` again after the content
 // with class pk-only-mobile).
@@ -312,24 +529,45 @@ export function sectionHead({ eyebrowText, heading, link = "", level = 2 }) {
   return link ? `<div class="pk-head">${head}<div class="pk-only-desktop">${link}</div></div>` : head;
 }
 
-// "Request to attend" band (every page) — light or dark.
-export function regBand({ eyebrowText = "", heading, body, buttonLabel, href, dark = false, lang = "en", nativeRegister = false }) {
+// "Request to attend" band — IDENTICAL on every page (flagship review
+// 2026-10-01): a full-bleed black section (the black fills the whole band,
+// edge to edge, no grey margin), amber label, blue button. The old light /
+// "panel inside a grey band" variants are retired; `dark` is ignored.
+export function regBand({ eyebrowText = "", heading, body, buttonLabel, href, lang = "en", nativeRegister = false }) {
   if (!heading && !buttonLabel) return "";
   return `
-  <section class="pk-section pk-bleed pk-ground-tint pk-pad-tight" aria-label="${esc(heading || buttonLabel)}">
+  <section class="pk-section pk-bleed pk-ground-dark pk-band-sec" aria-label="${esc(heading || buttonLabel)}">
     <div class="pk-inner">
-      <div class="pk-band ${dark ? "pk-band--dark" : ""}">
+      <div class="pk-band">
         <div class="pk-band-text">
-          ${eyebrow(eyebrowText, dark ? "pk-on-dark" : "")}
+          ${eyebrow(eyebrowText, "pk-on-dark")}
           ${heading ? `<h2 class="pk-band-h">${esc(heading)}</h2>` : ""}
           ${body ? `<p class="pk-band-p">${esc(body)}</p>` : ""}
         </div>
         <div class="pk-band-cta">${nativeRegister
-          ? registerButton({ label: buttonLabel, variant: "primary", ground: dark ? "dark" : "light", size: "lg" })
-          : button({ label: buttonLabel, href, variant: "primary", ground: dark ? "dark" : "light", size: "lg", lang })}</div>
+          ? registerButton({ label: buttonLabel, variant: "primary", ground: "dark", size: "lg" })
+          : button({ label: buttonLabel, href, variant: "primary", ground: "dark", size: "lg", lang })}</div>
       </div>
     </div>
   </section>`;
+}
+
+// Default copy for that band, shared by Home and the inner pages so every
+// page says the same thing: "Join us at <venue> on <date>" over
+// "<weekday>, <time> <zone>, <address>, <city>."
+export function closingBandCopy({ cfg, lang, facts, P }) {
+  const c = cfg.cta;
+  const place = facts.venueName;
+  const heading = P("cta", "heading", c.heading)
+    || (facts.dayMonth ? (place ? fixed(lang, "joinUsAt", { place, date: facts.dayMonth }) : fixed(lang, "joinUsOn", { date: facts.dayMonth })) : "");
+  const when = [facts.weekday, facts.timeRange && `${facts.timeRange} ${facts.tzLong}`.trim()].filter(Boolean).join(", ");
+  const where = [facts.address1, facts.city].filter(Boolean).join(", ");
+  const body = P("cta", "body", c.body) || ([when, where].filter(Boolean).join(", ") + (when || where ? "." : ""));
+  return {
+    eyebrowText: P("cta", "eyebrow", c.eyebrow), heading, body,
+    buttonLabel: P("cta", "buttonLabel", c.buttonLabel), href: cfg.registerUrl,
+    lang, nativeRegister: cfg.registerMode !== "url",
+  };
 }
 
 // Dark page banner for inner pages (Agenda, Speakers, Venue, Contact).
@@ -359,6 +597,81 @@ export function pageBanner({ eyebrowText, title, intro, bg = null }) {
       ${intro ? `<p class="pk-banner-p">${esc(intro)}</p>` : ""}
     </div>
   </section>`;
+}
+
+// ---------------------------------------------------------------------------
+// Keep the page still while the editor re-renders a widget
+// A config change re-renders the whole widget. If the old content is cleared
+// first (or the speaker cards / images that mount afterwards start at zero
+// height), the page gets shorter for a moment, the browser clamps the scroll
+// position and the planner lands back at the top. So:
+//  - holdHeight(root): pins the widget at its current height while the new
+//    markup goes in, then lets go once async parts have had time to mount;
+//  - trackScroll() / restoreScroll(): if the editor swaps the whole widget
+//    (disconnect + connect) on the same page, put the scroll back afterwards.
+// ---------------------------------------------------------------------------
+const HOLD_MS = 1500;
+export function holdHeight(root) {
+  if (!root) return () => {};
+  const h = root.offsetHeight;
+  const token = (root._pkHold = (root._pkHold || 0) + 1);
+  if (h > 0) root.style.minHeight = `${h}px`;
+  return () => {
+    setTimeout(() => {
+      if (root._pkHold === token) root.style.minHeight = "";
+    }, HOLD_MS);
+  };
+}
+
+// Cvent's editor can also swap in a NEW widget for a change (disconnect +
+// connect; the new one fetches its data again, so the page collapses while it
+// loads). The scroll position is tracked while the widget is on the page and,
+// when a new copy of the same widget arrives within a few seconds WITH A
+// DIFFERENT CONFIGURATION (= an editor change, never an ordinary page visit),
+// put back once it has rendered. sessionStorage, so a reloaded preview frame
+// is covered too. Works for window scroll and for a scrolling container.
+const MEMO = "bbg-pk-scroll:";
+const cfgSig = (cfg) => { const t = JSON.stringify(cfg || {}); let h = 0; for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return `${t.length}:${h}`; };
+const memoGet = (tag) => { try { return JSON.parse(sessionStorage.getItem(MEMO + tag) || "null"); } catch (e) { return null; } };
+const memoSet = (tag, v) => { try { sessionStorage.setItem(MEMO + tag, JSON.stringify(v)); } catch (e) { /* storage off */ } };
+function scrollBox(el) {
+  for (let n = el; n; ) {
+    n = n.parentElement || n.getRootNode?.().host || null;
+    if (!n || n === document.body || n === document.documentElement) break;
+    const oy = getComputedStyle(n).overflowY;
+    if (oy === "auto" || oy === "scroll") return n;
+  }
+  return null; // the window
+}
+const readY = (box) => (box ? box.scrollTop : (document.scrollingElement || document.documentElement).scrollTop);
+const putY = (box, y) => { if (Math.abs(readY(box) - y) > 2) (box ? box.scrollTo(0, y) : window.scrollTo(0, y)); };
+
+// Call once the widget is connected; returns a cleanup for disconnect.
+export function trackScroll(el, tag, cfg) {
+  const box = scrollBox(el);
+  const sig = cfgSig(cfg);
+  let raf = 0;
+  const save = () => { raf = 0; if (el.isConnected) memoSet(tag, { y: readY(box), at: Date.now(), path: location.pathname, sig: el._pkSig || sig }); };
+  const on = () => { if (!raf) raf = requestAnimationFrame(save); };
+  el._pkSig = sig;
+  document.addEventListener("scroll", on, { capture: true, passive: true });
+  save();
+  return () => {
+    document.removeEventListener("scroll", on, { capture: true });
+    cancelAnimationFrame(raf);
+    const m = memoGet(tag);
+    if (m) memoSet(tag, { ...m, at: Date.now() }); // the y stays as last scrolled
+  };
+}
+// The live widget's config changed in place (onConfigurationUpdate).
+export function noteConfig(el, cfg) { el._pkSig = cfgSig(cfg); }
+
+// Call after the FIRST render of a freshly connected widget.
+export function restoreScroll(el, tag, cfg) {
+  const m = memoGet(tag);
+  if (!m || !m.y || Date.now() - m.at > 8000 || m.path !== location.pathname || m.sig === cfgSig(cfg)) return;
+  const box = scrollBox(el);
+  [0, 300, 900].forEach((ms) => setTimeout(() => requestAnimationFrame(() => putY(box, m.y)), ms));
 }
 
 // ---------------------------------------------------------------------------
@@ -454,9 +767,8 @@ export const PAGE_BASE_DEFAULTS = {
     height: "",                // minimum banner height, px; blank = fits the text
   },
   cta: {
-    show: true,
-    style: "light",            // "light" (on the grey band) | "dark" (black panel)
-    eyebrow: "",
+    show: true,                // always the full-bleed black band (see regBand)
+    eyebrow: "Request to attend",
     heading: "",               // blank = "Join us at <venue> on <date>"
     body: "",                  // blank = "<weekday>, <time> <zone>, <address>"
     buttonLabel: "Request to attend",
@@ -659,17 +971,21 @@ export class PageWidget extends HTMLElement {
     root.dataset.build = this.build;
     this.shadowRoot.append(root);
     await this._renderInto(root);
+    restoreScroll(this, this.tag, this.configuration);
+    this._scrollCleanup = trackScroll(this, this.tag, this.configuration);
     this._langObserver = new MutationObserver(() => this._rerender());
     this._langObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
   }
 
   disconnectedCallback() {
+    this._scrollCleanup?.();
     this._runCleanups();
     this._langObserver?.disconnect();
   }
 
   onConfigurationUpdate(newConfig) {
     this.configuration = newConfig || {};
+    noteConfig(this, this.configuration);
     this._rerender();
   }
 
@@ -692,9 +1008,12 @@ export class PageWidget extends HTMLElement {
     const seq = ++this._renderSeq;
     const cfg = this.merge(this.configuration || {});
     const css = `<style>${kitCss()}${this.pageCss(cfg)}</style>`;
-    root.innerHTML = `${css}<p class="pk-sr" role="status">${esc(fixed("en", "loading"))}</p>`;
+    // First render only: later ones (editor changes, language switch) keep the
+    // old content on screen until the new markup is ready, so nothing jumps.
+    if (!root.childElementCount) root.innerHTML = `${css}<p class="pk-sr" role="status">${esc(fixed("en", "loading"))}</p>`;
     const data = await this._loadData();
     if (seq !== this._renderSeq) return; // a newer render started meanwhile
+    const release = holdHeight(root);
     this._runCleanups();
 
     const lang = resolveLang(data.eventInfo);
@@ -705,14 +1024,6 @@ export class PageWidget extends HTMLElement {
     const order = Array.isArray(cfg.order) ? cfg.order : ["banner", ...Object.keys(own), "cta"];
     const keys = order.filter((k) => cfg[k]?.show !== false && RENDER[k]);
     const parts = keys.map((k) => RENDER[k]()).filter((h) => h && h.trim());
-    // A light closing band right after a grey section turns white with a
-    // hairline on top, so two grey bands never merge.
-    parts.forEach((h, i) => {
-      if (i && /pk-band(?!--dark)/.test(h) && !/pk-band--dark/.test(h)) {
-        const prev = (parts[i - 1].match(/<section[^>]*>/) || [""])[0];
-        if (/pk-ground-tint/.test(prev)) parts[i] = h.replace("pk-ground-tint pk-pad-tight", "pk-ground-white pk-rule-top pk-pad-tight");
-      }
-    });
     const html = parts.join("");
 
     const space = Math.max(20, Math.min(200, Number(cfg.sectionSpacing) || 100)) / 100;
@@ -726,7 +1037,9 @@ export class PageWidget extends HTMLElement {
       selector: cfg.nativeRegisterSelector,
       url: cfg.registerUrl,
     }));
+    this._cleanups.push(wirePlannerContact(root, { enabled: cfg.plannerContact !== false, selector: cfg.plannerContactSelector }));
     this.afterRender(root, ctx);
+    release();
   }
 
   // ---- shared sections ------------------------------------------------------
@@ -743,18 +1056,8 @@ export class PageWidget extends HTMLElement {
     });
   }
 
-  _cta({ cfg, lang, facts, P }) {
-    const c = cfg.cta;
-    const place = facts.venueName;
-    const heading = P("cta", "heading", c.heading)
-      || (facts.dayMonth ? (place ? fixed(lang, "joinUsAt", { place, date: facts.dayMonth }) : fixed(lang, "joinUsOn", { date: facts.dayMonth })) : "");
-    const when = [facts.weekday, facts.timeRange && `${facts.timeRange} ${facts.tzLong}`.trim()].filter(Boolean).join(", ");
-    const body = P("cta", "body", c.body) || [when, [facts.address1, facts.city].filter(Boolean).join(", ")].filter(Boolean).join(", ") + (when ? "." : "");
-    return regBand({
-      eyebrowText: P("cta", "eyebrow", c.eyebrow), heading, body,
-      buttonLabel: P("cta", "buttonLabel", c.buttonLabel), href: cfg.registerUrl,
-      dark: c.style === "dark", lang, nativeRegister: cfg.registerMode !== "url",
-    });
+  _cta(ctx) {
+    return regBand(closingBandCopy(ctx));
   }
 }
 
@@ -793,18 +1096,22 @@ export function kitCss() {
   .pk-rule-top { border-top: 1px solid ${t.hair}; }
 
   /* Type */
-  .pk-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: ${t.amberInk}; margin-bottom: 14px; }
-  .pk-on-dark.pk-eyebrow, .pk-ground-dark .pk-eyebrow { color: ${t.amberOnDark}; }
+  /* Labels: amber on every ground, 20% larger (flagship review). */
+  .pk-eyebrow { font-size: ${LABEL_PX.section}px; line-height: 1.3; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: ${t.amber}; margin-bottom: 14px; }
+  .pk-on-dark.pk-eyebrow, .pk-ground-dark .pk-eyebrow { color: ${t.amber}; }
   .pk-h2 { font-size: ${px(sec.fontSize)}; line-height: 1.15; font-weight: 700; letter-spacing: -0.02em; max-width: 34ch; }
   .pk-ground-dark .pk-h2 { color: #fff; }
   .pk-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; }
   .pk-lede { font-size: 16px; line-height: 1.5; color: ${t.ink}; }
   .pk-copy { font-size: 17px; line-height: 1.65; color: ${t.body}; }
   .pk-copy p + p, .pk-lede p + p { margin-top: 16px; }
-  .pk-copy a, .pk-lede a { color: ${t.amberInk}; font-weight: 600; }
+  /* Links are blue (functional colour), underlined in running text. */
+  .pk-copy a, .pk-lede a { color: ${t.action}; font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+  .pk-copy a:hover, .pk-lede a:hover { color: ${t.actionH}; }
+  .pk-ground-dark .pk-copy a, .pk-ground-dark .pk-lede a { color: ${t.linkOnDark}; }
   .pk-copy ul, .pk-lede ul { padding-left: 20px; margin-top: 12px; }
 
-  /* Buttons: one primary (amber, by ground) + one secondary (outline) */
+  /* Buttons: one primary (BLUE on every ground) + one secondary (outline) */
   .pk-btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     min-height: 44px; padding: 0 22px; border-radius: 2px; border: 1px solid transparent;
@@ -814,31 +1121,29 @@ export function kitCss() {
   button.pk-btn { font-family: inherit; background: transparent; cursor: pointer; -webkit-appearance: none; appearance: none; margin: 0; }
   .pk-btn--lg { min-height: 52px; padding: 0 26px; font-size: 15px; }
   .pk-btn--full { width: 100%; }
-  .pk-btn--primary.pk-btn--on-dark { background: ${t.amberOnDark}; color: ${t.deep}; }
-  .pk-btn--primary.pk-btn--on-dark:hover { background: ${t.amberOnDarkH}; }
-  .pk-btn--primary.pk-btn--on-light { background: ${t.amberInk}; color: #fff; }
-  .pk-btn--primary.pk-btn--on-light:hover { background: ${t.amberInkH}; }
+  .pk-btn.pk-btn--primary { background: ${t.action}; color: #fff; }
+  .pk-btn.pk-btn--primary:hover { background: ${t.actionH}; }
   .pk-btn--secondary.pk-btn--on-dark { border-color: rgba(255,255,255,.5); color: #fff; }
   .pk-btn--secondary.pk-btn--on-dark:hover { background: rgba(255,255,255,.08); border-color: #fff; }
   .pk-btn--secondary.pk-btn--on-light { border-color: ${t.ink}; color: ${t.ink}; }
-  .pk-btn--secondary.pk-btn--on-light:hover { background: rgba(156,95,0,.10); }
+  .pk-btn--secondary.pk-btn--on-light:hover { background: rgba(0,98,221,.08); border-color: ${t.action}; color: ${t.action}; }
 
   .pk-arrow { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; text-decoration: none; transition: gap .15s ease; }
   .pk-arrow:hover { gap: 11px; }
-  .pk-arrow--on-light { color: ${t.amberInk}; }
-  .pk-arrow--on-dark { color: ${t.amberOnDark}; }
+  .pk-arrow--on-light { color: ${t.action}; }
+  .pk-arrow--on-light:hover { color: ${t.actionH}; }
+  .pk-arrow--on-dark { color: ${t.linkOnDark}; }
+  .pk-arrow--on-dark:hover { color: ${t.linkOnDarkH}; }
 
   /* Tags */
   .pk-tag { display: inline-flex; align-items: center; min-height: 24px; padding: 0 8px; border-radius: 2px; background: ${t.tagBg}; color: ${t.tagInk}; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
   .pk-badge { display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px; border: 1px solid ${t.hair}; border-radius: 2px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: ${t.muted}; }
 
-  /* Registration band */
+  /* Registration band: the black fills the whole section, edge to edge. */
+  .pk-band-sec { padding: calc(clamp(48px, 5.5vw, 80px) * var(--pk-space, 1)) 0; }
   .pk-band { display: flex; justify-content: space-between; align-items: center; gap: 48px; padding: 0; }
-  .pk-band--dark { background: ${t.deep}; padding: clamp(32px, 4.5vw, 56px) clamp(24px, 5vw, 64px); }
-  .pk-band-h { font-size: clamp(24px, 2.4vw, 34px); line-height: 1.2; font-weight: 700; letter-spacing: -0.02em; }
-  .pk-band--dark .pk-band-h { color: #fff; }
-  .pk-band-p { margin-top: 10px; font-size: 16px; color: ${t.muted}; }
-  .pk-band--dark .pk-band-p { color: ${t.onDark}; }
+  .pk-band-h { font-size: clamp(24px, 2.4vw, 34px); line-height: 1.2; font-weight: 700; letter-spacing: -0.02em; color: #fff; }
+  .pk-band-p { margin-top: 10px; font-size: 16px; color: ${t.onDark}; }
   .pk-band-cta { flex-shrink: 0; }
 
   /* Inner-page banner */

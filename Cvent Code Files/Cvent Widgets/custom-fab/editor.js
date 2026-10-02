@@ -163,10 +163,12 @@ const SECTIONS = [
         default: true,
         label: "Show Option 3",
         hint:
-          "Untick to remove it. Its form is still a preview and posts nowhere, so leave " +
-          "this off unless a destination has been connected.",
+          "Questions are sent through Cvent's Contact Planner widget to the Event Planner " +
+          "email in the event details. Add that widget to the page in Site Designer (it is " +
+          "hidden automatically); without it the form says questions can't be sent here.",
       },
       { key: "questionLabel", label: "Menu label", placeholder: "Submit a question" },
+      { key: "questionIntro", label: "Intro line", placeholder: "Submit your question to the Bloomberg Team and we'll get back to you as soon as possible.", multiline: true },
       {
         key: "questionTopics",
         label: "Question topics",

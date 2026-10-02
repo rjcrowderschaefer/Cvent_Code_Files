@@ -25,22 +25,29 @@ export function regFormCss(R = "html.bbg-reg") {
 // section with the CSS class "bbg-reg-page" (set in Cvent) always counts.
 const BODY_SEC = `:is(.bbg-reg-page, [class*=Grid__sectionContainer]:not([role=banner] *):not(.site-footer *):not(:has(.site-footer, .cus_nav, #navigationContainer, [class*=ProgressBar__wrapper], [data-cvent-id*=ProgressBar-widget])))`;
 const BODY = `${R} :where(${BODY_SEC})`;
-// Step-bar section of the registration header (live page and Site Designer).
-const STEPS_SEC = `[class*=Grid__sectionContainer]:has([class*=ProgressBar__wrapper])`;
+// The site nav section. On some events Cvent puts its step bar INSIDE this
+// section, so the step-bar rules below must never match it: hiding or
+// repainting "the section with the step bar" would take the nav with it
+// (bug seen 2026-10-01 on the Flagship template: nav missing on /register).
+const NAV_SEC = `:is(.cus_nav, :has(.cus_nav, #navigationContainer, [class*=WebsiteNavigator__container]))`;
+// Step-bar section of the registration header (live page and Site Designer),
+// never the nav section.
+const STEPS_SEC = `[class*=Grid__sectionContainer]:has([class*=ProgressBar__wrapper]):not(${NAV_SEC})`;
 return `
 ${R} {
   --r-bg: #FFFFFF; --r-ink: #141416; --r-body: #3F3F3D; --r-muted: #5C5C5A; --r-hair: #E4E4E0;
-  --r-ctl: #8A8A86; --r-field: #FFFFFF; --r-ph: #8C8C88; --r-accent: #9C5F00;
-  --r-primary: #9C5F00; --r-primary-h: #8F5700; --r-primary-ink: #FFFFFF;
+  --r-ctl: #8A8A86; --r-field: #FFFFFF; --r-ph: #8C8C88; --r-accent: #FF9D00; --r-accent-ink: #0B0B0C;
+  /* Flagship rule: buttons and links are BLUE (functional); amber is decoration only. */
+  --r-primary: #0062DD; --r-primary-h: #0050B5; --r-primary-ink: #FFFFFF; --r-link: #0062DD;
   --r-err: #B42318; --r-focus: #2B6CE8; --r-focus-ring: rgba(43,108,232,.22);
-  --r-menu: #FFFFFF; --r-menu-h: #F5F5F3; --r-sel: rgba(156,95,0,.10);
+  --r-menu: #FFFFFF; --r-menu-h: #F5F5F3; --r-sel: rgba(0,98,221,.08);
 }
 ${R}.bbg-reg--dark {
   --r-bg: #0B0B0C; --r-ink: #FFFFFF; --r-body: rgba(255,255,255,.80); --r-muted: rgba(255,255,255,.66); --r-hair: rgba(255,255,255,.14);
-  --r-ctl: rgba(255,255,255,.38); --r-field: #17181C; --r-ph: rgba(255,255,255,.45); --r-accent: #F7A325;
-  --r-primary: #F7A325; --r-primary-h: #E8951B; --r-primary-ink: #0B0B0C;
+  --r-ctl: rgba(255,255,255,.38); --r-field: #17181C; --r-ph: rgba(255,255,255,.45); --r-accent: #FF9D00; --r-accent-ink: #0B0B0C;
+  --r-primary: #0062DD; --r-primary-h: #0050B5; --r-primary-ink: #FFFFFF; --r-link: #4D94FF;
   --r-err: #FF8A7A; --r-focus: #6FA0FF; --r-focus-ring: rgba(111,160,255,.3);
-  --r-menu: #17181C; --r-menu-h: rgba(255,255,255,.08); --r-sel: rgba(247,163,37,.16);
+  --r-menu: #17181C; --r-menu-h: rgba(255,255,255,.08); --r-sel: rgba(77,148,255,.18);
 }
 
 /* ---------- grounds: no photos behind the form ---------- */
@@ -50,7 +57,7 @@ ${R} ${BODY_SEC} { background-color: var(--r-bg) !important; background-image: n
 /* Base text colour for everything Cvent draws in the form area (low
    specificity on purpose: the specific rules below win). */
 ${BODY} :where(p, span, div, h1, h2, h3, h4, h5, h6, label, legend, li, dt, dd, td, th, strong, b, em):not(.site-footer *) { color: var(--r-ink) !important; }
-${BODY} a { color: var(--r-accent) !important; }
+${BODY} a { color: var(--r-link) !important; }
 
 /* ---------- header: the step bar sits on the page ground under the banner ---------- */
 ${R} ${STEPS_SEC} {
@@ -66,8 +73,10 @@ ${R}.bbg-reg--hide-old ${STEPS_SEC} [data-cvent-id=containerParent]:has(.event-t
    header section once nothing visible is left in it. Cvent's bar stays in the
    page, so the widget can read it and pass clicks through to it. */
 ${R}.bbg-reg--own-steps :is([class*=ProgressBar__wrapper], [data-cvent-id*=ProgressBar-widget]) { display: none !important; }
-/* Newer Cvent step bar placed in the nav section: drop the empty column/row it leaves. */
+/* Cvent step bar placed in the nav section: hide only the bar's own row, never
+   the nav (the nav row holds nav / img / navigation and is kept). */
 ${R}.bbg-reg--own-steps [class*=Grid__row]:has(> [class*=Grid__column] > [data-cvent-id*=ProgressBar-widget]):not(:has(nav, img, [class*=navigation])) { display: none !important; }
+${R}.bbg-reg--own-steps ${NAV_SEC} [class*=Grid__row]:has([class*=ProgressBar__wrapper]):not(:has(nav, img, [class*=navigation], [class*=WebsiteNavigator])) { display: none !important; }
 /* Cvent's read-only "Registration Type · Apply to attend" line (one type only). */
 ${R}.bbg-reg--hide-regtype [data-cvent-id^=widget-RegistrationType]:has([data-cvent-id=read-only-view]) { display: none !important; }
 ${R}.bbg-reg--own-steps.bbg-reg--hide-old ${STEPS_SEC}:not(:has([data-bbg-reg])) { display: none !important; }
@@ -129,7 +138,7 @@ ${R} [class*=ProgressBar__before] {
   width: 30px !important; height: 30px !important; line-height: 27px !important; box-sizing: border-box !important;
   border: 1.5px solid var(--r-ctl) !important; background: var(--r-bg) !important; color: var(--r-muted) !important;
   font-family: ${FONT} !important; font-size: 13px !important; font-weight: 700 !important; box-shadow: none !important; }
-${R} [class*=ProgressBar__progressbar] li[aria-current=step] [class*=ProgressBar__before] { background: var(--r-accent) !important; border-color: var(--r-accent) !important; color: var(--r-primary-ink) !important; }
+${R} [class*=ProgressBar__progressbar] li[aria-current=step] [class*=ProgressBar__before] { background: var(--r-accent) !important; border-color: var(--r-accent) !important; color: var(--r-accent-ink) !important; }
 ${R} [class*=ProgressBar__progressbar] li:has(~ li[aria-current=step]) [class*=ProgressBar__before] { background: var(--r-ink) !important; border-color: var(--r-ink) !important; color: var(--r-bg) !important; }
 ${R} [class*=ProgressBar__progressText] { margin-top: 8px !important; font-family: ${FONT} !important; font-size: 14px !important; font-weight: 600 !important; letter-spacing: 0 !important; text-transform: none !important; color: var(--r-muted) !important; }
 ${R} [class*=ProgressBar__progressbar] li[aria-current=step] [class*=ProgressBar__progressText],
@@ -285,6 +294,10 @@ ${BODY} fieldset { border: 0 !important; margin: 0 !important; padding: 0 !impor
 ${BODY} fieldset > legend { float: left !important; width: 100% !important; }
 ${BODY} fieldset > legend + * { clear: both; }
 ${BODY} :is([data-cvent-id=attendeeListOptIn], [data-cvent-id*=AttendeeListOptIn-widget]), ${BODY} fieldset[class*=Forms__element] { margin-top: 22px !important; padding-top: 22px !important; border-top: 1px solid var(--r-hair) !important; }
+/* State / region before Country has an answer (the widget marks it). */
+${R} [data-bbg-state-wait] { display: none !important; }
+/* Cvent pads the opt-in wrapper 15px on each side; every other question sits flush. */
+${BODY} [data-cvent-id=attendeeListOptIn] { padding-left: 0 !important; padding-right: 0 !important; }
 /* A fieldset sits in a Forms__container that already has the 22px above it
    (Cvent's flex rows don't collapse the two margins): mockup, 22px to the rule. */
 ${BODY} [class*=Forms__container] > fieldset[class*=Forms__element] { margin-top: 0 !important; }
@@ -341,7 +354,7 @@ ${BODY} [class*=RegistrationSummary__attendee] > h4::before { content: var(--bbg
 ${BODY} [class*=RegistrationSummary__attendee] > [class*=fieldStyles]::before { content: var(--bbg-sum-email, "Work email"); }
 ${BODY} [class*=RegistrationSummary__attendee] > div:has(> [class*=summaryHeaderActionLinks]) { position: absolute !important; top: 15px; right: 22px; margin: 0 !important; padding: 0 !important; }
 ${BODY} [class*=RegistrationSummary__attendee] [class*=summaryHeaderActionLinks] {
-  padding: 0 !important; cursor: pointer; font-family: ${FONT} !important; font-size: 14px !important; line-height: 1.4 !important; font-weight: 700 !important; color: var(--r-accent) !important; text-decoration: none !important; }
+  padding: 0 !important; cursor: pointer; font-family: ${FONT} !important; font-size: 14px !important; line-height: 1.4 !important; font-weight: 700 !important; color: var(--r-link) !important; text-decoration: none !important; }
 ${BODY} [class*=RegistrationSummary__attendee] [class*=summaryHeaderActionLinks]:hover { text-decoration: underline !important; text-underline-offset: 3px; }
 /* card 2: About you (the answers) */
 ${BODY} [data-cvent-id^=widget-RegistrationSummary] [class*=RegistrationSummary__body] { margin-top: 16px !important; border: 1px solid var(--r-hair) !important; border-radius: 2px !important; background: var(--r-bg) !important; }
@@ -359,7 +372,7 @@ ${BODY} [data-bbg-sum-value] { margin-top: 2px !important; }
 /* consent line above the buttons */
 ${BODY} [data-bbg-consent] { margin-top: 20px !important; padding: 0 !important; }
 ${BODY} [data-bbg-consent][data-bbg-consent] :is(p, span, div) { max-width: 62ch; font-family: ${FONT} !important; font-size: 14px !important; line-height: 1.55 !important; color: var(--r-body) !important; text-align: left !important; }
-${BODY} [data-bbg-consent][data-bbg-consent] a { color: var(--r-accent) !important; font-weight: 600 !important; }
+${BODY} [data-bbg-consent][data-bbg-consent] a { color: var(--r-link) !important; font-weight: 600 !important; }
 @media (max-width: 600px) {
   ${BODY} [class*=RegistrationSummary__attendee] { grid-template-columns: minmax(0, 1fr); row-gap: 12px; }
   ${BODY} [class*=RegistrationSummary__attendee]::before { margin-bottom: 6px; }
@@ -392,7 +405,10 @@ ${BODY} ul[class*=ButtonGroup__buttonGroup] > li:has(> button#exit) { order: 3; 
 ${BODY} button#exit[class*=LinearNavigator__button] {
   height: auto !important; padding: 8px 4px !important; border: 0 !important; background: transparent !important;
   color: var(--r-muted) !important; font-size: 14px !important; font-weight: 600 !important; text-decoration: underline !important; text-underline-offset: 3px; }
-${BODY} :is(button, a, input):focus-visible { outline: 3px solid var(--r-focus) !important; outline-offset: 2px !important; }
+/* Not the dropdown's own search input: it is a few px wide inside the
+   control, so an outline on it draws two blue bars. The control shows focus. */
+${BODY} :is(button, a, input):not([class*=-control] input, [data-cvent-id=async-dropdown-wrapper] input):focus-visible { outline: 3px solid var(--r-focus) !important; outline-offset: 2px !important; }
+${BODY} :is([class*=-control], [data-cvent-id=async-dropdown-wrapper]) input:is(:focus, :focus-visible, .focus-visible) { outline: none !important; box-shadow: none !important; }
 
 @media (max-width: 767px) {
   ${R} [class*=ProgressBar__wrapper] { padding: 16px 20px !important; }
