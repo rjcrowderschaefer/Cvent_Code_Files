@@ -24,7 +24,7 @@
 import { FONT_STACK, TYPE_SCALE, ensureBrandFont } from "./type-scale.js";
 
 // Shown in the page widgets' editor footer, so a stale copy in Cvent is visible.
-export const PAGE_KIT_BUILD = "pagekit-2026-10-02a"; // + planner contact proxy, scroll hold
+export const PAGE_KIT_BUILD = "pagekit-2026-10-02b"; // + planner contact proxy, scroll hold
 
 // ---------------------------------------------------------------------------
 // Tokens
@@ -379,9 +379,116 @@ export function findPlannerContact(selector = "") {
     PLANNER_TEXT.test(el.textContent || "") && !el.closest("[class*='WebsiteNavigator'], nav")) || null;
 }
 
+// The Contact Planner pop-up, Flagship treatment. Cvent renders it in the
+// page (outside our shadow roots) with an orange header bar, a centred 384px
+// form and a pill button; this restyles it: white panel with an amber edge,
+// big title, recipient line, full-width fields like the registration form,
+// blue square Send. Injected once per page by wirePlannerContact().
+const PM_FONT = 'AvenirNextPForBBG, AvenirNextforBBG, "Avenir Next", Helvetica, Arial, sans-serif';
+export const PLANNER_MODAL_CSS = `
+[class*=Dialog__dragContainer]:has([class*=ContactPlannerStyle__dialogContainer]) {
+  width: min(600px, calc(100vw - 32px)) !important; max-width: none !important;
+  border-top: 3px solid #FF9D00 !important; border-radius: 2px !important; overflow: hidden !important;
+  background: #FFFFFF !important; box-shadow: 0 30px 80px rgba(0,0,0,.40) !important; }
+[class*=Dialog__dragContainer]:has([class*=ContactPlannerStyle__dialogContainer]) [class*=Dialog__content] { width: 100% !important; max-width: 100% !important; background: #FFFFFF !important; }
+[class*=ContactPlannerStyle__dialogContainer] { width: 100% !important; max-width: 100% !important; }
+[class*=ContactPlannerStyle__dialogContainer], [class*=ContactPlannerStyle__dialogContainer] :is(h3, div, span, label, input, textarea, button) {
+  font-family: ${PM_FONT} !important; }
+/* header: Cvent paints it orange inline */
+[class*=ContactPlannerStyle__dialogContainer] > div:first-child,
+[class*=ContactPlannerStyle__dialogContainer] #dialogHeader {
+  background: #FFFFFF !important; color: #141416 !important; position: relative !important; }
+[class*=ContactPlannerStyle__dialogContainer] #dialogHeader { padding: 36px 88px 0 44px !important; min-height: 0 !important; }
+[class*=ContactPlannerStyle__dialogContainer] #dialogHeader h3 {
+  margin: 0 !important; padding: 0 !important; color: #141416 !important; font-size: 30px !important; line-height: 1.15 !important;
+  font-weight: 700 !important; letter-spacing: -0.02em !important; text-align: left !important; }
+[class*=ContactPlannerStyle__closeDialog] {
+  position: absolute !important; top: 18px !important; right: 18px !important; width: 44px !important; height: 44px !important;
+  display: flex !important; align-items: center !important; justify-content: center !important; border-radius: 2px !important;
+  cursor: pointer !important; transition: background-color .15s ease !important; }
+[class*=ContactPlannerStyle__closeDialog]:hover { background: #F5F5F3 !important; }
+[class*=ContactPlannerStyle__closeDialog] svg { width: 18px !important; height: 18px !important; fill: #141416 !important; color: #141416 !important; }
+[class*=ContactPlannerStyle__closeDialog] path { fill: currentColor !important; }
+[class*=ContactPlannerStyle__closeDialog]:hover svg { fill: #0062DD !important; color: #0062DD !important; }
+/* body */
+[class*=ContactPlannerStyle__panel] { background: #FFFFFF !important; padding: 0 44px 44px !important; }
+[class*=ContactPlannerStyle__panel] > div { width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important;
+  display: flex !important; flex-direction: column !important; align-items: stretch !important; }
+[class*=ContactPlannerStyle__element] { width: 100% !important; max-width: none !important; margin: 0 0 22px !important; padding: 0 !important; text-align: left !important; }
+/* recipient: who the message goes to */
+[class*=ContactPlannerStyle__contactInfo] {
+  margin: 10px 0 28px !important; padding: 0 0 24px !important; border-bottom: 1px solid #E4E4E0 !important;
+  display: flex !important; flex-wrap: wrap !important; align-items: baseline !important; gap: 0 8px !important; }
+[class*=ContactPlannerStyle__contactInfo] > div { font-size: 16px !important; line-height: 1.5 !important; color: #5C5C5A !important; }
+[class*=ContactPlannerStyle__contactInfo] > div:first-child { color: #141416 !important; font-weight: 600 !important; }
+[class*=ContactPlannerStyle__contactInfo] > div + div::before { content: "·"; margin-right: 8px; color: #8A8A86; }
+/* labels + fields: the registration form's field style */
+[class*=ContactPlannerStyle__element] label { display: block !important; margin: 0 0 8px !important; padding: 0 !important;
+  font-size: 15px !important; line-height: 1.3 !important; font-weight: 600 !important; color: #141416 !important; }
+[class*=ContactPlannerStyle__element] [class*=QuestionText__required] { position: static !important; left: auto !important; width: auto !important;
+  margin: 0 4px 0 0 !important; color: #B42318 !important; }
+[class*=ContactPlannerStyle__element] [class*=Forms__inputContainer], [class*=ContactPlannerStyle__element] [class*=Forms__textboxContainer],
+[class*=ContactPlannerStyle__element] [class*=Forms__inputContainer] > span { display: block !important; width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important; }
+/* Specific enough to beat the site's ".custom-css-scope input[data-cvent-id=input]" */
+[class*=ContactPlannerStyle__dialogContainer] [class*=ContactPlannerStyle__element] input[class*=ContactPlannerStyle__textbox], [class*=ContactPlannerStyle__dialogContainer] [class*=ContactPlannerStyle__element] textarea[class*=ContactPlannerStyle__textarea] {
+  box-sizing: border-box !important; width: 100% !important; max-width: none !important; margin: 0 !important;
+  border: 1px solid #8A8A86 !important; border-radius: 2px !important; background: #FFFFFF !important; box-shadow: none !important; outline: none !important;
+  color: #141416 !important; font-size: 16px !important; line-height: 1.5 !important; }
+[class*=ContactPlannerStyle__dialogContainer] [class*=ContactPlannerStyle__element] input[class*=ContactPlannerStyle__textbox] { height: 48px !important; padding: 0 14px !important; }
+[class*=ContactPlannerStyle__dialogContainer] [class*=ContactPlannerStyle__element] textarea[class*=ContactPlannerStyle__textarea] { min-height: 148px !important; padding: 12px 14px !important; resize: vertical !important; }
+[class*=ContactPlannerStyle__dialogContainer] [class*=ContactPlannerStyle__element] :is(input, textarea)[class*=TextInput__error], [class*=ContactPlannerStyle__dialogContainer] [class*=ContactPlannerStyle__element] :is(input, textarea)[aria-invalid=true] {
+  border-color: #B42318 !important; box-shadow: none !important; }
+[class*=ContactPlannerStyle__dialogContainer] [class*=ContactPlannerStyle__element] :is(input, textarea)[class*=ContactPlannerStyle__]:focus {
+  border-color: #2B6CE8 !important; box-shadow: 0 0 0 3px rgba(43,108,232,.22) !important; }
+[class*=ContactPlannerStyle__element] [class*=Forms__errorText] {
+  margin: 8px 0 0 !important; padding: 0 !important; font-size: 14px !important; line-height: 1.4 !important; color: #B42318 !important; }
+[class*=ContactPlannerStyle__element] [class*=Forms__errorContainer] { margin: 0 !important; padding: 0 !important; background: transparent !important; }
+/* Send: blue, square */
+[class*=ContactPlanner__submitButton] {
+  align-self: flex-start !important; margin: 6px 0 0 !important; height: 48px !important; min-width: 0 !important; padding: 0 32px !important;
+  border: 0 !important; border-radius: 2px !important; background: #0062DD !important; color: #FFFFFF !important;
+  font-size: 16px !important; font-weight: 600 !important; letter-spacing: 0 !important; cursor: pointer !important; box-shadow: none !important;
+  transition: background-color .15s ease !important; }
+[class*=ContactPlanner__submitButton]:hover { background: #0050B5 !important; }
+[class*=ContactPlanner__submitButton]:focus-visible { outline: 3px solid rgba(43,108,232,.45) !important; outline-offset: 2px !important; }
+@media (max-width: 600px) {
+  [class*=ContactPlannerStyle__dialogContainer] #dialogHeader { padding: 28px 72px 0 24px !important; }
+  [class*=ContactPlannerStyle__dialogContainer] #dialogHeader h3 { font-size: 24px !important; }
+  [class*=ContactPlannerStyle__closeDialog] { top: 12px !important; right: 12px !important; }
+  [class*=ContactPlannerStyle__panel] { padding: 0 24px 28px !important; }
+  [class*=ContactPlanner__submitButton] { align-self: stretch !important; width: 100% !important; }
+}
+/* The native widget's own "Contact Us" button, once our links stand in for it. */
+[data-bbg-planner-src] { position: absolute !important; width: 1px !important; height: 1px !important; margin: -1px !important; padding: 0 !important;
+  overflow: hidden !important; clip: rect(0 0 0 0) !important; clip-path: inset(50%) !important; white-space: nowrap !important; border: 0 !important; }
+`;
+function ensurePlannerModalCss() {
+  if (document.getElementById("bbg-planner-modal-css")) return;
+  const st = document.createElement("style");
+  st.id = "bbg-planner-modal-css";
+  st.textContent = PLANNER_MODAL_CSS;
+  document.head.append(st);
+}
+// Hide the native widget's button (its Site Designer column) when the page
+// has our contact links: the links open the same pop-up. Only a column that
+// holds nothing but that one button is hidden.
+function hidePlannerSource(native) {
+  const col = native?.closest?.("[id^='widget:']");
+  if (!col || col.hasAttribute("data-bbg-planner-src")) return;
+  if (col.querySelectorAll("button, a, input").length !== 1) return;
+  col.setAttribute("data-bbg-planner-src", "");
+}
+
 // Wire every [data-planner-contact] link / button inside `root`. Returns a cleanup fn.
 export function wirePlannerContact(root, { selector = "", enabled = true } = {}) {
   if (!root || !enabled) return () => {};
+  ensurePlannerModalCss();
+  if (root.querySelector("[data-planner-contact]")) {
+    // Cvent may draw the native widget after us: look for a few seconds.
+    let n = 0;
+    const look = () => { const nat = findPlannerContact(selector); if (nat) hidePlannerSource(nat); else if (++n < 10) setTimeout(look, 500); };
+    look();
+  }
   const onClick = (e) => {
     const el = e.target.closest?.("[data-planner-contact]");
     if (!el || !root.contains(el)) return;

@@ -7,7 +7,7 @@
 // Shared building blocks: page-kit.js. NOTE: include the file extension in imports.
 import { PageWidget, PAGE_BASE_DEFAULTS, mergePageConfig, TOKENS, esc, eyebrow, safeUrl, button, paragraphs, findPlannerContact } from "./page-kit.js";
 
-export const BUILD = "contact-2026-10-02b";
+export const BUILD = "contact-2026-10-02c";
 
 export const SECTION_LABELS = {
   banner: "Page banner",

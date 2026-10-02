@@ -101,6 +101,11 @@ the speakers.
   it's on the page, and the message goes to the Event Planner email in the
   event details. Without the widget they fall back to mailto, or to the
   Contact page. Phone links stay `tel:`.
+- **Contact Planner pop-up, Flagship treatment** (`PLANNER_MODAL_CSS` in
+  `page-kit.js`, injected by our widgets): white panel, 3px amber top edge,
+  30px title, recipient line, full-width 48px fields like the registration
+  form, red errors, blue square Send. The native widget's own "Contact Us"
+  button is hidden (visually, still clickable) once our links are on the page.
 - **Request-to-attend copy is soft**: "Places are limited, so our team
   confirms each request personally." Avoid "reviewed", "decision" and
   "under review" on the site and in the emails ("Status: Registration Pending").
