@@ -1,5 +1,10 @@
 """Build Cvent-ready HTML for the six Flagship (AIF NY) emails from shared blocks.
 
+NOTE (2026-10-02): the files in out/ were then edited by hand (RJ, v2) and are
+now the source of truth. This script no longer matches them; running it writes
+to out-generated/ so it can never overwrite the hand-edited files. Make copy
+changes in out/ directly.
+
 History: built 2026-09-29 (AIF NY email mockups chat), data tags verified in
 Cvent's Insert Data Tags picker; every event detail comes from a data tag.
 2026-10-02: status bars read "Status: Registration …" ("Under review" removed).
@@ -415,6 +420,8 @@ FILES = {
     "06-event-reminder-1-week.html": reminder7,
 }
 if __name__ == "__main__":
+    GEN = OUT.parent / "out-generated"   # never out/: those are hand-edited now
+    GEN.mkdir(exist_ok=True)
     for name, html in FILES.items():
-        (OUT / name).write_text(html, encoding="utf-8")
+        (GEN / name).write_text(html, encoding="utf-8")
         print(name, len(html))
