@@ -7,7 +7,7 @@
 // Shared building blocks: page-kit.js. NOTE: include the file extension in imports.
 import { PageWidget, PAGE_BASE_DEFAULTS, mergePageConfig, TOKENS, esc, eyebrow, safeUrl, button, paragraphs, findPlannerContact } from "./page-kit.js";
 
-export const BUILD = "contact-2026-10-02c";
+export const BUILD = "contact-2026-10-02d";
 
 export const SECTION_LABELS = {
   banner: "Page banner",
@@ -30,7 +30,7 @@ export const CONTACT_DEFAULTS = {
   cards: {
     show: true,
     items: [
-      card({ eyebrow: "Event team", heading: "General inquiries", body: "Questions about the program, registration, travel or accessibility.", buttonLabel: "Contact the event team" }),
+      card({ eyebrow: "Event team", heading: "General inquiries", body: "Questions about the program, registration, travel or accessibility.", buttonLabel: "Contact the Bloomberg Team" }),
       card({ eyebrow: "Bloomberg", heading: "Talk to an account manager", body: "Speak directly with a Bloomberg account manager, or arrange a personalized demo.", buttonLabel: "Schedule a conversation", style: "secondary" }),
       card(),
     ],
@@ -48,7 +48,11 @@ export const CONTACT_DEFAULTS = {
 };
 
 export function mergeContactConfig(incoming = {}) {
-  return mergePageConfig(CONTACT_DEFAULTS, incoming, { lists: { "cards.items": 3, "faq.items": 8 } });
+  const out = mergePageConfig(CONTACT_DEFAULTS, incoming, { lists: { "cards.items": 3, "faq.items": 8 } });
+  // Earlier default label, saved into existing copies by the editor: update it.
+  const first = out.cards.items[0];
+  if (first && first.buttonLabel === "Contact the event team") first.buttonLabel = CONTACT_DEFAULTS.cards.items[0].buttonLabel;
+  return out;
 }
 
 export default class extends PageWidget {

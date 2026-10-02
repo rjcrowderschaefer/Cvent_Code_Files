@@ -22,7 +22,7 @@ import {
 } from "./page-kit.js";
 import { REG_FORM_CSS, regFormCss } from "./reg-form-css.js";
 
-export const BUILD = "reg-2026-10-02a";
+export const BUILD = "reg-2026-10-02b";
 
 export const REG_DEFAULTS = {
   mode: "banner",            // "banner" | "panel" | "confirmation"
@@ -77,7 +77,7 @@ export const REG_DEFAULTS = {
     nextHeading: "What happens next",
     nextSteps: "Share a few details. It takes about two minutes.\nPlaces are limited, so our team confirms each request personally.\nYou’ll hear from us by email soon, with your event details once your place is confirmed.",
     contactText: "Questions?",
-    contactLabel: "Contact the Bloomberg team",
+    contactLabel: "Contact the Bloomberg Team",
     contactUrl: "",          // a page link or mailto:; blank = Cvent's Contact Planner pop-up, else the site's "Contact" menu item
     plannerContactSelector: "", // advanced: the Contact Planner widget's button, if not found automatically
   },
@@ -89,7 +89,7 @@ export const REG_DEFAULTS = {
     steps: "Request received | Today\nConfirming places | We aim to reply within a few business days.\nYour event details | Once your place is confirmed, you’ll get your confirmation and a calendar invitation.",
     primaryLabel: "Explore the program",
     primaryUrl: "",
-    secondaryLabel: "Contact the event team",
+    secondaryLabel: "Contact the Bloomberg Team",
     secondaryUrl: "",
   },
   translations: {},
@@ -98,7 +98,8 @@ export const REG_DEFAULTS = {
 export function mergeRegConfig(incoming = {}) {
   const out = mergePageConfig(REG_DEFAULTS, incoming);
   // Earlier default, saved into existing copies by the editor: update it.
-  if (out.panel.contactLabel === "Contact the event team") out.panel.contactLabel = REG_DEFAULTS.panel.contactLabel;
+  if (["Contact the event team", "Contact the Bloomberg team"].includes(out.panel.contactLabel)) out.panel.contactLabel = REG_DEFAULTS.panel.contactLabel;
+  if (out.confirmation.secondaryLabel === "Contact the event team") out.confirmation.secondaryLabel = REG_DEFAULTS.confirmation.secondaryLabel;
   // Softer request-to-attend copy (2026-10-02): saved copies of the old
   // defaults follow the new ones; edited copy is left alone.
   const OLD = {
