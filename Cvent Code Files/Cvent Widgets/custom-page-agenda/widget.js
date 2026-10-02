@@ -21,7 +21,7 @@ import {
 const CARD_TAG = "bbg-agenda-speaker-card";
 // Bump on every change. Shown in the editor footer and as data-build on the
 // widget root, so a stale Cvent/CDN copy is obvious (Playbook §0).
-export const BUILD = "agenda-2026-10-02a";
+export const BUILD = "agenda-2026-10-02b";
 
 export const SECTION_LABELS = {
   banner: "Page banner",
@@ -118,8 +118,11 @@ export default class extends PageWidget {
   get build() { return BUILD; }
   merge(cfg) { return mergeAgendaConfig(cfg); }
 
-  bannerDefaults({ lang, facts, sessions, eventTz }) {
-    const n = countSessions(lang, sessions.length);
+  bannerDefaults({ cfg, lang, facts, sessions, eventTz }) {
+    // Content sessions only: breaks, meals, registration and networking
+    // slots are left out of the count (same rule as the break rows).
+    const breakCats = String(cfg.program.breakCategories || "").split(",").map(norm).filter(Boolean);
+    const n = countSessions(lang, sessions.filter((s) => !isBreakSession(s, breakCats)).length);
     const tz = tzName(sessions[0]?.startDateTime || facts.startIso, eventTz, "longGeneric") || facts.tzLong;
     const intro = !sessions.length ? "" : facts.venueName
       ? fixed(lang, "agendaIntro", { n, place: facts.venueName, tz })
@@ -214,7 +217,7 @@ export default class extends PageWidget {
       const range = `${fmtTimeRange(first.startDateTime, last, eventTz)} ${tzName(first.startDateTime, eventTz, "shortGeneric")}`.trim();
       return `<div class="ag-day-text">
           <h2 class="ag-day-h">${esc(fmtDate(first.startDateTime, eventTz, lang, { weekday: "long", month: "long", day: "numeric" }))}</h2>
-          <p class="ag-day-meta" data-day-meta>${esc(countSessions(lang, d.rows.length))} · ${esc(range)}</p>
+          <p class="ag-day-meta" data-day-meta>${esc(countSessions(lang, d.rows.filter((r) => !r.isBreak).length))} · ${esc(range)}</p>
         </div>`;
     };
     const single = days.length === 1;
