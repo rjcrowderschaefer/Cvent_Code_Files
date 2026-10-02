@@ -22,12 +22,13 @@ import {
   plannerText, fmtTime, fmtTimeRange, fmtDate, tzName, eyebrow, button, arrowLink,
   sectionHead, regBand, kitCss, applyFullBleed, registerButton, wireRegister, cleanLabel, isExternal, isHiddenSession,
   closingBandCopy, eventFacts, pageCardBase, pageCardTypography, LABEL_PX,
+  holdHeight, trackScroll, noteConfig, restoreScroll,
 } from "./page-kit.js";
 
 const CARD_TAG = "bbg-home-speaker-card";
 // Bump on every change. Shown in the editor footer and as data-build on the
 // widget root, so a stale Cvent/CDN copy is obvious (Playbook §0).
-export const BUILD = "home-2026-10-01c";
+export const BUILD = "home-2026-10-02a";
 
 // ---------------------------------------------------------------------------
 // Defaults (exported for editor.js). Copy defaults are GENERIC on purpose:
@@ -94,6 +95,8 @@ export const HOME_DEFAULTS = {
     modalEyebrowText: "Speaker",
     showSessions: true,
     sessionsHeaderText: "Sessions",
+    showModeratorLabel: true,   // "Moderator" above the name, as on the Speakers page
+    moderatorCategories: "Moderator, Moderators",
   },
   about: {
     show: true,
@@ -101,7 +104,9 @@ export const HOME_DEFAULTS = {
     heading: "",
     body: "",             // blank = the Cvent event description
     listEyebrow: "",
-    listItems: "",        // one per line
+    listStyle: "numbered", // "numbered" (01, 02 …) | "bullets" | "icons" (one per item)
+    items: [],            // [{ title, description, icon }]; a description makes the item expandable
+    listItems: "",        // LEGACY: one item per line (migrated into items by mergeHomeConfig)
     seeded: false,        // editor has copied the Cvent description into the fields once
   },
   themes: {
@@ -112,10 +117,11 @@ export const HOME_DEFAULTS = {
     bgFocalX: 50,         // focal point, % from left
     bgFocalY: 50,         // focal point, % from top
     bgOverlay: 70,        // darkening over the photo, 0–90 % (text must stay readable)
+    listStyle: "numbered", // card marker: "numbered" (01, 02 …) | "bullets" | "icons"
     items: [
-      { kicker: "", title: "", body: "" },
-      { kicker: "", title: "", body: "" },
-      { kicker: "", title: "", body: "" },
+      { kicker: "", title: "", body: "", icon: "" },
+      { kicker: "", title: "", body: "", icon: "" },
+      { kicker: "", title: "", body: "", icon: "" },
     ],
   },
   program: {
@@ -170,6 +176,12 @@ export function mergeHomeConfig(incoming = {}) {
     const inc = Array.isArray(incoming[k]?.items) ? incoming[k].items : [];
     out[k].items = base.map((b, i) => ({ ...b, ...(inc[i] || {}) }));
   });
+  // About list: structured items. Older configs kept one item per line in
+  // listItems; turn those into items once (titles only, no descriptions).
+  const inAbout = incoming.about || {};
+  out.about.items = Array.isArray(inAbout.items)
+    ? inAbout.items.map((it) => ({ title: "", description: "", icon: "", ...(typeof it === "string" ? { title: it } : it || {}) }))
+    : lines(inAbout.listItems || "").map((title) => ({ title, description: "", icon: "" }));
   const seen = new Set();
   let saved = Array.isArray(incoming.order) ? incoming.order : [];
   if (LEGACY_ORDERS.some((o) => o.length === saved.length && o.every((k, i) => k === saved[i]))) saved = d.order;
@@ -177,6 +189,59 @@ export function mergeHomeConfig(incoming = {}) {
   out.translations = { ...(incoming.translations || {}) };
   return out;
 }
+
+// ---------------------------------------------------------------------------
+// List markers (About list + Themes cards): numbers, bullets or an icon per
+// item. Icons are inline stroke SVGs (24 × 24, currentColor), so they follow
+// the text colour of where they sit and need no extra files.
+// ---------------------------------------------------------------------------
+export const LIST_STYLES = [["numbered", "Numbered (01, 02, 03)"], ["bullets", "Bullets"], ["icons", "An icon for each item"]];
+export const ICONS = {
+  check: ["Check", '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16 9.5"/>'],
+  chart: ["Line chart", '<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-7"/>'],
+  bars: ["Bar chart", '<path d="M3 21h18M6 21V11M11 21V5M16 21v-7M20 21v-4"/>'],
+  trend: ["Trend up", '<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>'],
+  globe: ["Globe", '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/>'],
+  bank: ["Bank", '<path d="M3 9.5L12 4l9 5.5M4 21h16M6 10.5v7.5M10 10.5v7.5M14 10.5v7.5M18 10.5v7.5"/>'],
+  coins: ["Coins", '<ellipse cx="9" cy="6.5" rx="6" ry="2.5"/><path d="M3 6.5V11c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V6.5"/><path d="M9 13.5V18c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-4.5c0-1.2-2-2.2-4.8-2.4"/>'],
+  shield: ["Shield", '<path d="M12 3l8 3v6c0 4.6-3.4 8.3-8 9-4.6-.7-8-4.4-8-9V6z"/><path d="M9 12l2.2 2.2L15.5 10"/>'],
+  lock: ["Lock", '<rect x="5" y="11" width="14" height="10" rx="1.5"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/>'],
+  scale: ["Scales", '<path d="M12 4v17M8 21h8M5 7h14M12 4a1 1 0 1 0 0 .01"/><path d="M5 7l-3 6.5a3 3 0 0 0 6 0zM19 7l-3 6.5a3 3 0 0 0 6 0z"/>'],
+  bulb: ["Light bulb", '<path d="M9.5 18h5M10.5 21h3"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.5 1.1 1.3 1.1 2.1V16h5v-.1c0-.8.4-1.6 1.1-2.1A6 6 0 0 0 12 3z"/>'],
+  chip: ["Chip / AI", '<rect x="6.5" y="6.5" width="11" height="11" rx="1.5"/><path d="M10 10h4v4h-4zM9.5 2.5v4M14.5 2.5v4M9.5 17.5v4M14.5 17.5v4M2.5 9.5h4M2.5 14.5h4M17.5 9.5h4M17.5 14.5h4"/>'],
+  network: ["Network", '<circle cx="12" cy="5" r="2.2"/><circle cx="5" cy="19" r="2.2"/><circle cx="19" cy="19" r="2.2"/><path d="M12 7.2V12M12 12l-5.4 5.4M12 12l5.4 5.4"/>'],
+  users: ["People", '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.4 3.3-5.5 6.5-5.5s5.9 2.1 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c1.9.7 3.2 2.5 3.5 5.2"/>'],
+  briefcase: ["Briefcase", '<rect x="3" y="7" width="18" height="13" rx="1.5"/><path d="M9 7V4.5h6V7M3 12.5h18"/>'],
+  target: ["Target", '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>'],
+  bolt: ["Lightning", '<path d="M13 2.5L4.5 13.5H11l-1 8 8.5-11H12z"/>'],
+  leaf: ["Leaf", '<path d="M5 19C5 11 10 5 20 4c-1 10-7 15-15 15z"/><path d="M5 19l7.5-7.5"/>'],
+  doc: ["Document", '<path d="M6 3h8.5L19 7.5V21H6z"/><path d="M14 3v5h5M9 12.5h7M9 16.5h7"/>'],
+  mic: ["Microphone", '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/>'],
+  calendar: ["Calendar", '<rect x="3" y="5" width="18" height="16" rx="1.5"/><path d="M3 10h18M8 3v4M16 3v4"/>'],
+};
+export const iconSvg = (name, cls = "mk-ico") => {
+  const d = (ICONS[name] || ICONS.check)[1];
+  return `<svg class="${cls}" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${d}</svg>`;
+};
+const listStyleOf = (v) => (LIST_STYLES.some(([k]) => k === v) ? v : "numbered");
+function listMarker(style, i, icon) {
+  if (style === "icons") return `<span class="mk mk--icon">${iconSvg(icon)}</span>`;
+  if (style === "bullets") return '<span class="mk mk--dot" aria-hidden="true"></span>';
+  return `<span class="mk mk--num" aria-hidden="true">${String(i + 1).padStart(2, "0")}</span>`;
+}
+
+// Speakers heading: always one line. 24 characters fit on one line at every
+// breakpoint (42px desktop down to 1025px wide with the carousel arrows, 32px
+// tablet down to 601px, 28px phone, scaled down slightly under ~430px). The
+// editor caps the field at this length; anything longer that is already saved
+// (or a long translation) is cut with an ellipsis and kept whole in a tooltip.
+export const SPEAKER_HEADING_MAX = 24;
+const spkTitle = (h) => (String(h || "").length > SPEAKER_HEADING_MAX ? ` title="${esc(h)}"` : "");
+
+// Same rule as the Speakers page widget: the speaker's Cvent category.
+const normCat = (v) => String(v ?? "").trim().toLowerCase();
+const isModerator = (sp, s) => String(s.moderatorCategories || "").split(",").map(normCat).filter(Boolean)
+  .includes(normCat(sp?.category?.name || sp?.categoryName || ""));
 
 // Split the Cvent event description into the About section's parts, so the
 // section renders in its two-column layout out of the box and the editor can
@@ -249,12 +314,15 @@ export default class extends HTMLElement {
     root.dataset.build = BUILD;
     this.shadowRoot.append(root);
     await this._renderInto(root);
+    restoreScroll(this, "home", this.configuration);
+    this._scrollCleanup = trackScroll(this, "home", this.configuration);
     // Re-render when the attendee switches language (Cvent updates <html lang>).
     this._langObserver = new MutationObserver(() => this._rerender());
     this._langObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
   }
 
   disconnectedCallback() {
+    this._scrollCleanup?.();
     this._stopCountdown();
     this._carouselCleanup?.();
     this._bleedCleanup?.();
@@ -266,6 +334,7 @@ export default class extends HTMLElement {
 
   onConfigurationUpdate(newConfig) {
     this.configuration = newConfig || {};
+    noteConfig(this, this.configuration);
     this._rerender();
   }
 
@@ -328,11 +397,14 @@ export default class extends HTMLElement {
   async _renderInto(root) {
     const seq = ++this._renderSeq;
     const cfg = mergeHomeConfig(this.configuration || {});
-    this._stopCountdown();
-    root.innerHTML = `<style>${kitCss()}${this._css(cfg)}</style><p class="pk-sr" role="status">${esc(fixed("en", "loading"))}</p>`;
+    // First render only: an editor change keeps the old content on screen
+    // until the new markup is ready, so the page does not jump to the top.
+    if (!root.childElementCount) root.innerHTML = `<style>${kitCss()}${this._css(cfg)}</style><p class="pk-sr" role="status">${esc(fixed("en", "loading"))}</p>`;
 
     const data = await this._loadData();
     if (seq !== this._renderSeq) return; // a newer render started meanwhile
+    this._stopCountdown();
+    const release = holdHeight(root);
 
     const lang = resolveLang(data.eventInfo);
     const ctx = { cfg, lang, ...data, facts: this._eventFacts(data, lang) };
@@ -375,6 +447,7 @@ export default class extends HTMLElement {
     this._carouselCleanup = null;
     this._mountSpeakers(root, ctx);
     this._startCountdown(root, ctx);
+    release();
   }
 
   // ---- derived event facts (hero line, facts strip, CTA) -------------------
@@ -570,7 +643,7 @@ export default class extends HTMLElement {
       return `
     <section class="pk-section pk-bleed pk-ground-white spk-sec--carousel" aria-labelledby="home-speakers-h">
       <div class="pk-inner">
-        <div class="pk-head">${sectionHead({ eyebrowText: P("speakers", "eyebrow", s.eyebrow), heading: P("speakers", "heading", s.heading) }).replace("<h2 ", '<h2 id="home-speakers-h" ')}${arrows}</div>
+        <div class="pk-head">${sectionHead({ eyebrowText: P("speakers", "eyebrow", s.eyebrow), heading: P("speakers", "heading", s.heading) }).replace('<h2 class="pk-h2"', `<h2 id="home-speakers-h" class="pk-h2 spk-h"${spkTitle(P("speakers", "heading", s.heading))}`)}${arrows}</div>
         <ul class="spk-grid spk-track" id="home-spk-track" role="list" data-speakers data-carousel></ul>
       </div>
     </section>`;
@@ -579,7 +652,7 @@ export default class extends HTMLElement {
     return `
     <section class="pk-section pk-bleed pk-ground-white" aria-labelledby="home-speakers-h">
       <div class="pk-inner">
-        ${sectionHead({ eyebrowText: P("speakers", "eyebrow", s.eyebrow), heading: P("speakers", "heading", s.heading), link }).replace("<h2 ", '<h2 id="home-speakers-h" ')}
+        ${sectionHead({ eyebrowText: P("speakers", "eyebrow", s.eyebrow), heading: P("speakers", "heading", s.heading), link }).replace('<h2 class="pk-h2"', `<h2 id="home-speakers-h" class="pk-h2 spk-h"${spkTitle(P("speakers", "heading", s.heading))}`)}
         <ul class="spk-grid" role="list" data-speakers></ul>
         ${link ? `<div class="pk-only-mobile">${link}</div>` : ""}
       </div>
@@ -652,6 +725,10 @@ export default class extends HTMLElement {
       showSessions: cfg.speakers.showSessions !== false,
       sessionsHeaderText: P("speakers", "sessionsHeaderText", cfg.speakers.sessionsHeaderText),
       moderatorLabel: fixed(lang, "moderator"),
+      // "Moderator" above the name, exactly as on the Speakers page. Every card
+      // reserves the line when any moderator is in the row, so names align.
+      cardEyebrow: cfg.speakers.showModeratorLabel !== false ? (sp) => (isModerator(sp, cfg.speakers) ? fixed(lang, "moderator") : "") : undefined,
+      cardEyebrowReserve: cfg.speakers.showModeratorLabel !== false && list.some((sp) => isModerator(sp, cfg.speakers)),
     };
     list.forEach((sp) => {
       const li = document.createElement("li");
@@ -673,10 +750,17 @@ export default class extends HTMLElement {
     // description, split into body / list / list eyebrow (deriveAbout).
     const derived = deriveAbout(eventInfo.description);
     const ownBody = P("about", "body", a.body);
-    const ownItems = P("about", "listItems", a.listItems);
+    const legacyTr = lines(P("about", "listItems", "")); // old one-per-line translation
+    const own = (a.items || [])
+      .map((it, i) => ({
+        title: P("about", `items.${i}.title`, legacyTr[i] || it.title).trim(),
+        description: P("about", `items.${i}.description`, it.description || ""),
+        icon: it.icon || "",
+      }))
+      .filter((it) => it.title);
     const bodyText = ownBody || derived.body;
-    const items = lines(ownItems || (ownBody ? "" : derived.listItems));
-    const listEyebrow = P("about", "listEyebrow", a.listEyebrow) || (ownItems ? "" : derived.listEyebrow);
+    const items = own.length ? own : ownBody ? [] : lines(derived.listItems).map((title) => ({ title, description: "", icon: "" }));
+    const listEyebrow = P("about", "listEyebrow", a.listEyebrow) || (own.length ? "" : derived.listEyebrow);
     const heading = P("about", "heading", a.heading);
     const body = paragraphs(bodyText);
     const eyebrowText = P("about", "eyebrow", a.eyebrow);
@@ -688,10 +772,22 @@ export default class extends HTMLElement {
       </div>
     </section>`;
     }
+    // Items with a description expand (FAQ-style arrows, closed on load).
+    const style = listStyleOf(a.listStyle);
+    const tag = style === "numbered" ? "ol" : "ul";
+    const row = (it, i) => {
+      const mk = listMarker(style, i, it.icon);
+      const desc = paragraphs(it.description);
+      if (!desc) return `<li class="ai"><div class="ai-row">${mk}<span class="num-t">${esc(it.title)}</span></div></li>`;
+      return `<li class="ai"><details class="ai-d">
+          <summary class="ai-row">${mk}<span class="num-t">${esc(it.title)}</span><span class="ai-arrow" aria-hidden="true"></span></summary>
+          <div class="ai-desc">${desc}</div>
+        </details></li>`;
+    };
     const list = items.length
       ? `<div class="about-list">
           ${eyebrow(listEyebrow)}
-          <ol class="num-list">${items.map((t, i) => `<li><span class="num-n" aria-hidden="true">${String(i + 1).padStart(2, "0")}</span><span class="num-t">${esc(t)}</span></li>`).join("")}</ol>
+          <${tag} class="num-list num-list--${style}">${items.map(row).join("")}</${tag}>
         </div>`
       : "";
     return `
@@ -725,8 +821,16 @@ export default class extends HTMLElement {
   _themes({ cfg, P }) {
     const t = cfg.themes;
     const items = t.items
-      .map((it, i) => ({ kicker: P("themes", `items.${i}.kicker`, it.kicker), title: P("themes", `items.${i}.title`, it.title), body: P("themes", `items.${i}.body`, it.body) }))
+      .map((it, i) => ({ kicker: P("themes", `items.${i}.kicker`, it.kicker), title: P("themes", `items.${i}.title`, it.title), body: P("themes", `items.${i}.body`, it.body), icon: it.icon || "" }))
       .filter((it) => it.title || it.body);
+    const style = listStyleOf(t.listStyle);
+    // Numbered: the kicker replaces the number ("01"); bullets / icons sit
+    // beside the kicker text, if any.
+    const themeMarker = (st, i, it) => {
+      if (st === "numbered") return `<p class="theme-kicker">${esc(it.kicker || String(i + 1).padStart(2, "0"))}</p>`;
+      const mk = st === "icons" ? `<span class="mk mk--icon">${iconSvg(it.icon)}</span>` : '<span class="mk mk--dot" aria-hidden="true"></span>';
+      return `<p class="theme-kicker theme-kicker--${st}">${mk}${it.kicker ? `<span>${esc(it.kicker)}</span>` : ""}</p>`;
+    };
     if (!items.length) {
       return `
     <section class="pk-section pk-bleed pk-ground-dark sec-has-bg" aria-label="${esc(t.heading || t.eyebrow || "Themes")}">
@@ -745,7 +849,7 @@ export default class extends HTMLElement {
         <div class="themes-grid" style="--cols:${items.length}">
           ${items.map((it, i) => `
             <article class="theme-card">
-              <p class="theme-kicker">${esc(it.kicker || String(i + 1).padStart(2, "0"))}</p>
+              ${themeMarker(style, i, it)}
               ${it.title ? `<h3 class="theme-title">${esc(it.title)}</h3>` : ""}
               ${it.body ? `<p class="theme-body">${esc(it.body)}</p>` : ""}
             </article>`).join("")}
@@ -932,6 +1036,9 @@ export default class extends HTMLElement {
     .spk-empty { margin-top: 32px; }
     /* Carousel: 4 cards in view (3 tablet, ~1.6 phone so the next one peeks) */
     .spk-sec--carousel .pk-head { align-items: flex-end; }
+    /* Heading on one line at every size (SPEAKER_HEADING_MAX characters). */
+    .spk-h { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: none; }
+    .pk-head .pk-head-text { min-width: 0; }
     .spk-track { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: calc((100% - 3 * 32px) / 4);
       overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-behavior: smooth;
       scrollbar-width: none; padding-bottom: 4px; }
@@ -950,14 +1057,36 @@ export default class extends HTMLElement {
     .about-eyebrow { grid-column: 1 / -1; }
     .about--single { grid-template-columns: minmax(0, 1fr); max-width: 820px; }
     .about-h { margin-bottom: 24px; }
-    .about-copy > p:first-child { font-size: 19px; line-height: 1.55; color: ${t.ink}; }
     .about-list .pk-eyebrow { margin-top: 10px; }
     /* No heading: the list label lines up with the first line of the body. */
     .about--no-heading .about-list .pk-eyebrow { margin-top: 0; }
     .num-list { list-style: none; margin: 0; padding: 0; border-bottom: 1px solid ${t.hair}; }
-    .num-list li { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 12px; padding: 20px 0; border-top: 1px solid ${t.hair}; }
-    .num-n { font-size: 14px; font-weight: 700; color: ${t.faint}; font-variant-numeric: tabular-nums; }
+    .num-list > li { border-top: 1px solid ${t.hair}; }
+    .ai-row { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 20px 0; }
     .num-t { font-size: 18px; line-height: 1.4; font-weight: 600; }
+    /* Markers: numbers, bullets or icons (decorative; the list itself is the
+       semantics). Bullets and icons are centred on the title's first line. */
+    .mk { display: inline-flex; align-items: center; color: ${t.ink}; }
+    .mk--num { font-size: 14px; font-weight: 700; color: ${t.faint}; font-variant-numeric: tabular-nums; }
+    .num-list--bullets .ai-row, .num-list--icons .ai-row { grid-template-columns: 28px minmax(0, 1fr); align-items: start; }
+    .num-list--bullets .ai-row { grid-template-columns: 20px minmax(0, 1fr); }
+    .mk--dot { height: 1.4em; font-size: 18px; }
+    .mk--dot::before { content: ""; width: 7px; height: 7px; background: ${t.amber}; }
+    .mk--icon { height: calc(18px * 1.4); }
+    .mk-ico { width: 24px; height: 24px; display: block; }
+    /* Expandable items: same arrows as the Contact page FAQ, closed on load. */
+    .ai-d > summary { list-style: none; cursor: pointer; }
+    .ai-d > summary::-webkit-details-marker { display: none; }
+    .ai-d > summary.ai-row { grid-template-columns: 48px minmax(0, 1fr) auto; }
+    .num-list--bullets .ai-d > summary.ai-row { grid-template-columns: 20px minmax(0, 1fr) auto; }
+    .num-list--icons .ai-d > summary.ai-row { grid-template-columns: 28px minmax(0, 1fr) auto; }
+    .ai-d > summary:hover .num-t { color: ${t.action}; }
+    .ai-arrow::before { content: "↓"; color: ${t.action}; font-weight: 700; font-size: 18px; }
+    .ai-d[open] .ai-arrow::before { content: "↑"; }
+    .ai-desc { padding: 0 32px 22px 60px; font-size: 15.5px; line-height: 1.6; color: ${t.body}; }
+    .num-list--bullets .ai-desc { padding-left: 32px; }
+    .num-list--icons .ai-desc { padding-left: 40px; }
+    .ai-desc p + p { margin-top: 10px; }
 
     /* SECTION BACKGROUND PHOTO (themes) */
     .sec-has-bg { position: relative; overflow: hidden; isolation: isolate; }
@@ -971,6 +1100,11 @@ export default class extends HTMLElement {
     .themes-grid { margin-top: 48px; display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); gap: 24px; }
     .theme-card { background: ${t.panel}; border: 1px solid ${t.onDarkHair}; border-radius: 2px; padding: 36px; display: flex; flex-direction: column; gap: 14px; }
     .theme-kicker { font-size: ${LABEL_PX.small}px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: ${t.amber}; }
+    .theme-kicker--bullets, .theme-kicker--icons { display: flex; align-items: center; gap: 12px; min-height: 20px; }
+    .theme-kicker .mk { color: ${t.amber}; }
+    .theme-kicker .mk--dot { height: auto; font-size: inherit; }
+    .theme-kicker .mk--icon { height: auto; }
+    .theme-kicker .mk-ico { width: 32px; height: 32px; }
     .theme-title { font-size: 22px; line-height: 1.25; font-weight: 700; color: #fff; }
     .theme-body { font-size: 15.5px; line-height: 1.6; color: rgba(255,255,255,.82); }
 
@@ -1071,7 +1205,15 @@ export default class extends HTMLElement {
       .spk-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 16px; margin-top: 28px; }
       .spk-track { grid-template-columns: none; grid-auto-columns: 62%; }
       .spk-sec--carousel .pk-head { flex-wrap: wrap; gap: 16px; }
+      .spk-sec--carousel .pk-head-text { flex: 1 1 100%; }
+      /* 24 characters at 0.55em need ~13.2em: shrink a little on narrow phones. */
+      .spk-h { font-size: min(28px, calc((100vw - 40px) / 13.2)); }
       .num-t { font-size: 16px; }
+      .mk--dot { font-size: 16px; }
+      .mk--icon { height: calc(16px * 1.4); }
+      .mk-ico { width: 22px; height: 22px; }
+      .ai-row { padding: 16px 0; }
+      .ai-desc { font-size: 15px; }
       .themes-grid { margin-top: 28px; gap: 16px; }
       .theme-card { padding: 28px; }
       .theme-title { font-size: 20px; }

@@ -50,7 +50,8 @@ export default class RegPagesEditor extends PageEditor {
         ] : []),
         this._text("Contact text", p.contactText, (v) => P({ contactText: v })),
         this._text("Contact link label", p.contactLabel, (v) => P({ contactLabel: v })),
-        this._text("Contact link URL", p.contactUrl, (v) => P({ contactUrl: v.trim() }), { hint: "A page link or mailto:address. Blank = the site menu’s “Contact” item." }),
+        this._text("Contact link URL", p.contactUrl, (v) => P({ contactUrl: v.trim() }), { hint: "Blank = Cvent’s Contact Planner pop-up (messages go to the Event Planner email) when that widget is on the page, else the site menu’s “Contact” page. A mailto: address also opens the pop-up when it’s there; a page link opens that page." }),
+        this._text("Contact Planner button: CSS selector (advanced)", p.plannerContactSelector, (v) => P({ plannerContactSelector: v.trim() }), { hint: "Only if the widget’s button isn’t found automatically." }),
       ]));
     }
     if (c.mode === "confirmation") {

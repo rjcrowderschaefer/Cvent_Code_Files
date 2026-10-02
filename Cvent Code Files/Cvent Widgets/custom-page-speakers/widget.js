@@ -13,7 +13,7 @@ import { FeaturedSpeaker, defaultTypography as speakerTypography } from "./Featu
 import { PageWidget, PAGE_BASE_DEFAULTS, mergePageConfig, TOKENS, esc, fixed, eyebrow, isHiddenSession, pageCardBase, pageCardTypography } from "./page-kit.js";
 
 const CARD_TAG = "bbg-speakers-page-card";
-export const BUILD = "speakers-2026-10-01c";
+export const BUILD = "speakers-2026-10-02a";
 
 export const SECTION_LABELS = {
   banner: "Page banner",

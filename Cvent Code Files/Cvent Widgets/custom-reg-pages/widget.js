@@ -17,11 +17,12 @@
 import { ensureBrandFont } from "./type-scale.js";
 import {
   TOKENS, esc, safeUrl, isExternal, lines, fixed, resolveLang, loadEventData, eventFacts,
-  kitCss, applyFullBleed, mergePageConfig, LABEL_PX,
+  kitCss, applyFullBleed, mergePageConfig, LABEL_PX, holdHeight, trackScroll, noteConfig, restoreScroll,
+  findPlannerContact, wirePlannerContact,
 } from "./page-kit.js";
 import { REG_FORM_CSS, regFormCss } from "./reg-form-css.js";
 
-export const BUILD = "reg-2026-10-01e";
+export const BUILD = "reg-2026-10-02a";
 
 export const REG_DEFAULTS = {
   mode: "banner",            // "banner" | "panel" | "confirmation"
@@ -74,17 +75,18 @@ export const REG_DEFAULTS = {
     showVenue: true,
     showNext: true,
     nextHeading: "What happens next",
-    nextSteps: "Send your request. It takes about two minutes.\nOur team reviews every request to attend.\nYou’ll get an email with our decision and your event details.",
+    nextSteps: "Share a few details. It takes about two minutes.\nPlaces are limited, so our team confirms each request personally.\nYou’ll hear from us by email soon, with your event details once your place is confirmed.",
     contactText: "Questions?",
     contactLabel: "Contact the Bloomberg team",
-    contactUrl: "",          // a page link or mailto:; blank = the site's "Contact" menu item
+    contactUrl: "",          // a page link or mailto:; blank = Cvent's Contact Planner pop-up, else the site's "Contact" menu item
+    plannerContactSelector: "", // advanced: the Contact Planner widget's button, if not found automatically
   },
   confirmation: {
     heading: "Thanks, {first}. Your request is in.",
     headingNoName: "Thanks. Your request is in.",
-    body: "All requests to attend are reviewed by the Bloomberg team. We’ll email you at {email} with our decision.",
-    bodyNoEmail: "All requests to attend are reviewed by the Bloomberg team. We’ll email you with our decision.",
-    steps: "Request received | Today\nReview by our team | We aim to reply within a few business days.\nConfirmation and event details | If approved, you’ll get your confirmation and a calendar invitation.",
+    body: "Places are limited, so our team confirms each request personally. We’ll be in touch at {email} soon.",
+    bodyNoEmail: "Places are limited, so our team confirms each request personally. We’ll be in touch by email soon.",
+    steps: "Request received | Today\nConfirming places | We aim to reply within a few business days.\nYour event details | Once your place is confirmed, you’ll get your confirmation and a calendar invitation.",
     primaryLabel: "Explore the program",
     primaryUrl: "",
     secondaryLabel: "Contact the event team",
@@ -97,6 +99,18 @@ export function mergeRegConfig(incoming = {}) {
   const out = mergePageConfig(REG_DEFAULTS, incoming);
   // Earlier default, saved into existing copies by the editor: update it.
   if (out.panel.contactLabel === "Contact the event team") out.panel.contactLabel = REG_DEFAULTS.panel.contactLabel;
+  // Softer request-to-attend copy (2026-10-02): saved copies of the old
+  // defaults follow the new ones; edited copy is left alone.
+  const OLD = {
+    "panel.nextSteps": "Send your request. It takes about two minutes.\nOur team reviews every request to attend.\nYou’ll get an email with our decision and your event details.",
+    "confirmation.body": "All requests to attend are reviewed by the Bloomberg team. We’ll email you at {email} with our decision.",
+    "confirmation.bodyNoEmail": "All requests to attend are reviewed by the Bloomberg team. We’ll email you with our decision.",
+    "confirmation.steps": "Request received | Today\nReview by our team | We aim to reply within a few business days.\nConfirmation and event details | If approved, you’ll get your confirmation and a calendar invitation.",
+  };
+  Object.entries(OLD).forEach(([k, v]) => {
+    const [sec, key] = k.split(".");
+    if (String(out[sec][key] || "").replace(/\r/g, "") === v) out[sec][key] = REG_DEFAULTS[sec][key];
+  });
   return out;
 }
 
@@ -248,9 +262,13 @@ export default class extends HTMLElement {
     this._watchPerson();
     this._watchSteps();
     await this._renderInto(root);
+    const tag = `reg-${this._cfg.mode}`;
+    restoreScroll(this, tag, this.configuration);
+    this._scrollCleanup = trackScroll(this, tag, this.configuration);
   }
 
   disconnectedCallback() {
+    this._scrollCleanup?.();
     clearTimeout(this._retry);
     this._hasSteps = false;
     if (this._target) { registry(this._target).delete(this); syncPageStyles(this._target); }
@@ -266,6 +284,7 @@ export default class extends HTMLElement {
   onConfigurationUpdate(newConfig) {
     this.configuration = newConfig || {};
     this._cfg = mergeRegConfig(this.configuration);
+    noteConfig(this, this.configuration);
     syncPageStyles(this._target || this._doc);
     const root = this.shadowRoot?.querySelector(".pk");
     if (root) this._renderInto(root);
@@ -678,12 +697,16 @@ export default class extends HTMLElement {
     const dark = cfg.theme === "dark";
     const body = cfg.mode === "panel" ? this._panel(ctx) : cfg.mode === "confirmation" ? this._confirmation(ctx) : this._banner(ctx);
     this.setAttribute("data-bbg-reg-mode", cfg.mode);
+    const release = holdHeight(root);
     root.className = `pk rg rg--${cfg.mode} ${dark ? "rg--dark" : ""} ${cfg.fullBleed !== false && cfg.mode === "banner" ? "pk--bleed" : ""}`;
     root.innerHTML = `${css}${body}`;
     this._cleanups.forEach((fn) => { try { fn(); } catch (e) { /* noop */ } });
     this._cleanups = [];
     if (cfg.mode === "banner" && cfg.fullBleed !== false) this._cleanups.push(applyFullBleed(root));
-    root.querySelectorAll("[data-site-contact]").forEach((b) => b.addEventListener("click", () => this._siteContactLink()?.click()));
+    // Contact: Cvent's Contact Planner pop-up when that widget is on the page,
+    // else the site menu's Contact page.
+    this._cleanups.push(wirePlannerContact(root, { selector: cfg.panel.plannerContactSelector }));
+    root.querySelectorAll("[data-site-contact]").forEach((b) => b.addEventListener("click", () => { if (!findPlannerContact(cfg.panel.plannerContactSelector)) this._siteContactLink()?.click(); }));
     this._rendered = true;
     syncPageStyles(this._target || this._doc);
     // Draw the step bar straight away from what was last read, so a redraw
@@ -691,6 +714,7 @@ export default class extends HTMLElement {
     this._paintSteps();
     this._stepsSig = null;
     this._checkSteps?.();
+    release();
   }
 
   // ---- BANNER -----------------------------------------------------------------
@@ -739,8 +763,8 @@ export default class extends HTMLElement {
         ${p.showVenue !== false && (facts.venueName || addr) ? `<div><dt>Venue</dt><dd>${esc(facts.venueName || addr)}${facts.venueName && addr ? `<span>${esc(addr)}</span>` : ""}</dd></div>` : ""}
       </dl>` : ""}
       ${p.showNext !== false && steps.length ? `<div class="rg-next"><p class="rg-eb">${esc(P("panel", "nextHeading", p.nextHeading))}</p><ol>${steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol></div>` : ""}
-      ${cLabel && cUrl ? `<p class="rg-ask">${esc(P("panel", "contactText", p.contactText))} <a href="${esc(cUrl)}"${isExternal(cUrl) ? ' target="_blank" rel="noopener"' : ""}>${esc(cLabel)}</a></p>`
-        : cLabel && this._siteContactLink() ? `<p class="rg-ask">${esc(P("panel", "contactText", p.contactText))} <button type="button" class="rg-ask-btn" data-site-contact>${esc(cLabel)}</button></p>` : ""}
+      ${cLabel && cUrl ? `<p class="rg-ask">${esc(P("panel", "contactText", p.contactText))} <a href="${esc(cUrl)}"${/^mailto:/i.test(cUrl) ? " data-planner-contact" : ""}${isExternal(cUrl) ? ' target="_blank" rel="noopener"' : ""}>${esc(cLabel)}</a></p>`
+        : cLabel && (this._siteContactLink() || findPlannerContact(p.plannerContactSelector)) ? `<p class="rg-ask">${esc(P("panel", "contactText", p.contactText))} <button type="button" class="rg-ask-btn" data-site-contact data-planner-contact>${esc(cLabel)}</button></p>` : ""}
     </aside>`;
   }
 
@@ -768,7 +792,7 @@ export default class extends HTMLElement {
       const u = safeUrl(url, "");
       if (!label || !u) return "";
       const ext = isExternal(u);
-      return `<a class="pk-btn pk-btn--lg ${primary ? "pk-btn--primary" : "pk-btn--secondary"} ${cfg.theme === "dark" ? "pk-btn--on-dark" : "pk-btn--on-light"}" href="${esc(u)}"${ext ? ' target="_blank" rel="noopener"' : ""}>${esc(label)}${ext ? `<span class="pk-sr"> ${esc(fixed(lang, "opensNewTab"))}</span>` : ""}</a>`;
+      return `<a${/^mailto:/i.test(u) ? " data-planner-contact" : ""} class="pk-btn pk-btn--lg ${primary ? "pk-btn--primary" : "pk-btn--secondary"} ${cfg.theme === "dark" ? "pk-btn--on-dark" : "pk-btn--on-light"}" href="${esc(u)}"${ext ? ' target="_blank" rel="noopener"' : ""}>${esc(label)}${ext ? `<span class="pk-sr"> ${esc(fixed(lang, "opensNewTab"))}</span>` : ""}</a>`;
     };
     const btns = btn(P("confirmation", "primaryLabel", c.primaryLabel), c.primaryUrl, true) + btn(P("confirmation", "secondaryLabel", c.secondaryLabel), c.secondaryUrl, false);
     return `

@@ -24,7 +24,7 @@
 import { FONT_STACK, TYPE_SCALE, ensureBrandFont } from "./type-scale.js";
 
 // Shown in the page widgets' editor footer, so a stale copy in Cvent is visible.
-export const PAGE_KIT_BUILD = "pagekit-2026-10-01a";
+export const PAGE_KIT_BUILD = "pagekit-2026-10-02a"; // + planner contact proxy, scroll hold
 
 // ---------------------------------------------------------------------------
 // Tokens
@@ -350,6 +350,57 @@ export function wireRegister(root, { mode = "native", label = "", selector = "",
   return () => root.removeEventListener("click", onClick);
 }
 
+// ---------------------------------------------------------------------------
+// Cvent's native "Contact Planner" widget
+// Placed in Site Designer, it shows a "Contact Us" button whose pop-up lets a
+// visitor message the planner (the Event Planner email in the event details).
+// Our contact areas ([data-planner-contact]) click that button, exactly like
+// the register proxy above. Not on the page = the link behaves as before
+// (mailto, page link), so nothing breaks while the widget is missing.
+// Found by: a planner-set CSS selector, else a Cvent class naming the widget,
+// else a button labelled "Contact us / Contact the planner / Contact planner".
+// The site nav's "Contact Us" item is a page link (role="link") and is skipped.
+// ---------------------------------------------------------------------------
+const PLANNER_TEXT = /^\s*(contact( us| the( event)? planner| planner| the organi[sz]er)?|email the planner)\s*$/i;
+export function findPlannerContact(selector = "") {
+  const sel = String(selector || "").trim();
+  if (sel) {
+    try {
+      const el = document.querySelector(sel);
+      if (el) return el.matches("button, a, [role='button']") ? el : el.querySelector("button, a, [role='button']") || el;
+    } catch (e) {
+      console.warn("[page-kit] invalid contact planner selector:", sel);
+    }
+  }
+  const box = document.querySelector("[class*='ContactPlanner'], [class*='contactPlanner'], [class*='PlannerContact'], [class*='plannerContact']");
+  const inBox = box && (box.matches("button, [role='button']") ? box : box.querySelector("button, [role='button'], a"));
+  if (inBox) return inBox;
+  return [...document.querySelectorAll("button, [role='button']")].find((el) =>
+    PLANNER_TEXT.test(el.textContent || "") && !el.closest("[class*='WebsiteNavigator'], nav")) || null;
+}
+
+// Wire every [data-planner-contact] link / button inside `root`. Returns a cleanup fn.
+export function wirePlannerContact(root, { selector = "", enabled = true } = {}) {
+  if (!root || !enabled) return () => {};
+  const onClick = (e) => {
+    const el = e.target.closest?.("[data-planner-contact]");
+    if (!el || !root.contains(el)) return;
+    const native = findPlannerContact(selector);
+    if (!native) {
+      // Fall back to the element's own link; a bare "#" would jump to the top.
+      if ((el.getAttribute("href") || "#") === "#") {
+        e.preventDefault();
+        console.warn("[page-kit] Cvent Contact Planner widget not found on this page; add it in Site Designer.");
+      }
+      return;
+    }
+    e.preventDefault();
+    native.click();
+  };
+  root.addEventListener("click", onClick);
+  return () => root.removeEventListener("click", onClick);
+}
+
 // Eyebrow + proposition heading, optional right-aligned link (desktop) that
 // drops below the content on mobile (render `link` again after the content
 // with class pk-only-mobile).
@@ -427,6 +478,81 @@ export function pageBanner({ eyebrowText, title, intro, bg = null }) {
       ${intro ? `<p class="pk-banner-p">${esc(intro)}</p>` : ""}
     </div>
   </section>`;
+}
+
+// ---------------------------------------------------------------------------
+// Keep the page still while the editor re-renders a widget
+// A config change re-renders the whole widget. If the old content is cleared
+// first (or the speaker cards / images that mount afterwards start at zero
+// height), the page gets shorter for a moment, the browser clamps the scroll
+// position and the planner lands back at the top. So:
+//  - holdHeight(root): pins the widget at its current height while the new
+//    markup goes in, then lets go once async parts have had time to mount;
+//  - trackScroll() / restoreScroll(): if the editor swaps the whole widget
+//    (disconnect + connect) on the same page, put the scroll back afterwards.
+// ---------------------------------------------------------------------------
+const HOLD_MS = 1500;
+export function holdHeight(root) {
+  if (!root) return () => {};
+  const h = root.offsetHeight;
+  const token = (root._pkHold = (root._pkHold || 0) + 1);
+  if (h > 0) root.style.minHeight = `${h}px`;
+  return () => {
+    setTimeout(() => {
+      if (root._pkHold === token) root.style.minHeight = "";
+    }, HOLD_MS);
+  };
+}
+
+// Cvent's editor can also swap in a NEW widget for a change (disconnect +
+// connect; the new one fetches its data again, so the page collapses while it
+// loads). The scroll position is tracked while the widget is on the page and,
+// when a new copy of the same widget arrives within a few seconds WITH A
+// DIFFERENT CONFIGURATION (= an editor change, never an ordinary page visit),
+// put back once it has rendered. sessionStorage, so a reloaded preview frame
+// is covered too. Works for window scroll and for a scrolling container.
+const MEMO = "bbg-pk-scroll:";
+const cfgSig = (cfg) => { const t = JSON.stringify(cfg || {}); let h = 0; for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return `${t.length}:${h}`; };
+const memoGet = (tag) => { try { return JSON.parse(sessionStorage.getItem(MEMO + tag) || "null"); } catch (e) { return null; } };
+const memoSet = (tag, v) => { try { sessionStorage.setItem(MEMO + tag, JSON.stringify(v)); } catch (e) { /* storage off */ } };
+function scrollBox(el) {
+  for (let n = el; n; ) {
+    n = n.parentElement || n.getRootNode?.().host || null;
+    if (!n || n === document.body || n === document.documentElement) break;
+    const oy = getComputedStyle(n).overflowY;
+    if (oy === "auto" || oy === "scroll") return n;
+  }
+  return null; // the window
+}
+const readY = (box) => (box ? box.scrollTop : (document.scrollingElement || document.documentElement).scrollTop);
+const putY = (box, y) => { if (Math.abs(readY(box) - y) > 2) (box ? box.scrollTo(0, y) : window.scrollTo(0, y)); };
+
+// Call once the widget is connected; returns a cleanup for disconnect.
+export function trackScroll(el, tag, cfg) {
+  const box = scrollBox(el);
+  const sig = cfgSig(cfg);
+  let raf = 0;
+  const save = () => { raf = 0; if (el.isConnected) memoSet(tag, { y: readY(box), at: Date.now(), path: location.pathname, sig: el._pkSig || sig }); };
+  const on = () => { if (!raf) raf = requestAnimationFrame(save); };
+  el._pkSig = sig;
+  document.addEventListener("scroll", on, { capture: true, passive: true });
+  save();
+  return () => {
+    document.removeEventListener("scroll", on, { capture: true });
+    cancelAnimationFrame(raf);
+    const m = memoGet(tag);
+    if (m) memoSet(tag, { ...m, at: Date.now() }); // the y stays as last scrolled
+  };
+}
+// The live widget's config changed in place (onConfigurationUpdate).
+export function noteConfig(el, cfg) { el._pkSig = cfgSig(cfg); }
+
+// Call after the FIRST render of a freshly connected widget.
+export function restoreScroll(el, tag, cfg) {
+  const m = memoGet(tag);
+  if (!m || !m.y || Date.now() - m.at > 8000 || m.path !== location.pathname || m.sig === cfgSig(cfg)) return;
+  const box = scrollBox(el);
+  [0, 300, 900].forEach((ms) => setTimeout(() => requestAnimationFrame(() => putY(box, m.y)), ms));
 }
 
 // ---------------------------------------------------------------------------
@@ -726,17 +852,21 @@ export class PageWidget extends HTMLElement {
     root.dataset.build = this.build;
     this.shadowRoot.append(root);
     await this._renderInto(root);
+    restoreScroll(this, this.tag, this.configuration);
+    this._scrollCleanup = trackScroll(this, this.tag, this.configuration);
     this._langObserver = new MutationObserver(() => this._rerender());
     this._langObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
   }
 
   disconnectedCallback() {
+    this._scrollCleanup?.();
     this._runCleanups();
     this._langObserver?.disconnect();
   }
 
   onConfigurationUpdate(newConfig) {
     this.configuration = newConfig || {};
+    noteConfig(this, this.configuration);
     this._rerender();
   }
 
@@ -759,9 +889,12 @@ export class PageWidget extends HTMLElement {
     const seq = ++this._renderSeq;
     const cfg = this.merge(this.configuration || {});
     const css = `<style>${kitCss()}${this.pageCss(cfg)}</style>`;
-    root.innerHTML = `${css}<p class="pk-sr" role="status">${esc(fixed("en", "loading"))}</p>`;
+    // First render only: later ones (editor changes, language switch) keep the
+    // old content on screen until the new markup is ready, so nothing jumps.
+    if (!root.childElementCount) root.innerHTML = `${css}<p class="pk-sr" role="status">${esc(fixed("en", "loading"))}</p>`;
     const data = await this._loadData();
     if (seq !== this._renderSeq) return; // a newer render started meanwhile
+    const release = holdHeight(root);
     this._runCleanups();
 
     const lang = resolveLang(data.eventInfo);
@@ -785,7 +918,9 @@ export class PageWidget extends HTMLElement {
       selector: cfg.nativeRegisterSelector,
       url: cfg.registerUrl,
     }));
+    this._cleanups.push(wirePlannerContact(root, { enabled: cfg.plannerContact !== false, selector: cfg.plannerContactSelector }));
     this.afterRender(root, ctx);
+    release();
   }
 
   // ---- shared sections ------------------------------------------------------

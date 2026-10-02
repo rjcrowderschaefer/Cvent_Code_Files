@@ -17,7 +17,10 @@ export default class ContactPageEditor extends PageEditor {
     return [
       this._bannerGroup({ titleHint: "Blank = “Contact”.", introHint: "Optional, e.g. “Questions about the summit or about Bloomberg. Reach the right team directly.”" }),
       this._sectionGroup("cards", [
-        this._hint("A card shows when it has a heading. Its button shows when it has a label and a URL or an email address (the button then opens an email)."),
+        this._hint("A card shows when it has a heading. Its button shows when it has a label (and, with the pop-up off, a URL or an email address)."),
+        this._check("Email links open Cvent’s Contact Planner pop-up", c.plannerContact !== false, (v) => this._patch({ plannerContact: v })),
+        this._hint("Add Cvent’s Contact Planner widget to this page in Site Designer (it can sit in a hidden section). Messages go to the Event Planner email in the event details. Without the widget, email links open an email as before."),
+        ...(c.plannerContact !== false ? [this._text("Contact Planner button: CSS selector (advanced)", c.plannerContactSelector, (v) => this._patch({ plannerContactSelector: v.trim() }), { url: false, placeholder: ".my-contact-planner button", hint: "Only if the widget’s button isn’t found automatically." })] : []),
         ...c.cards.items.flatMap((it, i) => [
           this._sub(`Card ${i + 1}`),
           this._text("Eyebrow", it.eyebrow, (v) => I("cards", i)({ eyebrow: v })),
@@ -26,8 +29,8 @@ export default class ContactPageEditor extends PageEditor {
           this._text("Email address", it.email, (v) => I("cards", i)({ email: v.trim() }), { url: false, placeholder: "events@bloomberg.net" }),
           this._text("Phone", it.phone, (v) => I("cards", i)({ phone: v.trim() }), { url: false }),
           this._text("Button label", it.buttonLabel, (v) => I("cards", i)({ buttonLabel: v })),
-          this._text("Button URL", it.buttonUrl, (v) => I("cards", i)({ buttonUrl: v.trim() }), { hint: "Blank = email the address above." }),
-          this._select("Button style", it.style, [["primary", "Amber (primary)"], ["secondary", "Outline (secondary)"]], (v) => I("cards", i)({ style: v })),
+          this._text("Button URL", it.buttonUrl, (v) => I("cards", i)({ buttonUrl: v.trim() }), { hint: c.plannerContact !== false ? "Blank = the Contact Planner pop-up. A page link here opens that page instead." : "Blank = email the address above." }),
+          this._select("Button style", it.style, [["primary", "Blue (primary)"], ["secondary", "Outline (secondary)"]], (v) => I("cards", i)({ style: v })),
         ]),
       ]),
       this._sectionGroup("faq", [

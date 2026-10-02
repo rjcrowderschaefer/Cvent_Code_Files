@@ -5,9 +5,9 @@
 // Everything here is planner copy (Cvent has no contact / FAQ data in the SDK);
 // the banner eyebrow and closing band still read the event (getEventInfo).
 // Shared building blocks: page-kit.js. NOTE: include the file extension in imports.
-import { PageWidget, PAGE_BASE_DEFAULTS, mergePageConfig, TOKENS, esc, eyebrow, safeUrl, button, paragraphs } from "./page-kit.js";
+import { PageWidget, PAGE_BASE_DEFAULTS, mergePageConfig, TOKENS, esc, eyebrow, safeUrl, button, paragraphs, wirePlannerContact } from "./page-kit.js";
 
-export const BUILD = "contact-2026-10-01a";
+export const BUILD = "contact-2026-10-02a";
 
 export const SECTION_LABELS = {
   banner: "Page banner",
@@ -22,6 +22,11 @@ const qa = (q = "") => ({ q, a: "" });
 export const CONTACT_DEFAULTS = {
   ...PAGE_BASE_DEFAULTS,
   order: ["banner", "cards", "faq", "cta"],
+  // Email links and email buttons open Cvent's Contact Planner pop-up (the
+  // message goes to the Event Planner email in the event details) when that
+  // native widget is on the page; otherwise they open an email as before.
+  plannerContact: true,
+  plannerContactSelector: "",
   cards: {
     show: true,
     items: [
@@ -61,6 +66,7 @@ export default class extends PageWidget {
   }
 
   _cards({ cfg, lang, P }) {
+    const pc = cfg.plannerContact !== false;
     const items = cfg.cards.items
       .map((it, i) => {
         const T = (k) => P("cards", `items.${i}.${k}`, it[k]);
@@ -75,13 +81,16 @@ export default class extends PageWidget {
           ${items.map((it) => {
             const email = String(it.email || "").trim();
             const phone = String(it.phone || "").trim();
-            const href = safeUrl(it.buttonUrl, "") || (email ? `mailto:${email}` : "");
+            const own = safeUrl(it.buttonUrl, "");
+            const href = own || (email ? `mailto:${email}` : "");
+            // The button goes to the planner pop-up unless it links to a page.
+            const toPlanner = pc && (!own || /^mailto:/i.test(own));
             return `<article class="ct-card">
               ${eyebrow(it.eyebrow)}
               <h2 class="ct-h">${esc(it.heading)}</h2>
               ${it.body ? `<p class="ct-p">${esc(it.body)}</p>` : ""}
-              ${email || phone ? `<p class="ct-contact">${email ? `<a href="mailto:${esc(email)}">${esc(email)}</a>` : ""}${phone ? `<a href="tel:${esc(phone.replace(/[^\d+]/g, ""))}">${esc(phone)}</a>` : ""}</p>` : ""}
-              ${it.buttonLabel && href ? `<div class="ct-btn">${button({ label: it.buttonLabel, href, variant: it.style === "secondary" ? "secondary" : "primary", ground: "light", lang })}</div>` : ""}
+              ${email || phone ? `<p class="ct-contact">${email ? `<a href="mailto:${esc(email)}"${pc ? " data-planner-contact" : ""}>${esc(email)}</a>` : ""}${phone ? `<a href="tel:${esc(phone.replace(/[^\d+]/g, ""))}">${esc(phone)}</a>` : ""}</p>` : ""}
+              ${it.buttonLabel && (href || toPlanner) ? `<div class="ct-btn">${button({ label: it.buttonLabel, href: href || "#", variant: it.style === "secondary" ? "secondary" : "primary", ground: "light", lang }).replace("<a ", toPlanner ? "<a data-planner-contact " : "<a ")}</div>` : ""}
             </article>`;
           }).join("")}
         </div>

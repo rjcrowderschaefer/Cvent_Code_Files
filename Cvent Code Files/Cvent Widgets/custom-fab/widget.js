@@ -62,6 +62,17 @@ const DEFAULTS = {
   questionTopics: "Fixed income, Macro & policy, Sustainable finance, Market structure, Technology & data, Other",
 };
 
+// Cvent's native Contact Planner widget button (same rules as page-kit.js
+// findPlannerContact; the FAB does not import the page kit).
+const PLANNER_TEXT = /^\s*(contact( us| the( event)? planner| planner| the organi[sz]er)?|email the planner)\s*$/i;
+function findPlannerContact() {
+  const box = document.querySelector("[class*='ContactPlanner'], [class*='contactPlanner'], [class*='PlannerContact'], [class*='plannerContact']");
+  const inBox = box && (box.matches("button, [role='button']") ? box : box.querySelector("button, [role='button'], a"));
+  if (inBox) return inBox;
+  return [...document.querySelectorAll("button, [role='button']")].find((el) =>
+    PLANNER_TEXT.test(el.textContent || "") && !el.closest("[class*='WebsiteNavigator'], nav")) || null;
+}
+
 // Bloomberg Terminal mark, inlined so there is no external asset to host.
 // Source artwork is #231f20; currentColor lets the CSS paint it white.
 const ICON_TERMINAL = `<svg class="ico-term" viewBox="0 0 122.7487 76.6267" aria-hidden="true" focusable="false"><path fill="currentColor" d="M58.4646,44.4462a2.3451,2.3451,0,0,1-2.3386,2.3376H2.3387A2.3451,2.3451,0,0,1,0,44.4462V2.3513A2.3456,2.3456,0,0,1,2.3387.0127H56.126a2.3456,2.3456,0,0,1,2.3386,2.3386ZM122.7487,2.3386A2.3453,2.3453,0,0,0,120.41,0H66.6233a2.3456,2.3456,0,0,0-2.3386,2.3386v42.095a2.3451,2.3451,0,0,0,2.3386,2.3376H120.41a2.3447,2.3447,0,0,0,2.3386-2.3376ZM55.0352,59.475C46.158,60.55,39.6829,63.9016,39.6829,67.8706c0,4.8358,9.6138,8.7561,21.4729,8.7561s21.4726-3.92,21.4726-8.7561c0-4.0387-6.36-7.3442-15.4791-8.3559l-.2749-.0239v3.943c0,1.4659-2.6209,2.6542-5.8545,2.6542S55.1655,64.9,55.1655,63.4338v-3.943Z"/></svg>`;
@@ -685,7 +696,7 @@ export default class BbgContactWidget extends HTMLElement {
             </div>
             <div>
               <p class="glabel">Event team</p>
-              <a class="mail" href="mailto:${escapeHtml(c.eventEmail)}">${escapeHtml(c.eventEmail)}</a>
+              <a class="mail" data-planner-contact href="mailto:${escapeHtml(c.eventEmail)}">${escapeHtml(c.eventEmail)}</a>
             </div>
             ${showDemo ? `<button type="button" class="btn btn-secondary" data-go="demo">Contact a specialist</button>` : ""}
             ${supportHref ? `<a class="support" href="${escapeHtml(supportHref)}" target="_blank" rel="noopener noreferrer">
@@ -767,6 +778,12 @@ export default class BbgContactWidget extends HTMLElement {
     card.addEventListener("click", (event) => {
       const go = event.target.closest("[data-go]");
       if (go) setView(go.getAttribute("data-go"));
+      // Event team email: Cvent's Contact Planner pop-up (sends to the Event
+      // Planner email in the event details) when that widget is on the page;
+      // otherwise the mailto link opens as before.
+      const mail = event.target.closest("[data-planner-contact]");
+      const native = mail && findPlannerContact();
+      if (native) { event.preventDefault(); close(); native.click(); }
     });
 
     const counter = card.querySelector("[data-counter]");
