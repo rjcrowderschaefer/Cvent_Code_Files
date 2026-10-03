@@ -22,7 +22,7 @@ import {
 } from "./page-kit.js";
 import { REG_FORM_CSS, regFormCss } from "./reg-form-css.js";
 
-export const BUILD = "reg-2026-10-03a";
+export const BUILD = "reg-2026-10-03b";
 
 export const REG_DEFAULTS = {
   mode: "banner",            // "banner" | "panel" | "confirmation"
@@ -459,25 +459,14 @@ export default class extends HTMLElement {
     });
     const halves = new Map(), half = new Map();
     const stateKey = this._cfg.stateAfterCountry !== false ? norm(this._cfg.stateLabel || "State / region") : "";
-    // The row a field sits in among its siblings (the largest wrapper that
-    // holds only this field).
-    const rowOf = (l) => {
-      let n = l.closest("[class*=Forms__container]") || l;
-      while (n.parentElement && n.parentElement.querySelectorAll("[class*=Forms__container]").length === 1) n = n.parentElement;
-      return n.parentElement ? n : null;
-    };
     lines(this._cfg.pairFields).forEach((line) => {
       const [a, b] = line.split("+").map(norm);
       const la = labels.get(a), lb = labels.get(b);
-      // State / region is only drawn once Country has an answer: keep Country
-      // at half width meanwhile, so State fills the empty half instead of
-      // Country shrinking when it arrives.
-      if (a && b && la && !lb && b === stateKey) {
-        const ra = rowOf(la);
-        if (ra && !cells.has(ra)) { halves.set(ra.parentElement, ""); half.set(ra, "1"); }
-        return;
-      }
+      // Country stays full width until State / region is drawn; the two are
+      // paired in the same frame State arrives (see _observeTarget), so the
+      // switch to halves happens once, with no in-between paint.
       if (!a || !b || !la || !lb) return;
+      if (b === stateKey && !this._countryAnswered()) return; // State is still held back
       const anc = lca(la, lb);
       const ra = childToward(anc, la), rb = childToward(anc, lb);
       if (!anc || !ra || !rb || ra === rb || ra.nextElementSibling !== rb || cells.has(ra) || cells.has(rb)) return;
@@ -655,6 +644,10 @@ export default class extends HTMLElement {
       return l && norm(l.textContent) === want;
     }) || null;
   }
+  _countryAnswered(country = this._fieldByLabel(this._cfg.countryLabel || "Country")) {
+    if (!country) return true;
+    return !!(country.querySelector("[class*=singleValue]")?.textContent || "").trim() || !!country.querySelector("select")?.value;
+  }
   _syncStateField() {
     const t = this._target || this._doc;
     const off = this._cfg.stateAfterCountry !== false;
@@ -662,8 +655,7 @@ export default class extends HTMLElement {
     const state = off ? this._fieldByLabel(this._cfg.stateLabel || "State / region") : null;
     let hide = null;
     if (country && state) {
-      const answered = !!(country.querySelector("[class*=singleValue]")?.textContent || "").trim()
-        || !!country.querySelector("select")?.value;
+      const answered = this._countryAnswered(country);
       // Hide the field's own slot: its half of a paired row, else the largest
       // wrapper that holds nothing but this field.
       if (!answered) {
