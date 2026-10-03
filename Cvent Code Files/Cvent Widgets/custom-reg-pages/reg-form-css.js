@@ -296,6 +296,9 @@ ${BODY} fieldset > legend + * { clear: both; }
 ${BODY} :is([data-cvent-id=attendeeListOptIn], [data-cvent-id*=AttendeeListOptIn-widget]), ${BODY} fieldset[class*=Forms__element] { margin-top: 22px !important; padding-top: 22px !important; border-top: 1px solid var(--r-hair) !important; }
 /* State / region before Country has an answer (the widget marks it). */
 ${R} [data-bbg-state-wait] { display: none !important; }
+${R} [data-bbg-fadein] { animation: bbgRegFieldIn .28s ease both; }
+@keyframes bbgRegFieldIn { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { ${R} [data-bbg-fadein] { animation: none; } }
 /* Cvent pads the opt-in wrapper 15px on each side; every other question sits flush. */
 ${BODY} [data-cvent-id=attendeeListOptIn] { padding-left: 0 !important; padding-right: 0 !important; }
 /* A fieldset sits in a Forms__container that already has the 22px above it

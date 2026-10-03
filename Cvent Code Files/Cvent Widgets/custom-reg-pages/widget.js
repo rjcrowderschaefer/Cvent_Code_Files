@@ -22,7 +22,7 @@ import {
 } from "./page-kit.js";
 import { REG_FORM_CSS, regFormCss } from "./reg-form-css.js";
 
-export const BUILD = "reg-2026-10-02b";
+export const BUILD = "reg-2026-10-03a";
 
 export const REG_DEFAULTS = {
   mode: "banner",            // "banner" | "panel" | "confirmation"
@@ -194,7 +194,11 @@ export function syncPageStyles(t = document) {
   const lead = active.find((w) => w._cfg.mode === "banner") || active[0];
   const dark = lead._cfg.theme === "dark";
   const hideOld = active.some((w) => w._cfg.hideOldHeader !== false);
-  const ownSteps = active.some((w) => w._cfg.mode === "banner" && w._cfg.banner?.showSteps !== false && w._hasSteps);
+  // Our step bar replaces Cvent's. Until the widget has read Cvent's bar (it
+  // can draw after the widget), keep Cvent's hidden for a short grace period
+  // so it never flashes; after that, a page we can't read keeps Cvent's bar.
+  const ownSteps = active.some((w) => w._cfg.mode === "banner" && w._cfg.banner?.showSteps !== false
+    && (w._hasSteps || Date.now() < (w._stepsGraceUntil || 0)));
   const ready = active.some((w) => w._rendered);
   els.forEach((e) => {
     if (!isDoc(t)) e.classList.add(ROOT_CLASS);
@@ -251,6 +255,9 @@ export default class extends HTMLElement {
   async connectedCallback() {
     if (this._cfg.useBrandFont !== false) ensureBrandFont();
     this.setAttribute("data-bbg-reg", "");
+    this._stepsGraceUntil = Date.now() + 2000;
+    clearTimeout(this._graceTimer);
+    this._graceTimer = setTimeout(() => syncPageStyles(this._target || this._doc), 2050);
     this._findTarget();
     // Site Designer can draw the page after the widget: look again for a while.
     let tries = 0;
@@ -271,6 +278,9 @@ export default class extends HTMLElement {
   disconnectedCallback() {
     this._scrollCleanup?.();
     clearTimeout(this._retry);
+    clearTimeout(this._graceTimer);
+    clearTimeout(this._dropTimer);
+    this._dropTimer = 0;
     this._hasSteps = false;
     if (this._target) { registry(this._target).delete(this); syncPageStyles(this._target); }
     this._target = null;
@@ -367,9 +377,18 @@ export default class extends HTMLElement {
   _watchSteps() {
     if (typeof MutationObserver === "undefined") return;
     let timer = 0;
-    const check = () => {
+    const check = (force) => {
       timer = 0;
-      const steps = this._cfg.mode === "banner" && this._cfg.banner?.showSteps !== false ? this._readSteps() : null;
+      const want = this._cfg.mode === "banner" && this._cfg.banner?.showSteps !== false;
+      const steps = want ? this._readSteps() : null;
+      // Cvent redraws its bar between pages: a bar that goes missing for a
+      // moment keeps ours (and Cvent's hidden) instead of flashing Cvent's.
+      if (steps) { clearTimeout(this._dropTimer); this._dropTimer = 0; }
+      else if (want && this._hasSteps && force !== true) {
+        if (!this._dropTimer) this._dropTimer = setTimeout(() => { this._dropTimer = 0; check(true); }, 1000);
+        this._markLayout();
+        return;
+      }
       const sig = steps ? steps.map((s) => `${s.label}|${s.state}|${s.target ? 1 : 0}`).join("~") : "";
       const had = !!this._hasSteps;
       this._steps = steps;
@@ -439,9 +458,25 @@ export default class extends HTMLElement {
       if (txt && !labels.has(txt)) labels.set(txt, l);
     });
     const halves = new Map(), half = new Map();
+    const stateKey = this._cfg.stateAfterCountry !== false ? norm(this._cfg.stateLabel || "State / region") : "";
+    // The row a field sits in among its siblings (the largest wrapper that
+    // holds only this field).
+    const rowOf = (l) => {
+      let n = l.closest("[class*=Forms__container]") || l;
+      while (n.parentElement && n.parentElement.querySelectorAll("[class*=Forms__container]").length === 1) n = n.parentElement;
+      return n.parentElement ? n : null;
+    };
     lines(this._cfg.pairFields).forEach((line) => {
       const [a, b] = line.split("+").map(norm);
       const la = labels.get(a), lb = labels.get(b);
+      // State / region is only drawn once Country has an answer: keep Country
+      // at half width meanwhile, so State fills the empty half instead of
+      // Country shrinking when it arrives.
+      if (a && b && la && !lb && b === stateKey) {
+        const ra = rowOf(la);
+        if (ra && !cells.has(ra)) { halves.set(ra.parentElement, ""); half.set(ra, "1"); }
+        return;
+      }
       if (!a || !b || !la || !lb) return;
       const anc = lca(la, lb);
       const ra = childToward(anc, la), rb = childToward(anc, lb);
@@ -642,13 +677,30 @@ export default class extends HTMLElement {
     }
     t.querySelectorAll("[data-bbg-state-wait]").forEach((e) => { if (e !== hide) { e.removeAttribute("data-bbg-state-wait"); e.removeAttribute("aria-hidden"); } });
     if (hide && !hide.hasAttribute("data-bbg-state-wait")) { hide.setAttribute("data-bbg-state-wait", ""); hide.setAttribute("aria-hidden", "true"); }
+    // State / region fades in when it first shows (no pop).
+    const shown = !!(state && !hide);
+    if (shown && this._stateShown === false) {
+      const slot = state.closest("[data-bbg-half], [data-bbg-cell]") || state;
+      slot.setAttribute("data-bbg-fadein", "");
+      setTimeout(() => slot.removeAttribute("data-bbg-fadein"), 400);
+    }
+    if (off) this._stateShown = shown;
   }
   _observeTarget() {
     if (!this._checkSteps || typeof MutationObserver === "undefined") return;
     this._stepsObserver?.disconnect();
     const t = this._target || this._doc;
     const node = isDoc(t) ? (t.body || t.documentElement) : t;
-    this._stepsObserver = new MutationObserver(this._checkSteps);
+    // Fields Cvent adds (State / region after Country, other display logic)
+    // are paired and marked in the same frame they arrive, before the browser
+    // paints them, so nothing jumps; the rest waits for the debounced check.
+    const isField = (n) => n.nodeType === 1 && (n.matches?.("[class*=Forms__container]") || !!n.querySelector?.("[class*=Forms__container]"));
+    this._stepsObserver = new MutationObserver((muts) => {
+      if (muts.some((m) => m.type === "childList" && ([...m.addedNodes].some(isField) || [...m.removedNodes].some(isField)))) {
+        try { this._markFields(); this._syncStateField(); } catch (e) { /* the debounced pass retries */ }
+      }
+      this._checkSteps();
+    });
     this._stepsObserver.observe(node, { subtree: true, childList: true, attributes: true, attributeFilter: ["aria-current", "class"] });
   }
   _paintSteps() {

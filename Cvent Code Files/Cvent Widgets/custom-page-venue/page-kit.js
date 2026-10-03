@@ -24,7 +24,7 @@
 import { FONT_STACK, TYPE_SCALE, ensureBrandFont } from "./type-scale.js";
 
 // Shown in the page widgets' editor footer, so a stale copy in Cvent is visible.
-export const PAGE_KIT_BUILD = "pagekit-2026-10-02d"; // + planner contact proxy, scroll hold
+export const PAGE_KIT_BUILD = "pagekit-2026-10-03a"; // + page CSS channel (confirm page), planner contact proxy, scroll hold
 
 // ---------------------------------------------------------------------------
 // Tokens
@@ -477,6 +477,67 @@ function ensurePlannerModalCss() {
   st.textContent = PLANNER_MODAL_CSS;
   document.head.append(st);
 }
+// ---------------------------------------------------------------------------
+// Page CSS carried by the widgets, not by the site theme.
+// Cvent's site custom CSS is full (character limit), so the theme now holds
+// only what must apply before any widget loads (early hide of the reg pages,
+// the Contact Planner button). Everything else that styles Cvent's own page
+// content is injected here, once per page, by whichever page widget (or the
+// FAB) loads first. Rules are keyed on our own marker classes, so a page
+// without them is untouched. New page-level CSS goes here, never the theme.
+//
+// Pending approval / confirmation page: native text sections given the classes
+// bbg-confirm-banner, bbg-confirm and bbg-confirm-panel (source:
+// css-files/bbg-reg-confirm.css, kept as the readable copy).
+export const CONFIRM_PAGE_CSS = `
+:is(.bbg-confirm-banner,.bbg-confirm,.bbg-confirm-panel) *{font-family:AvenirNextPForBBG,Helvetica,Arial,sans-serif!important;text-align:left!important;letter-spacing:0}
+:is(.bbg-confirm-banner,.bbg-confirm,.bbg-confirm-panel) :is([data-cvent-id*=usText],[data-cvent-id*=usText]>div){padding:0!important;background:none!important}
+:is(.bbg-confirm-banner,.bbg-confirm,.bbg-confirm-panel) :is(p,h1,h3,h4){margin:0!important;padding:0!important}
+.bbg-confirm-banner{background:#0B0B0C!important;box-shadow:0 0 0 100vmax #0B0B0C;clip-path:inset(0 -100vmax);padding:clamp(32px,4vw,44px) max(20px,calc((100% - 1144px)/2)) clamp(28px,3.5vw,38px)!important}
+.bbg-confirm-banner :is(p,p *){font-size:16px!important;line-height:1.5!important;font-weight:400!important;color:#fffc!important}
+.bbg-confirm-banner [class*=Grid__row]:first-child :is(p,p *){margin-bottom:12px!important;font-size:14.4px!important;font-weight:700!important;letter-spacing:.14em;text-transform:uppercase;color:#FF9D00!important}
+.bbg-confirm-banner :is(h1,h1 *){margin-bottom:12px!important;font-size:clamp(34px,4vw,48px)!important;line-height:1.1!important;font-weight:700!important;letter-spacing:-.02em;color:#fff!important}
+[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel){display:flex!important;align-items:flex-start!important;gap:56px;max-width:1240px;margin:auto!important;padding:44px 48px 64px!important;box-sizing:border-box}
+[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel)>[class*=Grid__col]{flex:1 1 auto!important;width:auto!important;max-width:620px!important}
+[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel)>[class*=Grid__col]:has(.bbg-confirm-panel){flex:0 0 380px!important;max-width:380px!important;margin-left:auto!important;position:sticky;top:96px}
+[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel) [data-cvent-id^=containerP]:not(.bbg-confirm-panel){padding:0!important}
+.bbg-confirm,.bbg-confirm [data-cvent-id^=containerP]{padding:0!important;background:none!important;border-radius:0!important}
+.bbg-confirm :is(p,li,span){font-size:16.5px!important;line-height:1.55!important;font-weight:400!important;color:#3F3F3D!important}
+.bbg-confirm [data-cvent-id*=usText]:has(h1)::before{content:"✓";display:grid;place-items:center;width:52px;height:52px;margin-bottom:22px;border-radius:50%;background:#FF9D0029;color:#FF9D00;font:700 20px/1 Arial}
+.bbg-confirm :is(h1,h1 *){margin-bottom:12px!important;font-size:32px!important;line-height:1.15!important;font-weight:700!important;letter-spacing:-.02em;color:#141416!important}
+.bbg-confirm ul{margin:28px 0 0!important;padding:0!important;list-style:none!important;border-top:1px solid #E4E4E0}
+.bbg-confirm li{position:relative;margin:0!important;padding:16px 0 16px 42px!important;list-style:none!important;border-bottom:1px solid #E4E4E0}
+.bbg-confirm :is(li,li *){font-size:14.5px!important}
+.bbg-confirm li::before{content:"";position:absolute;left:0;top:21px;width:14px;height:14px;box-sizing:border-box;border-radius:50%;border:2px solid #C9C9C4}
+.bbg-confirm li:first-child::before{border-color:#FF9D00;background:#FF9D00}
+.bbg-confirm li span[style*=bold]{font-size:16px!important;font-weight:700!important;color:#141416!important}
+.bbg-confirm p:has(a){display:flex!important;flex-wrap:wrap;gap:12px;margin-top:28px!important;font-size:0!important}
+.bbg-confirm p:has(a) br{display:none}
+.bbg-confirm p:has(a) a{display:inline-flex!important;align-items:center;height:52px;padding:0 28px!important;border:1px solid #141416;border-radius:2px;color:#141416!important;font-size:15px!important;font-weight:700!important;text-decoration:none!important}
+.bbg-confirm p:has(a) a:hover{background:#F5F5F3}
+.bbg-confirm p:has(a) a:first-of-type{background:#0062DD;border-color:#0062DD;color:#fff!important}
+.bbg-confirm p:has(a) a:first-of-type:hover{background:#0050B5}
+.bbg-confirm-panel{padding:28px!important;background:#F5F5F3!important;border-top:3px solid #FF9D00!important}
+.bbg-confirm-panel :is(p,span){font-size:14px!important;line-height:1.5!important;color:#3F3F3D!important}
+.bbg-confirm-panel [class*=Grid__row]:first-child :is(p,p *){margin-bottom:8px!important;font-size:13.2px!important;font-weight:700!important;letter-spacing:.14em;text-transform:uppercase;color:#FF9D00!important}
+.bbg-confirm-panel :is(h3,h3 *){font-size:21px!important;line-height:1.25!important;font-weight:700!important;letter-spacing:-.01em;color:#141416!important}
+.bbg-confirm-panel :is(h4,h4 *){margin:14px 0 2px!important;font-size:13.2px!important;font-weight:700!important;letter-spacing:.08em;text-transform:uppercase;color:#FF9D00!important}
+.bbg-confirm-panel [class*=Grid__row]:has(h3)+[class*=Grid__row] h4{margin-top:18px!important}
+.bbg-confirm-panel [class*=Grid__row]:has(h4)+[class*=Grid__row] p{font-size:15.5px!important;color:#141416!important}
+.bbg-confirm-panel [class*=Grid__row]:last-child:not(:first-child) p{margin-top:18px!important;padding-top:16px!important;border-top:1px solid #E4E4E0;font-size:14.5px!important}
+.bbg-confirm-panel a{color:#0062DD!important;font-weight:700!important;text-decoration:none!important}
+@media(max-width:1023px){[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel){flex-direction:column;gap:32px;padding:32px 20px 48px!important}[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel)>[class*=Grid__col],[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel)>[class*=Grid__col]:has(.bbg-confirm-panel){flex:none!important;width:100%!important;max-width:100%!important;margin-left:0!important;position:static}.bbg-confirm-panel{padding:22px 20px!important}.bbg-confirm :is(h1,h1 *){font-size:26px!important}.bbg-confirm-banner p{font-size:15px!important}.bbg-confirm p:has(a){flex-direction:column}.bbg-confirm p:has(a) a{justify-content:center}}
+`;
+export const SITE_CSS_ID = "bbg-site-css";
+export function ensureSiteCss(doc = typeof document !== "undefined" ? document : null) {
+  if (!doc?.head || doc.getElementById(SITE_CSS_ID)) return;
+  const st = doc.createElement("style");
+  st.id = SITE_CSS_ID;
+  st.textContent = CONFIRM_PAGE_CSS;
+  doc.head.append(st);
+}
+try { ensureSiteCss(); } catch (e) { /* no document (tests) */ }
+
 // Hide the native widget's button (its Site Designer column) when the page
 // has our contact links: the links open the same pop-up. Only a column that
 // holds nothing but that one button is hidden.
