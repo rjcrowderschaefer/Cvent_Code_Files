@@ -301,6 +301,8 @@ ${BODY} :is([data-cvent-id=attendeeListOptIn], [data-cvent-id*=AttendeeListOptIn
 ${R} [data-bbg-state-wait] { display: none !important; }
 /* The registrant's name / email placed with Cvent data tags for the widget to read. */
 ${R} .bbg-person, .bbg-person { display: none !important; }
+/* Cvent's own Modify / Cancel Registration buttons, when the widget's buttons stand in for them (still clickable by the widget). */
+[data-bbg-native-hidden] { display: none !important; }
 ${R} [data-bbg-fadein] { animation: bbgRegFieldIn .28s ease both; }
 @keyframes bbgRegFieldIn { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { ${R} [data-bbg-fadein] { animation: none; } }

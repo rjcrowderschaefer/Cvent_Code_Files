@@ -22,7 +22,7 @@ import {
 } from "./page-kit.js";
 import { REG_FORM_CSS, regFormCss } from "./reg-form-css.js";
 
-export const BUILD = "reg-2026-10-04c";
+export const BUILD = "reg-2026-10-04d";
 
 export const REG_DEFAULTS = {
   mode: "banner",            // "banner" | "panel" | "confirmation" | "styles" (page CSS only, draws nothing)
@@ -228,6 +228,25 @@ export function syncPageStyles(t = document) {
   // The site CSS can hide the page until the widget has taken over (no flash of
   // Cvent's own design); it watches for this class on the marked section.
   if (ready) (isDoc(t) ? t : t).querySelectorAll(".bbg-reg-page").forEach((e) => e.classList.add("bbg-reg-ready"));
+}
+
+// Cvent's own Modify / Cancel Registration buttons (post-registration pages).
+// Their links carry the attendee's details, so the widget never copies them:
+// its buttons click Cvent's, and Cvent's are hidden.
+const NATIVE_TEXT = {
+  modify: /^\s*(modify|change|edit|update)\s+(my\s+|your\s+)?registration\s*$/i,
+  cancel: /^\s*cancel\s+(my\s+|your\s+)?registration\s*$/i,
+};
+function nativeAction(url) {
+  const m = /^#(modify|cancel)$/i.exec(String(url || "").trim());
+  return m ? m[1].toLowerCase() : "";
+}
+function findNative(t, act) {
+  const re = NATIVE_TEXT[act];
+  if (!re || !t?.querySelectorAll) return null;
+  const hit = [...t.querySelectorAll("a, button, [role=button]")].find((el) => re.test(el.textContent || "")
+    && !el.closest("[data-bbg-reg], nav, [class*=WebsiteNavigator], [role=banner]"));
+  return hit || null;
 }
 
 // ---------------------------------------------------------------------------
@@ -651,7 +670,23 @@ export default class extends HTMLElement {
       }
     }
   }
+  // Hide Cvent's own Modify / Cancel buttons that this copy's buttons stand in for
+  // (their Site Designer column when it holds nothing else).
+  _hideNatives() {
+    const t = this._target || this._doc;
+    const c = this._cfg.confirmation || {};
+    const acts = new Set([c.primaryUrl, c.secondaryUrl, c.tertiaryUrl].map(nativeAction).filter(Boolean));
+    acts.forEach((act) => {
+      const el = findNative(t, act);
+      if (!el) return;
+      let box = el;
+      while (box.parentElement && !box.parentElement.matches("[class*=Grid__row], [data-cvent-id=containerChild], body")
+        && box.parentElement.querySelectorAll("a, button, [role=button], input, img, p").length <= 1) box = box.parentElement;
+      if (!box.hasAttribute("data-bbg-native-hidden")) { box.setAttribute("data-bbg-native-hidden", act); box.style.setProperty("display", "none", "important"); }
+    });
+  }
   _markLayout() {
+    if (this._cfg.mode === "confirmation") this._hideNatives();
     this._syncPersonFromPage();
     this._markFields();
     this._syncStateField();
@@ -822,6 +857,13 @@ export default class extends HTMLElement {
     root.querySelectorAll("[data-site-contact]").forEach((b) => b.addEventListener("click", () => { if (!findPlannerContact(cfg.panel.plannerContactSelector)) this._siteContactLink()?.click(); }));
     this._rendered = true;
     syncPageStyles(this._target || this._doc);
+    root.querySelectorAll("[data-cvent-action]").forEach((a) => a.addEventListener("click", (e) => {
+      e.preventDefault();
+      const native = findNative(this._target || this._doc, a.dataset.cventAction);
+      if (native) native.click();
+      else console.warn(`[reg-pages] Cvent's ${a.dataset.cventAction === "cancel" ? "Cancel" : "Modify"} Registration button isn't on this page; add it in Site Designer.`);
+    }));
+    if (cfg.mode === "confirmation") this._hideNatives();
     // A side panel copy pairs with this copy's column once it exists: let it look again.
     if (cfg.mode === "confirmation") registry(this._target || this._doc).forEach((w) => { if (w !== this) w._checkSteps?.(); });
     // Draw the step bar straight away from what was last read, so a redraw
@@ -904,14 +946,18 @@ export default class extends HTMLElement {
       return i < 0 ? { t: l, d: "" } : { t: l.slice(0, i).trim(), d: l.slice(i + 1).trim() };
     });
     const btn = (label, url, primary) => {
+      // "#modify" / "#cancel": Cvent's own Modify / Cancel Registration button
+      // on this page does the work (its link is per attendee); ours stands in.
+      const act = nativeAction(url);
+      if (act) return label ? `<a class="pk-btn pk-btn--lg ${primary ? "pk-btn--primary" : "pk-btn--secondary"} ${cfg.theme === "dark" ? "pk-btn--on-dark" : "pk-btn--on-light"}" href="#" role="button" data-cvent-action="${act}">${esc(label)}</a>` : "";
       const u = safeUrl(url, "");
       if (!label || !u) return "";
       const ext = isExternal(u);
       return `<a${/^mailto:/i.test(u) ? " data-planner-contact" : ""} class="pk-btn pk-btn--lg ${primary ? "pk-btn--primary" : "pk-btn--secondary"} ${cfg.theme === "dark" ? "pk-btn--on-dark" : "pk-btn--on-light"}" href="${esc(u)}"${ext ? ' target="_blank" rel="noopener"' : ""}>${esc(label)}${ext ? `<span class="pk-sr"> ${esc(fixed(lang, "opensNewTab"))}</span>` : ""}</a>`;
     };
     const btns = btn(P("confirmation", "primaryLabel", c.primaryLabel), c.primaryUrl, true) + btn(P("confirmation", "secondaryLabel", c.secondaryLabel), c.secondaryUrl, false);
-    const qLabel = P("confirmation", "tertiaryLabel", c.tertiaryLabel), qUrl = safeUrl(c.tertiaryUrl, "");
-    const quiet = qLabel && qUrl ? `<a class="rg-quiet" href="${esc(qUrl)}"${isExternal(qUrl) ? ' target="_blank" rel="noopener"' : ""}>${esc(qLabel)}</a>` : "";
+    const qLabel = P("confirmation", "tertiaryLabel", c.tertiaryLabel), qAct = nativeAction(c.tertiaryUrl), qUrl = qAct ? "#" : safeUrl(c.tertiaryUrl, "");
+    const quiet = qLabel && qUrl ? `<a class="rg-quiet" href="${esc(qUrl)}"${qAct ? ` role="button" data-cvent-action="${qAct}"` : isExternal(qUrl) ? ' target="_blank" rel="noopener"' : ""}>${esc(qLabel)}</a>` : "";
     const cTitle = String(P("confirmation", "calloutTitle", c.calloutTitle) || "").trim();
     const cText = String(P("confirmation", "calloutText", c.calloutText) || "").trim();
     const done = Math.max(0, Math.min(steps.length, Math.round(Number(c.stepsDone ?? 1)) || 0));
