@@ -3,7 +3,7 @@
 // groups (General / Page layout / Closing band), which don't apply here.
 import { PageEditor, EDITOR_KIT_BUILD, EDITOR_CSS } from "./editor-kit.js";
 import { PAGE_KIT_BUILD } from "./page-kit.js";
-import { REG_DEFAULTS, mergeRegConfig, BUILD } from "./widget.js";
+import { REG_DEFAULTS, mergeRegConfig, BUILD, PAGE_TYPES, applyPageType } from "./widget.js";
 
 const MODES = [
   ["banner", "Banner: page header (event, “Request to attend”, date · venue)"],
@@ -13,7 +13,13 @@ const MODES = [
 ];
 
 export default class RegPagesEditor extends PageEditor {
-  merge(cfg) { return mergeRegConfig(cfg); }
+  // The page's copy, once filled in, belongs to the planner: mark it so later
+  // edits (even back to a general default) are kept.
+  merge(cfg) {
+    const m = mergeRegConfig(cfg);
+    if (m.pageType !== "registration" && m.presetFor !== m.pageType) m.presetFor = m.pageType;
+    return m;
+  }
   get defaults() { return REG_DEFAULTS; }
   get title() { return "Registration pages widget"; }
   get build() { return BUILD; }
@@ -88,6 +94,8 @@ export default class RegPagesEditor extends PageEditor {
       ]);
     }
     return this._group("general", "Setup", true, null, [
+      this._select("Page", c.pageType, PAGE_TYPES, (v) => this._patch(applyPageType(this._config, v)),
+        "Fills in this page’s wording, buttons and settings for every part (banner, status, side panel). Edit anything below afterwards. Choosing another page replaces those fields with its copy. Set the same page on every copy."),
       this._select("What this copy shows", c.mode, MODES, (v) => this._patch({ mode: v }),
         "Place one copy per job: the banner in the page header, the side panel beside the form or the status text, the confirmation / status copy on post-registration pages."),
       this._select("Theme", c.theme, [["light", "Light"], ["dark", "Dark"]], (v) => this._patch({ theme: v }),

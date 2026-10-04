@@ -22,10 +22,14 @@ import {
 } from "./page-kit.js";
 import { REG_FORM_CSS, regFormCss } from "./reg-form-css.js";
 
-export const BUILD = "reg-2026-10-04d";
+export const BUILD = "reg-2026-10-04e";
 
 export const REG_DEFAULTS = {
   mode: "banner",            // "banner" | "panel" | "confirmation" | "styles" (page CSS only, draws nothing)
+  // Which Cvent page this copy sits on. Choosing one fills in that page's
+  // copy (PAGE_PRESETS) for every mode; any field can be edited after.
+  pageType: "registration",
+  presetFor: "",             // the page type whose copy was last filled in (set by the editor)
   theme: "light",            // "light" | "dark": the form area and this widget
   styleForm: true,           // restyle Cvent's registration form on this page
   hideOldHeader: true,       // hide the old "Event registration" text box in the page header
@@ -102,6 +106,128 @@ export const REG_DEFAULTS = {
   translations: {},
 };
 
+// ---------------------------------------------------------------------------
+// Page types: one preset per Cvent registration / post-registration page.
+// Tokens in the copy: {first} {email} (registrant), {event} {date} {time}
+// (event). Button URLs: a page link, mailto:, or #agenda / #contact (the site's
+// pages; #contact opens Cvent's Contact Planner pop-up when it is on the page)
+// and #modify / #cancel (Cvent's own Modify / Cancel Registration buttons).
+// ---------------------------------------------------------------------------
+export const PAGE_TYPES = [
+  ["registration", "Registration form (Request to attend)"],
+  ["pending", "Pending approval (Request received)"],
+  ["approved", "Confirmation (approved)"],
+  ["denied", "Registration denied"],
+  ["cancelForm", "Cancellation form"],
+  ["cancelled", "Registration cancelled (after cancelling)"],
+  ["declineForm", "Decline invitation form"],
+  ["guest", "Guest registration"],
+  ["archive", "Archive (event has ended)"],
+];
+const NO_GREETING = { greeting: "", showNext: false };
+export const PAGE_PRESETS = {
+  registration: {},
+  pending: {
+    banner: { title: "Request received", showSteps: false },
+    panel: { eyebrow: "Your request", ...NO_GREETING },
+    confirmation: { primaryUrl: "#agenda", secondaryUrl: "#contact" },
+  },
+  approved: {
+    banner: { title: "You’re registered", showSteps: false },
+    panel: { eyebrow: "Your registration", ...NO_GREETING },
+    confirmation: {
+      heading: "You’re confirmed, {first}.",
+      headingNoName: "You’re confirmed.",
+      body: "Your place at {event} is confirmed. We sent your confirmation and calendar invitation to {email}.",
+      bodyNoEmail: "Your place at {event} is confirmed. We sent your confirmation and calendar invitation by email.",
+      steps: "Request approved | Your place is saved.\nConfirmation sent | Check your inbox for the calendar invitation.\nEvent day | {date} · {time}",
+      stepsDone: 2,
+      primaryLabel: "Explore the program", primaryUrl: "#agenda",
+      secondaryLabel: "Change my registration", secondaryUrl: "#modify",
+      tertiaryLabel: "Cancel registration", tertiaryUrl: "#cancel",
+    },
+  },
+  denied: {
+    banner: { title: "An update on your registration request", showSteps: false },
+    panel: { eyebrow: "The event", ...NO_GREETING },
+    confirmation: {
+      showTick: false,
+      heading: "We can’t offer you a place this time, {first}.",
+      headingNoName: "We can’t offer you a place this time.",
+      body: "Thank you for your interest in {event}. Due to limited capacity, we’re unable to confirm your registration. We hope to welcome you at a future Bloomberg event.",
+      bodyNoEmail: "Thank you for your interest in {event}. Due to limited capacity, we’re unable to confirm your registration. We hope to welcome you at a future Bloomberg event.",
+      steps: "", stepsDone: 0,
+      primaryLabel: "Contact the Bloomberg Team", primaryUrl: "#contact",
+      secondaryLabel: "", secondaryUrl: "",
+    },
+  },
+  cancelForm: {
+    banner: { title: "Cancel registration", showSteps: false },
+    panel: { eyebrow: "Your registration", ...NO_GREETING },
+  },
+  cancelled: {
+    banner: { title: "Registration cancelled", showSteps: false },
+    panel: { eyebrow: "The event", ...NO_GREETING },
+    confirmation: {
+      showTick: false,
+      heading: "Your registration is cancelled, {first}.",
+      headingNoName: "Your registration is cancelled.",
+      body: "We’ve released your place at {event} and sent a confirmation to {email}. If your plans change, contact us and we’ll do what we can.",
+      bodyNoEmail: "We’ve released your place at {event} and sent you a confirmation by email. If your plans change, contact us and we’ll do what we can.",
+      steps: "", stepsDone: 0,
+      primaryLabel: "Contact the Bloomberg Team", primaryUrl: "#contact",
+      secondaryLabel: "", secondaryUrl: "",
+    },
+  },
+  declineForm: {
+    banner: { title: "Decline invitation", showSteps: false },
+    panel: { eyebrow: "Your invitation", ...NO_GREETING },
+  },
+  guest: {
+    banner: { title: "Add a guest" },
+    panel: {
+      eyebrow: "Your registration", greeting: "", showNext: true, nextHeading: "About guests",
+      nextSteps: "Each guest gets their own confirmation email.\nGuests go through the same review as you.\nYou can remove a guest by changing your registration.",
+    },
+  },
+  archive: {
+    banner: { title: "This event has ended", showSteps: false },
+    panel: { eyebrow: "The event", ...NO_GREETING },
+    confirmation: {
+      showTick: false,
+      heading: "Thanks for your interest",
+      headingNoName: "Thanks for your interest",
+      body: "{event} took place on {date}. Registration is closed and this site is no longer updated.",
+      bodyNoEmail: "{event} took place on {date}. Registration is closed and this site is no longer updated.",
+      steps: "", stepsDone: 0,
+      calloutTitle: "Interested in future events?",
+      calloutText: "Tell us what you’d like to hear about and we’ll invite you to upcoming Bloomberg events.",
+      primaryLabel: "Contact the Bloomberg Team", primaryUrl: "#contact",
+      secondaryLabel: "", secondaryUrl: "",
+    },
+  },
+};
+// Every field any preset sets: switching page type resets these.
+const PRESET_FIELDS = (() => {
+  const f = {};
+  Object.values(PAGE_PRESETS).forEach((pr) => Object.entries(pr).forEach(([sec, vals]) => {
+    f[sec] = f[sec] || new Set();
+    Object.keys(vals).forEach((k) => f[sec].add(k));
+  }));
+  return f;
+})();
+// The editor's page-type switch: that page's copy in every preset field
+// (fields the preset doesn't set go back to the defaults).
+export function applyPageType(cfg, type) {
+  const pr = PAGE_PRESETS[type] || {};
+  const out = { ...cfg, pageType: type, presetFor: type };
+  Object.entries(PRESET_FIELDS).forEach(([sec, keys]) => {
+    out[sec] = { ...(cfg[sec] || {}) };
+    keys.forEach((k) => { out[sec][k] = pr[sec] && k in pr[sec] ? pr[sec][k] : REG_DEFAULTS[sec][k]; });
+  });
+  return out;
+}
+
 export function mergeRegConfig(incoming = {}) {
   const out = mergePageConfig(REG_DEFAULTS, incoming);
   // Earlier default, saved into existing copies by the editor: update it.
@@ -119,6 +245,14 @@ export function mergeRegConfig(incoming = {}) {
     const [sec, key] = k.split(".");
     if (String(out[sec][key] || "").replace(/\r/g, "") === v) out[sec][key] = REG_DEFAULTS[sec][key];
   });
+  // A page type chosen without the editor filling its copy in (or an older
+  // saved copy): fields still at the general default take the page's copy.
+  if (!PAGE_PRESETS[out.pageType]) out.pageType = "registration";
+  if (out.pageType !== "registration" && out.presetFor !== out.pageType) {
+    Object.entries(PAGE_PRESETS[out.pageType]).forEach(([sec, vals]) => Object.entries(vals).forEach(([k, v]) => {
+      if (out[sec][k] === undefined || out[sec][k] === REG_DEFAULTS[sec][k]) out[sec][k] = v;
+    }));
+  }
   return out;
 }
 
@@ -857,6 +991,13 @@ export default class extends HTMLElement {
     root.querySelectorAll("[data-site-contact]").forEach((b) => b.addEventListener("click", () => { if (!findPlannerContact(cfg.panel.plannerContactSelector)) this._siteContactLink()?.click(); }));
     this._rendered = true;
     syncPageStyles(this._target || this._doc);
+    root.querySelectorAll("[data-site-page]").forEach((a) => a.addEventListener("click", (e) => {
+      e.preventDefault();
+      const want = a.dataset.sitePage === "agenda" ? /^\s*(agenda|program(me)?)\s*$/i : new RegExp(`^\\s*${a.dataset.sitePage}\\s*$`, "i");
+      const t = this._target || this._doc;
+      const link = [...t.querySelectorAll("[class*=WebsiteNavigator] [role=link], [class*=WebsiteNavigator__menuItem] > *, nav a[href], a[href]")].find((n) => want.test(n.textContent || "") && !this.contains(n));
+      if (link) link.click(); else console.warn(`[reg-pages] No “${a.dataset.sitePage}” page in the site menu.`);
+    }));
     root.querySelectorAll("[data-cvent-action]").forEach((a) => a.addEventListener("click", (e) => {
       e.preventDefault();
       const native = findNative(this._target || this._doc, a.dataset.cventAction);
@@ -933,15 +1074,16 @@ export default class extends HTMLElement {
   }
 
   // ---- CONFIRMATION -------------------------------------------------------------
-  _confirmation({ cfg, P, person, lang }) {
+  _confirmation({ cfg, P, person, lang, facts }) {
     const c = cfg.confirmation;
-    const heading = person.first
+    const ev = (x) => String(x || "").replace(/\{event\}/g, facts?.title || "").replace(/\{date\}/g, facts?.dateLong || "").replace(/\{time\}/g, [facts?.timeRange, facts?.tzShort].filter(Boolean).join(" "));
+    const heading = ev(person.first
       ? P("confirmation", "heading", c.heading).replace(/\{first\}/g, person.first)
-      : P("confirmation", "headingNoName", c.headingNoName);
+      : P("confirmation", "headingNoName", c.headingNoName));
     // The email is set in bold; everything else is escaped text.
-    const rawBody = person.email ? P("confirmation", "body", c.body) : P("confirmation", "bodyNoEmail", c.bodyNoEmail);
+    const rawBody = ev(person.email ? P("confirmation", "body", c.body) : P("confirmation", "bodyNoEmail", c.bodyNoEmail));
     const body = esc(rawBody).replace(/\{email\}/g, `<b>${esc(person.email)}</b>`).replace(/\{first\}/g, esc(person.first));
-    const steps = lines(P("confirmation", "steps", c.steps)).map((l) => {
+    const steps = lines(ev(P("confirmation", "steps", c.steps))).map((l) => {
       const i = l.indexOf("|");
       return i < 0 ? { t: l, d: "" } : { t: l.slice(0, i).trim(), d: l.slice(i + 1).trim() };
     });
@@ -949,6 +1091,9 @@ export default class extends HTMLElement {
       // "#modify" / "#cancel": Cvent's own Modify / Cancel Registration button
       // on this page does the work (its link is per attendee); ours stands in.
       const act = nativeAction(url);
+      const cls = `pk-btn pk-btn--lg ${primary ? "pk-btn--primary" : "pk-btn--secondary"} ${cfg.theme === "dark" ? "pk-btn--on-dark" : "pk-btn--on-light"}`;
+      if (/^#contact$/i.test(String(url || "").trim())) return label ? `<a class="${cls}" href="#" data-planner-contact>${esc(label)}</a>` : "";
+      if (/^#(agenda|home|speakers|venue)$/i.test(String(url || "").trim())) return label ? `<a class="${cls}" href="#" data-site-page="${esc(String(url).trim().slice(1).toLowerCase())}">${esc(label)}</a>` : "";
       if (act) return label ? `<a class="pk-btn pk-btn--lg ${primary ? "pk-btn--primary" : "pk-btn--secondary"} ${cfg.theme === "dark" ? "pk-btn--on-dark" : "pk-btn--on-light"}" href="#" role="button" data-cvent-action="${act}">${esc(label)}</a>` : "";
       const u = safeUrl(url, "");
       if (!label || !u) return "";
@@ -958,8 +1103,8 @@ export default class extends HTMLElement {
     const btns = btn(P("confirmation", "primaryLabel", c.primaryLabel), c.primaryUrl, true) + btn(P("confirmation", "secondaryLabel", c.secondaryLabel), c.secondaryUrl, false);
     const qLabel = P("confirmation", "tertiaryLabel", c.tertiaryLabel), qAct = nativeAction(c.tertiaryUrl), qUrl = qAct ? "#" : safeUrl(c.tertiaryUrl, "");
     const quiet = qLabel && qUrl ? `<a class="rg-quiet" href="${esc(qUrl)}"${qAct ? ` role="button" data-cvent-action="${qAct}"` : isExternal(qUrl) ? ' target="_blank" rel="noopener"' : ""}>${esc(qLabel)}</a>` : "";
-    const cTitle = String(P("confirmation", "calloutTitle", c.calloutTitle) || "").trim();
-    const cText = String(P("confirmation", "calloutText", c.calloutText) || "").trim();
+    const cTitle = ev(P("confirmation", "calloutTitle", c.calloutTitle)).trim();
+    const cText = ev(P("confirmation", "calloutText", c.calloutText)).trim();
     const done = Math.max(0, Math.min(steps.length, Math.round(Number(c.stepsDone ?? 1)) || 0));
     return `
     <section class="rg-done" aria-label="${esc(heading)}">
