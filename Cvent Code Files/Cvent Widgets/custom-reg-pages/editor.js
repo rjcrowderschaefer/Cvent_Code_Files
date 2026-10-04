@@ -3,12 +3,13 @@
 // groups (General / Page layout / Closing band), which don't apply here.
 import { PageEditor, EDITOR_KIT_BUILD, EDITOR_CSS } from "./editor-kit.js";
 import { PAGE_KIT_BUILD } from "./page-kit.js";
-import { REG_DEFAULTS, mergeRegConfig, BUILD, PAGE_TYPES, applyPageType } from "./widget.js";
+import { REG_DEFAULTS, mergeRegConfig, BUILD, PAGE_TYPES, applyPageType, pageConfig, STATUS_PAGES } from "./widget.js";
 
 const MODES = [
   ["banner", "Banner: page header (event, “Request to attend”, date · venue)"],
   ["panel", "Side panel: “Your request” summary beside the form"],
   ["confirmation", "Confirmation / status: heading, text, timeline, buttons (pending, approved, denied, archive pages)"],
+  ["page", "Whole page: banner, status and side panel (one copy in a shared header)"],
   ["styles", "Page styles only (invisible): for text-block pages"],
 ];
 
@@ -17,8 +18,27 @@ export default class RegPagesEditor extends PageEditor {
   // edits (even back to a general default) are kept.
   merge(cfg) {
     const m = mergeRegConfig(cfg);
-    if (m.pageType !== "registration" && m.presetFor !== m.pageType) m.presetFor = m.pageType;
+    if (m.pageType !== "registration" && m.pageType !== "auto" && m.presetFor !== m.pageType) m.presetFor = m.pageType;
     return m;
+  }
+  // Whole-page copy: the page whose wording is being edited.
+  _editPage(c) {
+    const ok = (t) => PAGE_TYPES.some(([k]) => k === t && k !== "auto");
+    if (ok(c.editPage)) return c.editPage;
+    return ok(c.pageType) ? c.pageType : "pending";
+  }
+  // Whole-page copy: banner / panel / status edits go to the page being edited.
+  _patchSection(section, partial) {
+    const c = this._config;
+    if (c.mode === "page" && ["banner", "panel", "confirmation"].includes(section)) {
+      const ed = this._editPage(c);
+      const view = pageConfig(c, ed);
+      const pages = { ...(c.pages || {}) };
+      pages[ed] = { ...(pages[ed] || {}), [section]: { ...view[section], ...partial } };
+      this._patch({ pages });
+      return;
+    }
+    super._patchSection(section, partial);
   }
   get defaults() { return REG_DEFAULTS; }
   get title() { return "Registration pages widget"; }
@@ -27,8 +47,21 @@ export default class RegPagesEditor extends PageEditor {
   groups(c) {
     const S = (sec) => (p) => this._patchSection(sec, p);
     const out = [this._setupGroup(c)];
-    if (c.mode === "banner") {
-      const b = c.banner, B = S("banner");
+    const whole = c.mode === "page";
+    const ed = this._editPage(c);
+    const v = whole ? pageConfig(c, ed) : c;
+    if (whole) {
+      out.push(this._group("wholepage", "Whole page", true, null, [
+        this._area("Page addresses (optional)", c.pageAddresses, (val) => this._patch({ pageAddresses: val }), { rows: 3,
+          hint: "Only if a page is recognised wrongly. One per line: words from the page address = page, e.g. registrationPendingApprovalPage = pending. Pages: " + PAGE_TYPES.filter(([k]) => k !== "auto").map(([k]) => k).join(", ") + "." }),
+        this._check("Status pages: hide Cvent’s own page content below", c.hideBody !== false, (val) => this._patch({ hideBody: val })),
+        this._check("Form pages: put the side panel beside Cvent’s form", c.injectPanel !== false, (val) => this._patch({ injectPanel: val })),
+        this._select("Edit the wording for", ed, PAGE_TYPES.filter(([k]) => k !== "auto"), (val) => this._patch({ editPage: val }),
+          "Each page keeps its own banner, status and side panel wording. Pick a page, then edit below."),
+      ]));
+    }
+    if (c.mode === "banner" || whole) {
+      const b = v.banner, B = S("banner");
       out.push(this._group("banner", "Banner", true, null, [
         this._text("Eyebrow", b.eyebrow, (v) => B({ eyebrow: v }), { hint: "Blank = the event name." }),
         this._text("Title", b.title, (v) => B({ title: v })),
@@ -41,8 +74,8 @@ export default class RegPagesEditor extends PageEditor {
         ...(b.bgImageUrl || b.bgImageData ? [this._num("Darken image (%)", b.bgOverlay, (v) => B({ bgOverlay: v }), { max: 90 })] : []),
       ]));
     }
-    if (c.mode === "panel") {
-      const p = c.panel, P = S("panel");
+    if (c.mode === "panel" || whole) {
+      const p = v.panel, P = S("panel");
       out.push(this._group("panel", "Side panel", true, null, [
         this._text("Eyebrow", p.eyebrow, (v) => P({ eyebrow: v })),
         this._text("Heading", p.heading, (v) => P({ heading: v }), { hint: "Blank = the event name." }),
@@ -61,8 +94,8 @@ export default class RegPagesEditor extends PageEditor {
         this._text("Contact Planner button: CSS selector (advanced)", p.plannerContactSelector, (v) => P({ plannerContactSelector: v.trim() }), { hint: "Only if the widget’s button isn’t found automatically." }),
       ]));
     }
-    if (c.mode === "confirmation") {
-      const k = c.confirmation, K = S("confirmation");
+    if (c.mode === "confirmation" || (whole && STATUS_PAGES.includes(ed))) {
+      const k = v.confirmation, K = S("confirmation");
       out.push(this._group("confirmation", "Confirmation", true, null, [
         this._text("Heading", k.heading, (v) => K({ heading: v }), { hint: "{first} = the registrant’s first name." }),
         this._text("Heading when the name isn’t available", k.headingNoName, (v) => K({ headingNoName: v })),
@@ -94,7 +127,7 @@ export default class RegPagesEditor extends PageEditor {
       ]);
     }
     return this._group("general", "Setup", true, null, [
-      this._select("Page", c.pageType, PAGE_TYPES, (v) => this._patch(applyPageType(this._config, v)),
+      this._select("Page", c.pageType, PAGE_TYPES, (v) => this._patch(this._config.mode === "page" || v === "auto" ? { pageType: v, editPage: v === "auto" ? this._config.editPage : v } : applyPageType(this._config, v)),
         "Fills in this page’s wording, buttons and settings for every part (banner, status, side panel). Edit anything below afterwards. Choosing another page replaces those fields with its copy. Set the same page on every copy."),
       this._select("What this copy shows", c.mode, MODES, (v) => this._patch({ mode: v }),
         "Place one copy per job: the banner in the page header, the side panel beside the form or the status text, the confirmation / status copy on post-registration pages."),

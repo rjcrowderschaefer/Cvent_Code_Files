@@ -303,6 +303,10 @@ ${R} [data-bbg-state-wait] { display: none !important; }
 ${R} .bbg-person, .bbg-person { display: none !important; }
 /* Cvent's own Modify / Cancel Registration buttons, when the widget's buttons stand in for them (still clickable by the widget). */
 [data-bbg-native-hidden] { display: none !important; }
+/* A whole-page copy (shared header) on a status page draws the page itself:
+   Cvent's own page content below it is hidden (still in the page, so Cvent's
+   Modify / Cancel buttons and the bbg-person block keep working). */
+${R}.bbg-reg--hide-body [role=main] [class*=Grid__sectionContainer]:not(:has([data-bbg-reg], .site-footer, .cus_nav, #navigationContainer)):not([data-bbg-reg] *):not(.site-footer *):not([class*=Grid__grid]:has(.site-footer) *) { display: none !important; }
 ${R} [data-bbg-fadein] { animation: bbgRegFieldIn .28s ease both; }
 @keyframes bbgRegFieldIn { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { ${R} [data-bbg-fadein] { animation: none; } }
