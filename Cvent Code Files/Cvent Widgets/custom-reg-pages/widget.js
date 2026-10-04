@@ -22,7 +22,7 @@ import {
 } from "./page-kit.js";
 import { REG_FORM_CSS, regFormCss } from "./reg-form-css.js";
 
-export const BUILD = "reg-2026-10-04a";
+export const BUILD = "reg-2026-10-04b";
 
 export const REG_DEFAULTS = {
   mode: "banner",            // "banner" | "panel" | "confirmation" | "styles" (page CSS only, draws nothing)
@@ -91,6 +91,13 @@ export const REG_DEFAULTS = {
     primaryUrl: "",
     secondaryLabel: "Contact the Bloomberg Team",
     secondaryUrl: "",
+    // Post-registration pages (2026-10-04): approved confirmation, denied, archive.
+    showTick: true,          // the amber check mark above the heading (good news only)
+    stepsDone: 1,            // timeline steps marked as done, from the top
+    tertiaryLabel: "",       // a quiet underlined link after the buttons (e.g. "Cancel registration")
+    tertiaryUrl: "",
+    calloutTitle: "",        // an outlined box above the buttons; blank title + text = none
+    calloutText: "",
   },
   translations: {},
 };
@@ -633,7 +640,7 @@ export default class extends HTMLElement {
       const root = this.shadowRoot.querySelector(".pk");
       if (root) this._renderInto(root);
     }
-    const FORM_BITS = ".left-align-fields, [class*=Forms__container], [class*=ButtonGroup__buttonGroup]";
+    const FORM_BITS = ".left-align-fields, [class*=Forms__container], [class*=ButtonGroup__buttonGroup], [data-bbg-reg-mode=confirmation]";
     // The nearest ancestor whose parent also holds the form in another child:
     // that parent is the row, this ancestor the panel's column (wrappers allowed).
     for (let el = this; el && el.parentElement; el = el.parentElement) {
@@ -872,13 +879,19 @@ export default class extends HTMLElement {
       return `<a${/^mailto:/i.test(u) ? " data-planner-contact" : ""} class="pk-btn pk-btn--lg ${primary ? "pk-btn--primary" : "pk-btn--secondary"} ${cfg.theme === "dark" ? "pk-btn--on-dark" : "pk-btn--on-light"}" href="${esc(u)}"${ext ? ' target="_blank" rel="noopener"' : ""}>${esc(label)}${ext ? `<span class="pk-sr"> ${esc(fixed(lang, "opensNewTab"))}</span>` : ""}</a>`;
     };
     const btns = btn(P("confirmation", "primaryLabel", c.primaryLabel), c.primaryUrl, true) + btn(P("confirmation", "secondaryLabel", c.secondaryLabel), c.secondaryUrl, false);
+    const qLabel = P("confirmation", "tertiaryLabel", c.tertiaryLabel), qUrl = safeUrl(c.tertiaryUrl, "");
+    const quiet = qLabel && qUrl ? `<a class="rg-quiet" href="${esc(qUrl)}"${isExternal(qUrl) ? ' target="_blank" rel="noopener"' : ""}>${esc(qLabel)}</a>` : "";
+    const cTitle = String(P("confirmation", "calloutTitle", c.calloutTitle) || "").trim();
+    const cText = String(P("confirmation", "calloutText", c.calloutText) || "").trim();
+    const done = Math.max(0, Math.min(steps.length, Math.round(Number(c.stepsDone ?? 1)) || 0));
     return `
     <section class="rg-done" aria-label="${esc(heading)}">
-      <div class="rg-tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+      ${c.showTick !== false ? '<div class="rg-tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>' : ""}
       <h2 class="rg-dh">${esc(heading)}</h2>
       ${rawBody ? `<p class="rg-dp">${body}</p>` : ""}
-      ${steps.length ? `<ol class="rg-tl">${steps.map((s, i) => `<li><i class="${i === 0 ? "on" : ""}" aria-hidden="true"></i><div><b>${esc(s.t)}</b>${s.d ? `<span>${esc(s.d)}</span>` : ""}</div></li>`).join("")}</ol>` : ""}
-      ${btns ? `<div class="rg-btns">${btns}</div>` : ""}
+      ${steps.length ? `<ol class="rg-tl">${steps.map((s, i) => `<li><i class="${i < done ? "on" : ""}" aria-hidden="true"></i><div><b>${esc(s.t)}</b>${s.d ? `<span>${esc(s.d)}</span>` : ""}</div></li>`).join("")}</ol>` : ""}
+      ${cTitle || cText ? `<div class="rg-callout">${cTitle ? `<b>${esc(cTitle)}</b>` : ""}${cText ? `<span>${esc(cText)}</span>` : ""}</div>` : ""}
+      ${btns || quiet ? `<div class="rg-btns">${btns}${quiet}</div>` : ""}
     </section>`;
   }
 }
@@ -932,7 +945,13 @@ const WIDGET_CSS = `
   .rg-tl i.on { border-color: var(--rg-accent); background: var(--rg-accent); }
   .rg-tl b { display: block; font-size: 16.5px; color: var(--rg-ink); }
   .rg-tl span { font-size: 15px; color: var(--rg-body); }
-  .rg-btns { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+  .rg-btns { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 28px; }
+  .rg-quiet { margin-left: auto; font-size: 14px; font-weight: 600; color: var(--rg-muted); text-decoration: underline; text-underline-offset: 3px; }
+  .rg-quiet:hover { color: var(--rg-link); }
+  .rg-quiet:focus-visible { outline: 3px solid rgba(43,108,232,.45); outline-offset: 2px; }
+  .rg-callout { margin-top: 26px; padding: 20px 22px; border: 1px solid var(--rg-hair); border-radius: 2px; display: grid; gap: 4px; }
+  .rg-callout b { font-size: 16px; color: var(--rg-ink); }
+  .rg-callout span { font-size: 15px; line-height: 1.5; color: var(--rg-body); }
   /* step bar under the banner (drawn from Cvent's own, which is hidden) */
   .rg-steps { background: var(--rg-ground); border-bottom: 1px solid var(--rg-hair); }
   .rg--dark .rg-steps { border-top: 1px solid var(--rg-hair); }
@@ -969,5 +988,6 @@ const WIDGET_CSS = `
     .rg-meta i { display: none; }
     .rg-panel { padding: 22px 20px; }
     .rg-btns .pk-btn { width: 100%; }
+    .rg-quiet { margin: 6px auto 0; }
   }
 `;

@@ -8,7 +8,7 @@ import { REG_DEFAULTS, mergeRegConfig, BUILD } from "./widget.js";
 const MODES = [
   ["banner", "Banner: page header (event, “Request to attend”, date · venue)"],
   ["panel", "Side panel: “Your request” summary beside the form"],
-  ["confirmation", "Confirmation: “Thanks, your request is in”"],
+  ["confirmation", "Confirmation / status: heading, text, timeline, buttons (pending, approved, denied, archive pages)"],
   ["styles", "Page styles only (invisible): for text-block pages"],
 ];
 
@@ -62,12 +62,19 @@ export default class RegPagesEditor extends PageEditor {
         this._text("Heading when the name isn’t available", k.headingNoName, (v) => K({ headingNoName: v })),
         this._area("Text", k.body, (v) => K({ body: v }), { rows: 3, hint: "{email} = their email address, shown in bold." }),
         this._area("Text when the email isn’t available", k.bodyNoEmail, (v) => K({ bodyNoEmail: v }), { rows: 3 }),
-        this._area("Timeline", k.steps, (v) => K({ steps: v }), { rows: 4, hint: "One step per line: Title | detail. The first step is marked as done." }),
+        this._check("Show the check mark above the heading", k.showTick !== false, (v) => K({ showTick: v })),
+        this._area("Timeline", k.steps, (v) => K({ steps: v }), { rows: 4, hint: "One step per line: Title | detail. Blank = no timeline." }),
+        this._num("Steps marked as done", k.stepsDone ?? 1, (v) => K({ stepsDone: v }), { max: 5 }),
         this._sub("Buttons"),
         this._text("Primary button label", k.primaryLabel, (v) => K({ primaryLabel: v })),
         this._text("Primary button URL", k.primaryUrl, (v) => K({ primaryUrl: v.trim() }), { hint: "e.g. the Agenda page. Blank = no button." }),
         this._text("Second button label", k.secondaryLabel, (v) => K({ secondaryLabel: v })),
         this._text("Second button URL", k.secondaryUrl, (v) => K({ secondaryUrl: v.trim() }), { hint: "e.g. the Contact page. Blank = no button." }),
+        this._text("Small link after the buttons", k.tertiaryLabel, (v) => K({ tertiaryLabel: v }), { hint: "e.g. Cancel registration. Blank = none." }),
+        this._text("Small link URL", k.tertiaryUrl, (v) => K({ tertiaryUrl: v.trim() })),
+        this._sub("Box above the buttons (optional)"),
+        this._text("Box title", k.calloutTitle, (v) => K({ calloutTitle: v }), { hint: "e.g. Watch the program online. Blank title and text = no box." }),
+        this._area("Box text", k.calloutText, (v) => K({ calloutText: v }), { rows: 2 }),
       ]));
     }
     return out;
@@ -82,7 +89,7 @@ export default class RegPagesEditor extends PageEditor {
     }
     return this._group("general", "Setup", true, null, [
       this._select("What this copy shows", c.mode, MODES, (v) => this._patch({ mode: v }),
-        "Place one copy per job: the banner in the page header, the side panel beside the form, the confirmation on the pending-approval page."),
+        "Place one copy per job: the banner in the page header, the side panel beside the form or the status text, the confirmation / status copy on post-registration pages."),
       this._select("Theme", c.theme, [["light", "Light"], ["dark", "Dark"]], (v) => this._patch({ theme: v }),
         "Applies to this widget and to Cvent’s form on the page. When a page has several copies, the banner’s theme wins; set the same theme on every copy."),
       this._check("Restyle Cvent’s registration form on this page", c.styleForm !== false, (v) => this._patch({ styleForm: v })),

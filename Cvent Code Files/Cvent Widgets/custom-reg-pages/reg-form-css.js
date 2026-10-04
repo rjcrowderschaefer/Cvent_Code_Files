@@ -102,7 +102,7 @@ ${R} [class*=Grid__column]:has([data-bbg-reg-mode=panel]):not(:has([class*=Grid_
   ${R} [data-bbg-reg-formcol] [data-cvent-id=containerParent]:has([data-bbg-form]) { padding-left: 0 !important; padding-right: 0 !important; }
   /* Site Designer wraps each column for drag and drop, so the marked children
      can be wrappers: the Cvent columns inside them fill the wrapper. */
-  ${R} :is([data-bbg-reg-formcol], [data-bbg-reg-panelcol]) [class*=Grid__column]:has(.left-align-fields, [data-bbg-form], [data-bbg-reg-mode=panel], [class*=Forms__container]):not(:is(.left-align-fields, [data-bbg-form]) *) { width: 100% !important; max-width: 100% !important; flex: 0 0 100% !important; margin-left: 0 !important; margin-inline-start: 0 !important; left: auto !important; right: auto !important; }
+  ${R} :is([data-bbg-reg-formcol], [data-bbg-reg-panelcol]) [class*=Grid__column]:has(.left-align-fields, [data-bbg-form], [data-bbg-reg-mode=panel], [data-bbg-reg-mode=confirmation], [class*=Forms__container]):not(:is(.left-align-fields, [data-bbg-form]) *) { width: 100% !important; max-width: 100% !important; flex: 0 0 100% !important; margin-left: 0 !important; margin-inline-start: 0 !important; left: auto !important; right: auto !important; }
 }
 
 /* Narrower screens: form first, then the panel, both full width. */

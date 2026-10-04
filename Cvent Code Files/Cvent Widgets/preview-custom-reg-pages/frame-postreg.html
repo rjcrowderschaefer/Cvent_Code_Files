@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>widget frame: post-registration page</title>
+<style>
+  /* A stand-in for a Cvent post-registration page (no form): banner copy in
+     the header region, then one row with two half columns, the
+     confirmation / status copy left and the side panel copy right. Load with
+     ?all=1 so frame.js places all three copies. */
+  body { margin: 0; font: 14px/1.4 Arial, sans-serif; background: #fff; }
+  .cus_nav { height: 64px; background: #0b0b0c; display: flex; align-items: center; padding: 0 24px; font: 700 13px Arial; letter-spacing: .08em; color: #aaa; }
+  [class*=Grid__row] { display: flex; }
+  [class*=Grid__col_6] { width: 50%; }
+  .site-footer { background: #000; color: #999; padding: 40px 24px; }
+  #slot-panel:empty, #slot-banner:empty, #slot-confirm:empty { display: none; }
+</style>
+</head>
+<body>
+<div class="AppContainer__container___9f2a">
+  <div role="banner"><div class="cus_nav">FAKE CVENT NAV</div></div>
+  <div role="main">
+    <div class="Grid__grid___1a"><div class="Grid__sectionContainer___2b"><div id="slot-banner"></div></div></div>
+    <div class="Grid__grid___1a"><div class="Grid__sectionContainer___2b">
+      <div class="Grid__row___r" style="max-width:1240px;margin:0 auto;padding:44px 48px;box-sizing:border-box">
+        <div class="Grid__column___c Grid__col_6___c"><div id="slot-confirm"></div></div>
+        <div class="Grid__column___c Grid__col_6___c"><div id="slot-panel"></div></div>
+      </div>
+    </div></div>
+    <div class="Grid__grid___1a"><div class="Grid__sectionContainer___2b" style="padding:0"><div class="site-footer">Black site footer (never restyled)</div></div></div>
+  </div>
+</div>
+<script type="module">import(`./frame.js?v=${Date.now()}`);</script>
+</body>
+</html>
