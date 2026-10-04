@@ -9,6 +9,7 @@ const MODES = [
   ["banner", "Banner: page header (event, “Request to attend”, date · venue)"],
   ["panel", "Side panel: “Your request” summary beside the form"],
   ["confirmation", "Confirmation: “Thanks, your request is in”"],
+  ["styles", "Page styles only (invisible): for text-block pages"],
 ];
 
 export default class RegPagesEditor extends PageEditor {
@@ -73,6 +74,12 @@ export default class RegPagesEditor extends PageEditor {
   }
 
   _setupGroup(c) {
+    if (c.mode === "styles") {
+      return this._group("general", "Setup", true, null, [
+        this._select("What this copy shows", c.mode, MODES, (v) => this._patch({ mode: v })),
+        this._hint("Draws nothing. It brings the page styles for pages built from Cvent text blocks (Request received, Confirmation, Registration denied, Archive): the containers with the classes bbg-confirm-banner, bbg-confirm, bbg-confirm-panel, bbg-confirm-callout and bbg-confirm-note. One copy per page is enough, or one in the default header or footer for every page. Cvent's own form is left alone."),
+      ]);
+    }
     return this._group("general", "Setup", true, null, [
       this._select("What this copy shows", c.mode, MODES, (v) => this._patch({ mode: v }),
         "Place one copy per job: the banner in the page header, the side panel beside the form, the confirmation on the pending-approval page."),

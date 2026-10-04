@@ -18,14 +18,14 @@ import { ensureBrandFont } from "./type-scale.js";
 import {
   TOKENS, esc, safeUrl, isExternal, lines, fixed, resolveLang, loadEventData, eventFacts,
   kitCss, applyFullBleed, mergePageConfig, LABEL_PX, holdHeight, trackScroll, noteConfig, restoreScroll,
-  findPlannerContact, wirePlannerContact,
+  findPlannerContact, wirePlannerContact, ensureSiteCss,
 } from "./page-kit.js";
 import { REG_FORM_CSS, regFormCss } from "./reg-form-css.js";
 
-export const BUILD = "reg-2026-10-03b";
+export const BUILD = "reg-2026-10-04a";
 
 export const REG_DEFAULTS = {
-  mode: "banner",            // "banner" | "panel" | "confirmation"
+  mode: "banner",            // "banner" | "panel" | "confirmation" | "styles" (page CSS only, draws nothing)
   theme: "light",            // "light" | "dark": the form area and this widget
   styleForm: true,           // restyle Cvent's registration form on this page
   hideOldHeader: true,       // hide the old "Event registration" text box in the page header
@@ -174,7 +174,7 @@ function registry(t) {
 export function syncPageStyles(t = document) {
   if (!t) return;
   const set = registry(t);
-  const active = [...set].filter((w) => w.isConnected && w._cfg?.styleForm !== false);
+  const active = [...set].filter((w) => w.isConnected && w._cfg?.styleForm !== false && w._cfg?.mode !== "styles");
   const els = stateEls(t);
   let tag = isDoc(t) ? t.getElementById(STYLE_ID) : t.querySelector(`#${STYLE_ID}`);
   if (!active.length) {
@@ -254,6 +254,12 @@ export default class extends HTMLElement {
 
   async connectedCallback() {
     if (this._cfg.useBrandFont !== false) ensureBrandFont();
+    // "Page styles only": this widget type is the one Cvent offers on every
+    // registration and post-registration page (and the default header /
+    // footer), so one invisible copy brings the page CSS (CONFIRM_PAGE_CSS:
+    // the bbg-confirm text-block pages) where no other widget can go. It
+    // draws nothing and leaves Cvent's form alone.
+    if (this._cfg.mode === "styles") { this._connectStylesOnly(); return; }
     this.setAttribute("data-bbg-reg", "");
     this._stepsGraceUntil = Date.now() + 2000;
     clearTimeout(this._graceTimer);
@@ -275,6 +281,22 @@ export default class extends HTMLElement {
     this._scrollCleanup = trackScroll(this, tag, this.configuration);
   }
 
+  _connectStylesOnly() {
+    try { ensureSiteCss(this._doc); } catch (e) { /* page CSS is a nicety */ }
+    this.setAttribute("data-bbg-reg", "");
+    this.setAttribute("data-bbg-reg-mode", "styles");
+    this.style.display = "block";
+    this.style.height = "0";
+    this.style.overflow = "hidden";
+    if (!this.shadowRoot.querySelector(".pk")) {
+      const root = document.createElement("div");
+      root.className = "pk";
+      root.dataset.build = BUILD;
+      root.setAttribute("aria-hidden", "true");
+      this.shadowRoot.append(root);
+    }
+  }
+
   disconnectedCallback() {
     this._scrollCleanup?.();
     clearTimeout(this._retry);
@@ -293,8 +315,18 @@ export default class extends HTMLElement {
   }
 
   onConfigurationUpdate(newConfig) {
+    const wasStyles = this._cfg?.mode === "styles";
     this.configuration = newConfig || {};
     this._cfg = mergeRegConfig(this.configuration);
+    // Switching to or from "Page styles only": start over, as on first load.
+    if (wasStyles !== (this._cfg.mode === "styles")) {
+      if (!wasStyles) this.disconnectedCallback();
+      this.shadowRoot.innerHTML = "";
+      this.removeAttribute("style");
+      if (this.isConnected) this.connectedCallback();
+      return;
+    }
+    if (this._cfg.mode === "styles") return;
     noteConfig(this, this.configuration);
     syncPageStyles(this._target || this._doc);
     const root = this.shadowRoot?.querySelector(".pk");
