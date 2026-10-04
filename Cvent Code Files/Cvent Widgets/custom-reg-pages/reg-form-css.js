@@ -23,7 +23,7 @@ const FONT = `"AvenirNextforBBG","AvenirNextPForBBG","Avenir Next",Helvetica,Ari
 export function regFormCss(R = "html.bbg-reg") {
 // Sections of the page body that hold the form (not the site footer). A
 // section with the CSS class "bbg-reg-page" (set in Cvent) always counts.
-const BODY_SEC = `:is(.bbg-reg-page, [class*=Grid__sectionContainer]:not([role=banner] *):not(.site-footer *):not(:has(.site-footer, .cus_nav, #navigationContainer, [class*=ProgressBar__wrapper], [data-cvent-id*=ProgressBar-widget])))`;
+const BODY_SEC = `:is(.bbg-reg-page, [class*=Grid__sectionContainer]:not([role=banner] *):not(.site-footer *):not([class*=Grid__grid]:has(.site-footer) *):not(:has(.site-footer, .cus_nav, #navigationContainer, [class*=ProgressBar__wrapper], [data-cvent-id*=ProgressBar-widget])))`;
 const BODY = `${R} :where(${BODY_SEC})`;
 // The site nav section. On some events Cvent puts its step bar INSIDE this
 // section, so the step-bar rules below must never match it: hiding or
@@ -96,6 +96,8 @@ ${R} [class*=Grid__column]:has([data-bbg-reg-mode=panel]):not(:has([class*=Grid_
      form lines up under the banner title. */
   ${R} [data-bbg-reg-row] { display: grid !important; grid-template-columns: minmax(0, 1fr) 380px; column-gap: 56px; align-items: start !important; width: 100% !important; max-width: 1144px !important; margin-left: auto !important; margin-right: auto !important; }
   ${R} [data-bbg-reg-row] > * { width: auto !important; max-width: none !important; min-width: 0 !important; flex: none !important; margin: 0 !important; left: auto !important; right: auto !important; }
+  /* Post-registration pages: status copy + panel, page spacing as the mockup. */
+  ${R} [data-bbg-reg-row]:has(> [data-bbg-reg-formcol] [data-bbg-reg-mode=confirmation]) { box-sizing: border-box !important; max-width: 1240px !important; padding: 48px 48px 72px !important; }
   ${R} [data-bbg-reg-row] > [data-bbg-reg-panelcol] { position: sticky; top: 96px; z-index: 3; align-self: start; margin-top: var(--bbg-reg-panel-top, 0px) !important; }
   ${R} [data-bbg-reg-row] :is(.left-align-fields, [data-bbg-form]) { padding-left: 0 !important; padding-right: 0 !important; }
   /* Review page: the form box sits in a second Cvent container, padded too. */
@@ -110,6 +112,7 @@ ${R} [class*=Grid__column]:has([data-bbg-reg-mode=panel]):not(:has([class*=Grid_
   ${R} [data-bbg-reg-row] { display: block !important; }
   ${R} [data-bbg-reg-row] > * { width: 100% !important; max-width: 100% !important; flex: none !important; margin: 0 !important; }
   ${R} [data-bbg-reg-row] > [data-bbg-reg-panelcol] { margin-top: 32px !important; }
+  ${R} [data-bbg-reg-row]:has(> [data-bbg-reg-formcol] [data-bbg-reg-mode=confirmation]) { padding: 32px 20px 48px !important; }
 }
 
 /* Site Designer: a drag-and-drop wrapper around a Cvent column behaves like the
@@ -296,6 +299,8 @@ ${BODY} fieldset > legend + * { clear: both; }
 ${BODY} :is([data-cvent-id=attendeeListOptIn], [data-cvent-id*=AttendeeListOptIn-widget]), ${BODY} fieldset[class*=Forms__element] { margin-top: 22px !important; padding-top: 22px !important; border-top: 1px solid var(--r-hair) !important; }
 /* State / region before Country has an answer (the widget marks it). */
 ${R} [data-bbg-state-wait] { display: none !important; }
+/* The registrant's name / email placed with Cvent data tags for the widget to read. */
+${R} .bbg-person, .bbg-person { display: none !important; }
 ${R} [data-bbg-fadein] { animation: bbgRegFieldIn .28s ease both; }
 @keyframes bbgRegFieldIn { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { ${R} [data-bbg-fadein] { animation: none; } }

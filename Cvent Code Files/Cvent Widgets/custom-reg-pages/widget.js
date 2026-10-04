@@ -22,7 +22,7 @@ import {
 } from "./page-kit.js";
 import { REG_FORM_CSS, regFormCss } from "./reg-form-css.js";
 
-export const BUILD = "reg-2026-10-04b";
+export const BUILD = "reg-2026-10-04c";
 
 export const REG_DEFAULTS = {
   mode: "banner",            // "banner" | "panel" | "confirmation" | "styles" (page CSS only, draws nothing)
@@ -308,6 +308,7 @@ export default class extends HTMLElement {
     this._scrollCleanup?.();
     clearTimeout(this._retry);
     clearTimeout(this._graceTimer);
+    clearTimeout(this._rowRetry);
     clearTimeout(this._dropTimer);
     this._dropTimer = 0;
     this._hasSteps = false;
@@ -357,6 +358,30 @@ export default class extends HTMLElement {
       c.querySelectorAll("[class*=visuallyhidden], [class*=visuallyHidden], [class*=sr-only], [class*=QuestionText__required]").forEach((n) => n.remove());
       return /^first\s*name$/i.test(c.textContent.replace(/[*\u00a0]/g, " ").trim());
     });
+  }
+  // Post-registration pages: Cvent may not hand the widget the registrant's
+  // name and email. A planner can place them on the page with Cvent's own data
+  // tags, in a container with the class "bbg-person" (first name, then email,
+  // one text block each); the widget reads them and the CSS hides the container.
+  _personFromPage() {
+    const t = this._target || this._doc;
+    const box = t?.querySelector?.(".bbg-person") || this._doc.querySelector(".bbg-person");
+    if (!box) return null;
+    const bits = [...box.querySelectorAll("p, span, div")].filter((n) => !n.children.length).map((n) => n.textContent.trim()).filter(Boolean);
+    const email = bits.find((x) => /@/.test(x)) || "";
+    const first = bits.find((x) => !/@/.test(x) && !/[{}\[\]]/.test(x)) || "";
+    return first || email ? { first, email } : null;
+  }
+  _syncPersonFromPage() {
+    if (this._cfg.mode !== "confirmation" && this._cfg.mode !== "panel") return;
+    if (this._person.first && this._person.email) return;
+    const p = this._personFromPage();
+    if (!p) return;
+    const next = { first: this._person.first || p.first, email: this._person.email || p.email };
+    if (next.first === this._person.first && next.email === this._person.email) return;
+    this._person = next;
+    const root = this.shadowRoot?.querySelector(".pk");
+    if (root && this._rendered) this._renderInto(root);
   }
   _watchPerson() {
     const apply = (v) => {
@@ -627,6 +652,7 @@ export default class extends HTMLElement {
     }
   }
   _markLayout() {
+    this._syncPersonFromPage();
     this._markFields();
     this._syncStateField();
     if (this._cfg.mode !== "panel") return;
@@ -641,6 +667,9 @@ export default class extends HTMLElement {
       if (root) this._renderInto(root);
     }
     const FORM_BITS = ".left-align-fields, [class*=Forms__container], [class*=ButtonGroup__buttonGroup], [data-bbg-reg-mode=confirmation]";
+    // Cvent may draw the other column after this one: look again for a while.
+    clearTimeout(this._rowRetry);
+    this._rowRetry = setTimeout(() => { if (this.isConnected && !this.closest("[data-bbg-reg-panelcol]") && (this._rowTries = (this._rowTries || 0) + 1) < 20) this._checkSteps?.(); }, 300);
     // The nearest ancestor whose parent also holds the form in another child:
     // that parent is the row, this ancestor the panel's column (wrappers allowed).
     for (let el = this; el && el.parentElement; el = el.parentElement) {
@@ -793,6 +822,8 @@ export default class extends HTMLElement {
     root.querySelectorAll("[data-site-contact]").forEach((b) => b.addEventListener("click", () => { if (!findPlannerContact(cfg.panel.plannerContactSelector)) this._siteContactLink()?.click(); }));
     this._rendered = true;
     syncPageStyles(this._target || this._doc);
+    // A side panel copy pairs with this copy's column once it exists: let it look again.
+    if (cfg.mode === "confirmation") registry(this._target || this._doc).forEach((w) => { if (w !== this) w._checkSteps?.(); });
     // Draw the step bar straight away from what was last read, so a redraw
     // never leaves the banner without it (no height change, no jump).
     this._paintSteps();

@@ -23,12 +23,16 @@
   <div role="main">
     <div class="Grid__grid___1a"><div class="Grid__sectionContainer___2b"><div id="slot-banner"></div></div></div>
     <div class="Grid__grid___1a"><div class="Grid__sectionContainer___2b">
-      <div class="Grid__row___r" style="max-width:1240px;margin:0 auto;padding:44px 48px;box-sizing:border-box">
+      <div class="Grid__row___r">
         <div class="Grid__column___c Grid__col_6___c"><div id="slot-confirm"></div></div>
         <div class="Grid__column___c Grid__col_6___c"><div id="slot-panel"></div></div>
       </div>
     </div></div>
-    <div class="Grid__grid___1a"><div class="Grid__sectionContainer___2b" style="padding:0"><div class="site-footer">Black site footer (never restyled)</div></div></div>
+    <!-- Registrant name / email via Cvent data tags (hidden by the widget CSS) -->
+    <div class="Grid__grid___1a"><div class="Grid__sectionContainer___2b"><div class="Container__container___x bbg-person" data-cvent-id="containerParent"><div><p>Morgan</p></div><div><p>morgan@example.com</p></div></div></div></div>
+    <!-- Footer: Cvent sections inside one Grid__grid; only one carries .site-footer.
+         The site CSS paints them black (simulated here). -->
+    <div class="Grid__grid___1a" id="footer-grid" style="background:#0b0b0c"><div class="Grid__sectionContainer___2b" id="footer-a" style="background:#0b0b0c"><div class="site-footer">Black site footer (never restyled)</div></div><div class="Grid__sectionContainer___2b" id="footer-b" style="background:#0b0b0c;color:#fff;padding:20px 24px">Footer links row (must stay black)</div></div>
   </div>
 </div>
 <script type="module">import(`./frame.js?v=${Date.now()}`);</script>
