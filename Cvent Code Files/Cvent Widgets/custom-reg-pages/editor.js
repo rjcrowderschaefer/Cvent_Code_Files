@@ -54,6 +54,13 @@ export default class RegPagesEditor extends PageEditor {
       out.push(this._group("wholepage", "Whole page", true, null, [
         this._area("Page addresses (optional)", c.pageAddresses, (val) => this._patch({ pageAddresses: val }), { rows: 3,
           hint: "Only if a page is recognised wrongly. One per line: words from the page address = page, e.g. registrationPendingApprovalPage = pending. Pages: " + PAGE_TYPES.filter(([k]) => k !== "auto").map(([k]) => k).join(", ") + "." }),
+        this._sub("Pages this copy draws (Automatic)"),
+        this._hint("Everywhere else (website pages such as Home or Agenda, and pages that already have their own banner copy) it draws nothing, so it can sit in a header shared with the whole site."),
+        ...PAGE_TYPES.filter(([k]) => k !== "auto").map(([k, label]) => this._check(label, (c.covers || []).includes(k), (on) => {
+          const set = new Set(c.covers || []); if (on) set.add(k); else set.delete(k);
+          this._patch({ covers: PAGE_TYPES.map(([x]) => x).filter((x) => set.has(x)) });
+        })),
+        this._sub("Options"),
         this._check("Status pages: hide Cvent’s own page content below", c.hideBody !== false, (val) => this._patch({ hideBody: val })),
         this._check("Form pages: put the side panel beside Cvent’s form", c.injectPanel !== false, (val) => this._patch({ injectPanel: val })),
         this._select("Edit the wording for", ed, PAGE_TYPES.filter(([k]) => k !== "auto"), (val) => this._patch({ editPage: val }),

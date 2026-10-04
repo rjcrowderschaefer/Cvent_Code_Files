@@ -22,7 +22,7 @@ import {
 } from "./page-kit.js";
 import { REG_FORM_CSS, regFormCss } from "./reg-form-css.js";
 
-export const BUILD = "reg-2026-10-04f";
+export const BUILD = "reg-2026-10-04g";
 
 export const REG_DEFAULTS = {
   mode: "banner",            // "banner" | "panel" | "confirmation" | "page" (all of it, for a shared header) | "styles" (page CSS only, draws nothing)
@@ -36,6 +36,9 @@ export const REG_DEFAULTS = {
   pageAddresses: "",         // "address words = page type" lines, checked before the built-in matching
   hideBody: true,            // whole-page copy on a status page: hide Cvent's own page content below it
   injectPanel: true,         // whole-page copy on a form page: put the side panel beside Cvent's form
+  // Whole-page copy in a header shared with other pages: the pages it draws.
+  // Everywhere else (website pages, pages with their own copies) it draws nothing.
+  covers: ["pending", "denied", "cancelled", "archive", "cancelForm", "declineForm", "guest"],
   theme: "light",            // "light" | "dark": the form area and this widget
   styleForm: true,           // restyle Cvent's registration form on this page
   hideOldHeader: true,       // hide the old "Event registration" text box in the page header
@@ -234,7 +237,8 @@ export function detectPageType(path, map = "") {
   if (/guest/.test(s)) return "guest";
   if (/archive|closed|postevent|ended/.test(s)) return "archive";
   if (/confirmation|confirmed|approved/.test(s)) return "approved";
-  return "registration";
+  if (/regprocess|register|registration|summary.*reg|reg.*summary/.test(s)) return "registration";
+  return "none";               // a website page (Home, Agenda, ...): not ours
 }
 // One page's full settings for a whole-page copy: defaults, then the page's
 // preset, then the planner's edits for that page.
@@ -245,7 +249,7 @@ export function pageConfig(cfg, type) {
   ["banner", "panel", "confirmation"].forEach((sec) => { out[sec] = { ...REG_DEFAULTS[sec], ...(pr[sec] || {}), ...(own[sec] || {}) }; });
   return out;
 }
-const isBannerish = (w) => w._cfg?.mode === "banner" || w._cfg?.mode === "page";
+const isBannerish = (w) => w._cfg?.mode === "banner" || (w._cfg?.mode === "page" && !w._idle);
 
 // Every field any preset sets: switching page type resets these.
 const PRESET_FIELDS = (() => {
@@ -289,6 +293,7 @@ export function mergeRegConfig(incoming = {}) {
   // saved copy): fields still at the general default take the page's copy.
   if (!PAGE_PRESETS[out.pageType] && out.pageType !== "auto") out.pageType = "registration";
   if (!out.pages || typeof out.pages !== "object") out.pages = {};
+  if (!Array.isArray(out.covers)) out.covers = [...REG_DEFAULTS.covers];
   if (out.pageType !== "registration" && out.pageType !== "auto" && out.presetFor !== out.pageType) {
     Object.entries(PAGE_PRESETS[out.pageType]).forEach(([sec, vals]) => Object.entries(vals).forEach(([k, v]) => {
       if (out[sec][k] === undefined || out[sec][k] === REG_DEFAULTS[sec][k]) out[sec][k] = v;
@@ -357,7 +362,7 @@ function registry(t) {
 export function syncPageStyles(t = document) {
   if (!t) return;
   const set = registry(t);
-  const active = [...set].filter((w) => w.isConnected && w._cfg?.styleForm !== false && w._cfg?.mode !== "styles");
+  const active = [...set].filter((w) => w.isConnected && w._cfg?.styleForm !== false && w._cfg?.mode !== "styles" && !(w._cfg?.mode === "page" && w._idle));
   const els = stateEls(t);
   let tag = isDoc(t) ? t.getElementById(STYLE_ID) : t.querySelector(`#${STYLE_ID}`);
   if (!active.length) {
@@ -390,7 +395,7 @@ export function syncPageStyles(t = document) {
     e.classList.toggle(HTML_HIDE_OLD, hideOld);
     e.classList.toggle(HTML_OWN_STEPS, ownSteps);
     e.classList.toggle(HTML_READY, ready);
-    e.classList.toggle(HTML_HIDE_BODY, active.some((w) => w._cfg.mode === "page" && w._cfg.hideBody !== false && STATUS_PAGES.includes(w._pageKind)));
+    e.classList.toggle(HTML_HIDE_BODY, active.some((w) => w._cfg.mode === "page" && !w._idle && w._cfg.hideBody !== false && STATUS_PAGES.includes(w._pageKind)));
     e.classList.toggle(HTML_HIDE_REGTYPE, active.some((w) => w._cfg.hideRegType !== false));
     e.classList.toggle(HTML_REQ_NOTE, lead._cfg.showRequiredNote !== false);
     e.classList.toggle(HTML_INTRO_H, lead._cfg.introHeading !== false);
@@ -874,9 +879,31 @@ export default class extends HTMLElement {
   _resolvePage() {
     const base = mergeRegConfig(this.configuration);
     this._pathSeen = this._pagePath();
-    this._pageKind = base.pageType === "auto" ? detectPageType(this._pathSeen, base.pageAddresses) : base.pageType;
-    if (this.isConnected) this.setAttribute("data-bbg-page", this._pageKind);
+    const found = base.pageType === "auto" ? detectPageType(this._pathSeen, base.pageAddresses) : base.pageType;
+    const covers = Array.isArray(base.covers) ? base.covers : [];
+    // A whole-page copy set to Automatic draws only the pages it covers.
+    this._pageKind = base.mode === "page" && base.pageType === "auto" && !covers.includes(found) ? "none" : found;
+    if (this.isConnected) { this.setAttribute("data-bbg-page", this._pageKind); this.setAttribute("data-bbg-page-found", found); }
+    this._idle = this._computeIdle(base);
     this._cfg = base.mode === "page" ? pageConfig(base, this._pageKind) : base;
+  }
+  // A whole-page copy steps aside on pages it doesn't cover, and on pages that
+  // already have their own banner copy (the registration pages' page sections).
+  _computeIdle(base = this._cfg) {
+    if (base.mode !== "page") return false;
+    if (!PAGE_PRESETS[this._pageKind]) return true;
+    const t = this._target || this._doc;
+    return [...registry(t)].some((w) => w !== this && w.isConnected && w._cfg?.mode === "banner" && !w.hasAttribute("data-bbg-injected"));
+  }
+  _syncIdle() {
+    const idle = this._computeIdle();
+    if (idle === this._idle) return;
+    this._idle = idle;
+    if (idle) { this._injected?.remove(); this._injected = null; }
+    const root = this.shadowRoot?.querySelector(".pk");
+    this._newPage = true;
+    if (root) this._renderInto(root);
+    syncPageStyles(this._target || this._doc);
   }
   // Cvent moves between registration pages without reloading: follow it.
   _checkPageChange() {
@@ -894,7 +921,7 @@ export default class extends HTMLElement {
   // Form pages: a side panel copy beside Cvent's form, made by this copy.
   _syncInjectedPanel() {
     const t = this._target || this._doc;
-    const want = this._cfg.mode === "page" && this._cfg.injectPanel !== false && !STATUS_PAGES.includes(this._pageKind);
+    const want = this._cfg.mode === "page" && !this._idle && this._cfg.injectPanel !== false && !STATUS_PAGES.includes(this._pageKind);
     const form = want ? t.querySelector?.(".left-align-fields, [class*=Forms__container]") : null;
     if (!form) { this._injected?.remove(); this._injected = null; return; }
     // The form's outermost Cvent column inside its section: the panel goes next to it.
@@ -916,11 +943,12 @@ export default class extends HTMLElement {
   // Copies that show the registrant's name or email.
   _showsPerson() {
     const m = this._cfg.mode;
-    return m === "panel" || m === "confirmation" || (m === "page" && STATUS_PAGES.includes(this._pageKind));
+    return m === "panel" || m === "confirmation" || (m === "page" && !this._idle && STATUS_PAGES.includes(this._pageKind));
   }
   _markLayout() {
-    if (this._cfg.mode === "confirmation" || (this._cfg.mode === "page" && STATUS_PAGES.includes(this._pageKind))) this._hideNatives();
-    if (this._cfg.mode === "page") { this._checkPageChange(); this._syncInjectedPanel(); }
+    if (this._cfg.mode === "page") { this._checkPageChange(); this._syncIdle(); }
+    if (this._cfg.mode === "confirmation" || (this._cfg.mode === "page" && !this._idle && STATUS_PAGES.includes(this._pageKind))) this._hideNatives();
+    if (this._cfg.mode === "page") this._syncInjectedPanel();
     this._syncPersonFromPage();
     this._markFields();
     this._syncStateField();
@@ -1082,7 +1110,8 @@ export default class extends HTMLElement {
     // A new page (whole-page copy) has its own height: don't hold the old one.
     const release = this._newPage ? (() => {}) : holdHeight(root);
     if (this._newPage) { root._pkHold = (root._pkHold || 0) + 1; root.style.minHeight = ""; this._newPage = false; }
-    const bannerish = cfg.mode === "banner" || cfg.mode === "page";
+    const bannerish = cfg.mode === "banner" || (cfg.mode === "page" && !this._idle);
+    this.style.display = cfg.mode === "page" && this._idle ? "none" : "";
     root.className = `pk rg rg--${cfg.mode} ${dark ? "rg--dark" : ""} ${cfg.fullBleed !== false && bannerish ? "pk--bleed" : ""}`;
     root.innerHTML = `${css}${body}`;
     this._cleanups.forEach((fn) => { try { fn(); } catch (e) { /* noop */ } });
@@ -1107,7 +1136,7 @@ export default class extends HTMLElement {
       if (native) native.click();
       else console.warn(`[reg-pages] Cvent's ${a.dataset.cventAction === "cancel" ? "Cancel" : "Modify"} Registration button isn't on this page; add it in Site Designer.`);
     }));
-    if (cfg.mode === "confirmation" || (cfg.mode === "page" && STATUS_PAGES.includes(this._pageKind))) this._hideNatives();
+    if (cfg.mode === "confirmation" || (cfg.mode === "page" && !this._idle && STATUS_PAGES.includes(this._pageKind))) this._hideNatives();
     if (cfg.mode === "page") this._syncInjectedPanel();
     // A side panel copy pairs with this copy's column once it exists: let it look again.
     if (cfg.mode === "confirmation") registry(this._target || this._doc).forEach((w) => { if (w !== this) w._checkSteps?.(); });
@@ -1146,6 +1175,7 @@ export default class extends HTMLElement {
 
   // ---- WHOLE PAGE (shared header copy) -----------------------------------------
   _wholePage(ctx) {
+    if (this._idle) return "";
     const status = STATUS_PAGES.includes(this._pageKind);
     return `${this._banner(ctx)}${status ? `
     <section class="pk-bleed rg-pagebody"><div class="pk-inner rg-pagegrid">
