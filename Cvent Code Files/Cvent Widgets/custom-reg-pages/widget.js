@@ -22,7 +22,7 @@ import {
 } from "./page-kit.js";
 import { REG_FORM_CSS, regFormCss } from "./reg-form-css.js";
 
-export const BUILD = "reg-2026-10-05g";
+export const BUILD = "reg-2026-10-05h";
 
 export const REG_DEFAULTS = {
   mode: "banner",            // "banner" | "panel" | "confirmation" | "page" (all of it, for a shared header) | "styles" (page CSS only, draws nothing)
@@ -249,7 +249,22 @@ function sampleForm(f) {
 // The page a copy is on, from the address: Cvent names its registration pages
 // in the last part of the path (".../registrationPendingApprovalPage:<id>").
 // The planner's "address words = page type" lines are checked first.
-export function detectPageType(path, map = "") {
+export // Site Designer's page picker ("Registration Pending", "Header and Footer", ...).
+function designerPage(doc) {
+  try {
+    const name = (doc.querySelector("[data-cvent-id=site-header-dropdown-text]")?.textContent || "").trim();
+    if (!name) return null;
+    const box = doc.querySelector("[data-cvent-id=nucleus-site-editor-site-header]");
+    return { name, hf: /header|footer|h\s*&\s*f\b/i.test(`${name} ${box?.textContent || ""}`) };
+  } catch (e) { return null; }
+}
+const DESIGNER_KINDS = [
+  [/cancel\w*\s+form/i, "cancelForm"], [/decline/i, "declineForm"], [/pending/i, "pending"],
+  [/denied|rejected/i, "denied"], [/cancel/i, "cancelled"], [/guest/i, "guest"],
+  [/archiv/i, "archive"], [/confirm|approved/i, "approved"],
+];
+const designerKind = (name) => (DESIGNER_KINDS.find(([re]) => re.test(name)) || [, ""])[1];
+function detectPageType(path, map = "") {
   const seg = (() => { try { return decodeURIComponent(String(path || "").split("/").filter(Boolean).pop() || ""); } catch (e) { return ""; } })().split(":")[0];
   const s = seg.toLowerCase(), all = String(path || "").toLowerCase();
   for (const line of lines(map)) {
@@ -918,7 +933,14 @@ export default class extends HTMLElement {
   // ---- whole-page copy (one copy in a shared header) ---------------------------
   // _pageKind: the page this copy is on. A whole-page copy draws that page's
   // settings (pageConfig); other copies keep their own settings.
-  _pagePath() { try { return (this._doc.defaultView || window).location.pathname || ""; } catch (e) { return ""; } }
+  _pagePath() {
+    let p = "";
+    try { p = (this._doc.defaultView || window).location.pathname || ""; } catch (e) { /* none */ }
+    // Site Designer keeps one address for every page: the page being edited
+    // (its page picker) is part of the "address", so switching pages redraws.
+    const dp = /\/event\/[^/]+\/[^/]+/.test(p) ? null : designerPage(this._doc);
+    return dp ? `${p}#designer:${dp.hf ? "hf" : dp.name}` : p;
+  }
   _resolvePage() {
     const base = mergeRegConfig(this.configuration);
     this._pathSeen = this._pagePath();
@@ -929,13 +951,19 @@ export default class extends HTMLElement {
     // page picked in "Edit the wording for" there, as a preview.
     this._designer = base.mode === "page" && base.pageType === "auto" && !/\/event\/[^/]+\/[^/]+/.test(this._pathSeen);
     const preview = PAGE_PRESETS[base.editPage] && base.editPage !== "registration" ? base.editPage : "pending";
+    // In Site Designer: the page open in the editor, as the live site would
+    // draw it (its own page, or nothing on pages this copy doesn't cover). The
+    // header & footer page itself shows the "Edit the wording for" page.
+    const dp = this._designer ? designerPage(this._doc) : null;
+    const dk = dp && !dp.hf ? designerKind(dp.name) : "";
+    const designed = !dp || dp.hf ? preview : dk && covers.includes(dk) ? dk : "none";
     // "?bbg-preview=denied" on any live page: that page exactly as it will
     // look (for pages only a registrant in that state can reach).
     let forced = "";
     try { forced = new URLSearchParams((this._doc.defaultView || window).location.search).get("bbg-preview") || ""; } catch (e) { /* none */ }
     if (base.mode === "page" && PAGE_PRESETS[forced] && forced !== "registration") { this._designer = false; this._forced = forced; } else this._forced = "";
     // A whole-page copy set to Automatic draws only the pages it covers.
-    this._pageKind = this._forced || (this._designer ? preview
+    this._pageKind = this._forced || (this._designer ? designed
       : base.mode === "page" && base.pageType === "auto" && !covers.includes(found) ? "none" : found);
     if (this.isConnected) { this.setAttribute("data-bbg-page", this._pageKind); this.setAttribute("data-bbg-page-found", found); }
     this._idle = this._computeIdle(base);
@@ -949,7 +977,7 @@ export default class extends HTMLElement {
     // first on the page draws, so the page never shows twice.
     const t0 = this._target || this._doc;
     if ([...registry(t0)].some((w) => w !== this && w.isConnected && w._cfg?.mode === "page" && (w.compareDocumentPosition(this) & Node.DOCUMENT_POSITION_FOLLOWING))) return true;
-    if (this._designer || this._forced) return false;
+    if (this._forced || (this._designer && PAGE_PRESETS[this._pageKind])) return false;
     if (!PAGE_PRESETS[this._pageKind]) return true;
     const t = this._target || this._doc;
     return [...registry(t)].some((w) => w !== this && w.isConnected && w._cfg?.mode === "banner" && !w.hasAttribute("data-bbg-injected"));
@@ -1243,7 +1271,7 @@ export default class extends HTMLElement {
     // registration form's style) stands in, beside the real side panel.
     const sample = (this._designer || this._forced) && SAMPLE_FORMS[this._pageKind];
     const label = (PAGE_TYPES.find(([k]) => k === this._pageKind) || [, this._pageKind])[1];
-    const note = this._designer || this._forced ? `<p class="rg-designer-note" title="On the live site this copy shows only on its own pages. In Site Designer, pick the page to preview in “Edit the wording for”; on the live site add ?bbg-preview=<page> to any address.">Preview: ${esc(label)}</p>` : "";
+    const note = this._designer || this._forced ? `<p class="rg-designer-note" title="On the live site this copy shows only on its own pages. Site Designer shows it on the page you have open (on the header and footer page: the page picked in “Edit the wording for”); on the live site add ?bbg-preview=<page> to any address.">Preview: ${esc(label)}</p>` : "";
     if (sample) return `${note}${this._banner(ctx)}
     <section class="pk-bleed rg-pagebody"><div class="pk-inner rg-pagegrid">
       <div class="rg-pagemain">${sampleForm(sample)}</div>
