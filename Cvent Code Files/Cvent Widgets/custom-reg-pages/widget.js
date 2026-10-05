@@ -22,7 +22,7 @@ import {
 } from "./page-kit.js";
 import { REG_FORM_CSS, regFormCss } from "./reg-form-css.js";
 
-export const BUILD = "reg-2026-10-05l";
+export const BUILD = "reg-2026-10-05m";
 
 export const REG_DEFAULTS = {
   mode: "banner",            // "banner" | "panel" | "confirmation" | "page" (all of it, for a shared header) | "styles" (page CSS only, draws nothing)
@@ -1396,6 +1396,7 @@ const WIDGET_CSS = `
 
   /* panel */
   .rg-panel { max-width: 420px; box-sizing: border-box; background: var(--rg-panel); border-top: 3px solid ${t.amberOnDark}; padding: 28px; }
+  @media (max-width: 1023px) { .rg--panel .rg-panel { max-width: none; } }
   .rg-eb { font-size: ${LABEL_PX.small}px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--rg-label); }
   .rg-ph { margin-top: 8px; font-size: 21px; line-height: 1.25; font-weight: 700; letter-spacing: -0.01em; color: var(--rg-ink); }
   .rg-dl { margin: 18px 0 0; display: grid; gap: 14px; }
@@ -1435,6 +1436,8 @@ const WIDGET_CSS = `
   /* Preview label: floats over the banner's corner so the layout is exactly the live one. */
   .rg--page { position: relative; }
   .rg-designer-note { position: absolute; z-index: 5; top: 8px; right: 8px; margin: 0; padding: 4px 10px; border-radius: 2px; background: #FF9D00; color: #0B0B0C; font-size: 12px; font-weight: 700; line-height: 1.4; pointer-events: auto; }
+  /* Phones: in its own line above the banner, so it never covers the eyebrow. */
+  @media (max-width: 767px) { .rg-designer-note { position: static; display: block; border-radius: 0; text-align: center; } }
   /* preview stand-in for Cvent's form (matches the restyled registration form) */
   .rg-sf { max-width: 620px; }
   .rg-sf-h { font-size: 28px; line-height: 1.2; font-weight: 700; letter-spacing: -0.01em; color: var(--rg-ink); }

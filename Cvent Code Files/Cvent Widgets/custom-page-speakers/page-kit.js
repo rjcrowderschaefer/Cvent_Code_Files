@@ -24,7 +24,7 @@
 import { FONT_STACK, TYPE_SCALE, ensureBrandFont } from "./type-scale.js";
 
 // Shown in the page widgets' editor footer, so a stale copy in Cvent is visible.
-export const PAGE_KIT_BUILD = "pagekit-2026-10-05c"; // + page CSS channel (confirm page), planner contact proxy, scroll hold
+export const PAGE_KIT_BUILD = "pagekit-2026-10-05d"; // + page CSS channel (confirm page), planner contact proxy, scroll hold
 
 // ---------------------------------------------------------------------------
 // Tokens
@@ -576,6 +576,9 @@ export function pinClosingBand(doc) {
     if (!band || !band.getClientRects().length) return;
     const mainBottom = main.getBoundingClientRect().bottom;
     const lowest = Math.max(0, ...[...main.children].map((c) => c.getBoundingClientRect().bottom));
+    // Only when the band is the last thing on the page (Home has a section
+    // after it): otherwise the spare height stays below the content.
+    if (lowest - band.getBoundingClientRect().bottom > 4) return;
     const spare = Math.floor(mainBottom - lowest);
     if (spare > 1) band.style.setProperty("margin-top", `${spare}px`);
   };

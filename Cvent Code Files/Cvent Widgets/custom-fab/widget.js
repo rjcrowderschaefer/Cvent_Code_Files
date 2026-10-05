@@ -760,7 +760,7 @@ export default class BbgContactWidget extends HTMLElement {
     FABS.add(this);
     syncFabs();
     if (this._initialized) {
-      if (this._onLift) { window.addEventListener("scroll", this._onLift, { passive: true }); window.addEventListener("resize", this._onLift); clearInterval(this._liftPoll); this._liftPoll = setInterval(this._onLift, 1000); this._onLift(); }
+      if (this._onLift) { window.addEventListener("scroll", this._onLift, { passive: true }); window.addEventListener("resize", this._onLift); clearInterval(this._liftPoll); this._liftPoll = setInterval(() => { this._findBand?.(); this._onLift(); }, 1000); this._onLift(); }
       return;
     }
     this._initialized = true;
@@ -1089,17 +1089,34 @@ export default class BbgContactWidget extends HTMLElement {
     // the footer's top edge instead of covering the footer.
     if (!isEditorPreview) {
       let raf = 0;
+      // The page widgets' closing "Request to attend" band: on narrower
+      // screens its button sits where the FAB is, so the FAB stops above the
+      // band instead (only when they would overlap; on desktop it rests on the
+      // footer). Found in the widgets' shadow roots; re-found once a second.
+      let band = null;
+      const findBand = () => {
+        const hosts = [...document.querySelectorAll("#main *, [role=main] *")].filter((e) => e.shadowRoot && /^WIDGET-/.test(e.tagName));
+        const all = hosts.flatMap((h) => [...h.shadowRoot.querySelectorAll(".pk-band-sec")]);
+        band = all[all.length - 1] || null;
+      };
       const lift = () => {
         raf = 0;
         const foot = document.querySelector("footer") || document.querySelector("[class*=Grid__grid]:has(.site-footer)");
-        let px = 0;
-        if (foot && foot.getClientRects().length) px = Math.max(0, Math.round(window.innerHeight - foot.getBoundingClientRect().top));
+        let anchor = foot && foot.getClientRects().length ? foot.getBoundingClientRect().top : Infinity;
+        if (band && band.isConnected && band.getClientRects().length) {
+          const cta = (band.querySelector(".pk-band-cta") || band).getBoundingClientRect();
+          const f = fab.getBoundingClientRect();
+          if (cta.height && cta.right > f.left - 12 && cta.left < f.right + 12) anchor = Math.min(anchor, band.getBoundingClientRect().top);
+        }
+        const px = anchor === Infinity ? 0 : Math.max(0, Math.round(window.innerHeight - anchor));
         wrap.style.setProperty("--fab-lift", `${px}px`);
       };
       this._onLift = () => { if (!raf) raf = requestAnimationFrame(lift); };
       window.addEventListener("scroll", this._onLift, { passive: true });
       window.addEventListener("resize", this._onLift);
-      this._liftPoll = setInterval(this._onLift, 1000); // pages that grow after load
+      this._findBand = findBand;
+      this._liftPoll = setInterval(() => { findBand(); this._onLift(); }, 1000); // pages that grow after load
+      findBand();
       this._onLift();
     }
 

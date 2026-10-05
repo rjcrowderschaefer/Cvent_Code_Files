@@ -28,7 +28,7 @@ import {
 const CARD_TAG = "bbg-home-speaker-card";
 // Bump on every change. Shown in the editor footer and as data-build on the
 // widget root, so a stale Cvent/CDN copy is obvious (Playbook §0).
-export const BUILD = "home-2026-10-02b";
+export const BUILD = "home-2026-10-05a";
 
 // ---------------------------------------------------------------------------
 // Defaults (exported for editor.js). Copy defaults are GENERIC on purpose:
@@ -1205,6 +1205,9 @@ export default class extends HTMLElement {
       .hero-logo-h { margin-bottom: ${gapT - 22}px; }
       .facts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .facts-cell { border-bottom: 1px solid ${t.hair}; }
+      /* Three facts stay in one row (two columns would leave an empty cell). */
+      .facts-grid[style*="--cols:3"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .facts-grid[style*="--cols:3"] .facts-cell { border-bottom: 0; }
       .spk-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px 24px; }
       .spk-track { grid-template-columns: none; grid-auto-columns: calc((100% - 2 * 24px) / 3); }
       .about { grid-template-columns: minmax(0, 1fr); }
@@ -1230,8 +1233,9 @@ export default class extends HTMLElement {
       .hero-lede { font-size: 15px; }
       .hero-btns { flex-direction: column; width: 100%; }
       .hero-btns .pk-btn { width: 100%; }
-      .facts-grid { grid-template-columns: minmax(0, 1fr); border-left: 0; }
+      .facts-grid, .facts-grid[style*="--cols:3"] { grid-template-columns: minmax(0, 1fr); border-left: 0; }
       .facts-cell { padding: 18px 0; border-right: 0; }
+      .facts-grid[style*="--cols:3"] .facts-cell { border-bottom: 1px solid ${t.hair}; }
       .facts--docked .facts-cell { padding: 18px 20px; }
       .spk-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 16px; margin-top: 28px; }
       .spk-track { grid-template-columns: none; grid-auto-columns: 62%; }

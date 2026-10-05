@@ -112,6 +112,11 @@ ${R} [class*=Grid__column]:has([data-bbg-reg-mode=panel]):not(:has([class*=Grid_
   ${R} [data-bbg-reg-row] { display: block !important; }
   ${R} [data-bbg-reg-row] > * { width: 100% !important; max-width: 100% !important; flex: none !important; margin: 0 !important; }
   ${R} [data-bbg-reg-row] > [data-bbg-reg-panelcol] { margin-top: 32px !important; }
+  /* The banner's side gutter (pk-inner) for the form and the panel, instead of
+     Cvent's 15px on the form only and none on the panel. */
+  ${R} [data-bbg-reg-row] { box-sizing: border-box !important; padding-left: clamp(20px, 4vw, 48px) !important; padding-right: clamp(20px, 4vw, 48px) !important; }
+  ${R} [data-bbg-reg-row] :is(.left-align-fields, [data-bbg-form]) { padding-left: 0 !important; padding-right: 0 !important; }
+  ${R} [data-bbg-reg-formcol] [data-cvent-id=containerParent]:has([data-bbg-form]) { padding-left: 0 !important; padding-right: 0 !important; }
   ${R} [data-bbg-reg-row]:has(> [data-bbg-reg-formcol] [data-bbg-reg-mode=confirmation]) { padding: 32px 20px 48px !important; }
 }
 
