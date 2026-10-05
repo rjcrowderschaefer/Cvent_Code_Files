@@ -310,6 +310,10 @@ ${R}.bbg-reg--hide-body [role=main] [class*=Grid__sectionContainer]:not(:has([da
 /* The site CSS holds #main at a screen tall while pages load; with the page's own
    content hidden, that height would be empty white below the widget. */
 ${R}.bbg-reg--hide-body.bbg-reg--page-drawn :is(#main, [role=main]) { min-height: 0 !important; }
+/* Website pages pin the nav section (.scroll = position:fixed) once scrolled.
+   With a whole page drawn inside that section, pinning pulls it out of the
+   page, the page shrinks, the scroll resets and it unpins: a jumping loop. */
+${R}.bbg-reg--hide-body .cus_nav.scroll:has([data-bbg-reg-mode=page]) { position: relative !important; box-shadow: none !important; }
 ${R} [data-bbg-fadein] { animation: bbgRegFieldIn .28s ease both; }
 @keyframes bbgRegFieldIn { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { ${R} [data-bbg-fadein] { animation: none; } }

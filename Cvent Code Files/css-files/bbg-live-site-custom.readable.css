@@ -1201,3 +1201,12 @@ li[class*=Navigator__vertical] > div[class*=Navigator__selected] {
    container with this class; the Registration pages widget reads it. Here so
    Site Designer lists the class, and it stays hidden if the widget fails. */
 .bbg-person { display: none !important; }
+
+/* Post-registration pages (2026-10-05): until the Registration pages widget
+   has drawn the page, hide Cvent's own text and show a pulsing Bloomberg "B".
+   Triggered by a .bbg-person container on the page (put an empty one on pages
+   that don't show the name). Shown anyway after 8 s if the widget never loads. */
+[class*=AppContainer__container]:has(.bbg-person:not(.bbg-reg-ready)) [role=main]{opacity:0;animation:bbgRegIn .2s 8s forwards}
+[class*=AppContainer__container]:has(.bbg-person:not(.bbg-reg-ready))::after{content:"B";position:fixed;left:50%;top:50%;z-index:50;width:56px;height:56px;margin:-28px;display:grid;place-items:center;background:#000;color:#fff;font-size:32px;font-weight:700;border-radius:6px;pointer-events:none;animation:bbgB 1.2s infinite,bbgRegOut .2s 8s forwards}
+@keyframes bbgB{0%,to{box-shadow:0 0 0 0 rgba(255,157,0,.7)}50%{transform:scale(.88);box-shadow:0 0 0 12px rgba(255,157,0,0)}}
+@keyframes bbgRegOut{to{opacity:0}}

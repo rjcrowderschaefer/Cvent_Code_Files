@@ -22,7 +22,7 @@ import {
 } from "./page-kit.js";
 import { REG_FORM_CSS, regFormCss } from "./reg-form-css.js";
 
-export const BUILD = "reg-2026-10-05f";
+export const BUILD = "reg-2026-10-05g";
 
 export const REG_DEFAULTS = {
   mode: "banner",            // "banner" | "panel" | "confirmation" | "page" (all of it, for a shared header) | "styles" (page CSS only, draws nothing)
@@ -443,7 +443,12 @@ export function syncPageStyles(t = document) {
   });
   // The site CSS can hide the page until the widget has taken over (no flash of
   // Cvent's own design); it watches for this class on the marked section.
-  if (ready) (isDoc(t) ? t : t).querySelectorAll(".bbg-reg-page").forEach((e) => e.classList.add("bbg-reg-ready"));
+  if (ready) markReady(t);
+}
+// .bbg-reg-page (registration form sections) and .bbg-person (post-registration
+// pages: the site CSS shows a loading "B" until then) are released here.
+function markReady(t) {
+  t?.querySelectorAll?.(".bbg-reg-page:not(.bbg-reg-ready), .bbg-person:not(.bbg-reg-ready)").forEach((e) => e.classList.add("bbg-reg-ready"));
 }
 
 // Cvent's own Modify / Cancel Registration buttons (post-registration pages).
@@ -1004,6 +1009,8 @@ export default class extends HTMLElement {
     if (this._cfg.mode === "confirmation" || (this._cfg.mode === "page" && !this._idle && STATUS_PAGES.includes(this._pageKind))) this._hideNatives();
     if (this._cfg.mode === "page") this._syncInjectedPanel();
     this._syncPersonFromPage();
+    // Sections Cvent adds after the widget drew still need releasing.
+    if (this._rendered && !(this._cfg.mode === "page" && this._idle)) markReady(this._target || this._doc);
     this._markFields();
     this._syncStateField();
     if (this._cfg.mode !== "panel") return;
