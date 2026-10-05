@@ -22,7 +22,7 @@ import {
 } from "./page-kit.js";
 import { REG_FORM_CSS, regFormCss } from "./reg-form-css.js";
 
-export const BUILD = "reg-2026-10-05h";
+export const BUILD = "reg-2026-10-05i";
 
 export const REG_DEFAULTS = {
   mode: "banner",            // "banner" | "panel" | "confirmation" | "page" (all of it, for a shared header) | "styles" (page CSS only, draws nothing)
@@ -633,8 +633,12 @@ export default class extends HTMLElement {
     if (!box) return null;
     const bits = [...box.querySelectorAll("p, span, div")].filter((n) => !n.children.length).map((n) => n.textContent.trim()).filter(Boolean);
     const email = bits.find((x) => /@/.test(x)) || "";
-    const first = bits.find((x) => !/@/.test(x) && !/[{}\[\]]/.test(x)) || "";
-    return first || email ? { first, email } : null;
+    // A first name only: short, no sentence (Site Designer shows data tags as
+    // placeholders, so a text block's own sentence could otherwise be read).
+    const isName = (x) => !/@/.test(x) && !/[{}\[\]<>]/.test(x) && x.length <= 40 && x.split(/\s+/).length <= 3 && !/[.!?:;,]/.test(x);
+    const first = bits.find(isName) || "";
+    const mail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : "";
+    return first || mail ? { first, email: mail } : null;
   }
   _syncPersonFromPage() {
     if (!this._showsPerson()) return;
