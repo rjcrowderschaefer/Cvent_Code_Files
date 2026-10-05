@@ -22,7 +22,7 @@ import {
 } from "./page-kit.js";
 import { REG_FORM_CSS, regFormCss } from "./reg-form-css.js";
 
-export const BUILD = "reg-2026-10-05b";
+export const BUILD = "reg-2026-10-05c";
 
 export const REG_DEFAULTS = {
   mode: "banner",            // "banner" | "panel" | "confirmation" | "page" (all of it, for a shared header) | "styles" (page CSS only, draws nothing)
@@ -902,6 +902,10 @@ export default class extends HTMLElement {
   // already have their own banner copy (the registration pages' page sections).
   _computeIdle(base = this._cfg) {
     if (base.mode !== "page") return false;
+    // Two whole-page copies (e.g. one placed twice in the header): only the
+    // first on the page draws, so the page never shows twice.
+    const t0 = this._target || this._doc;
+    if ([...registry(t0)].some((w) => w !== this && w.isConnected && w._cfg?.mode === "page" && (w.compareDocumentPosition(this) & Node.DOCUMENT_POSITION_FOLLOWING))) return true;
     if (this._designer || this._forced) return false;
     if (!PAGE_PRESETS[this._pageKind]) return true;
     const t = this._target || this._doc;
