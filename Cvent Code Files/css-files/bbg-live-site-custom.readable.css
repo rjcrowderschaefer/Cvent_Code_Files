@@ -1196,3 +1196,8 @@ li[class*=Navigator__vertical] > div[class*=Navigator__selected] {
    briefly sits under the nav and then jumps. Holding the main region at a
    screen tall (minus the 66px nav) keeps the footer below the fold. */
 #main { min-height: calc(100vh - 66px); }
+
+/* POST-REGISTRATION — registrant name / email placed with Cvent data tags in a
+   container with this class; the Registration pages widget reads it. Here so
+   Site Designer lists the class, and it stays hidden if the widget fails. */
+.bbg-person { display: none !important; }

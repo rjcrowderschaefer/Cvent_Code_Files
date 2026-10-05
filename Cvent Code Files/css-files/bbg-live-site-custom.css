@@ -11,3 +11,4 @@
 [class*=AppContainer__container]:has(.bbg-reg-page:not(.bbg-reg-ready)) :is([role=main],[class*=Grid__sectionContainer]:has([class*=ProgressBar__wrapper]):not(.cus_nav):not(:has(.cus_nav,#navigationContainer,[class*=WebsiteNavigator__container]))){opacity:0;animation:bbgRegIn .2s ease 3s forwards}
 [class*=AppContainer__container]:has(.bbg-reg-page:not(.bbg-reg-ready)) [data-cvent-id*=ProgressBar-widget]{max-height:0;padding-top:0!important;padding-bottom:0!important;overflow:hidden;opacity:0;animation:bbgRegBarIn 0s linear 3s forwards}
 [id^="widget:"]:has(>[data-cvent-id^=widget-ContactPlanner]),[data-cvent-id^=widget-ContactPlanner]{position:absolute!important;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.bbg-person{display:none!important}
