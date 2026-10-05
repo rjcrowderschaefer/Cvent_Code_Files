@@ -24,7 +24,7 @@
 import { FONT_STACK, TYPE_SCALE, ensureBrandFont } from "./type-scale.js";
 
 // Shown in the page widgets' editor footer, so a stale copy in Cvent is visible.
-export const PAGE_KIT_BUILD = "pagekit-2026-10-05b"; // + page CSS channel (confirm page), planner contact proxy, scroll hold
+export const PAGE_KIT_BUILD = "pagekit-2026-10-05c"; // + page CSS channel (confirm page), planner contact proxy, scroll hold
 
 // ---------------------------------------------------------------------------
 // Tokens
@@ -585,16 +585,17 @@ export function pinClosingBand(doc) {
 }
 // Loading screen: the site theme CSS hides the page body behind a pulsing
 // Bloomberg "B" while a page that has custom widgets is still drawing them
-// (6 s at most). This sets html.bbg-page-ready once every custom widget on the
-// page has drawn (or is hidden on purpose), and clears it again when Cvent
-// moves to another page without reloading.
-const READY = "bbg-page-ready";
+// (6 s at most). This marks Cvent's app container data-bbg-ready once every
+// custom widget on the page has drawn (or is hidden on purpose), and clears it
+// again when Cvent moves to another page without reloading. (Cvent prefixes
+// every theme rule with ".custom-css-scope ", so the mark must sit inside that
+// element, not on <html>; an attribute, since Cvent re-sets its class names.)
+const READY_ATTR = "data-bbg-ready";
 export function watchPageReady(doc) {
   const win = doc?.defaultView;
   if (!win || doc.__bbgReadyWatch) return;
   doc.__bbgReadyWatch = true;
-  const html = doc.documentElement;
-  let path = "", since = 0, okFrom = 0, timer = 0;
+  let path = "", since = 0, okFrom = 0, ready = false;
   const loading = (box) => {
     if (!box.getClientRects().length) return false;                // hidden column
     const host = [...box.querySelectorAll("*")].find((e) => /^WIDGET-/.test(e.tagName));
@@ -604,17 +605,19 @@ export function watchPageReady(doc) {
     return !!sr && (!!sr.querySelector(".pk-sr[role=status]") || !!sr.querySelector(".pk:empty"));
   };
   const tick = () => {
-    timer = 0;
     const now = Date.now();
     const p = win.location.pathname;
-    if (p !== path) { path = p; since = now; okFrom = 0; html.classList.remove(READY); }
-    if (!html.classList.contains(READY)) {
+    if (p !== path) { path = p; since = now; okFrom = 0; ready = false; }
+    if (!ready) {
       const boxes = [...doc.querySelectorAll("[data-cvent-id^=widget-content-]")];
       const ok = now - since > 250 && boxes.length > 0 && !boxes.some(loading);
       okFrom = ok ? okFrom || now : 0;
-      if (ok && now - okFrom >= 150) html.classList.add(READY);
+      if (ok && now - okFrom >= 150) ready = true;
     }
-    timer = win.setTimeout(tick, html.classList.contains(READY) ? 400 : 60);
+    doc.querySelectorAll("[class*=AppContainer__container]").forEach((el) => {
+      if (ready !== el.hasAttribute(READY_ATTR)) el.toggleAttribute(READY_ATTR, ready);
+    });
+    win.setTimeout(tick, ready ? 400 : 60);
   };
   tick();
 }
