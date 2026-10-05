@@ -669,6 +669,7 @@ const WIDGET_CSS = `
   .done p { margin: 0 0 10px; font: 400 12.5px/1.45 var(--f); color: #5C5C5A; }
   .done .fine { color: #FF9D00; }
   .ferr { margin: 0; font: 400 12px/1.4 var(--f); color: #B42318; }
+  .ferr a { color: #0062DD; font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
   .btn:disabled { opacity: .7; cursor: default; }
 
   /* --- mobile ----------------------------------------------------------- */
@@ -988,8 +989,19 @@ export default class BbgContactWidget extends HTMLElement {
         };
         let result;
         try { result = await sendViaPlanner({ email: v("email"), message }); } catch (e) {
+          // No Contact Planner widget on this page (or Cvent's pop-up didn't
+          // open): hand the question to the visitor's email app, already
+          // written, rather than a dead end.
           console.warn("[fab] question not sent:", e.message);
-          fail(`Sorry, questions can't be sent from this page. Email us at ${c.eventEmail}.`);
+          const subject = `Question about ${document.title || "the event"}`;
+          const href = `mailto:${encodeURIComponent(c.eventEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+          fail(`We couldn't send that from this page.`);
+          const err = form.querySelector(".ferr");
+          if (err && c.eventEmail) {
+            const link = document.createElement("a");
+            link.href = href; link.textContent = `Email it to ${c.eventEmail} instead`;
+            err.append(" ", link);
+          }
           return;
         }
         if (result === "invalid") { fail("Please check your email address and try again."); return; }
