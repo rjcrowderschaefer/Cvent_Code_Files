@@ -22,7 +22,7 @@ import {
 } from "./page-kit.js";
 import { REG_FORM_CSS, regFormCss } from "./reg-form-css.js";
 
-export const BUILD = "reg-2026-10-05j";
+export const BUILD = "reg-2026-10-05k";
 
 export const REG_DEFAULTS = {
   mode: "banner",            // "banner" | "panel" | "confirmation" | "page" (all of it, for a shared header) | "styles" (page CSS only, draws nothing)
@@ -249,7 +249,14 @@ function sampleForm(f) {
 // The page a copy is on, from the address: Cvent names its registration pages
 // in the last part of the path (".../registrationPendingApprovalPage:<id>").
 // The planner's "address words = page type" lines are checked first.
-export // Site Designer's page picker ("Registration Pending", "Header and Footer", ...).
+// Site Designer (not the live site, not Planner Registration mode).
+function isDesignerPath(path, doc) {
+  const p = String(path || "");
+  if (/\/event\/[^/]+\/[^/]+/.test(p) || /PlannerRegistration/i.test(p)) return false;
+  // (and the local preview harness, /preview-*/)
+  return /EditWebsite|SiteDesigner|site-designer|\/preview[^/]*\//i.test(p) || !!designerPage(doc);
+}
+// Site Designer's page picker ("Registration Pending", "Header and Footer", ...).
 function designerPage(doc) {
   try {
     const name = (doc.querySelector("[data-cvent-id=site-header-dropdown-text]")?.textContent || "").trim();
@@ -545,7 +552,7 @@ export default class extends HTMLElement {
     await this._renderInto(root);
     const tag = `reg-${this._cfg.mode}`;
     // Putting the scroll back is for editor changes only; never on the live site.
-    if (!/\/event\/[^/]+\/[^/]+/.test(this._pagePath())) restoreScroll(this, tag, this.configuration);
+    if (isDesignerPath(this._pagePath(), this._doc)) restoreScroll(this, tag, this.configuration);
     this._scrollCleanup = trackScroll(this, tag, this.configuration);
   }
 
@@ -942,7 +949,7 @@ export default class extends HTMLElement {
     try { p = (this._doc.defaultView || window).location.pathname || ""; } catch (e) { /* none */ }
     // Site Designer keeps one address for every page: the page being edited
     // (its page picker) is part of the "address", so switching pages redraws.
-    const dp = /\/event\/[^/]+\/[^/]+/.test(p) ? null : designerPage(this._doc);
+    const dp = isDesignerPath(p, this._doc) ? designerPage(this._doc) : null;
     return dp ? `${p}#designer:${dp.hf ? "hf" : dp.name}` : p;
   }
   _resolvePage() {
@@ -953,7 +960,10 @@ export default class extends HTMLElement {
     // Site Designer (and its preview) isn't on a live ".../event/<site>/<page>"
     // address, so the page can't be read from it: a whole-page copy shows the
     // page picked in "Edit the wording for" there, as a preview.
-    this._designer = base.mode === "page" && base.pageType === "auto" && !/\/event\/[^/]+\/[^/]+/.test(this._pathSeen);
+    // Only Site Designer itself: other planner screens (Planner Registration
+    // mode, at app.cvent.com/.../PlannerRegistration/...) run the real pages
+    // and are read like the live site.
+    this._designer = base.mode === "page" && base.pageType === "auto" && isDesignerPath(this._pathSeen, this._doc);
     const preview = PAGE_PRESETS[base.editPage] && base.editPage !== "registration" ? base.editPage : "pending";
     // In Site Designer: the page open in the editor, as the live site would
     // draw it (its own page, or nothing on pages this copy doesn't cover). The
