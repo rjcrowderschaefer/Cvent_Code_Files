@@ -180,6 +180,10 @@ ${R}.bbg-reg--intro-heading [data-bbg-intro-h=block] { padding: 0 !important; }
 }
 /* Intro text blocks (marked data-bbg-intro) start on the fields' left edge. */
 ${R} [data-bbg-intro] { padding: 0 !important; margin-left: var(--bbg-intro-shift, 0px) !important; margin-top: var(--bbg-intro-gap, 0px) !important; margin-bottom: var(--bbg-intro-after, 0px) !important; }
+/* The spacing fix can pull the fields' row up over the intro line, and that
+   row has a white background (Planner Registration's prefilled details):
+   the intro text paints above it. */
+${R} [data-bbg-intro] { position: relative; z-index: 2; }
 ${R} [data-bbg-intro] :is(p, h1, h2, h3, h4):last-child { margin-bottom: 0 !important; }
 ${R} [data-cvent-id^=widget-NucleusText] [data-bbg-empty] { display: none !important; }
 ${R} [data-bbg-intro] :is(div, p, h1, h2, h3, h4) { padding-left: 0 !important; margin-left: 0 !important; text-indent: 0 !important; }
