@@ -310,6 +310,11 @@ ${R}.bbg-reg--hide-body [role=main] [class*=Grid__sectionContainer]:not(:has([da
 /* The site CSS holds #main at a screen tall while pages load; with the page's own
    content hidden, that height would be empty white below the widget. */
 ${R}.bbg-reg--hide-body.bbg-reg--page-drawn :is(#main, [role=main]) { min-height: 0 !important; }
+/* Tall screens: the footer stays at the bottom of the window (the emptied
+   page body takes up the spare height between the drawn page and the footer). */
+${R}.bbg-reg--hide-body.bbg-reg--page-drawn div:has(> [role=banner]):has(> :is(#main, [role=main])) { display: flex !important; flex-direction: column !important; min-height: 100vh; }
+${R}.bbg-reg--hide-body.bbg-reg--page-drawn div:has(> [role=banner]) > :is(#main, [role=main]) { flex: 1 0 auto; }
+${R}.bbg-reg--hide-body.bbg-reg--page-drawn div:has(> [role=banner]) > :not(#main, [role=main]) { flex: 0 0 auto; }
 /* Website pages pin the nav section (.scroll = position:fixed) once scrolled.
    With a whole page drawn inside that section, pinning pulls it out of the
    page, the page shrinks, the scroll resets and it unpins: a jumping loop. */
