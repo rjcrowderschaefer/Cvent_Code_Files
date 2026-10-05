@@ -286,7 +286,9 @@ const WIDGET_CSS = `
   .wrap {
     position: fixed;
     right: clamp(16px, 4vw, 32px);
-    bottom: clamp(16px, 4vh, 32px);
+    /* --fab-lift: how far the footer has come up into the window, so the
+       button rests on top of the footer instead of sitting over it. */
+    bottom: calc(clamp(16px, 4vh, 32px) + var(--fab-lift, 0px));
     left: auto;
     z-index: 2147483000;
     display: flex;
@@ -757,7 +759,10 @@ export default class BbgContactWidget extends HTMLElement {
     // root, producing stacked duplicate buttons.
     FABS.add(this);
     syncFabs();
-    if (this._initialized) return;
+    if (this._initialized) {
+      if (this._onLift) { window.addEventListener("scroll", this._onLift, { passive: true }); window.addEventListener("resize", this._onLift); clearInterval(this._liftPoll); this._liftPoll = setInterval(this._onLift, 1000); this._onLift(); }
+      return;
+    }
     this._initialized = true;
     try { ensureSiteCss(); } catch (e) { /* page CSS is a nicety */ }
 
@@ -1080,6 +1085,24 @@ export default class BbgContactWidget extends HTMLElement {
       this._stopNudging = stopNudging;
     }
 
+    // Live site: once the footer scrolls into view, the button rides up with
+    // the footer's top edge instead of covering the footer.
+    if (!isEditorPreview) {
+      let raf = 0;
+      const lift = () => {
+        raf = 0;
+        const foot = document.querySelector("footer") || document.querySelector("[class*=Grid__grid]:has(.site-footer)");
+        let px = 0;
+        if (foot && foot.getClientRects().length) px = Math.max(0, Math.round(window.innerHeight - foot.getBoundingClientRect().top));
+        wrap.style.setProperty("--fab-lift", `${px}px`);
+      };
+      this._onLift = () => { if (!raf) raf = requestAnimationFrame(lift); };
+      window.addEventListener("scroll", this._onLift, { passive: true });
+      window.addEventListener("resize", this._onLift);
+      this._liftPoll = setInterval(this._onLift, 1000); // pages that grow after load
+      this._onLift();
+    }
+
     // In Site Designer, pin to the bottom-right of the page preview rather
     // than of the whole browser window. Cosmetic only, and fully contained
     // so it can never break the render.
@@ -1132,6 +1155,7 @@ export default class BbgContactWidget extends HTMLElement {
     syncFabs();
     if (this._onKeydown) document.removeEventListener("keydown", this._onKeydown);
     if (this._onResize) window.removeEventListener("resize", this._onResize);
+    if (this._onLift) { window.removeEventListener("scroll", this._onLift); window.removeEventListener("resize", this._onLift); clearInterval(this._liftPoll); }
     if (this._pinPollId) clearInterval(this._pinPollId);
     if (this._stopNudging) this._stopNudging();
   }
