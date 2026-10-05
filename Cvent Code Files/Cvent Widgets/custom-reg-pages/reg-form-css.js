@@ -309,7 +309,7 @@ ${R} .bbg-person, .bbg-person { display: none !important; }
 ${R}.bbg-reg--hide-body [role=main] [class*=Grid__sectionContainer]:not(:has([data-bbg-reg], .site-footer, .cus_nav, #navigationContainer)):not([data-bbg-reg] *):not(.site-footer *):not([class*=Grid__grid]:has(.site-footer) *) { display: none !important; }
 /* The site CSS holds #main at a screen tall while pages load; with the page's own
    content hidden, that height would be empty white below the widget. */
-${R}.bbg-reg--hide-body :is(#main, [role=main]) { min-height: 0 !important; }
+${R}.bbg-reg--hide-body.bbg-reg--page-drawn :is(#main, [role=main]) { min-height: 0 !important; }
 ${R} [data-bbg-fadein] { animation: bbgRegFieldIn .28s ease both; }
 @keyframes bbgRegFieldIn { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { ${R} [data-bbg-fadein] { animation: none; } }

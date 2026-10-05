@@ -22,7 +22,7 @@ import {
 } from "./page-kit.js";
 import { REG_FORM_CSS, regFormCss } from "./reg-form-css.js";
 
-export const BUILD = "reg-2026-10-05e";
+export const BUILD = "reg-2026-10-05f";
 
 export const REG_DEFAULTS = {
   mode: "banner",            // "banner" | "panel" | "confirmation" | "page" (all of it, for a shared header) | "styles" (page CSS only, draws nothing)
@@ -339,6 +339,7 @@ const HTML_DARK = "bbg-reg--dark";
 const HTML_HIDE_OLD = "bbg-reg--hide-old";
 const HTML_OWN_STEPS = "bbg-reg--own-steps";
 const HTML_READY = "bbg-reg--ready";
+const HTML_PAGE_DRAWN = "bbg-reg--page-drawn";
 const HTML_HIDE_BODY = "bbg-reg--hide-body";
 const HTML_HIDE_REGTYPE = "bbg-reg--hide-regtype";
 const HTML_REQ_NOTE = "bbg-reg--req-note";
@@ -395,7 +396,7 @@ export function syncPageStyles(t = document) {
   let tag = isDoc(t) ? t.getElementById(STYLE_ID) : t.querySelector(`#${STYLE_ID}`);
   if (!active.length) {
     tag?.remove();
-    els.forEach((e) => { e.classList.remove(ROOT_CLASS, HTML_ON, HTML_DARK, HTML_HIDE_OLD, HTML_OWN_STEPS, HTML_READY, HTML_HIDE_BODY, HTML_HIDE_REGTYPE, HTML_REQ_NOTE, HTML_INTRO_H, HTML_NO_HINTS); e.style.removeProperty("--bbg-reg-req"); e.style.removeProperty("--bbg-reg-optin-help"); ["--bbg-sum-contact", "--bbg-sum-about", "--bbg-sum-name", "--bbg-sum-email"].forEach((k) => e.style.removeProperty(k)); });
+    els.forEach((e) => { e.classList.remove(ROOT_CLASS, HTML_ON, HTML_DARK, HTML_HIDE_OLD, HTML_OWN_STEPS, HTML_READY, HTML_PAGE_DRAWN, HTML_HIDE_BODY, HTML_HIDE_REGTYPE, HTML_REQ_NOTE, HTML_INTRO_H, HTML_NO_HINTS); e.style.removeProperty("--bbg-reg-req"); e.style.removeProperty("--bbg-reg-optin-help"); ["--bbg-sum-contact", "--bbg-sum-about", "--bbg-sum-name", "--bbg-sum-email"].forEach((k) => e.style.removeProperty(k)); });
     return;
   }
   const css = isDoc(t) ? REG_FORM_CSS : SHADOW_CSS;
@@ -423,8 +424,12 @@ export function syncPageStyles(t = document) {
     e.classList.toggle(HTML_HIDE_OLD, hideOld);
     e.classList.toggle(HTML_OWN_STEPS, ownSteps);
     e.classList.toggle(HTML_READY, ready);
-    e.classList.toggle(HTML_HIDE_BODY, active.some((w) => w._cfg.mode === "page" && !w._idle && !w._designer
-      && (w._forced || (w._cfg.hideBody !== false && STATUS_PAGES.includes(w._pageKind)))));
+    const hiders = active.filter((w) => w._cfg.mode === "page" && !w._idle && !w._designer
+      && (w._forced || (w._cfg.hideBody !== false && STATUS_PAGES.includes(w._pageKind))));
+    e.classList.toggle(HTML_HIDE_BODY, hiders.length > 0);
+    // Cvent's own page-height floor stays until the drawn page is there, so the
+    // footer never jumps up (and the scroll position never snaps) while it loads.
+    e.classList.toggle(HTML_PAGE_DRAWN, hiders.some((w) => w._rendered));
     e.classList.toggle(HTML_HIDE_REGTYPE, active.some((w) => w._cfg.hideRegType !== false));
     e.classList.toggle(HTML_REQ_NOTE, lead._cfg.showRequiredNote !== false);
     e.classList.toggle(HTML_INTRO_H, lead._cfg.introHeading !== false);
@@ -504,6 +509,9 @@ export default class extends HTMLElement {
     clearTimeout(this._graceTimer);
     this._graceTimer = setTimeout(() => syncPageStyles(this._target || this._doc), 2050);
     this._findTarget();
+    // A whole-page copy hides the page's own content straight away, not after
+    // its data has loaded, so the old content never shows and then vanishes.
+    if (this._cfg.mode === "page") syncPageStyles(this._target || this._doc);
     // Site Designer can draw the page after the widget: look again for a while.
     let tries = 0;
     const again = () => { if (!this.isConnected || tries++ > 20) return; if (!this._target?.querySelector?.(PAGE_MARKERS)) this._findTarget(); this._retry = setTimeout(again, 500); };
@@ -516,7 +524,8 @@ export default class extends HTMLElement {
     this._watchSteps();
     await this._renderInto(root);
     const tag = `reg-${this._cfg.mode}`;
-    restoreScroll(this, tag, this.configuration);
+    // Putting the scroll back is for editor changes only; never on the live site.
+    if (!/\/event\/[^/]+\/[^/]+/.test(this._pagePath())) restoreScroll(this, tag, this.configuration);
     this._scrollCleanup = trackScroll(this, tag, this.configuration);
   }
 
