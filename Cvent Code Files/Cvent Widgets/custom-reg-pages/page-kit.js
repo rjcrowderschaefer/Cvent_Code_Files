@@ -24,7 +24,7 @@
 import { FONT_STACK, TYPE_SCALE, ensureBrandFont } from "./type-scale.js";
 
 // Shown in the page widgets' editor footer, so a stale copy in Cvent is visible.
-export const PAGE_KIT_BUILD = "pagekit-2026-10-03b"; // + page CSS channel (confirm page), planner contact proxy, scroll hold
+export const PAGE_KIT_BUILD = "pagekit-2026-10-05a"; // + page CSS channel (confirm page), planner contact proxy, scroll hold
 
 // ---------------------------------------------------------------------------
 // Tokens
@@ -536,15 +536,51 @@ export const CONFIRM_PAGE_CSS = `
 .bbg-confirm :is(.bbg-confirm-callout,.bbg-confirm-note) :is(p,span),:is(.bbg-confirm-callout,.bbg-confirm-note) :is(p,span){margin:0!important;font-size:14.5px!important;line-height:1.5!important;color:#3F3F3D!important}
 .bbg-confirm .bbg-confirm-callout [class*=Grid__row]:first-child :is(p,p *),.bbg-confirm-callout [class*=Grid__row]:first-child :is(p,p *){margin-bottom:4px!important;font-size:16px!important;font-weight:700!important;color:#141416!important}
 .bbg-confirm .bbg-confirm-note :is(b,strong,span[style*=bold]),.bbg-confirm-note :is(b,strong,span[style*=bold]){font-weight:700!important;color:#141416!important}
+html.bbg-live div:has(>[role=banner]):has(>#main){display:flex!important;flex-direction:column!important;min-height:100vh}
+html.bbg-live div:has(>[role=banner])>#main{flex:1 0 auto;min-height:0!important}
+html.bbg-live div:has(>[role=banner])>:not(#main){flex:0 0 auto}
 @media(max-width:1023px){[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel){flex-direction:column;gap:32px;padding:32px 20px 48px!important}[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel)>[class*=Grid__col],[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel)>[class*=Grid__col]:has(.bbg-confirm-panel){flex:none!important;width:100%!important;max-width:100%!important;margin-left:0!important;position:static}.bbg-confirm-panel{padding:22px 20px!important}.bbg-confirm :is(h1,h2,h1 *,h2 *){font-size:26px!important}.bbg-confirm-banner p{font-size:15px!important}.bbg-confirm p:has(a){flex-direction:column}.bbg-confirm p:has(a) a{justify-content:center}.bbg-confirm p:has(a) a:nth-of-type(3){margin:6px auto 0}}
 `;
 export const SITE_CSS_ID = "bbg-site-css";
+// The live site (not Site Designer, not Planner Registration): html.bbg-live
+// scopes the page-layout rules (footer at the bottom of a tall window).
+export const isLiveSite = (doc) => { try { return /\/event\/[^/]+\/[^/]+/.test(doc.defaultView.location.pathname); } catch (e) { return false; } };
 export function ensureSiteCss(doc = typeof document !== "undefined" ? document : null) {
+  if (doc?.documentElement && isLiveSite(doc)) { doc.documentElement.classList.add("bbg-live"); pinClosingBand(doc); }
   if (!doc?.head || doc.getElementById(SITE_CSS_ID)) return;
   const st = doc.createElement("style");
   st.id = SITE_CSS_ID;
   st.textContent = CONFIRM_PAGE_CSS;
   doc.head.append(st);
+}
+// Tall windows: the footer sits at the bottom of the window (the bbg-live
+// rules above) and the closing "Request to attend" band sits right above it;
+// the spare height goes above the band, not between the band and the footer.
+// Recomputed from scratch each time (margin off, measure, margin on) in one
+// frame, so nothing flickers and it never feeds back into itself.
+export function pinClosingBand(doc) {
+  const win = doc?.defaultView;
+  if (!win || doc.__bbgPinBand) return;
+  doc.__bbgPinBand = true;
+  let raf = 0, watched = null;
+  const ro = typeof win.ResizeObserver === "function" ? new win.ResizeObserver(() => ask()) : null;
+  const run = () => {
+    raf = 0;
+    const main = doc.querySelector("#main, [role=main]");
+    if (!main) return;
+    if (ro && watched !== main) { ro.disconnect(); ro.observe(main); watched = main; }
+    const bands = [...main.querySelectorAll("*")].filter((e) => e.shadowRoot).flatMap((h) => [...h.shadowRoot.querySelectorAll(".pk-band-sec")]);
+    const band = bands[bands.length - 1];
+    bands.forEach((b) => b.style.removeProperty("margin-top"));
+    if (!band || !band.getClientRects().length) return;
+    const mainBottom = main.getBoundingClientRect().bottom;
+    const lowest = Math.max(0, ...[...main.children].map((c) => c.getBoundingClientRect().bottom));
+    const spare = Math.floor(mainBottom - lowest);
+    if (spare > 1) band.style.setProperty("margin-top", `${spare}px`);
+  };
+  const ask = () => { if (!raf) raf = win.requestAnimationFrame(run); };
+  win.addEventListener("resize", ask);
+  [0, 600, 1500, 3000, 6000].forEach((ms) => win.setTimeout(ask, ms));
 }
 try { ensureSiteCss(); } catch (e) { /* no document (tests) */ }
 

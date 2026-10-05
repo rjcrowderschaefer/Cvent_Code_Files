@@ -127,10 +127,15 @@ const CONFIRM_PAGE_CSS = `
 .bbg-confirm :is(.bbg-confirm-callout,.bbg-confirm-note) :is(p,span),:is(.bbg-confirm-callout,.bbg-confirm-note) :is(p,span){margin:0!important;font-size:14.5px!important;line-height:1.5!important;color:#3F3F3D!important}
 .bbg-confirm .bbg-confirm-callout [class*=Grid__row]:first-child :is(p,p *),.bbg-confirm-callout [class*=Grid__row]:first-child :is(p,p *){margin-bottom:4px!important;font-size:16px!important;font-weight:700!important;color:#141416!important}
 .bbg-confirm .bbg-confirm-note :is(b,strong,span[style*=bold]),.bbg-confirm-note :is(b,strong,span[style*=bold]){font-weight:700!important;color:#141416!important}
+html.bbg-live div:has(>[role=banner]):has(>#main){display:flex!important;flex-direction:column!important;min-height:100vh}
+html.bbg-live div:has(>[role=banner])>#main{flex:1 0 auto;min-height:0!important}
+html.bbg-live div:has(>[role=banner])>:not(#main){flex:0 0 auto}
 @media(max-width:1023px){[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel){flex-direction:column;gap:32px;padding:32px 20px 48px!important}[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel)>[class*=Grid__col],[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel)>[class*=Grid__col]:has(.bbg-confirm-panel){flex:none!important;width:100%!important;max-width:100%!important;margin-left:0!important;position:static}.bbg-confirm-panel{padding:22px 20px!important}.bbg-confirm :is(h1,h2,h1 *,h2 *){font-size:26px!important}.bbg-confirm-banner p{font-size:15px!important}.bbg-confirm p:has(a){flex-direction:column}.bbg-confirm p:has(a) a{justify-content:center}.bbg-confirm p:has(a) a:nth-of-type(3){margin:6px auto 0}}
 `;
 // END CONFIRM_PAGE_CSS
 function ensureSiteCss() {
+  // html.bbg-live scopes the page-layout rules to the live site (as page-kit).
+  if (/\/event\/[^/]+\/[^/]+/.test(location.pathname)) document.documentElement.classList.add("bbg-live");
   if (!document.head || document.getElementById("bbg-site-css")) return;
   const st = document.createElement("style"); st.id = "bbg-site-css"; st.textContent = CONFIRM_PAGE_CSS; document.head.append(st);
 }
