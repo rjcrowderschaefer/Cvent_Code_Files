@@ -22,7 +22,7 @@ import {
 } from "./page-kit.js";
 import { REG_FORM_CSS, regFormCss } from "./reg-form-css.js";
 
-export const BUILD = "reg-2026-10-05a";
+export const BUILD = "reg-2026-10-05b";
 
 export const REG_DEFAULTS = {
   mode: "banner",            // "banner" | "panel" | "confirmation" | "page" (all of it, for a shared header) | "styles" (page CSS only, draws nothing)
@@ -886,9 +886,14 @@ export default class extends HTMLElement {
     // page picked in "Edit the wording for" there, as a preview.
     this._designer = base.mode === "page" && base.pageType === "auto" && !/\/event\/[^/]+\/[^/]+/.test(this._pathSeen);
     const preview = PAGE_PRESETS[base.editPage] && base.editPage !== "registration" ? base.editPage : "pending";
+    // "?bbg-preview=denied" on any live page: that page exactly as it will
+    // look (for pages only a registrant in that state can reach).
+    let forced = "";
+    try { forced = new URLSearchParams((this._doc.defaultView || window).location.search).get("bbg-preview") || ""; } catch (e) { /* none */ }
+    if (base.mode === "page" && PAGE_PRESETS[forced] && forced !== "registration") { this._designer = false; this._forced = forced; } else this._forced = "";
     // A whole-page copy set to Automatic draws only the pages it covers.
-    this._pageKind = this._designer ? preview
-      : base.mode === "page" && base.pageType === "auto" && !covers.includes(found) ? "none" : found;
+    this._pageKind = this._forced || (this._designer ? preview
+      : base.mode === "page" && base.pageType === "auto" && !covers.includes(found) ? "none" : found);
     if (this.isConnected) { this.setAttribute("data-bbg-page", this._pageKind); this.setAttribute("data-bbg-page-found", found); }
     this._idle = this._computeIdle(base);
     this._cfg = base.mode === "page" ? pageConfig(base, this._pageKind) : base;
@@ -897,7 +902,7 @@ export default class extends HTMLElement {
   // already have their own banner copy (the registration pages' page sections).
   _computeIdle(base = this._cfg) {
     if (base.mode !== "page") return false;
-    if (this._designer) return false;
+    if (this._designer || this._forced) return false;
     if (!PAGE_PRESETS[this._pageKind]) return true;
     const t = this._target || this._doc;
     return [...registry(t)].some((w) => w !== this && w.isConnected && w._cfg?.mode === "banner" && !w.hasAttribute("data-bbg-injected"));
@@ -1185,7 +1190,7 @@ export default class extends HTMLElement {
     if (this._idle) return "";
     const status = STATUS_PAGES.includes(this._pageKind);
     const label = (PAGE_TYPES.find(([k]) => k === this._pageKind) || [, this._pageKind])[1];
-    const note = this._designer ? `<p class="rg-designer-note">Registration pages widget · Whole page · preview: <b>${esc(label)}</b>. On the live site it shows only on its pages (pick the page to preview in “Edit the wording for”).</p>` : "";
+    const note = this._designer || this._forced ? `<p class="rg-designer-note" title="On the live site this copy shows only on its own pages. In Site Designer, pick the page to preview in “Edit the wording for”; on the live site add ?bbg-preview=<page> to any address.">Preview: ${esc(label)}</p>` : "";
     return `${note}${this._banner(ctx)}${status ? `
     <section class="pk-bleed rg-pagebody"><div class="pk-inner rg-pagegrid">
       <div class="rg-pagemain">${this._confirmation(ctx)}</div>
@@ -1327,7 +1332,9 @@ const WIDGET_CSS = `
   .rg-callout { margin-top: 26px; padding: 20px 22px; border: 1px solid var(--rg-hair); border-radius: 2px; display: grid; gap: 4px; }
   .rg-callout b { font-size: 16px; color: var(--rg-ink); }
   .rg-callout span { font-size: 15px; line-height: 1.5; color: var(--rg-body); }
-  .rg-designer-note { margin: 0; padding: 8px 16px; background: #FFF4E0; color: #5C3B00; font-size: 13px; line-height: 1.4; border-bottom: 1px solid #F0D9A8; }
+  /* Preview label: floats over the banner's corner so the layout is exactly the live one. */
+  .rg--page { position: relative; }
+  .rg-designer-note { position: absolute; z-index: 5; top: 8px; right: 8px; margin: 0; padding: 4px 10px; border-radius: 2px; background: #FF9D00; color: #0B0B0C; font-size: 12px; font-weight: 700; line-height: 1.4; pointer-events: auto; }
   /* whole page: status copy + side panel under the banner */
   .rg-pagebody { background: var(--rg-ground); }
   .rg-pagegrid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; column-gap: 56px; align-items: start; padding-top: 48px; padding-bottom: 72px; }
