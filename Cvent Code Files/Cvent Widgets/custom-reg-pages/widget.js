@@ -22,7 +22,7 @@ import {
 } from "./page-kit.js";
 import { REG_FORM_CSS, regFormCss } from "./reg-form-css.js";
 
-export const BUILD = "reg-2026-10-04g";
+export const BUILD = "reg-2026-10-05a";
 
 export const REG_DEFAULTS = {
   mode: "banner",            // "banner" | "panel" | "confirmation" | "page" (all of it, for a shared header) | "styles" (page CSS only, draws nothing)
@@ -395,7 +395,7 @@ export function syncPageStyles(t = document) {
     e.classList.toggle(HTML_HIDE_OLD, hideOld);
     e.classList.toggle(HTML_OWN_STEPS, ownSteps);
     e.classList.toggle(HTML_READY, ready);
-    e.classList.toggle(HTML_HIDE_BODY, active.some((w) => w._cfg.mode === "page" && !w._idle && w._cfg.hideBody !== false && STATUS_PAGES.includes(w._pageKind)));
+    e.classList.toggle(HTML_HIDE_BODY, active.some((w) => w._cfg.mode === "page" && !w._idle && !w._designer && w._cfg.hideBody !== false && STATUS_PAGES.includes(w._pageKind)));
     e.classList.toggle(HTML_HIDE_REGTYPE, active.some((w) => w._cfg.hideRegType !== false));
     e.classList.toggle(HTML_REQ_NOTE, lead._cfg.showRequiredNote !== false);
     e.classList.toggle(HTML_INTRO_H, lead._cfg.introHeading !== false);
@@ -881,8 +881,14 @@ export default class extends HTMLElement {
     this._pathSeen = this._pagePath();
     const found = base.pageType === "auto" ? detectPageType(this._pathSeen, base.pageAddresses) : base.pageType;
     const covers = Array.isArray(base.covers) ? base.covers : [];
+    // Site Designer (and its preview) isn't on a live ".../event/<site>/<page>"
+    // address, so the page can't be read from it: a whole-page copy shows the
+    // page picked in "Edit the wording for" there, as a preview.
+    this._designer = base.mode === "page" && base.pageType === "auto" && !/\/event\/[^/]+\/[^/]+/.test(this._pathSeen);
+    const preview = PAGE_PRESETS[base.editPage] && base.editPage !== "registration" ? base.editPage : "pending";
     // A whole-page copy set to Automatic draws only the pages it covers.
-    this._pageKind = base.mode === "page" && base.pageType === "auto" && !covers.includes(found) ? "none" : found;
+    this._pageKind = this._designer ? preview
+      : base.mode === "page" && base.pageType === "auto" && !covers.includes(found) ? "none" : found;
     if (this.isConnected) { this.setAttribute("data-bbg-page", this._pageKind); this.setAttribute("data-bbg-page-found", found); }
     this._idle = this._computeIdle(base);
     this._cfg = base.mode === "page" ? pageConfig(base, this._pageKind) : base;
@@ -891,6 +897,7 @@ export default class extends HTMLElement {
   // already have their own banner copy (the registration pages' page sections).
   _computeIdle(base = this._cfg) {
     if (base.mode !== "page") return false;
+    if (this._designer) return false;
     if (!PAGE_PRESETS[this._pageKind]) return true;
     const t = this._target || this._doc;
     return [...registry(t)].some((w) => w !== this && w.isConnected && w._cfg?.mode === "banner" && !w.hasAttribute("data-bbg-injected"));
@@ -921,7 +928,7 @@ export default class extends HTMLElement {
   // Form pages: a side panel copy beside Cvent's form, made by this copy.
   _syncInjectedPanel() {
     const t = this._target || this._doc;
-    const want = this._cfg.mode === "page" && !this._idle && this._cfg.injectPanel !== false && !STATUS_PAGES.includes(this._pageKind);
+    const want = this._cfg.mode === "page" && !this._idle && !this._designer && this._cfg.injectPanel !== false && !STATUS_PAGES.includes(this._pageKind);
     const form = want ? t.querySelector?.(".left-align-fields, [class*=Forms__container]") : null;
     if (!form) { this._injected?.remove(); this._injected = null; return; }
     // The form's outermost Cvent column inside its section: the panel goes next to it.
@@ -1177,7 +1184,9 @@ export default class extends HTMLElement {
   _wholePage(ctx) {
     if (this._idle) return "";
     const status = STATUS_PAGES.includes(this._pageKind);
-    return `${this._banner(ctx)}${status ? `
+    const label = (PAGE_TYPES.find(([k]) => k === this._pageKind) || [, this._pageKind])[1];
+    const note = this._designer ? `<p class="rg-designer-note">Registration pages widget · Whole page · preview: <b>${esc(label)}</b>. On the live site it shows only on its pages (pick the page to preview in “Edit the wording for”).</p>` : "";
+    return `${note}${this._banner(ctx)}${status ? `
     <section class="pk-bleed rg-pagebody"><div class="pk-inner rg-pagegrid">
       <div class="rg-pagemain">${this._confirmation(ctx)}</div>
       ${this._panel(ctx)}
@@ -1318,6 +1327,7 @@ const WIDGET_CSS = `
   .rg-callout { margin-top: 26px; padding: 20px 22px; border: 1px solid var(--rg-hair); border-radius: 2px; display: grid; gap: 4px; }
   .rg-callout b { font-size: 16px; color: var(--rg-ink); }
   .rg-callout span { font-size: 15px; line-height: 1.5; color: var(--rg-body); }
+  .rg-designer-note { margin: 0; padding: 8px 16px; background: #FFF4E0; color: #5C3B00; font-size: 13px; line-height: 1.4; border-bottom: 1px solid #F0D9A8; }
   /* whole page: status copy + side panel under the banner */
   .rg-pagebody { background: var(--rg-ground); }
   .rg-pagegrid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; column-gap: 56px; align-items: start; padding-top: 48px; padding-bottom: 72px; }
