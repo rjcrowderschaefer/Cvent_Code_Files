@@ -28,7 +28,7 @@ import {
 const CARD_TAG = "bbg-home-speaker-card";
 // Bump on every change. Shown in the editor footer and as data-build on the
 // widget root, so a stale Cvent/CDN copy is obvious (Playbook §0).
-export const BUILD = "home-2026-10-05a";
+export const BUILD = "home-2026-10-05b";
 
 // ---------------------------------------------------------------------------
 // Defaults (exported for editor.js). Copy defaults are GENERIC on purpose:
@@ -191,11 +191,28 @@ export function mergeHomeConfig(incoming = {}) {
 }
 
 // ---------------------------------------------------------------------------
+// Button links picked from a list of the site's pages, so planners never copy
+// a URL. Stored as "page:<address ending>" and turned into a link at render
+// time from the current site address (/event/<site>/<page>), so a copy of the
+// template keeps working without editing links. Anything else (a full URL, a
+// path, blank) passes through unchanged. Address endings are Cvent's: Home is
+// "summary", Contact Us is "contact-us".
+export const SITE_PAGES = [["summary", "Home"], ["agenda", "Agenda"], ["speakers", "Speakers"], ["venue", "Venue"], ["contact-us", "Contact Us"]];
+export const PAGE_SLUG = /^page:([a-z0-9][a-z0-9_-]*)$/i;
+export function pageHref(v) {
+  const s = String(v ?? "").trim();
+  const m = PAGE_SLUG.exec(s);
+  if (!m) return /^page:/i.test(s) ? "" : s;
+  const base = (window.location.pathname.match(/^(.*?\/event\/[^/]+)(?:\/|$)/) || [])[1];
+  if (base) return `${base}/${m[1]}`;
+  try { return new URL(m[1], window.location.href).pathname; } catch (e) { return ""; }
+}
+
 // List markers (About list + Themes cards): numbers, bullets or an icon per
 // item. Icons are inline stroke SVGs (24 × 24, currentColor), so they follow
 // the text colour of where they sit and need no extra files.
 // ---------------------------------------------------------------------------
-export const LIST_STYLES = [["numbered", "Numbered (01, 02, 03)"], ["bullets", "Bullets"], ["icons", "An icon for each item"]];
+export const LIST_STYLES = [["numbered", "Ordered (01, 02, 03)"], ["bullets", "Unordered (bullets)"], ["icons", "An icon for each item"], ["none", "None"]];
 export const ICONS = {
   check: ["Check", '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16 9.5"/>'],
   chart: ["Line chart", '<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-7"/>'],
@@ -225,6 +242,7 @@ export const iconSvg = (name, cls = "mk-ico") => {
 };
 const listStyleOf = (v) => (LIST_STYLES.some(([k]) => k === v) ? v : "numbered");
 function listMarker(style, i, icon) {
+  if (style === "none") return "";
   if (style === "icons") return `<span class="mk mk--icon">${iconSvg(icon)}</span>`;
   if (style === "bullets") return '<span class="mk mk--dot" aria-hidden="true"></span>';
   return `<span class="mk mk--num" aria-hidden="true">${String(i + 1).padStart(2, "0")}</span>`;
@@ -258,13 +276,13 @@ function programShape(sessions, lang) {
   return { programFormats, closingReception };
 }
 
-// Speakers heading: always one line. 24 characters fit on one line at every
-// breakpoint (42px desktop down to 1025px wide with the carousel arrows, 32px
-// tablet down to 601px, 28px phone, scaled down slightly under ~430px). The
+// Speakers heading: always one line. 20 characters fit on one line at every
+// breakpoint, all capitals included (measured 320px to 1440px, carousel and
+// grid layouts; the tightest are phones and 601px with the grid link). The
 // editor caps the field at this length; anything longer that is already saved
-// (or a long translation) is cut with an ellipsis and kept whole in a tooltip.
-export const SPEAKER_HEADING_MAX = 24;
-const spkTitle = (h) => (String(h || "").length > SPEAKER_HEADING_MAX ? ` title="${esc(h)}"` : "");
+// (or a long translation) wraps to a second line. Never an ellipsis.
+export const SPEAKER_HEADING_MAX = 20;
+const spkTitle = () => "";
 
 // Same rule as the Speakers page widget: the speaker's Cvent category.
 const normCat = (v) => String(v ?? "").trim().toLowerCase();
@@ -468,7 +486,7 @@ export default class extends HTMLElement {
       // Cvent's header button usually carries the same text as ours.
       label: cfg.nativeRegisterLabel || P("hero", "primaryLabel", cfg.hero.primaryLabel),
       selector: cfg.nativeRegisterSelector,
-      url: cfg.registerUrl,
+      url: pageHref(cfg.registerUrl),
     });
     this._mountVideo(root, cfg);
     this._carouselCleanup?.();
@@ -522,9 +540,9 @@ export default class extends HTMLElement {
     const lede = P("hero", "lede", h.lede);
     const btns = `<div class="hero-btns">
         ${cfg.registerMode === "url"
-          ? button({ label: P("hero", "primaryLabel", h.primaryLabel), href: cfg.registerUrl, variant: "primary", ground: "dark", size: "lg", lang })
+          ? button({ label: P("hero", "primaryLabel", h.primaryLabel), href: pageHref(cfg.registerUrl), variant: "primary", ground: "dark", size: "lg", lang })
           : registerButton({ label: P("hero", "primaryLabel", h.primaryLabel), variant: "primary", ground: "dark", size: "lg" })}
-        ${button({ label: P("hero", "secondaryLabel", h.secondaryLabel), href: h.secondaryUrl, variant: "secondary", ground: "dark", size: "lg", lang })}
+        ${button({ label: P("hero", "secondaryLabel", h.secondaryLabel), href: pageHref(h.secondaryUrl), variant: "secondary", ground: "dark", size: "lg", lang })}
       </div>`;
     const countdown = h.showCountdown && facts.startMs > Date.now()
       ? `<div class="hero-count" role="timer" aria-live="off">
@@ -857,10 +875,13 @@ export default class extends HTMLElement {
     const style = listStyleOf(t.listStyle);
     // Numbered: the kicker replaces the number ("01"); bullets / icons sit
     // beside the kicker text, if any.
+    // Kickers written for the old numbered style carried their own number
+    // ("01 / Valuation"); the marker shows it now, so drop that prefix.
     const themeMarker = (st, i, it) => {
-      if (st === "numbered") return `<p class="theme-kicker">${esc(it.kicker || String(i + 1).padStart(2, "0"))}</p>`;
-      const mk = st === "icons" ? `<span class="mk mk--icon">${iconSvg(it.icon)}</span>` : '<span class="mk mk--dot" aria-hidden="true"></span>';
-      return `<p class="theme-kicker theme-kicker--${st}">${mk}${it.kicker ? `<span>${esc(it.kicker)}</span>` : ""}</p>`;
+      const k = st === "numbered" ? String(it.kicker || "").replace(/^\s*0*\d{1,2}\s*(?:[/·.:|–—-]\s*|$)/u, "") : it.kicker;
+      const text = k ? `<span>${esc(k)}</span>` : "";
+      if (st === "none") return text ? `<p class="theme-kicker">${text}</p>` : "";
+      return `<p class="theme-kicker theme-kicker--${st}">${listMarker(st, i, it.icon)}${text}</p>`;
     };
     if (!items.length) {
       return `
@@ -1067,8 +1088,10 @@ export default class extends HTMLElement {
     .spk-empty { margin-top: 32px; }
     /* Carousel: 4 cards in view (3 tablet, ~1.6 phone so the next one peeks) */
     .spk-sec--carousel .pk-head { align-items: flex-end; }
-    /* Heading on one line at every size (SPEAKER_HEADING_MAX characters). */
-    .spk-h { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: none; }
+    /* One line at every size: the editor caps it at SPEAKER_HEADING_MAX
+       characters. Never clipped and no ellipsis: a longer saved value or a
+       long translation wraps instead. */
+    .spk-h { white-space: normal; overflow: visible; overflow-wrap: anywhere; max-width: none; }
     .pk-head .pk-head-text { min-width: 0; }
     .spk-track { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: calc((100% - 3 * 32px) / 4);
       overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-behavior: smooth;
@@ -1098,9 +1121,12 @@ export default class extends HTMLElement {
     /* Markers: numbers, bullets or icons (decorative; the list itself is the
        semantics). Bullets and icons are centred on the title's first line. */
     .mk { display: inline-flex; align-items: center; color: ${t.ink}; }
-    .mk--num { font-size: 14px; font-weight: 700; color: ${t.faint}; font-variant-numeric: tabular-nums; }
+    .mk--num { font-size: 15px; font-weight: 700; letter-spacing: .04em; color: ${t.ink}; font-variant-numeric: tabular-nums; }
     .num-list--bullets .ai-row, .num-list--icons .ai-row { grid-template-columns: 28px minmax(0, 1fr); align-items: start; }
     .num-list--bullets .ai-row { grid-template-columns: 20px minmax(0, 1fr); }
+    .num-list--none .ai-row { grid-template-columns: minmax(0, 1fr); }
+    .num-list--none .ai-d > summary.ai-row { grid-template-columns: minmax(0, 1fr) auto; }
+    .num-list--none .ai-desc { padding-left: 0; }
     .mk--dot { height: 1.4em; font-size: 18px; }
     .mk--dot::before { content: ""; width: 7px; height: 7px; background: ${t.amber}; }
     .mk--icon { height: calc(18px * 1.4); }
@@ -1131,7 +1157,8 @@ export default class extends HTMLElement {
     .themes-grid { margin-top: 48px; display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); gap: 24px; }
     .theme-card { background: ${t.panel}; border: 1px solid ${t.onDarkHair}; border-radius: 2px; padding: 36px; display: flex; flex-direction: column; gap: 14px; }
     .theme-kicker { font-size: ${LABEL_PX.small}px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: ${t.amber}; }
-    .theme-kicker--bullets, .theme-kicker--icons { display: flex; align-items: center; gap: 12px; min-height: 20px; }
+    .theme-kicker--numbered, .theme-kicker--bullets, .theme-kicker--icons { display: flex; align-items: center; gap: 12px; min-height: 20px; }
+    .theme-kicker .mk--num { font-size: inherit; letter-spacing: inherit; color: #fff; }
     .theme-kicker .mk { color: ${t.amber}; }
     .theme-kicker .mk--dot { height: auto; font-size: inherit; }
     .theme-kicker .mk--icon { height: auto; }
@@ -1241,7 +1268,7 @@ export default class extends HTMLElement {
       .spk-track { grid-template-columns: none; grid-auto-columns: 62%; }
       .spk-sec--carousel .pk-head { flex-wrap: wrap; gap: 16px; }
       .spk-sec--carousel .pk-head-text { flex: 1 1 100%; }
-      /* 24 characters at 0.55em need ~13.2em: shrink a little on narrow phones. */
+      /* Shrink a little on narrow phones so a full-length heading stays on one line. */
       .spk-h { font-size: min(28px, calc((100vw - 40px) / 13.2)); }
       .num-t { font-size: 16px; }
       .mk--dot { font-size: 16px; }

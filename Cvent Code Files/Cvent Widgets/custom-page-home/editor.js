@@ -4,7 +4,7 @@
 // data (the same SDK calls the widget uses). Text fields commit on `change`
 // (blur / Enter), never `input`: the panel re-renders on every patch and would
 // otherwise steal focus mid-typing (Playbook §7).
-import { HOME_DEFAULTS, mergeHomeConfig, deriveAbout, BUILD, SECTIONS, LIST_STYLES, ICONS, iconSvg, SPEAKER_HEADING_MAX } from "./widget.js";
+import { HOME_DEFAULTS, mergeHomeConfig, deriveAbout, BUILD, SECTIONS, LIST_STYLES, ICONS, iconSvg, SPEAKER_HEADING_MAX, SITE_PAGES, PAGE_SLUG } from "./widget.js";
 import { extractUrl, lines } from "./page-kit.js";
 
 // Cvent description list (one per line) -> About items.
@@ -143,7 +143,7 @@ export default class HomePageEditor extends HTMLElement {
       const count = this._el("span", { class: "hint" });
       const upd = () => {
         const n = i.value.length;
-        count.textContent = n > maxLength ? `${n} / ${maxLength} characters: too long, it will be cut off on the page. Shorten it.` : `${n} / ${maxLength} characters`;
+        count.textContent = n > maxLength ? `${n} / ${maxLength} characters: too long, it may wrap to two lines on smaller screens. Shorten it.` : `${n} / ${maxLength} characters`;
         count.classList.toggle("warn", n > maxLength);
       };
       i.addEventListener("input", upd);
@@ -194,6 +194,40 @@ export default class HomePageEditor extends HTMLElement {
     options.forEach(([v, l]) => { const o = this._el("option", { value: v, text: l }); if (v === value) o.selected = true; s.append(o); });
     s.onchange = () => onChange(s.value);
     return this._field(label, s, hint);
+  }
+  // Button link: pick one of the site's pages (stored as "page:<ending>" and
+  // turned into the right address by the widget), another page on the site by
+  // its address ending, or any web address. Returns a list of fields.
+  _linkPicker(key, label, value, onChange, hint) {
+    const v = String(value ?? "").trim();
+    const page = /^page:/i.test(v) ? v.slice(5) : null;
+    const known = page !== null && SITE_PAGES.some(([k]) => k === page);
+    this._linkMode = this._linkMode || {};
+    let mode = known ? page : page !== null ? "other" : this._linkMode[key] === "url" || v ? "url" : "";
+    if (!v && this._linkMode[key] === "other") mode = "other";
+    const s = this._el("select");
+    [["", "Choose a page…"], ...SITE_PAGES, ["other", "Another page on this site…"], ["url", "A web address (URL)…"]].forEach(([k, l]) => {
+      const o = this._el("option", { value: k, text: l });
+      if (k === mode) o.selected = true;
+      s.append(o);
+    });
+    s.onchange = () => {
+      const k = s.value;
+      this._linkMode[key] = k;
+      if (k === "url") onChange(page === null ? v : "");
+      else if (k === "other") onChange(page !== null && !known ? v : "");
+      else onChange(k ? `page:${k}` : "");
+    };
+    const out = [this._field(label, s, hint)];
+    if (mode === "other") {
+      out.push(this._text("Page address ending", known ? "" : page || "", (x) => {
+        const slug = String(x || "").trim().split(/[?#]/)[0].replace(/\/+$/, "").split("/").pop();
+        onChange(slug ? `page:${slug}` : "");
+      }, { placeholder: "faq", hint: "The last part of the page’s address in Cvent, e.g. faq for …/event/your-event/faq." }));
+      if (page && !PAGE_SLUG.test(v)) out.push(this._el("span", { class: "hint warn", text: "Use letters, numbers and hyphens only." }));
+    }
+    if (mode === "url") out.push(this._text("URL", page === null ? v : "", (x) => onChange(String(x || "").trim()), { placeholder: "https://…" }));
+    return out;
   }
   _iconSelect(value, onChange) {
     const s = this._el("select", { "aria-label": "Icon" });
@@ -357,7 +391,7 @@ export default class HomePageEditor extends HTMLElement {
         this._text("Cvent button label to match", c.nativeRegisterLabel, (v) => this._patch({ nativeRegisterLabel: v.trim() }), { placeholder: c.hero.primaryLabel || "Request to attend", hint: "The exact text on Cvent’s Register button. Blank = the hero button label." }),
         this._text("Or: CSS selector (advanced)", c.nativeRegisterSelector, (v) => this._patch({ nativeRegisterSelector: v.trim() }), { placeholder: ".my-register-button button", hint: "Use when the label is not unique, e.g. a CSS class you added to a native Register Button widget." }),
       ]),
-      this._text(c.registerMode === "url" ? "Registration URL" : "Fallback registration URL", c.registerUrl, (v) => this._patch({ registerUrl: v.trim() }), { hint: c.registerMode === "url" ? "Every “Request to attend” button links here." : "Used only if Cvent’s button can’t be found on the page." }),
+      ...this._linkPicker("registerUrl", c.registerMode === "url" ? "Registration link" : "Fallback registration link", c.registerUrl, (v) => this._patch({ registerUrl: v }), c.registerMode === "url" ? "Every “Request to attend” button links here." : "Used only if Cvent’s button can’t be found on the page."),
       this._check("Use the Bloomberg brand font", c.useBrandFont !== false, (v) => this._patch({ useBrandFont: v })),
       this._check("Full-width backgrounds (edge to edge)", c.fullBleed !== false, (v) => this._patch({ fullBleed: v })),
       this._el("p", { class: "hint", text: "Stretches each section’s background (hero video, grey and dark bands) to the window edges; text stays centred. If backgrounds are still cut off, also set the Cvent section and column holding this widget to full width with no side padding." }),
@@ -411,7 +445,7 @@ export default class HomePageEditor extends HTMLElement {
       this._area("Intro line", h.lede, (v) => S("hero")({ lede: v }), { rows: 2 }),
       this._text("Primary button label", h.primaryLabel, (v) => S("hero")({ primaryLabel: v })),
       this._text("Secondary button label", h.secondaryLabel, (v) => S("hero")({ secondaryLabel: v })),
-      this._text("Secondary button URL", h.secondaryUrl, (v) => S("hero")({ secondaryUrl: v.trim() }), { hint: "Usually the Agenda page." }),
+      ...this._linkPicker("secondaryUrl", "Secondary button links to", h.secondaryUrl, (v) => S("hero")({ secondaryUrl: v }), "Usually the Agenda page. The link is built for this site automatically."),
       this._check("Show countdown", h.showCountdown, (v) => S("hero")({ showCountdown: v })),
     ]));
 
@@ -482,11 +516,11 @@ export default class HomePageEditor extends HTMLElement {
         this._num("Darken image (%)", t.bgOverlay, (v) => S("themes")({ bgOverlay: v }), { max: 90, hint: "Keeps the heading and cards readable. 60–80 suits most photos." }),
       ] : []),
       this._select("Card marker", t.listStyle || "numbered", LIST_STYLES, (v) => S("themes")({ listStyle: v }),
-        "Numbered: the kicker replaces the number. Bullets and icons sit beside the kicker."),
+        "The kicker (if any) sits beside the marker. None = kicker only."),
       ...t.items.flatMap((it, i) => [
         this._el("p", { class: "sub", text: `Theme ${i + 1}` }),
         ...(t.listStyle === "icons" ? [this._iconSelect(it.icon, (v) => this._patchItem("themes", i, { icon: v }))] : []),
-        this._text("Kicker", it.kicker, (v) => this._patchItem("themes", i, { kicker: v }), { placeholder: t.listStyle === "numbered" || !t.listStyle ? `0${i + 1} / Short label` : "Short label (optional)" }),
+        this._text("Kicker", it.kicker, (v) => this._patchItem("themes", i, { kicker: v }), { placeholder: "Short label (optional)" }),
         this._text("Title", it.title, (v) => this._patchItem("themes", i, { title: v })),
         this._area("Text", it.body, (v) => this._patchItem("themes", i, { body: v }), { rows: 3 }),
       ]),
