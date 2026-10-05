@@ -24,7 +24,7 @@
 import { FONT_STACK, TYPE_SCALE, ensureBrandFont } from "./type-scale.js";
 
 // Shown in the page widgets' editor footer, so a stale copy in Cvent is visible.
-export const PAGE_KIT_BUILD = "pagekit-2026-10-05a"; // + page CSS channel (confirm page), planner contact proxy, scroll hold
+export const PAGE_KIT_BUILD = "pagekit-2026-10-05b"; // + page CSS channel (confirm page), planner contact proxy, scroll hold
 
 // ---------------------------------------------------------------------------
 // Tokens
@@ -547,6 +547,7 @@ export const SITE_CSS_ID = "bbg-site-css";
 export const isLiveSite = (doc) => { try { return /\/event\/[^/]+\/[^/]+/.test(doc.defaultView.location.pathname); } catch (e) { return false; } };
 export function ensureSiteCss(doc = typeof document !== "undefined" ? document : null) {
   if (doc?.documentElement && isLiveSite(doc)) { doc.documentElement.classList.add("bbg-live"); pinClosingBand(doc); }
+  if (doc?.documentElement) watchPageReady(doc);
   if (!doc?.head || doc.getElementById(SITE_CSS_ID)) return;
   const st = doc.createElement("style");
   st.id = SITE_CSS_ID;
@@ -581,6 +582,41 @@ export function pinClosingBand(doc) {
   const ask = () => { if (!raf) raf = win.requestAnimationFrame(run); };
   win.addEventListener("resize", ask);
   [0, 600, 1500, 3000, 6000].forEach((ms) => win.setTimeout(ask, ms));
+}
+// Loading screen: the site theme CSS hides the page body behind a pulsing
+// Bloomberg "B" while a page that has custom widgets is still drawing them
+// (6 s at most). This sets html.bbg-page-ready once every custom widget on the
+// page has drawn (or is hidden on purpose), and clears it again when Cvent
+// moves to another page without reloading.
+const READY = "bbg-page-ready";
+export function watchPageReady(doc) {
+  const win = doc?.defaultView;
+  if (!win || doc.__bbgReadyWatch) return;
+  doc.__bbgReadyWatch = true;
+  const html = doc.documentElement;
+  let path = "", since = 0, okFrom = 0, timer = 0;
+  const loading = (box) => {
+    if (!box.getClientRects().length) return false;                // hidden column
+    const host = [...box.querySelectorAll("*")].find((e) => /^WIDGET-/.test(e.tagName));
+    if (!host || !host.matches(":defined")) return true;           // script not in yet
+    if (!host.getClientRects().length || host.getBoundingClientRect().height >= 4) return false;
+    const sr = host.shadowRoot;                                      // drawn nothing yet
+    return !!sr && (!!sr.querySelector(".pk-sr[role=status]") || !!sr.querySelector(".pk:empty"));
+  };
+  const tick = () => {
+    timer = 0;
+    const now = Date.now();
+    const p = win.location.pathname;
+    if (p !== path) { path = p; since = now; okFrom = 0; html.classList.remove(READY); }
+    if (!html.classList.contains(READY)) {
+      const boxes = [...doc.querySelectorAll("[data-cvent-id^=widget-content-]")];
+      const ok = now - since > 250 && boxes.length > 0 && !boxes.some(loading);
+      okFrom = ok ? okFrom || now : 0;
+      if (ok && now - okFrom >= 150) html.classList.add(READY);
+    }
+    timer = win.setTimeout(tick, html.classList.contains(READY) ? 400 : 60);
+  };
+  tick();
 }
 try { ensureSiteCss(); } catch (e) { /* no document (tests) */ }
 
