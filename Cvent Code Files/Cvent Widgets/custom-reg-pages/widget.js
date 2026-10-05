@@ -22,7 +22,7 @@ import {
 } from "./page-kit.js";
 import { REG_FORM_CSS, regFormCss } from "./reg-form-css.js";
 
-export const BUILD = "reg-2026-10-05c";
+export const BUILD = "reg-2026-10-05d";
 
 export const REG_DEFAULTS = {
   mode: "banner",            // "banner" | "panel" | "confirmation" | "page" (all of it, for a shared header) | "styles" (page CSS only, draws nothing)
@@ -218,6 +218,34 @@ export const PAGE_PRESETS = {
   },
 };
 export const STATUS_PAGES = ["pending", "approved", "denied", "cancelled", "archive"];
+// Preview-only stand-ins for Cvent's forms on the form pages (see _wholePage).
+const SAMPLE_FORMS = {
+  cancelForm: {
+    h: "We’re sorry you can’t attend", p: "Confirm your details to cancel your registration. We’ll email you to confirm.",
+    fields: [["First name", 1], ["Last name", 1], ["Work email"], ["Let us know why you can’t attend", 0, "area"]],
+    note: ["Your place will be released.", "If you change your mind later, you’ll need to request to attend again."],
+    primary: "Cancel my registration", secondary: "Keep my registration",
+  },
+  declineForm: {
+    h: "Sorry you can’t join us", p: "Enter your information below and we’ll let the team know.",
+    fields: [["First name", 1], ["Last name", 1], ["Work email"], ["Anything you’d like us to know?", 0, "area", true]],
+    primary: "Decline invitation", link: "Back to the event site",
+  },
+  guest: {
+    h: "Add a guest", p: "Enter your guest’s details. They’ll get their own confirmation email.",
+    fields: [["First name", 1], ["Last name", 1], ["Work email"]],
+    primary: "Add guest", link: "Cancel",
+  },
+};
+function sampleForm(f) {
+  const field = ([label, half, kind, optional]) => `<div class="rg-sf-f${half ? " rg-sf-half" : ""}"><span class="rg-sf-l">${esc(label)}${optional ? '<em>Optional</em>' : "<b>*</b>"}</span><span class="rg-sf-in${kind === "area" ? " rg-sf-area" : ""}"></span></div>`;
+  return `<div class="rg-sf" aria-hidden="true">
+    <h2 class="rg-sf-h">${esc(f.h)}</h2><p class="rg-sf-p">${esc(f.p)}</p><p class="rg-sf-req"><b>*</b> Required</p>
+    <div class="rg-sf-grid">${f.fields.map(field).join("")}</div>
+    ${f.note ? `<p class="rg-sf-note"><b>${esc(f.note[0])}</b> ${esc(f.note[1])}</p>` : ""}
+    <div class="rg-sf-actions"><span class="pk-btn pk-btn--lg pk-btn--primary pk-btn--on-light">${esc(f.primary)}</span>${f.secondary ? `<span class="pk-btn pk-btn--lg pk-btn--secondary pk-btn--on-light">${esc(f.secondary)}</span>` : ""}${f.link ? `<span class="rg-sf-link">${esc(f.link)}</span>` : ""}</div>
+  </div>`;
+}
 // The page a copy is on, from the address: Cvent names its registration pages
 // in the last part of the path (".../registrationPendingApprovalPage:<id>").
 // The planner's "address words = page type" lines are checked first.
@@ -395,7 +423,8 @@ export function syncPageStyles(t = document) {
     e.classList.toggle(HTML_HIDE_OLD, hideOld);
     e.classList.toggle(HTML_OWN_STEPS, ownSteps);
     e.classList.toggle(HTML_READY, ready);
-    e.classList.toggle(HTML_HIDE_BODY, active.some((w) => w._cfg.mode === "page" && !w._idle && !w._designer && w._cfg.hideBody !== false && STATUS_PAGES.includes(w._pageKind)));
+    e.classList.toggle(HTML_HIDE_BODY, active.some((w) => w._cfg.mode === "page" && !w._idle && !w._designer
+      && (w._forced || (w._cfg.hideBody !== false && STATUS_PAGES.includes(w._pageKind)))));
     e.classList.toggle(HTML_HIDE_REGTYPE, active.some((w) => w._cfg.hideRegType !== false));
     e.classList.toggle(HTML_REQ_NOTE, lead._cfg.showRequiredNote !== false);
     e.classList.toggle(HTML_INTRO_H, lead._cfg.introHeading !== false);
@@ -1193,8 +1222,17 @@ export default class extends HTMLElement {
   _wholePage(ctx) {
     if (this._idle) return "";
     const status = STATUS_PAGES.includes(this._pageKind);
+    // Previews of the form pages: Cvent's form only exists on the real page,
+    // so a sample of it (the fields and buttons the guide sets up, in the
+    // registration form's style) stands in, beside the real side panel.
+    const sample = (this._designer || this._forced) && SAMPLE_FORMS[this._pageKind];
     const label = (PAGE_TYPES.find(([k]) => k === this._pageKind) || [, this._pageKind])[1];
     const note = this._designer || this._forced ? `<p class="rg-designer-note" title="On the live site this copy shows only on its own pages. In Site Designer, pick the page to preview in “Edit the wording for”; on the live site add ?bbg-preview=<page> to any address.">Preview: ${esc(label)}</p>` : "";
+    if (sample) return `${note}${this._banner(ctx)}
+    <section class="pk-bleed rg-pagebody"><div class="pk-inner rg-pagegrid">
+      <div class="rg-pagemain">${sampleForm(sample)}</div>
+      ${this._panel(ctx)}
+    </div></section>`;
     return `${note}${this._banner(ctx)}${status ? `
     <section class="pk-bleed rg-pagebody"><div class="pk-inner rg-pagegrid">
       <div class="rg-pagemain">${this._confirmation(ctx)}</div>
@@ -1339,6 +1377,24 @@ const WIDGET_CSS = `
   /* Preview label: floats over the banner's corner so the layout is exactly the live one. */
   .rg--page { position: relative; }
   .rg-designer-note { position: absolute; z-index: 5; top: 8px; right: 8px; margin: 0; padding: 4px 10px; border-radius: 2px; background: #FF9D00; color: #0B0B0C; font-size: 12px; font-weight: 700; line-height: 1.4; pointer-events: auto; }
+  /* preview stand-in for Cvent's form (matches the restyled registration form) */
+  .rg-sf { max-width: 620px; }
+  .rg-sf-h { font-size: 28px; line-height: 1.2; font-weight: 700; letter-spacing: -0.01em; color: var(--rg-ink); }
+  .rg-sf-p { margin-top: 8px; font-size: 16.5px; line-height: 1.55; color: var(--rg-body); }
+  .rg-sf-req { margin-top: 6px; font-size: 13px; color: var(--rg-muted); }
+  .rg-sf-req b, .rg-sf-l b { color: var(--rg-accent); margin-left: 2px; }
+  .rg-sf-grid { margin-top: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 22px 20px; }
+  .rg-sf-f { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px; }
+  .rg-sf-half { grid-column: auto; }
+  .rg-sf-l { font-size: 15px; font-weight: 600; color: var(--rg-ink); }
+  .rg-sf-l em { font-style: normal; font-weight: 500; font-size: 13px; color: var(--rg-muted); margin-left: 6px; }
+  .rg-sf-in { display: block; height: 48px; border: 1px solid var(--rg-ctl); border-radius: 2px; background: #fff; }
+  .rg-sf-area { height: 120px; }
+  .rg-sf-note { margin-top: 22px; padding: 14px 16px; background: var(--rg-panel); border-left: 3px solid var(--rg-accent); font-size: 14.5px; line-height: 1.5; color: var(--rg-body); }
+  .rg-sf-note b { color: var(--rg-ink); }
+  .rg-sf-actions { margin-top: 36px; padding-top: 24px; border-top: 1px solid var(--rg-hair); display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  .rg-sf-link { margin-left: auto; font-size: 14px; font-weight: 600; color: var(--rg-muted); text-decoration: underline; text-underline-offset: 3px; }
+  @media (max-width: 600px) { .rg-sf-grid { grid-template-columns: 1fr; } .rg-sf-half { grid-column: 1 / -1; } .rg-sf-actions .pk-btn { width: 100%; } .rg-sf-link { margin: 6px auto 0; } }
   /* whole page: status copy + side panel under the banner */
   .rg-pagebody { background: var(--rg-ground); }
   .rg-pagegrid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; column-gap: 56px; align-items: start; padding-top: 48px; padding-bottom: 72px; }
