@@ -707,6 +707,40 @@ const WIDGET_CSS = `
   }
 `;
 
+// ---- one FAB for the whole site -------------------------------------------
+// Place ONE copy in the site header (Header & Footer), set it up once, and it
+// shows on every website page. It never shows on registration or
+// post-registration pages (their addresses end in "<pageType>:<id>", e.g.
+// regProcessStep1:..., registrationPendingApprovalPage:...), nor in Planner
+// Registration mode. If copies are also left on individual pages, only one
+// shows: the header copy (its settings win), else the first on the page.
+const FABS = new Set();
+let fabTimer = 0;
+function isRegPage() {
+  let path = "";
+  try { path = window.location.pathname || ""; } catch (e) { return false; }
+  if (/PlannerRegistration/i.test(path)) return true;
+  if (!/\/event\/[^/]+\/[^/]+/.test(path)) return false;   // Site Designer etc.: show
+  let seg = path.split("/").filter(Boolean).pop() || "";
+  try { seg = decodeURIComponent(seg); } catch (e) { /* keep */ }
+  return seg.includes(":") || /regprocess|registration|register|pending|confirmation|cancel|decline|guest|denied|archive/i.test(seg);
+}
+function inHeaderOrFooter(el) {
+  return !!el.closest("[role=banner], footer, [class*=Grid__grid]:has(.site-footer)");
+}
+function syncFabs() {
+  const live = [...FABS].filter((w) => w.isConnected);
+  const hideAll = isRegPage();
+  const lead = live.find(inHeaderOrFooter) || live.sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1))[0];
+  live.forEach((w) => {
+    const show = !hideAll && w === lead;
+    if (!show && w._close) w._close(true);
+    w.style.display = show ? "" : "none";
+  });
+  if (!live.length) { clearInterval(fabTimer); fabTimer = 0; }
+  else if (!fabTimer) fabTimer = setInterval(syncFabs, 500); // Cvent changes pages without reloading
+}
+
 export default class BbgContactWidget extends HTMLElement {
   constructor({ configuration, theme }) {
     super();
@@ -720,6 +754,8 @@ export default class BbgContactWidget extends HTMLElement {
     // a DOM move/reflow). Without this guard, connectedCallback would run
     // again and append a second full set of markup into the same shadow
     // root, producing stacked duplicate buttons.
+    FABS.add(this);
+    syncFabs();
     if (this._initialized) return;
     this._initialized = true;
     try { ensureSiteCss(); } catch (e) { /* page CSS is a nicety */ }
@@ -889,15 +925,18 @@ export default class BbgContactWidget extends HTMLElement {
       document.body.style.overflow = "hidden";
       setView("menu");
     };
-    const close = () => {
+    const close = (quiet) => {
       wrap.classList.remove("is-open");
       fab.setAttribute("aria-expanded", "false");
       document.body.style.overflow = "";
       wrap.setAttribute("data-view", "menu");
       // Programmatic focus doesn't match :focus-visible, so the hint stays
       // hidden for a mouse user while keyboard users still get it back.
-      fab.focus();
+      if (quiet !== true) fab.focus();
     };
+    // Hidden by syncFabs (registration page, or another copy leads): close
+    // first so the page is never left with its scrolling locked.
+    this._close = (quiet) => { if (isOpen()) close(quiet); };
 
     fab.addEventListener("click", () => (isOpen() ? close() : open()));
     mclose.addEventListener("click", close);
@@ -1077,6 +1116,8 @@ export default class BbgContactWidget extends HTMLElement {
   }
 
   disconnectedCallback() {
+    FABS.delete(this);
+    syncFabs();
     if (this._onKeydown) document.removeEventListener("keydown", this._onKeydown);
     if (this._onResize) window.removeEventListener("resize", this._onResize);
     if (this._pinPollId) clearInterval(this._pinPollId);
