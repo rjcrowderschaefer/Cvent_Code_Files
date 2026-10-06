@@ -18,14 +18,27 @@ import { ensureBrandFont } from "./type-scale.js";
 import {
   TOKENS, esc, safeUrl, isExternal, lines, fixed, resolveLang, loadEventData, eventFacts,
   kitCss, applyFullBleed, mergePageConfig, LABEL_PX, holdHeight, trackScroll, noteConfig, restoreScroll,
-  findPlannerContact, wirePlannerContact,
+  findPlannerContact, wirePlannerContact, ensureSiteCss,
 } from "./page-kit.js";
 import { REG_FORM_CSS, regFormCss } from "./reg-form-css.js";
 
-export const BUILD = "reg-2026-10-02b";
+export const BUILD = "reg-2026-10-05m";
 
 export const REG_DEFAULTS = {
-  mode: "banner",            // "banner" | "panel" | "confirmation"
+  mode: "banner",            // "banner" | "panel" | "confirmation" | "page" (all of it, for a shared header) | "styles" (page CSS only, draws nothing)
+  // Which Cvent page this copy sits on. Choosing one fills in that page's
+  // copy (PAGE_PRESETS) for every mode; any field can be edited after.
+  pageType: "registration",
+  presetFor: "",             // the page type whose copy was last filled in (set by the editor)
+  // "Whole page" copies (one copy in a shared header): each page's own wording,
+  // { pending: { banner, panel, confirmation }, ... } over that page's preset.
+  pages: {},
+  pageAddresses: "",         // "address words = page type" lines, checked before the built-in matching
+  hideBody: true,            // whole-page copy on a status page: hide Cvent's own page content below it
+  injectPanel: true,         // whole-page copy on a form page: put the side panel beside Cvent's form
+  // Whole-page copy in a header shared with other pages: the pages it draws.
+  // Everywhere else (website pages, pages with their own copies) it draws nothing.
+  covers: ["pending", "denied", "cancelled", "archive", "cancelForm", "declineForm", "guest"],
   theme: "light",            // "light" | "dark": the form area and this widget
   styleForm: true,           // restyle Cvent's registration form on this page
   hideOldHeader: true,       // hide the old "Event registration" text box in the page header
@@ -91,9 +104,223 @@ export const REG_DEFAULTS = {
     primaryUrl: "",
     secondaryLabel: "Contact the Bloomberg Team",
     secondaryUrl: "",
+    // Post-registration pages (2026-10-04): approved confirmation, denied, archive.
+    showTick: true,          // the amber check mark above the heading (good news only)
+    stepsDone: 1,            // timeline steps marked as done, from the top
+    tertiaryLabel: "",       // a quiet underlined link after the buttons (e.g. "Cancel registration")
+    tertiaryUrl: "",
+    calloutTitle: "",        // an outlined box above the buttons; blank title + text = none
+    calloutText: "",
   },
   translations: {},
 };
+
+// ---------------------------------------------------------------------------
+// Page types: one preset per Cvent registration / post-registration page.
+// Tokens in the copy: {first} {email} (registrant), {event} {date} {time}
+// (event). Button URLs: a page link, mailto:, or #agenda / #contact (the site's
+// pages; #contact opens Cvent's Contact Planner pop-up when it is on the page)
+// and #modify / #cancel (Cvent's own Modify / Cancel Registration buttons).
+// ---------------------------------------------------------------------------
+export const PAGE_TYPES = [
+  ["auto", "Automatic: from the page address (for a shared header)"],
+  ["registration", "Registration form (Request to attend)"],
+  ["pending", "Pending approval (Request received)"],
+  ["approved", "Confirmation (approved)"],
+  ["denied", "Registration denied"],
+  ["cancelForm", "Cancellation form"],
+  ["cancelled", "Registration cancelled (after cancelling)"],
+  ["declineForm", "Decline invitation form"],
+  ["guest", "Guest registration"],
+  ["archive", "Archive (event has ended)"],
+];
+const NO_GREETING = { greeting: "", showNext: false };
+export const PAGE_PRESETS = {
+  registration: {},
+  pending: {
+    banner: { title: "Request received", showSteps: false },
+    panel: { eyebrow: "Your request", ...NO_GREETING },
+    confirmation: { primaryUrl: "#agenda", secondaryUrl: "#contact" },
+  },
+  approved: {
+    banner: { title: "You’re registered", showSteps: false },
+    panel: { eyebrow: "Your registration", ...NO_GREETING },
+    confirmation: {
+      heading: "You’re confirmed, {first}.",
+      headingNoName: "You’re confirmed.",
+      body: "Your place at {event} is confirmed. We sent your confirmation and calendar invitation to {email}.",
+      bodyNoEmail: "Your place at {event} is confirmed. We sent your confirmation and calendar invitation by email.",
+      steps: "Request approved | Your place is saved.\nConfirmation sent | Check your inbox for the calendar invitation.\nEvent day | {date} · {time}",
+      stepsDone: 2,
+      primaryLabel: "Explore the program", primaryUrl: "#agenda",
+      secondaryLabel: "Change my registration", secondaryUrl: "#modify",
+      tertiaryLabel: "Cancel registration", tertiaryUrl: "#cancel",
+    },
+  },
+  denied: {
+    banner: { title: "An update on your registration request", showSteps: false },
+    panel: { eyebrow: "The event", ...NO_GREETING },
+    confirmation: {
+      showTick: false,
+      heading: "We can’t offer you a place this time, {first}.",
+      headingNoName: "We can’t offer you a place this time.",
+      body: "Thank you for your interest in {event}. Due to limited capacity, we’re unable to confirm your registration. We hope to welcome you at a future Bloomberg event.",
+      bodyNoEmail: "Thank you for your interest in {event}. Due to limited capacity, we’re unable to confirm your registration. We hope to welcome you at a future Bloomberg event.",
+      steps: "", stepsDone: 0,
+      primaryLabel: "Contact the Bloomberg Team", primaryUrl: "#contact",
+      secondaryLabel: "", secondaryUrl: "",
+    },
+  },
+  cancelForm: {
+    banner: { title: "Cancel registration", showSteps: false },
+    panel: { eyebrow: "Your registration", ...NO_GREETING },
+  },
+  cancelled: {
+    banner: { title: "Registration cancelled", showSteps: false },
+    panel: { eyebrow: "The event", ...NO_GREETING },
+    confirmation: {
+      showTick: false,
+      heading: "Your registration is cancelled, {first}.",
+      headingNoName: "Your registration is cancelled.",
+      body: "We’ve released your place at {event} and sent a confirmation to {email}. If your plans change, contact us and we’ll do what we can.",
+      bodyNoEmail: "We’ve released your place at {event} and sent you a confirmation by email. If your plans change, contact us and we’ll do what we can.",
+      steps: "", stepsDone: 0,
+      primaryLabel: "Contact the Bloomberg Team", primaryUrl: "#contact",
+      secondaryLabel: "", secondaryUrl: "",
+    },
+  },
+  declineForm: {
+    banner: { title: "Decline invitation", showSteps: false },
+    panel: { eyebrow: "Your invitation", ...NO_GREETING },
+  },
+  guest: {
+    banner: { title: "Add a guest" },
+    panel: {
+      eyebrow: "Your registration", greeting: "", showNext: true, nextHeading: "About guests",
+      nextSteps: "Each guest gets their own confirmation email.\nGuests go through the same review as you.\nYou can remove a guest by changing your registration.",
+    },
+  },
+  archive: {
+    banner: { title: "This event has ended", showSteps: false },
+    panel: { eyebrow: "The event", ...NO_GREETING },
+    confirmation: {
+      showTick: false,
+      heading: "Thanks for your interest",
+      headingNoName: "Thanks for your interest",
+      body: "{event} took place on {date}. Registration is closed and this site is no longer updated.",
+      bodyNoEmail: "{event} took place on {date}. Registration is closed and this site is no longer updated.",
+      steps: "", stepsDone: 0,
+      calloutTitle: "Interested in future events?",
+      calloutText: "Tell us what you’d like to hear about and we’ll invite you to upcoming Bloomberg events.",
+      primaryLabel: "Contact the Bloomberg Team", primaryUrl: "#contact",
+      secondaryLabel: "", secondaryUrl: "",
+    },
+  },
+};
+export const STATUS_PAGES = ["pending", "approved", "denied", "cancelled", "archive"];
+// Preview-only stand-ins for Cvent's forms on the form pages (see _wholePage).
+const SAMPLE_FORMS = {
+  cancelForm: {
+    h: "We’re sorry you can’t attend", p: "Confirm your details to cancel your registration. We’ll email you to confirm.",
+    fields: [["First name", 1], ["Last name", 1], ["Work email"], ["Let us know why you can’t attend", 0, "area"]],
+    note: ["Your place will be released.", "If you change your mind later, you’ll need to request to attend again."],
+    primary: "Cancel my registration", secondary: "Keep my registration",
+  },
+  declineForm: {
+    h: "Sorry you can’t join us", p: "Enter your information below and we’ll let the team know.",
+    fields: [["First name", 1], ["Last name", 1], ["Work email"], ["Anything you’d like us to know?", 0, "area", true]],
+    primary: "Decline invitation", link: "Back to the event site",
+  },
+  guest: {
+    h: "Add a guest", p: "Enter your guest’s details. They’ll get their own confirmation email.",
+    fields: [["First name", 1], ["Last name", 1], ["Work email"]],
+    primary: "Add guest", link: "Cancel",
+  },
+};
+function sampleForm(f) {
+  const field = ([label, half, kind, optional]) => `<div class="rg-sf-f${half ? " rg-sf-half" : ""}"><span class="rg-sf-l">${esc(label)}${optional ? '<em>Optional</em>' : "<b>*</b>"}</span><span class="rg-sf-in${kind === "area" ? " rg-sf-area" : ""}"></span></div>`;
+  return `<div class="rg-sf" aria-hidden="true">
+    <h2 class="rg-sf-h">${esc(f.h)}</h2><p class="rg-sf-p">${esc(f.p)}</p><p class="rg-sf-req"><b>*</b> Required</p>
+    <div class="rg-sf-grid">${f.fields.map(field).join("")}</div>
+    ${f.note ? `<p class="rg-sf-note"><b>${esc(f.note[0])}</b> ${esc(f.note[1])}</p>` : ""}
+    <div class="rg-sf-actions"><span class="pk-btn pk-btn--lg pk-btn--primary pk-btn--on-light">${esc(f.primary)}</span>${f.secondary ? `<span class="pk-btn pk-btn--lg pk-btn--secondary pk-btn--on-light">${esc(f.secondary)}</span>` : ""}${f.link ? `<span class="rg-sf-link">${esc(f.link)}</span>` : ""}</div>
+  </div>`;
+}
+// The page a copy is on, from the address: Cvent names its registration pages
+// in the last part of the path (".../registrationPendingApprovalPage:<id>").
+// The planner's "address words = page type" lines are checked first.
+// Site Designer (not the live site, not Planner Registration mode).
+function isDesignerPath(path, doc) {
+  const p = String(path || "");
+  if (/\/event\/[^/]+\/[^/]+/.test(p) || /PlannerRegistration/i.test(p)) return false;
+  // (and the local preview harness, /preview-*/)
+  return /EditWebsite|SiteDesigner|site-designer|\/preview[^/]*\//i.test(p) || !!designerPage(doc);
+}
+// Site Designer's page picker ("Registration Pending", "Header and Footer", ...).
+function designerPage(doc) {
+  try {
+    const name = (doc.querySelector("[data-cvent-id=site-header-dropdown-text]")?.textContent || "").trim();
+    if (!name) return null;
+    const box = doc.querySelector("[data-cvent-id=nucleus-site-editor-site-header]");
+    return { name, hf: /header|footer|h\s*&\s*f\b/i.test(`${name} ${box?.textContent || ""}`) };
+  } catch (e) { return null; }
+}
+const DESIGNER_KINDS = [
+  [/cancel\w*\s+form/i, "cancelForm"], [/decline/i, "declineForm"], [/pending/i, "pending"],
+  [/denied|rejected/i, "denied"], [/cancel/i, "cancelled"], [/guest/i, "guest"],
+  [/archiv/i, "archive"], [/confirm|approved/i, "approved"],
+];
+const designerKind = (name) => (DESIGNER_KINDS.find(([re]) => re.test(name)) || [, ""])[1];
+function detectPageType(path, map = "") {
+  const seg = (() => { try { return decodeURIComponent(String(path || "").split("/").filter(Boolean).pop() || ""); } catch (e) { return ""; } })().split(":")[0];
+  const s = seg.toLowerCase(), all = String(path || "").toLowerCase();
+  for (const line of lines(map)) {
+    const i = line.lastIndexOf("=");
+    if (i < 0) continue;
+    const frag = line.slice(0, i).trim().toLowerCase(), type = line.slice(i + 1).trim();
+    if (frag && PAGE_PRESETS[type] && all.includes(frag)) return type;
+  }
+  if (/pending|awaitingapproval/.test(s)) return "pending";
+  if (/denied|deny|reject|notapproved|disapproved/.test(s)) return "denied";
+  if (/cancel/.test(s)) return /(cancelled|canceled|confirm|complete|success|done)/.test(s) ? "cancelled" : "cancelForm";
+  if (/decline/.test(s)) return "declineForm";
+  if (/guest/.test(s)) return "guest";
+  if (/archive|closed|postevent|ended/.test(s)) return "archive";
+  if (/confirmation|confirmed|approved/.test(s)) return "approved";
+  if (/regprocess|register|registration|summary.*reg|reg.*summary/.test(s)) return "registration";
+  return "none";               // a website page (Home, Agenda, ...): not ours
+}
+// One page's full settings for a whole-page copy: defaults, then the page's
+// preset, then the planner's edits for that page.
+export function pageConfig(cfg, type) {
+  const pr = PAGE_PRESETS[type] || {};
+  const own = (cfg.pages && cfg.pages[type]) || {};
+  const out = { ...cfg, pageType: type, presetFor: type };
+  ["banner", "panel", "confirmation"].forEach((sec) => { out[sec] = { ...REG_DEFAULTS[sec], ...(pr[sec] || {}), ...(own[sec] || {}) }; });
+  return out;
+}
+const isBannerish = (w) => w._cfg?.mode === "banner" || (w._cfg?.mode === "page" && !w._idle);
+
+// Every field any preset sets: switching page type resets these.
+const PRESET_FIELDS = (() => {
+  const f = {};
+  Object.values(PAGE_PRESETS).forEach((pr) => Object.entries(pr).forEach(([sec, vals]) => {
+    f[sec] = f[sec] || new Set();
+    Object.keys(vals).forEach((k) => f[sec].add(k));
+  }));
+  return f;
+})();
+// The editor's page-type switch: that page's copy in every preset field
+// (fields the preset doesn't set go back to the defaults).
+export function applyPageType(cfg, type) {
+  const pr = PAGE_PRESETS[type] || {};
+  const out = { ...cfg, pageType: type, presetFor: type };
+  Object.entries(PRESET_FIELDS).forEach(([sec, keys]) => {
+    out[sec] = { ...(cfg[sec] || {}) };
+    keys.forEach((k) => { out[sec][k] = pr[sec] && k in pr[sec] ? pr[sec][k] : REG_DEFAULTS[sec][k]; });
+  });
+  return out;
+}
 
 export function mergeRegConfig(incoming = {}) {
   const out = mergePageConfig(REG_DEFAULTS, incoming);
@@ -112,6 +339,16 @@ export function mergeRegConfig(incoming = {}) {
     const [sec, key] = k.split(".");
     if (String(out[sec][key] || "").replace(/\r/g, "") === v) out[sec][key] = REG_DEFAULTS[sec][key];
   });
+  // A page type chosen without the editor filling its copy in (or an older
+  // saved copy): fields still at the general default take the page's copy.
+  if (!PAGE_PRESETS[out.pageType] && out.pageType !== "auto") out.pageType = "registration";
+  if (!out.pages || typeof out.pages !== "object") out.pages = {};
+  if (!Array.isArray(out.covers)) out.covers = [...REG_DEFAULTS.covers];
+  if (out.pageType !== "registration" && out.pageType !== "auto" && out.presetFor !== out.pageType) {
+    Object.entries(PAGE_PRESETS[out.pageType]).forEach(([sec, vals]) => Object.entries(vals).forEach(([k, v]) => {
+      if (out[sec][k] === undefined || out[sec][k] === REG_DEFAULTS[sec][k]) out[sec][k] = v;
+    }));
+  }
   return out;
 }
 
@@ -124,6 +361,8 @@ const HTML_DARK = "bbg-reg--dark";
 const HTML_HIDE_OLD = "bbg-reg--hide-old";
 const HTML_OWN_STEPS = "bbg-reg--own-steps";
 const HTML_READY = "bbg-reg--ready";
+const HTML_PAGE_DRAWN = "bbg-reg--page-drawn";
+const HTML_HIDE_BODY = "bbg-reg--hide-body";
 const HTML_HIDE_REGTYPE = "bbg-reg--hide-regtype";
 const HTML_REQ_NOTE = "bbg-reg--req-note";
 const HTML_INTRO_H = "bbg-reg--intro-heading";
@@ -174,12 +413,12 @@ function registry(t) {
 export function syncPageStyles(t = document) {
   if (!t) return;
   const set = registry(t);
-  const active = [...set].filter((w) => w.isConnected && w._cfg?.styleForm !== false);
+  const active = [...set].filter((w) => w.isConnected && w._cfg?.styleForm !== false && w._cfg?.mode !== "styles" && !(w._cfg?.mode === "page" && w._idle));
   const els = stateEls(t);
   let tag = isDoc(t) ? t.getElementById(STYLE_ID) : t.querySelector(`#${STYLE_ID}`);
   if (!active.length) {
     tag?.remove();
-    els.forEach((e) => { e.classList.remove(ROOT_CLASS, HTML_ON, HTML_DARK, HTML_HIDE_OLD, HTML_OWN_STEPS, HTML_READY, HTML_HIDE_REGTYPE, HTML_REQ_NOTE, HTML_INTRO_H, HTML_NO_HINTS); e.style.removeProperty("--bbg-reg-req"); e.style.removeProperty("--bbg-reg-optin-help"); ["--bbg-sum-contact", "--bbg-sum-about", "--bbg-sum-name", "--bbg-sum-email"].forEach((k) => e.style.removeProperty(k)); });
+    els.forEach((e) => { e.classList.remove(ROOT_CLASS, HTML_ON, HTML_DARK, HTML_HIDE_OLD, HTML_OWN_STEPS, HTML_READY, HTML_PAGE_DRAWN, HTML_HIDE_BODY, HTML_HIDE_REGTYPE, HTML_REQ_NOTE, HTML_INTRO_H, HTML_NO_HINTS); e.style.removeProperty("--bbg-reg-req"); e.style.removeProperty("--bbg-reg-optin-help"); ["--bbg-sum-contact", "--bbg-sum-about", "--bbg-sum-name", "--bbg-sum-email"].forEach((k) => e.style.removeProperty(k)); });
     return;
   }
   const css = isDoc(t) ? REG_FORM_CSS : SHADOW_CSS;
@@ -191,10 +430,14 @@ export function syncPageStyles(t = document) {
   }
   if (tag.textContent !== css) tag.textContent = css;
   // The banner copy (else the first copy) decides the theme.
-  const lead = active.find((w) => w._cfg.mode === "banner") || active[0];
+  const lead = active.find(isBannerish) || active[0];
   const dark = lead._cfg.theme === "dark";
   const hideOld = active.some((w) => w._cfg.hideOldHeader !== false);
-  const ownSteps = active.some((w) => w._cfg.mode === "banner" && w._cfg.banner?.showSteps !== false && w._hasSteps);
+  // Our step bar replaces Cvent's. Until the widget has read Cvent's bar (it
+  // can draw after the widget), keep Cvent's hidden for a short grace period
+  // so it never flashes; after that, a page we can't read keeps Cvent's bar.
+  const ownSteps = active.some((w) => isBannerish(w) && w._cfg.banner?.showSteps !== false
+    && (w._hasSteps || Date.now() < (w._stepsGraceUntil || 0)));
   const ready = active.some((w) => w._rendered);
   els.forEach((e) => {
     if (!isDoc(t)) e.classList.add(ROOT_CLASS);
@@ -203,6 +446,12 @@ export function syncPageStyles(t = document) {
     e.classList.toggle(HTML_HIDE_OLD, hideOld);
     e.classList.toggle(HTML_OWN_STEPS, ownSteps);
     e.classList.toggle(HTML_READY, ready);
+    const hiders = active.filter((w) => w._cfg.mode === "page" && !w._idle && !w._designer
+      && (w._forced || (w._cfg.hideBody !== false && STATUS_PAGES.includes(w._pageKind))));
+    e.classList.toggle(HTML_HIDE_BODY, hiders.length > 0);
+    // Cvent's own page-height floor stays until the drawn page is there, so the
+    // footer never jumps up (and the scroll position never snaps) while it loads.
+    e.classList.toggle(HTML_PAGE_DRAWN, hiders.some((w) => w._rendered));
     e.classList.toggle(HTML_HIDE_REGTYPE, active.some((w) => w._cfg.hideRegType !== false));
     e.classList.toggle(HTML_REQ_NOTE, lead._cfg.showRequiredNote !== false);
     e.classList.toggle(HTML_INTRO_H, lead._cfg.introHeading !== false);
@@ -216,7 +465,31 @@ export function syncPageStyles(t = document) {
   });
   // The site CSS can hide the page until the widget has taken over (no flash of
   // Cvent's own design); it watches for this class on the marked section.
-  if (ready) (isDoc(t) ? t : t).querySelectorAll(".bbg-reg-page").forEach((e) => e.classList.add("bbg-reg-ready"));
+  if (ready) markReady(t);
+}
+// .bbg-reg-page (registration form sections) and .bbg-person (post-registration
+// pages: the site CSS shows a loading "B" until then) are released here.
+function markReady(t) {
+  t?.querySelectorAll?.(".bbg-reg-page:not(.bbg-reg-ready), .bbg-person:not(.bbg-reg-ready)").forEach((e) => e.classList.add("bbg-reg-ready"));
+}
+
+// Cvent's own Modify / Cancel Registration buttons (post-registration pages).
+// Their links carry the attendee's details, so the widget never copies them:
+// its buttons click Cvent's, and Cvent's are hidden.
+const NATIVE_TEXT = {
+  modify: /^\s*(modify|change|edit|update)\s+(my\s+|your\s+)?registration\s*$/i,
+  cancel: /^\s*cancel\s+(my\s+|your\s+)?registration\s*$/i,
+};
+function nativeAction(url) {
+  const m = /^#(modify|cancel)$/i.exec(String(url || "").trim());
+  return m ? m[1].toLowerCase() : "";
+}
+function findNative(t, act) {
+  const re = NATIVE_TEXT[act];
+  if (!re || !t?.querySelectorAll) return null;
+  const hit = [...t.querySelectorAll("a, button, [role=button]")].find((el) => re.test(el.textContent || "")
+    && !el.closest("[data-bbg-reg], nav, [class*=WebsiteNavigator], [role=banner]"));
+  return hit || null;
 }
 
 // ---------------------------------------------------------------------------
@@ -227,6 +500,7 @@ export default class extends HTMLElement {
     this.theme = theme || {};
     this.attachShadow({ mode: "open" });
     this._cfg = mergeRegConfig(this.configuration);
+    this._pageKind = this._cfg.pageType === "auto" ? "registration" : this._cfg.pageType;
     this._dataPromise = null;
     this._renderSeq = 0;
     this._cleanups = [];
@@ -250,8 +524,21 @@ export default class extends HTMLElement {
 
   async connectedCallback() {
     if (this._cfg.useBrandFont !== false) ensureBrandFont();
+    // "Page styles only": this widget type is the one Cvent offers on every
+    // registration and post-registration page (and the default header /
+    // footer), so one invisible copy brings the page CSS (CONFIRM_PAGE_CSS:
+    // the bbg-confirm text-block pages) where no other widget can go. It
+    // draws nothing and leaves Cvent's form alone.
+    if (this._cfg.mode === "styles") { this._connectStylesOnly(); return; }
+    this._resolvePage();
     this.setAttribute("data-bbg-reg", "");
+    this._stepsGraceUntil = Date.now() + 2000;
+    clearTimeout(this._graceTimer);
+    this._graceTimer = setTimeout(() => syncPageStyles(this._target || this._doc), 2050);
     this._findTarget();
+    // A whole-page copy hides the page's own content straight away, not after
+    // its data has loaded, so the old content never shows and then vanishes.
+    if (this._cfg.mode === "page") syncPageStyles(this._target || this._doc);
     // Site Designer can draw the page after the widget: look again for a while.
     let tries = 0;
     const again = () => { if (!this.isConnected || tries++ > 20) return; if (!this._target?.querySelector?.(PAGE_MARKERS)) this._findTarget(); this._retry = setTimeout(again, 500); };
@@ -264,13 +551,36 @@ export default class extends HTMLElement {
     this._watchSteps();
     await this._renderInto(root);
     const tag = `reg-${this._cfg.mode}`;
-    restoreScroll(this, tag, this.configuration);
+    // Putting the scroll back is for editor changes only; never on the live site.
+    if (isDesignerPath(this._pagePath(), this._doc)) restoreScroll(this, tag, this.configuration);
     this._scrollCleanup = trackScroll(this, tag, this.configuration);
+  }
+
+  _connectStylesOnly() {
+    try { ensureSiteCss(this._doc); } catch (e) { /* page CSS is a nicety */ }
+    this.setAttribute("data-bbg-reg", "");
+    this.setAttribute("data-bbg-reg-mode", "styles");
+    this.style.display = "block";
+    this.style.height = "0";
+    this.style.overflow = "hidden";
+    if (!this.shadowRoot.querySelector(".pk")) {
+      const root = document.createElement("div");
+      root.className = "pk";
+      root.dataset.build = BUILD;
+      root.setAttribute("aria-hidden", "true");
+      this.shadowRoot.append(root);
+    }
   }
 
   disconnectedCallback() {
     this._scrollCleanup?.();
     clearTimeout(this._retry);
+    clearTimeout(this._graceTimer);
+    clearTimeout(this._rowRetry);
+    clearTimeout(this._dropTimer);
+    this._injected?.remove();
+    this._injected = null;
+    this._dropTimer = 0;
     this._hasSteps = false;
     if (this._target) { registry(this._target).delete(this); syncPageStyles(this._target); }
     this._target = null;
@@ -283,8 +593,19 @@ export default class extends HTMLElement {
   }
 
   onConfigurationUpdate(newConfig) {
+    const wasStyles = this._cfg?.mode === "styles";
     this.configuration = newConfig || {};
     this._cfg = mergeRegConfig(this.configuration);
+    this._resolvePage();
+    // Switching to or from "Page styles only": start over, as on first load.
+    if (wasStyles !== (this._cfg.mode === "styles")) {
+      if (!wasStyles) this.disconnectedCallback();
+      this.shadowRoot.innerHTML = "";
+      this.removeAttribute("style");
+      if (this.isConnected) this.connectedCallback();
+      return;
+    }
+    if (this._cfg.mode === "styles") return;
     noteConfig(this, this.configuration);
     syncPageStyles(this._target || this._doc);
     const root = this.shadowRoot?.querySelector(".pk");
@@ -309,6 +630,34 @@ export default class extends HTMLElement {
       return /^first\s*name$/i.test(c.textContent.replace(/[*\u00a0]/g, " ").trim());
     });
   }
+  // Post-registration pages: Cvent may not hand the widget the registrant's
+  // name and email. A planner can place them on the page with Cvent's own data
+  // tags, in a container with the class "bbg-person" (first name, then email,
+  // one text block each); the widget reads them and the CSS hides the container.
+  _personFromPage() {
+    const t = this._target || this._doc;
+    const box = t?.querySelector?.(".bbg-person") || this._doc.querySelector(".bbg-person");
+    if (!box) return null;
+    const bits = [...box.querySelectorAll("p, span, div")].filter((n) => !n.children.length).map((n) => n.textContent.trim()).filter(Boolean);
+    const email = bits.find((x) => /@/.test(x)) || "";
+    // A first name only: short, no sentence (Site Designer shows data tags as
+    // placeholders, so a text block's own sentence could otherwise be read).
+    const isName = (x) => !/@/.test(x) && !/[{}\[\]<>]/.test(x) && x.length <= 40 && x.split(/\s+/).length <= 3 && !/[.!?:;,]/.test(x);
+    const first = bits.find(isName) || "";
+    const mail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : "";
+    return first || mail ? { first, email: mail } : null;
+  }
+  _syncPersonFromPage() {
+    if (!this._showsPerson()) return;
+    if (this._person.first && this._person.email) return;
+    const p = this._personFromPage();
+    if (!p) return;
+    const next = { first: this._person.first || p.first, email: this._person.email || p.email };
+    if (next.first === this._person.first && next.email === this._person.email) return;
+    this._person = next;
+    const root = this.shadowRoot?.querySelector(".pk");
+    if (root && this._rendered) this._renderInto(root);
+  }
   _watchPerson() {
     const apply = (v) => {
       const first = String(v?.FIRSTNAME ?? "").trim();
@@ -319,7 +668,7 @@ export default class extends HTMLElement {
       // Only the panel and the confirmation show the name or email. Redrawing
       // the banner on every keystroke emptied its step bar for a moment, which
       // made the whole page jump while typing.
-      if (root && this._rendered && this._cfg.mode !== "banner") this._renderInto(root);
+      if (root && this._rendered && this._showsPerson()) this._renderInto(root);
     };
     try {
       const observe = this._sdk("observe");
@@ -367,9 +716,18 @@ export default class extends HTMLElement {
   _watchSteps() {
     if (typeof MutationObserver === "undefined") return;
     let timer = 0;
-    const check = () => {
+    const check = (force) => {
       timer = 0;
-      const steps = this._cfg.mode === "banner" && this._cfg.banner?.showSteps !== false ? this._readSteps() : null;
+      const want = isBannerish(this) && this._cfg.banner?.showSteps !== false;
+      const steps = want ? this._readSteps() : null;
+      // Cvent redraws its bar between pages: a bar that goes missing for a
+      // moment keeps ours (and Cvent's hidden) instead of flashing Cvent's.
+      if (steps) { clearTimeout(this._dropTimer); this._dropTimer = 0; }
+      else if (want && this._hasSteps && force !== true) {
+        if (!this._dropTimer) this._dropTimer = setTimeout(() => { this._dropTimer = 0; check(true); }, 1000);
+        this._markLayout();
+        return;
+      }
       const sig = steps ? steps.map((s) => `${s.label}|${s.state}|${s.target ? 1 : 0}`).join("~") : "";
       const had = !!this._hasSteps;
       this._steps = steps;
@@ -439,10 +797,15 @@ export default class extends HTMLElement {
       if (txt && !labels.has(txt)) labels.set(txt, l);
     });
     const halves = new Map(), half = new Map();
+    const stateKey = this._cfg.stateAfterCountry !== false ? norm(this._cfg.stateLabel || "State / region") : "";
     lines(this._cfg.pairFields).forEach((line) => {
       const [a, b] = line.split("+").map(norm);
       const la = labels.get(a), lb = labels.get(b);
+      // Country stays full width until State / region is drawn; the two are
+      // paired in the same frame State arrives (see _observeTarget), so the
+      // switch to halves happens once, with no in-between paint.
       if (!a || !b || !la || !lb) return;
+      if (b === stateKey && !this._countryAnswered()) return; // State is still held back
       const anc = lca(la, lb);
       const ra = childToward(anc, la), rb = childToward(anc, lb);
       if (!anc || !ra || !rb || ra === rb || ra.nextElementSibling !== rb || cells.has(ra) || cells.has(rb)) return;
@@ -563,7 +926,133 @@ export default class extends HTMLElement {
       }
     }
   }
+  // Hide Cvent's own Modify / Cancel buttons that this copy's buttons stand in for
+  // (their Site Designer column when it holds nothing else).
+  _hideNatives() {
+    const t = this._target || this._doc;
+    const c = this._cfg.confirmation || {};
+    const acts = new Set([c.primaryUrl, c.secondaryUrl, c.tertiaryUrl].map(nativeAction).filter(Boolean));
+    acts.forEach((act) => {
+      const el = findNative(t, act);
+      if (!el) return;
+      let box = el;
+      while (box.parentElement && !box.parentElement.matches("[class*=Grid__row], [data-cvent-id=containerChild], body")
+        && box.parentElement.querySelectorAll("a, button, [role=button], input, img, p").length <= 1) box = box.parentElement;
+      if (!box.hasAttribute("data-bbg-native-hidden")) { box.setAttribute("data-bbg-native-hidden", act); box.style.setProperty("display", "none", "important"); }
+    });
+  }
+  // ---- whole-page copy (one copy in a shared header) ---------------------------
+  // _pageKind: the page this copy is on. A whole-page copy draws that page's
+  // settings (pageConfig); other copies keep their own settings.
+  _pagePath() {
+    let p = "";
+    try { p = (this._doc.defaultView || window).location.pathname || ""; } catch (e) { /* none */ }
+    // Site Designer keeps one address for every page: the page being edited
+    // (its page picker) is part of the "address", so switching pages redraws.
+    const dp = isDesignerPath(p, this._doc) ? designerPage(this._doc) : null;
+    return dp ? `${p}#designer:${dp.hf ? "hf" : dp.name}` : p;
+  }
+  _resolvePage() {
+    const base = mergeRegConfig(this.configuration);
+    this._pathSeen = this._pagePath();
+    const found = base.pageType === "auto" ? detectPageType(this._pathSeen, base.pageAddresses) : base.pageType;
+    const covers = Array.isArray(base.covers) ? base.covers : [];
+    // Site Designer (and its preview) isn't on a live ".../event/<site>/<page>"
+    // address, so the page can't be read from it: a whole-page copy shows the
+    // page picked in "Edit the wording for" there, as a preview.
+    // Only Site Designer itself: other planner screens (Planner Registration
+    // mode, at app.cvent.com/.../PlannerRegistration/...) run the real pages
+    // and are read like the live site.
+    this._designer = base.mode === "page" && base.pageType === "auto" && isDesignerPath(this._pathSeen, this._doc);
+    const preview = PAGE_PRESETS[base.editPage] && base.editPage !== "registration" ? base.editPage : "pending";
+    // In Site Designer: the page open in the editor, as the live site would
+    // draw it (its own page, or nothing on pages this copy doesn't cover). The
+    // header & footer page itself shows the "Edit the wording for" page.
+    const dp = this._designer ? designerPage(this._doc) : null;
+    const dk = dp && !dp.hf ? designerKind(dp.name) : "";
+    const designed = !dp || dp.hf ? preview : dk && covers.includes(dk) ? dk : "none";
+    // "?bbg-preview=denied" on any live page: that page exactly as it will
+    // look (for pages only a registrant in that state can reach).
+    let forced = "";
+    try { forced = new URLSearchParams((this._doc.defaultView || window).location.search).get("bbg-preview") || ""; } catch (e) { /* none */ }
+    if (base.mode === "page" && PAGE_PRESETS[forced] && forced !== "registration") { this._designer = false; this._forced = forced; } else this._forced = "";
+    // A whole-page copy set to Automatic draws only the pages it covers.
+    this._pageKind = this._forced || (this._designer ? designed
+      : base.mode === "page" && base.pageType === "auto" && !covers.includes(found) ? "none" : found);
+    if (this.isConnected) { this.setAttribute("data-bbg-page", this._pageKind); this.setAttribute("data-bbg-page-found", found); }
+    this._idle = this._computeIdle(base);
+    this._cfg = base.mode === "page" ? pageConfig(base, this._pageKind) : base;
+  }
+  // A whole-page copy steps aside on pages it doesn't cover, and on pages that
+  // already have their own banner copy (the registration pages' page sections).
+  _computeIdle(base = this._cfg) {
+    if (base.mode !== "page") return false;
+    // Two whole-page copies (e.g. one placed twice in the header): only the
+    // first on the page draws, so the page never shows twice.
+    const t0 = this._target || this._doc;
+    if ([...registry(t0)].some((w) => w !== this && w.isConnected && w._cfg?.mode === "page" && (w.compareDocumentPosition(this) & Node.DOCUMENT_POSITION_FOLLOWING))) return true;
+    if (this._forced || (this._designer && PAGE_PRESETS[this._pageKind])) return false;
+    if (!PAGE_PRESETS[this._pageKind]) return true;
+    const t = this._target || this._doc;
+    return [...registry(t)].some((w) => w !== this && w.isConnected && w._cfg?.mode === "banner" && !w.hasAttribute("data-bbg-injected"));
+  }
+  _syncIdle() {
+    const idle = this._computeIdle();
+    if (idle === this._idle) return;
+    this._idle = idle;
+    if (idle) { this._injected?.remove(); this._injected = null; }
+    const root = this.shadowRoot?.querySelector(".pk");
+    this._newPage = true;
+    if (root) this._renderInto(root);
+    syncPageStyles(this._target || this._doc);
+  }
+  // Cvent moves between registration pages without reloading: follow it.
+  _checkPageChange() {
+    if (this._pagePath() === this._pathSeen) return;
+    const was = this._pageKind;
+    this._resolvePage();
+    this._person = this._person || { first: "", email: "" };
+    this._injected?.remove();
+    this._injected = null;
+    const root = this.shadowRoot?.querySelector(".pk");
+    this._newPage = true;
+    if (root && (was !== this._pageKind || this._rendered)) this._renderInto(root);
+    syncPageStyles(this._target || this._doc);
+  }
+  // Form pages: a side panel copy beside Cvent's form, made by this copy.
+  _syncInjectedPanel() {
+    const t = this._target || this._doc;
+    const want = this._cfg.mode === "page" && !this._idle && !this._designer && this._cfg.injectPanel !== false && !STATUS_PAGES.includes(this._pageKind);
+    const form = want ? t.querySelector?.(".left-align-fields, [class*=Forms__container]") : null;
+    if (!form) { this._injected?.remove(); this._injected = null; return; }
+    // The form's outermost Cvent column inside its section: the panel goes next to it.
+    let col = null;
+    for (let n = form; n && !n.matches?.("[class*=Grid__sectionContainer], [role=main], body"); n = n.parentElement) if (n.matches?.("[class*=Grid__column]")) col = n;
+    if (!col || !col.parentElement) return;
+    if (this._injected?.isConnected && this._injected.previousElementSibling === col) return;
+    if (!this._injected) {
+      const cfg = { ...this._cfg, mode: "panel", pageType: this._pageKind, presetFor: this._pageKind, pages: {} };
+      const el = new this.constructor({ configuration: cfg, theme: this.theme });
+      const names = ["getEventInfo", "getSessionGenerator", "getSpeakers", "observe", "read"];
+      el.cventSdk = this.cventSdk || Object.fromEntries(names.map((n) => [n, this._sdk(n)]).filter(([, f]) => f));
+      el.setAttribute("data-bbg-injected", "");
+      this._injected = el;
+    }
+    col.after(this._injected);
+  }
+
+  // Copies that show the registrant's name or email.
+  _showsPerson() {
+    const m = this._cfg.mode;
+    return m === "panel" || m === "confirmation" || (m === "page" && !this._idle && STATUS_PAGES.includes(this._pageKind));
+  }
   _markLayout() {
+    if (this._cfg.mode === "page") { this._checkPageChange(); this._syncIdle(); }
+    if (this._cfg.mode === "confirmation" || (this._cfg.mode === "page" && !this._idle && STATUS_PAGES.includes(this._pageKind))) this._hideNatives();
+    if (this._cfg.mode === "page") this._syncInjectedPanel();
+    this._syncPersonFromPage();
+    // Sections Cvent adds after the widget drew still need releasing.
+    if (this._rendered && !(this._cfg.mode === "page" && this._idle)) markReady(this._target || this._doc);
     this._markFields();
     this._syncStateField();
     if (this._cfg.mode !== "panel") return;
@@ -577,7 +1066,10 @@ export default class extends HTMLElement {
       const root = this.shadowRoot.querySelector(".pk");
       if (root) this._renderInto(root);
     }
-    const FORM_BITS = ".left-align-fields, [class*=Forms__container], [class*=ButtonGroup__buttonGroup]";
+    const FORM_BITS = ".left-align-fields, [class*=Forms__container], [class*=ButtonGroup__buttonGroup], [data-bbg-reg-mode=confirmation]";
+    // Cvent may draw the other column after this one: look again for a while.
+    clearTimeout(this._rowRetry);
+    this._rowRetry = setTimeout(() => { if (this.isConnected && !this.closest("[data-bbg-reg-panelcol]") && (this._rowTries = (this._rowTries || 0) + 1) < 20) this._checkSteps?.(); }, 300);
     // The nearest ancestor whose parent also holds the form in another child:
     // that parent is the row, this ancestor the panel's column (wrappers allowed).
     for (let el = this; el && el.parentElement; el = el.parentElement) {
@@ -620,6 +1112,10 @@ export default class extends HTMLElement {
       return l && norm(l.textContent) === want;
     }) || null;
   }
+  _countryAnswered(country = this._fieldByLabel(this._cfg.countryLabel || "Country")) {
+    if (!country) return true;
+    return !!(country.querySelector("[class*=singleValue]")?.textContent || "").trim() || !!country.querySelector("select")?.value;
+  }
   _syncStateField() {
     const t = this._target || this._doc;
     const off = this._cfg.stateAfterCountry !== false;
@@ -627,8 +1123,7 @@ export default class extends HTMLElement {
     const state = off ? this._fieldByLabel(this._cfg.stateLabel || "State / region") : null;
     let hide = null;
     if (country && state) {
-      const answered = !!(country.querySelector("[class*=singleValue]")?.textContent || "").trim()
-        || !!country.querySelector("select")?.value;
+      const answered = this._countryAnswered(country);
       // Hide the field's own slot: its half of a paired row, else the largest
       // wrapper that holds nothing but this field.
       if (!answered) {
@@ -642,20 +1137,37 @@ export default class extends HTMLElement {
     }
     t.querySelectorAll("[data-bbg-state-wait]").forEach((e) => { if (e !== hide) { e.removeAttribute("data-bbg-state-wait"); e.removeAttribute("aria-hidden"); } });
     if (hide && !hide.hasAttribute("data-bbg-state-wait")) { hide.setAttribute("data-bbg-state-wait", ""); hide.setAttribute("aria-hidden", "true"); }
+    // State / region fades in when it first shows (no pop).
+    const shown = !!(state && !hide);
+    if (shown && this._stateShown === false) {
+      const slot = state.closest("[data-bbg-half], [data-bbg-cell]") || state;
+      slot.setAttribute("data-bbg-fadein", "");
+      setTimeout(() => slot.removeAttribute("data-bbg-fadein"), 400);
+    }
+    if (off) this._stateShown = shown;
   }
   _observeTarget() {
     if (!this._checkSteps || typeof MutationObserver === "undefined") return;
     this._stepsObserver?.disconnect();
     const t = this._target || this._doc;
     const node = isDoc(t) ? (t.body || t.documentElement) : t;
-    this._stepsObserver = new MutationObserver(this._checkSteps);
+    // Fields Cvent adds (State / region after Country, other display logic)
+    // are paired and marked in the same frame they arrive, before the browser
+    // paints them, so nothing jumps; the rest waits for the debounced check.
+    const isField = (n) => n.nodeType === 1 && (n.matches?.("[class*=Forms__container]") || !!n.querySelector?.("[class*=Forms__container]"));
+    this._stepsObserver = new MutationObserver((muts) => {
+      if (muts.some((m) => m.type === "childList" && ([...m.addedNodes].some(isField) || [...m.removedNodes].some(isField)))) {
+        try { this._markFields(); this._syncStateField(); } catch (e) { /* the debounced pass retries */ }
+      }
+      this._checkSteps();
+    });
     this._stepsObserver.observe(node, { subtree: true, childList: true, attributes: true, attributeFilter: ["aria-current", "class"] });
   }
   _paintSteps() {
     const slot = this.shadowRoot?.querySelector(".rg-steps-slot");
     if (!slot) return;
     const steps = this._steps;
-    if (!steps || this._cfg.mode !== "banner" || this._cfg.banner?.showSteps === false) { slot.innerHTML = ""; return; }
+    if (!steps || !isBannerish(this) || this._cfg.banner?.showSteps === false) { slot.innerHTML = ""; return; }
     const cur = Math.max(0, steps.findIndex((s) => s.state === "current"));
     const tick = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>';
     slot.innerHTML = `
@@ -696,20 +1208,41 @@ export default class extends HTMLElement {
     };
     const ctx = { cfg, lang, facts, P, person: this._person };
     const dark = cfg.theme === "dark";
-    const body = cfg.mode === "panel" ? this._panel(ctx) : cfg.mode === "confirmation" ? this._confirmation(ctx) : this._banner(ctx);
+    const body = cfg.mode === "panel" ? this._panel(ctx) : cfg.mode === "confirmation" ? this._confirmation(ctx) : cfg.mode === "page" ? this._wholePage(ctx) : this._banner(ctx);
     this.setAttribute("data-bbg-reg-mode", cfg.mode);
-    const release = holdHeight(root);
-    root.className = `pk rg rg--${cfg.mode} ${dark ? "rg--dark" : ""} ${cfg.fullBleed !== false && cfg.mode === "banner" ? "pk--bleed" : ""}`;
+    // A new page (whole-page copy) has its own height: don't hold the old one.
+    const release = this._newPage ? (() => {}) : holdHeight(root);
+    if (this._newPage) { root._pkHold = (root._pkHold || 0) + 1; root.style.minHeight = ""; this._newPage = false; }
+    const bannerish = cfg.mode === "banner" || (cfg.mode === "page" && !this._idle);
+    this.style.display = cfg.mode === "page" && this._idle ? "none" : "";
+    root.className = `pk rg rg--${cfg.mode} ${dark ? "rg--dark" : ""} ${cfg.fullBleed !== false && bannerish ? "pk--bleed" : ""}`;
     root.innerHTML = `${css}${body}`;
     this._cleanups.forEach((fn) => { try { fn(); } catch (e) { /* noop */ } });
     this._cleanups = [];
-    if (cfg.mode === "banner" && cfg.fullBleed !== false) this._cleanups.push(applyFullBleed(root));
+    if (bannerish && cfg.fullBleed !== false) this._cleanups.push(applyFullBleed(root));
     // Contact: Cvent's Contact Planner pop-up when that widget is on the page,
     // else the site menu's Contact page.
     this._cleanups.push(wirePlannerContact(root, { selector: cfg.panel.plannerContactSelector }));
     root.querySelectorAll("[data-site-contact]").forEach((b) => b.addEventListener("click", () => { if (!findPlannerContact(cfg.panel.plannerContactSelector)) this._siteContactLink()?.click(); }));
     this._rendered = true;
     syncPageStyles(this._target || this._doc);
+    root.querySelectorAll("[data-site-page]").forEach((a) => a.addEventListener("click", (e) => {
+      e.preventDefault();
+      const want = a.dataset.sitePage === "agenda" ? /^\s*(agenda|program(me)?)\s*$/i : new RegExp(`^\\s*${a.dataset.sitePage}\\s*$`, "i");
+      const t = this._target || this._doc;
+      const link = [...t.querySelectorAll("[class*=WebsiteNavigator] [role=link], [class*=WebsiteNavigator__menuItem] > *, nav a[href], a[href]")].find((n) => want.test(n.textContent || "") && !this.contains(n));
+      if (link) link.click(); else console.warn(`[reg-pages] No “${a.dataset.sitePage}” page in the site menu.`);
+    }));
+    root.querySelectorAll("[data-cvent-action]").forEach((a) => a.addEventListener("click", (e) => {
+      e.preventDefault();
+      const native = findNative(this._target || this._doc, a.dataset.cventAction);
+      if (native) native.click();
+      else console.warn(`[reg-pages] Cvent's ${a.dataset.cventAction === "cancel" ? "Cancel" : "Modify"} Registration button isn't on this page; add it in Site Designer.`);
+    }));
+    if (cfg.mode === "confirmation" || (cfg.mode === "page" && !this._idle && STATUS_PAGES.includes(this._pageKind))) this._hideNatives();
+    if (cfg.mode === "page") this._syncInjectedPanel();
+    // A side panel copy pairs with this copy's column once it exists: let it look again.
+    if (cfg.mode === "confirmation") registry(this._target || this._doc).forEach((w) => { if (w !== this) w._checkSteps?.(); });
     // Draw the step bar straight away from what was last read, so a redraw
     // never leaves the banner without it (no height change, no jump).
     this._paintSteps();
@@ -741,6 +1274,28 @@ export default class extends HTMLElement {
       </div>
     </section>
     <div class="rg-steps-slot"></div>`;
+  }
+
+  // ---- WHOLE PAGE (shared header copy) -----------------------------------------
+  _wholePage(ctx) {
+    if (this._idle) return "";
+    const status = STATUS_PAGES.includes(this._pageKind);
+    // Previews of the form pages: Cvent's form only exists on the real page,
+    // so a sample of it (the fields and buttons the guide sets up, in the
+    // registration form's style) stands in, beside the real side panel.
+    const sample = (this._designer || this._forced) && SAMPLE_FORMS[this._pageKind];
+    const label = (PAGE_TYPES.find(([k]) => k === this._pageKind) || [, this._pageKind])[1];
+    const note = this._designer || this._forced ? `<p class="rg-designer-note" title="On the live site this copy shows only on its own pages. Site Designer shows it on the page you have open (on the header and footer page: the page picked in “Edit the wording for”); on the live site add ?bbg-preview=<page> to any address.">Preview: ${esc(label)}</p>` : "";
+    if (sample) return `${note}${this._banner(ctx)}
+    <section class="pk-bleed rg-pagebody"><div class="pk-inner rg-pagegrid">
+      <div class="rg-pagemain">${sampleForm(sample)}</div>
+      ${this._panel(ctx)}
+    </div></section>`;
+    return `${note}${this._banner(ctx)}${status ? `
+    <section class="pk-bleed rg-pagebody"><div class="pk-inner rg-pagegrid">
+      <div class="rg-pagemain">${this._confirmation(ctx)}</div>
+      ${this._panel(ctx)}
+    </div></section>` : ""}`;
   }
 
   // ---- PANEL ------------------------------------------------------------------
@@ -777,32 +1332,46 @@ export default class extends HTMLElement {
   }
 
   // ---- CONFIRMATION -------------------------------------------------------------
-  _confirmation({ cfg, P, person, lang }) {
+  _confirmation({ cfg, P, person, lang, facts }) {
     const c = cfg.confirmation;
-    const heading = person.first
+    const ev = (x) => String(x || "").replace(/\{event\}/g, facts?.title || "").replace(/\{date\}/g, facts?.dateLong || "").replace(/\{time\}/g, [facts?.timeRange, facts?.tzShort].filter(Boolean).join(" "));
+    const heading = ev(person.first
       ? P("confirmation", "heading", c.heading).replace(/\{first\}/g, person.first)
-      : P("confirmation", "headingNoName", c.headingNoName);
+      : P("confirmation", "headingNoName", c.headingNoName));
     // The email is set in bold; everything else is escaped text.
-    const rawBody = person.email ? P("confirmation", "body", c.body) : P("confirmation", "bodyNoEmail", c.bodyNoEmail);
+    const rawBody = ev(person.email ? P("confirmation", "body", c.body) : P("confirmation", "bodyNoEmail", c.bodyNoEmail));
     const body = esc(rawBody).replace(/\{email\}/g, `<b>${esc(person.email)}</b>`).replace(/\{first\}/g, esc(person.first));
-    const steps = lines(P("confirmation", "steps", c.steps)).map((l) => {
+    const steps = lines(ev(P("confirmation", "steps", c.steps))).map((l) => {
       const i = l.indexOf("|");
       return i < 0 ? { t: l, d: "" } : { t: l.slice(0, i).trim(), d: l.slice(i + 1).trim() };
     });
     const btn = (label, url, primary) => {
+      // "#modify" / "#cancel": Cvent's own Modify / Cancel Registration button
+      // on this page does the work (its link is per attendee); ours stands in.
+      const act = nativeAction(url);
+      const cls = `pk-btn pk-btn--lg ${primary ? "pk-btn--primary" : "pk-btn--secondary"} ${cfg.theme === "dark" ? "pk-btn--on-dark" : "pk-btn--on-light"}`;
+      if (/^#contact$/i.test(String(url || "").trim())) return label ? `<a class="${cls}" href="#" data-planner-contact>${esc(label)}</a>` : "";
+      if (/^#(agenda|home|speakers|venue)$/i.test(String(url || "").trim())) return label ? `<a class="${cls}" href="#" data-site-page="${esc(String(url).trim().slice(1).toLowerCase())}">${esc(label)}</a>` : "";
+      if (act) return label ? `<a class="pk-btn pk-btn--lg ${primary ? "pk-btn--primary" : "pk-btn--secondary"} ${cfg.theme === "dark" ? "pk-btn--on-dark" : "pk-btn--on-light"}" href="#" role="button" data-cvent-action="${act}">${esc(label)}</a>` : "";
       const u = safeUrl(url, "");
       if (!label || !u) return "";
       const ext = isExternal(u);
       return `<a${/^mailto:/i.test(u) ? " data-planner-contact" : ""} class="pk-btn pk-btn--lg ${primary ? "pk-btn--primary" : "pk-btn--secondary"} ${cfg.theme === "dark" ? "pk-btn--on-dark" : "pk-btn--on-light"}" href="${esc(u)}"${ext ? ' target="_blank" rel="noopener"' : ""}>${esc(label)}${ext ? `<span class="pk-sr"> ${esc(fixed(lang, "opensNewTab"))}</span>` : ""}</a>`;
     };
     const btns = btn(P("confirmation", "primaryLabel", c.primaryLabel), c.primaryUrl, true) + btn(P("confirmation", "secondaryLabel", c.secondaryLabel), c.secondaryUrl, false);
+    const qLabel = P("confirmation", "tertiaryLabel", c.tertiaryLabel), qAct = nativeAction(c.tertiaryUrl), qUrl = qAct ? "#" : safeUrl(c.tertiaryUrl, "");
+    const quiet = qLabel && qUrl ? `<a class="rg-quiet" href="${esc(qUrl)}"${qAct ? ` role="button" data-cvent-action="${qAct}"` : isExternal(qUrl) ? ' target="_blank" rel="noopener"' : ""}>${esc(qLabel)}</a>` : "";
+    const cTitle = ev(P("confirmation", "calloutTitle", c.calloutTitle)).trim();
+    const cText = ev(P("confirmation", "calloutText", c.calloutText)).trim();
+    const done = Math.max(0, Math.min(steps.length, Math.round(Number(c.stepsDone ?? 1)) || 0));
     return `
     <section class="rg-done" aria-label="${esc(heading)}">
-      <div class="rg-tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+      ${c.showTick !== false ? '<div class="rg-tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>' : ""}
       <h2 class="rg-dh">${esc(heading)}</h2>
       ${rawBody ? `<p class="rg-dp">${body}</p>` : ""}
-      ${steps.length ? `<ol class="rg-tl">${steps.map((s, i) => `<li><i class="${i === 0 ? "on" : ""}" aria-hidden="true"></i><div><b>${esc(s.t)}</b>${s.d ? `<span>${esc(s.d)}</span>` : ""}</div></li>`).join("")}</ol>` : ""}
-      ${btns ? `<div class="rg-btns">${btns}</div>` : ""}
+      ${steps.length ? `<ol class="rg-tl">${steps.map((s, i) => `<li><i class="${i < done ? "on" : ""}" aria-hidden="true"></i><div><b>${esc(s.t)}</b>${s.d ? `<span>${esc(s.d)}</span>` : ""}</div></li>`).join("")}</ol>` : ""}
+      ${cTitle || cText ? `<div class="rg-callout">${cTitle ? `<b>${esc(cTitle)}</b>` : ""}${cText ? `<span>${esc(cText)}</span>` : ""}</div>` : ""}
+      ${btns || quiet ? `<div class="rg-btns">${btns}${quiet}</div>` : ""}
     </section>`;
   }
 }
@@ -827,6 +1396,7 @@ const WIDGET_CSS = `
 
   /* panel */
   .rg-panel { max-width: 420px; box-sizing: border-box; background: var(--rg-panel); border-top: 3px solid ${t.amberOnDark}; padding: 28px; }
+  @media (max-width: 1023px) { .rg--panel .rg-panel { max-width: none; } }
   .rg-eb { font-size: ${LABEL_PX.small}px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--rg-label); }
   .rg-ph { margin-top: 8px; font-size: 21px; line-height: 1.25; font-weight: 700; letter-spacing: -0.01em; color: var(--rg-ink); }
   .rg-dl { margin: 18px 0 0; display: grid; gap: 14px; }
@@ -856,7 +1426,41 @@ const WIDGET_CSS = `
   .rg-tl i.on { border-color: var(--rg-accent); background: var(--rg-accent); }
   .rg-tl b { display: block; font-size: 16.5px; color: var(--rg-ink); }
   .rg-tl span { font-size: 15px; color: var(--rg-body); }
-  .rg-btns { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+  .rg-btns { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 28px; }
+  .rg-quiet { margin-left: auto; font-size: 14px; font-weight: 600; color: var(--rg-muted); text-decoration: underline; text-underline-offset: 3px; }
+  .rg-quiet:hover { color: var(--rg-link); }
+  .rg-quiet:focus-visible { outline: 3px solid rgba(43,108,232,.45); outline-offset: 2px; }
+  .rg-callout { margin-top: 26px; padding: 20px 22px; border: 1px solid var(--rg-hair); border-radius: 2px; display: grid; gap: 4px; }
+  .rg-callout b { font-size: 16px; color: var(--rg-ink); }
+  .rg-callout span { font-size: 15px; line-height: 1.5; color: var(--rg-body); }
+  /* Preview label: floats over the banner's corner so the layout is exactly the live one. */
+  .rg--page { position: relative; }
+  .rg-designer-note { position: absolute; z-index: 5; top: 8px; right: 8px; margin: 0; padding: 4px 10px; border-radius: 2px; background: #FF9D00; color: #0B0B0C; font-size: 12px; font-weight: 700; line-height: 1.4; pointer-events: auto; }
+  /* Phones: in its own line above the banner, so it never covers the eyebrow. */
+  @media (max-width: 767px) { .rg-designer-note { position: static; display: block; border-radius: 0; text-align: center; } }
+  /* preview stand-in for Cvent's form (matches the restyled registration form) */
+  .rg-sf { max-width: 620px; }
+  .rg-sf-h { font-size: 28px; line-height: 1.2; font-weight: 700; letter-spacing: -0.01em; color: var(--rg-ink); }
+  .rg-sf-p { margin-top: 8px; font-size: 16.5px; line-height: 1.55; color: var(--rg-body); }
+  .rg-sf-req { margin-top: 6px; font-size: 13px; color: var(--rg-muted); }
+  .rg-sf-req b, .rg-sf-l b { color: var(--rg-accent); margin-left: 2px; }
+  .rg-sf-grid { margin-top: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 22px 20px; }
+  .rg-sf-f { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px; }
+  .rg-sf-half { grid-column: auto; }
+  .rg-sf-l { font-size: 15px; font-weight: 600; color: var(--rg-ink); }
+  .rg-sf-l em { font-style: normal; font-weight: 500; font-size: 13px; color: var(--rg-muted); margin-left: 6px; }
+  .rg-sf-in { display: block; height: 48px; border: 1px solid var(--rg-ctl); border-radius: 2px; background: #fff; }
+  .rg-sf-area { height: 120px; }
+  .rg-sf-note { margin-top: 22px; padding: 14px 16px; background: var(--rg-panel); border-left: 3px solid var(--rg-accent); font-size: 14.5px; line-height: 1.5; color: var(--rg-body); }
+  .rg-sf-note b { color: var(--rg-ink); }
+  .rg-sf-actions { margin-top: 36px; padding-top: 24px; border-top: 1px solid var(--rg-hair); display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  .rg-sf-link { margin-left: auto; font-size: 14px; font-weight: 600; color: var(--rg-muted); text-decoration: underline; text-underline-offset: 3px; }
+  @media (max-width: 600px) { .rg-sf-grid { grid-template-columns: 1fr; } .rg-sf-half { grid-column: 1 / -1; } .rg-sf-actions .pk-btn { width: 100%; } .rg-sf-link { margin: 6px auto 0; } }
+  /* whole page: status copy + side panel under the banner */
+  .rg-pagebody { background: var(--rg-ground); }
+  .rg-pagegrid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; column-gap: 56px; align-items: start; padding-top: 48px; padding-bottom: 72px; }
+  .rg-pagegrid > .rg-panel { position: sticky; top: 96px; }
+  @media (max-width: 1023px) { .rg-pagegrid { grid-template-columns: minmax(0, 1fr); row-gap: 32px; padding-top: 32px; padding-bottom: 48px; } .rg-pagegrid > .rg-panel { position: static; } }
   /* step bar under the banner (drawn from Cvent's own, which is hidden) */
   .rg-steps { background: var(--rg-ground); border-bottom: 1px solid var(--rg-hair); }
   .rg--dark .rg-steps { border-top: 1px solid var(--rg-hair); }
@@ -893,5 +1497,6 @@ const WIDGET_CSS = `
     .rg-meta i { display: none; }
     .rg-panel { padding: 22px 20px; }
     .rg-btns .pk-btn { width: 100%; }
+    .rg-quiet { margin: 6px auto 0; }
   }
 `;

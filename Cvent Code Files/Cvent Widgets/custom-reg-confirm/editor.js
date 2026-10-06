@@ -3,43 +3,16 @@
 // groups (General / Page layout / Closing band), which don't apply here.
 import { PageEditor, EDITOR_KIT_BUILD, EDITOR_CSS } from "./editor-kit.js";
 import { PAGE_KIT_BUILD } from "./page-kit.js";
-import { REG_DEFAULTS, mergeRegConfig, BUILD, PAGE_TYPES, applyPageType, pageConfig, STATUS_PAGES } from "./widget.js";
+import { REG_DEFAULTS, mergeRegConfig, BUILD } from "./widget.js";
 
 const MODES = [
   ["banner", "Banner: page header (event, “Request to attend”, date · venue)"],
   ["panel", "Side panel: “Your request” summary beside the form"],
-  ["confirmation", "Confirmation / status: heading, text, timeline, buttons (pending, approved, denied, archive pages)"],
-  ["page", "Whole page: banner, status and side panel (one copy in a shared header)"],
-  ["styles", "Page styles only (invisible): for text-block pages"],
+  ["confirmation", "Confirmation: “Thanks, your request is in”"],
 ];
 
 export default class RegPagesEditor extends PageEditor {
-  // The page's copy, once filled in, belongs to the planner: mark it so later
-  // edits (even back to a general default) are kept.
-  merge(cfg) {
-    const m = mergeRegConfig(cfg);
-    if (m.pageType !== "registration" && m.pageType !== "auto" && m.presetFor !== m.pageType) m.presetFor = m.pageType;
-    return m;
-  }
-  // Whole-page copy: the page whose wording is being edited.
-  _editPage(c) {
-    const ok = (t) => PAGE_TYPES.some(([k]) => k === t && k !== "auto");
-    if (ok(c.editPage)) return c.editPage;
-    return ok(c.pageType) ? c.pageType : "pending";
-  }
-  // Whole-page copy: banner / panel / status edits go to the page being edited.
-  _patchSection(section, partial) {
-    const c = this._config;
-    if (c.mode === "page" && ["banner", "panel", "confirmation"].includes(section)) {
-      const ed = this._editPage(c);
-      const view = pageConfig(c, ed);
-      const pages = { ...(c.pages || {}) };
-      pages[ed] = { ...(pages[ed] || {}), [section]: { ...view[section], ...partial } };
-      this._patch({ pages });
-      return;
-    }
-    super._patchSection(section, partial);
-  }
+  merge(cfg) { return mergeRegConfig(cfg); }
   get defaults() { return REG_DEFAULTS; }
   get title() { return "Registration pages widget"; }
   get build() { return BUILD; }
@@ -47,28 +20,8 @@ export default class RegPagesEditor extends PageEditor {
   groups(c) {
     const S = (sec) => (p) => this._patchSection(sec, p);
     const out = [this._setupGroup(c)];
-    const whole = c.mode === "page";
-    const ed = this._editPage(c);
-    const v = whole ? pageConfig(c, ed) : c;
-    if (whole) {
-      out.push(this._group("wholepage", "Whole page", true, null, [
-        this._area("Page addresses (optional)", c.pageAddresses, (val) => this._patch({ pageAddresses: val }), { rows: 3,
-          hint: "Only if a page is recognised wrongly. One per line: words from the page address = page, e.g. registrationPendingApprovalPage = pending. Pages: " + PAGE_TYPES.filter(([k]) => k !== "auto").map(([k]) => k).join(", ") + "." }),
-        this._sub("Pages this copy draws (Automatic)"),
-        this._hint("Everywhere else (website pages such as Home or Agenda, and pages that already have their own banner copy) it draws nothing, so it can sit in a header shared with the whole site."),
-        ...PAGE_TYPES.filter(([k]) => k !== "auto").map(([k, label]) => this._check(label, (c.covers || []).includes(k), (on) => {
-          const set = new Set(c.covers || []); if (on) set.add(k); else set.delete(k);
-          this._patch({ covers: PAGE_TYPES.map(([x]) => x).filter((x) => set.has(x)) });
-        })),
-        this._sub("Options"),
-        this._check("Status pages: hide Cvent’s own page content below", c.hideBody !== false, (val) => this._patch({ hideBody: val })),
-        this._check("Form pages: put the side panel beside Cvent’s form", c.injectPanel !== false, (val) => this._patch({ injectPanel: val })),
-        this._select("Edit the wording for", ed, PAGE_TYPES.filter(([k]) => k !== "auto"), (val) => this._patch({ editPage: val }),
-          "Each page keeps its own banner, status and side panel wording. Pick a page, then edit below."),
-      ]));
-    }
-    if (c.mode === "banner" || whole) {
-      const b = v.banner, B = S("banner");
+    if (c.mode === "banner") {
+      const b = c.banner, B = S("banner");
       out.push(this._group("banner", "Banner", true, null, [
         this._text("Eyebrow", b.eyebrow, (v) => B({ eyebrow: v }), { hint: "Blank = the event name." }),
         this._text("Title", b.title, (v) => B({ title: v })),
@@ -81,8 +34,8 @@ export default class RegPagesEditor extends PageEditor {
         ...(b.bgImageUrl || b.bgImageData ? [this._num("Darken image (%)", b.bgOverlay, (v) => B({ bgOverlay: v }), { max: 90 })] : []),
       ]));
     }
-    if (c.mode === "panel" || whole) {
-      const p = v.panel, P = S("panel");
+    if (c.mode === "panel") {
+      const p = c.panel, P = S("panel");
       out.push(this._group("panel", "Side panel", true, null, [
         this._text("Eyebrow", p.eyebrow, (v) => P({ eyebrow: v })),
         this._text("Heading", p.heading, (v) => P({ heading: v }), { hint: "Blank = the event name." }),
@@ -97,47 +50,31 @@ export default class RegPagesEditor extends PageEditor {
         ] : []),
         this._text("Contact text", p.contactText, (v) => P({ contactText: v })),
         this._text("Contact link label", p.contactLabel, (v) => P({ contactLabel: v })),
-        this._text("Contact link URL", p.contactUrl, (v) => P({ contactUrl: v.trim() }), { hint: "Blank = Cvent’s Contact Planner pop-up (messages go to the Event Planner email) when that widget is on the page, else the site menu’s “Contact” page. A mailto: address also opens the pop-up when it’s there; a page link opens that page." }),
-        this._text("Contact Planner button: CSS selector (advanced)", p.plannerContactSelector, (v) => P({ plannerContactSelector: v.trim() }), { hint: "Only if the widget’s button isn’t found automatically." }),
+        this._text("Contact link URL", p.contactUrl, (v) => P({ contactUrl: v.trim() }), { hint: "A page link or mailto:address. Blank = the site menu’s “Contact” item." }),
       ]));
     }
-    if (c.mode === "confirmation" || (whole && STATUS_PAGES.includes(ed))) {
-      const k = v.confirmation, K = S("confirmation");
+    if (c.mode === "confirmation") {
+      const k = c.confirmation, K = S("confirmation");
       out.push(this._group("confirmation", "Confirmation", true, null, [
         this._text("Heading", k.heading, (v) => K({ heading: v }), { hint: "{first} = the registrant’s first name." }),
         this._text("Heading when the name isn’t available", k.headingNoName, (v) => K({ headingNoName: v })),
         this._area("Text", k.body, (v) => K({ body: v }), { rows: 3, hint: "{email} = their email address, shown in bold." }),
         this._area("Text when the email isn’t available", k.bodyNoEmail, (v) => K({ bodyNoEmail: v }), { rows: 3 }),
-        this._check("Show the check mark above the heading", k.showTick !== false, (v) => K({ showTick: v })),
-        this._area("Timeline", k.steps, (v) => K({ steps: v }), { rows: 4, hint: "One step per line: Title | detail. Blank = no timeline." }),
-        this._num("Steps marked as done", k.stepsDone ?? 1, (v) => K({ stepsDone: v }), { max: 5 }),
+        this._area("Timeline", k.steps, (v) => K({ steps: v }), { rows: 4, hint: "One step per line: Title | detail. The first step is marked as done." }),
         this._sub("Buttons"),
         this._text("Primary button label", k.primaryLabel, (v) => K({ primaryLabel: v })),
-        this._text("Primary button URL", k.primaryUrl, (v) => K({ primaryUrl: v.trim() }), { hint: "e.g. the Agenda page. #modify or #cancel = Cvent’s Modify / Cancel Registration button on this page. Blank = no button." }),
+        this._text("Primary button URL", k.primaryUrl, (v) => K({ primaryUrl: v.trim() }), { hint: "e.g. the Agenda page. Blank = no button." }),
         this._text("Second button label", k.secondaryLabel, (v) => K({ secondaryLabel: v })),
-        this._text("Second button URL", k.secondaryUrl, (v) => K({ secondaryUrl: v.trim() }), { hint: "e.g. the Contact page. #modify or #cancel = Cvent’s Modify / Cancel Registration button on this page. Blank = no button." }),
-        this._text("Small link after the buttons", k.tertiaryLabel, (v) => K({ tertiaryLabel: v }), { hint: "e.g. Cancel registration. Blank = none." }),
-        this._text("Small link URL", k.tertiaryUrl, (v) => K({ tertiaryUrl: v.trim() }), { hint: "#cancel = Cvent’s Cancel Registration button on this page (keep that button on the page; the widget hides it)." }),
-        this._sub("Box above the buttons (optional)"),
-        this._text("Box title", k.calloutTitle, (v) => K({ calloutTitle: v }), { hint: "e.g. Watch the program online. Blank title and text = no box." }),
-        this._area("Box text", k.calloutText, (v) => K({ calloutText: v }), { rows: 2 }),
+        this._text("Second button URL", k.secondaryUrl, (v) => K({ secondaryUrl: v.trim() }), { hint: "e.g. the Contact page. Blank = no button." }),
       ]));
     }
     return out;
   }
 
   _setupGroup(c) {
-    if (c.mode === "styles") {
-      return this._group("general", "Setup", true, null, [
-        this._select("What this copy shows", c.mode, MODES, (v) => this._patch({ mode: v })),
-        this._hint("Draws nothing. It brings the page styles for pages built from Cvent text blocks (Request received, Confirmation, Registration denied, Archive): the containers with the classes bbg-confirm-banner, bbg-confirm, bbg-confirm-panel, bbg-confirm-callout and bbg-confirm-note. One copy per page is enough, or one in the default header or footer for every page. Cvent's own form is left alone."),
-      ]);
-    }
     return this._group("general", "Setup", true, null, [
-      this._select("Page", c.pageType, PAGE_TYPES, (v) => this._patch(this._config.mode === "page" || v === "auto" ? { pageType: v, editPage: v === "auto" ? this._config.editPage : v } : applyPageType(this._config, v)),
-        "Fills in this page’s wording, buttons and settings for every part (banner, status, side panel). Edit anything below afterwards. Choosing another page replaces those fields with its copy. Set the same page on every copy."),
       this._select("What this copy shows", c.mode, MODES, (v) => this._patch({ mode: v }),
-        "Place one copy per job: the banner in the page header, the side panel beside the form or the status text, the confirmation / status copy on post-registration pages."),
+        "Place one copy per job: the banner in the page header, the side panel beside the form, the confirmation on the pending-approval page."),
       this._select("Theme", c.theme, [["light", "Light"], ["dark", "Dark"]], (v) => this._patch({ theme: v }),
         "Applies to this widget and to Cvent’s form on the page. When a page has several copies, the banner’s theme wins; set the same theme on every copy."),
       this._check("Restyle Cvent’s registration form on this page", c.styleForm !== false, (v) => this._patch({ styleForm: v })),
@@ -148,7 +85,6 @@ export default class RegPagesEditor extends PageEditor {
       this._check("Show “* Required” under the form’s intro text", c.showRequiredNote !== false, (v) => this._patch({ showRequiredNote: v })),
       ...(c.showRequiredNote !== false ? [this._text("“Required” wording", c.requiredNote, (v) => this._patch({ requiredNote: v }), { url: false })] : []),
       this._check("Hide Cvent’s “Your answer can only contain…” line under text fields", c.hideFieldHints !== false, (v) => this._patch({ hideFieldHints: v })),
-      this._check("Hide State / region until a country is chosen (Cvent shows it for countries with states)", c.stateAfterCountry !== false, (v) => this._patch({ stateAfterCountry: v })),
       this._text("Help under the event-app networking question", c.optInHelp, (v) => this._patch({ optInHelp: v }), { url: false, hint: "Shown under Yes / No. Blank = no help line." }),
       this._area("Fields side by side", c.pairFields, (v) => this._patch({ pairFields: v }), { rows: 3,
         hint: "One pair per line: Label + Label, using the field labels as they appear on the page. The two fields must follow each other in Cvent. Phones show them one under the other." }),

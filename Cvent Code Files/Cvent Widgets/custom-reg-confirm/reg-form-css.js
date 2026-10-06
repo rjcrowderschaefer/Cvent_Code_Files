@@ -23,31 +23,24 @@ const FONT = `"AvenirNextforBBG","AvenirNextPForBBG","Avenir Next",Helvetica,Ari
 export function regFormCss(R = "html.bbg-reg") {
 // Sections of the page body that hold the form (not the site footer). A
 // section with the CSS class "bbg-reg-page" (set in Cvent) always counts.
-const BODY_SEC = `:is(.bbg-reg-page, [class*=Grid__sectionContainer]:not([role=banner] *):not(.site-footer *):not([class*=Grid__grid]:has(.site-footer) *):not(:has(.site-footer, .cus_nav, #navigationContainer, [class*=ProgressBar__wrapper], [data-cvent-id*=ProgressBar-widget])))`;
+const BODY_SEC = `:is(.bbg-reg-page, [class*=Grid__sectionContainer]:not([role=banner] *):not(.site-footer *):not(:has(.site-footer, .cus_nav, #navigationContainer, [class*=ProgressBar__wrapper], [data-cvent-id*=ProgressBar-widget])))`;
 const BODY = `${R} :where(${BODY_SEC})`;
-// The site nav section. On some events Cvent puts its step bar INSIDE this
-// section, so the step-bar rules below must never match it: hiding or
-// repainting "the section with the step bar" would take the nav with it
-// (bug seen 2026-10-01 on the Flagship template: nav missing on /register).
-const NAV_SEC = `:is(.cus_nav, :has(.cus_nav, #navigationContainer, [class*=WebsiteNavigator__container]))`;
-// Step-bar section of the registration header (live page and Site Designer),
-// never the nav section.
-const STEPS_SEC = `[class*=Grid__sectionContainer]:has([class*=ProgressBar__wrapper]):not(${NAV_SEC})`;
+// Step-bar section of the registration header (live page and Site Designer).
+const STEPS_SEC = `[class*=Grid__sectionContainer]:has([class*=ProgressBar__wrapper])`;
 return `
 ${R} {
   --r-bg: #FFFFFF; --r-ink: #141416; --r-body: #3F3F3D; --r-muted: #5C5C5A; --r-hair: #E4E4E0;
-  --r-ctl: #8A8A86; --r-field: #FFFFFF; --r-ph: #8C8C88; --r-accent: #FF9D00; --r-accent-ink: #0B0B0C;
-  /* Flagship rule: buttons and links are BLUE (functional); amber is decoration only. */
-  --r-primary: #0062DD; --r-primary-h: #0050B5; --r-primary-ink: #FFFFFF; --r-link: #0062DD;
+  --r-ctl: #8A8A86; --r-field: #FFFFFF; --r-ph: #8C8C88; --r-accent: #9C5F00;
+  --r-primary: #9C5F00; --r-primary-h: #8F5700; --r-primary-ink: #FFFFFF;
   --r-err: #B42318; --r-focus: #2B6CE8; --r-focus-ring: rgba(43,108,232,.22);
-  --r-menu: #FFFFFF; --r-menu-h: #F5F5F3; --r-sel: rgba(0,98,221,.08);
+  --r-menu: #FFFFFF; --r-menu-h: #F5F5F3; --r-sel: rgba(156,95,0,.10);
 }
 ${R}.bbg-reg--dark {
   --r-bg: #0B0B0C; --r-ink: #FFFFFF; --r-body: rgba(255,255,255,.80); --r-muted: rgba(255,255,255,.66); --r-hair: rgba(255,255,255,.14);
-  --r-ctl: rgba(255,255,255,.38); --r-field: #17181C; --r-ph: rgba(255,255,255,.45); --r-accent: #FF9D00; --r-accent-ink: #0B0B0C;
-  --r-primary: #0062DD; --r-primary-h: #0050B5; --r-primary-ink: #FFFFFF; --r-link: #4D94FF;
+  --r-ctl: rgba(255,255,255,.38); --r-field: #17181C; --r-ph: rgba(255,255,255,.45); --r-accent: #F7A325;
+  --r-primary: #F7A325; --r-primary-h: #E8951B; --r-primary-ink: #0B0B0C;
   --r-err: #FF8A7A; --r-focus: #6FA0FF; --r-focus-ring: rgba(111,160,255,.3);
-  --r-menu: #17181C; --r-menu-h: rgba(255,255,255,.08); --r-sel: rgba(77,148,255,.18);
+  --r-menu: #17181C; --r-menu-h: rgba(255,255,255,.08); --r-sel: rgba(247,163,37,.16);
 }
 
 /* ---------- grounds: no photos behind the form ---------- */
@@ -57,7 +50,7 @@ ${R} ${BODY_SEC} { background-color: var(--r-bg) !important; background-image: n
 /* Base text colour for everything Cvent draws in the form area (low
    specificity on purpose: the specific rules below win). */
 ${BODY} :where(p, span, div, h1, h2, h3, h4, h5, h6, label, legend, li, dt, dd, td, th, strong, b, em):not(.site-footer *) { color: var(--r-ink) !important; }
-${BODY} a { color: var(--r-link) !important; }
+${BODY} a { color: var(--r-accent) !important; }
 
 /* ---------- header: the step bar sits on the page ground under the banner ---------- */
 ${R} ${STEPS_SEC} {
@@ -73,10 +66,8 @@ ${R}.bbg-reg--hide-old ${STEPS_SEC} [data-cvent-id=containerParent]:has(.event-t
    header section once nothing visible is left in it. Cvent's bar stays in the
    page, so the widget can read it and pass clicks through to it. */
 ${R}.bbg-reg--own-steps :is([class*=ProgressBar__wrapper], [data-cvent-id*=ProgressBar-widget]) { display: none !important; }
-/* Cvent step bar placed in the nav section: hide only the bar's own row, never
-   the nav (the nav row holds nav / img / navigation and is kept). */
+/* Newer Cvent step bar placed in the nav section: drop the empty column/row it leaves. */
 ${R}.bbg-reg--own-steps [class*=Grid__row]:has(> [class*=Grid__column] > [data-cvent-id*=ProgressBar-widget]):not(:has(nav, img, [class*=navigation])) { display: none !important; }
-${R}.bbg-reg--own-steps ${NAV_SEC} [class*=Grid__row]:has([class*=ProgressBar__wrapper]):not(:has(nav, img, [class*=navigation], [class*=WebsiteNavigator])) { display: none !important; }
 /* Cvent's read-only "Registration Type · Apply to attend" line (one type only). */
 ${R}.bbg-reg--hide-regtype [data-cvent-id^=widget-RegistrationType]:has([data-cvent-id=read-only-view]) { display: none !important; }
 ${R}.bbg-reg--own-steps.bbg-reg--hide-old ${STEPS_SEC}:not(:has([data-bbg-reg])) { display: none !important; }
@@ -96,15 +87,13 @@ ${R} [class*=Grid__column]:has([data-bbg-reg-mode=panel]):not(:has([class*=Grid_
      form lines up under the banner title. */
   ${R} [data-bbg-reg-row] { display: grid !important; grid-template-columns: minmax(0, 1fr) 380px; column-gap: 56px; align-items: start !important; width: 100% !important; max-width: 1144px !important; margin-left: auto !important; margin-right: auto !important; }
   ${R} [data-bbg-reg-row] > * { width: auto !important; max-width: none !important; min-width: 0 !important; flex: none !important; margin: 0 !important; left: auto !important; right: auto !important; }
-  /* Post-registration pages: status copy + panel, page spacing as the mockup. */
-  ${R} [data-bbg-reg-row]:has(> [data-bbg-reg-formcol] [data-bbg-reg-mode=confirmation]) { box-sizing: border-box !important; max-width: 1240px !important; padding: 48px 48px 72px !important; }
   ${R} [data-bbg-reg-row] > [data-bbg-reg-panelcol] { position: sticky; top: 96px; z-index: 3; align-self: start; margin-top: var(--bbg-reg-panel-top, 0px) !important; }
   ${R} [data-bbg-reg-row] :is(.left-align-fields, [data-bbg-form]) { padding-left: 0 !important; padding-right: 0 !important; }
   /* Review page: the form box sits in a second Cvent container, padded too. */
   ${R} [data-bbg-reg-formcol] [data-cvent-id=containerParent]:has([data-bbg-form]) { padding-left: 0 !important; padding-right: 0 !important; }
   /* Site Designer wraps each column for drag and drop, so the marked children
      can be wrappers: the Cvent columns inside them fill the wrapper. */
-  ${R} :is([data-bbg-reg-formcol], [data-bbg-reg-panelcol]) [class*=Grid__column]:has(.left-align-fields, [data-bbg-form], [data-bbg-reg-mode=panel], [data-bbg-reg-mode=confirmation], [class*=Forms__container]):not(:is(.left-align-fields, [data-bbg-form]) *) { width: 100% !important; max-width: 100% !important; flex: 0 0 100% !important; margin-left: 0 !important; margin-inline-start: 0 !important; left: auto !important; right: auto !important; }
+  ${R} :is([data-bbg-reg-formcol], [data-bbg-reg-panelcol]) [class*=Grid__column]:has(.left-align-fields, [data-bbg-form], [data-bbg-reg-mode=panel], [class*=Forms__container]):not(:is(.left-align-fields, [data-bbg-form]) *) { width: 100% !important; max-width: 100% !important; flex: 0 0 100% !important; margin-left: 0 !important; margin-inline-start: 0 !important; left: auto !important; right: auto !important; }
 }
 
 /* Narrower screens: form first, then the panel, both full width. */
@@ -112,12 +101,6 @@ ${R} [class*=Grid__column]:has([data-bbg-reg-mode=panel]):not(:has([class*=Grid_
   ${R} [data-bbg-reg-row] { display: block !important; }
   ${R} [data-bbg-reg-row] > * { width: 100% !important; max-width: 100% !important; flex: none !important; margin: 0 !important; }
   ${R} [data-bbg-reg-row] > [data-bbg-reg-panelcol] { margin-top: 32px !important; }
-  /* The banner's side gutter (pk-inner) for the form and the panel, instead of
-     Cvent's 15px on the form only and none on the panel. */
-  ${R} [data-bbg-reg-row] { box-sizing: border-box !important; padding-left: clamp(20px, 4vw, 48px) !important; padding-right: clamp(20px, 4vw, 48px) !important; }
-  ${R} [data-bbg-reg-row] :is(.left-align-fields, [data-bbg-form]) { padding-left: 0 !important; padding-right: 0 !important; }
-  ${R} [data-bbg-reg-formcol] [data-cvent-id=containerParent]:has([data-bbg-form]) { padding-left: 0 !important; padding-right: 0 !important; }
-  ${R} [data-bbg-reg-row]:has(> [data-bbg-reg-formcol] [data-bbg-reg-mode=confirmation]) { padding: 32px 20px 48px !important; }
 }
 
 /* Site Designer: a drag-and-drop wrapper around a Cvent column behaves like the
@@ -146,7 +129,7 @@ ${R} [class*=ProgressBar__before] {
   width: 30px !important; height: 30px !important; line-height: 27px !important; box-sizing: border-box !important;
   border: 1.5px solid var(--r-ctl) !important; background: var(--r-bg) !important; color: var(--r-muted) !important;
   font-family: ${FONT} !important; font-size: 13px !important; font-weight: 700 !important; box-shadow: none !important; }
-${R} [class*=ProgressBar__progressbar] li[aria-current=step] [class*=ProgressBar__before] { background: var(--r-accent) !important; border-color: var(--r-accent) !important; color: var(--r-accent-ink) !important; }
+${R} [class*=ProgressBar__progressbar] li[aria-current=step] [class*=ProgressBar__before] { background: var(--r-accent) !important; border-color: var(--r-accent) !important; color: var(--r-primary-ink) !important; }
 ${R} [class*=ProgressBar__progressbar] li:has(~ li[aria-current=step]) [class*=ProgressBar__before] { background: var(--r-ink) !important; border-color: var(--r-ink) !important; color: var(--r-bg) !important; }
 ${R} [class*=ProgressBar__progressText] { margin-top: 8px !important; font-family: ${FONT} !important; font-size: 14px !important; font-weight: 600 !important; letter-spacing: 0 !important; text-transform: none !important; color: var(--r-muted) !important; }
 ${R} [class*=ProgressBar__progressbar] li[aria-current=step] [class*=ProgressBar__progressText],
@@ -161,15 +144,15 @@ ${R} [class*=ProgressBar__bar] { height: 100% !important; background: var(--r-ac
 /* ---------- form column ---------- */
 ${BODY} :is(.left-align-fields, [data-bbg-form]) { max-width: 620px; }
 /* One left edge for intro text, fields and buttons (Cvent pads each by 15px). */
-${BODY} :is(:is(.left-align-fields, [data-bbg-form]) [data-cvent-id^=widget-NucleusText], .button-group-left) { padding-left: 0 !important; padding-right: 0 !important; }
-${BODY} :is(.left-align-fields, [data-bbg-form]) [data-cvent-id^=widget-NucleusText] { padding-top: 0 !important; padding-bottom: 0 !important; }
+${BODY} :is(:is(.left-align-fields, [data-bbg-form]) [class*=TextWidget__container], .button-group-left) { padding-left: 0 !important; padding-right: 0 !important; }
+${BODY} :is(.left-align-fields, [data-bbg-form]) [class*=TextWidget__container] { padding-top: 0 !important; padding-bottom: 0 !important; }
 ${R} [data-bbg-reg-row] .identity-confirmation { padding-left: 0 !important; padding-right: 0 !important; }
 /* Intro text. Spans inside a heading are left to the heading rule below (a
    span rule here used to shrink the Heading 2 text to body size). */
-${BODY} [data-cvent-id^=widget-NucleusText] :is(p, li, span):not(:is(h1, h2, h3, h4) *) { font-family: ${FONT} !important; font-size: 16.5px !important; line-height: 1.55 !important; color: var(--r-body) !important; letter-spacing: 0 !important; }
-${BODY} [data-cvent-id^=widget-NucleusText] p { margin: 0 !important; }
-${BODY} [data-cvent-id^=widget-NucleusText] :is(h1, h2, h3, h4) { font-family: ${FONT} !important; color: var(--r-ink) !important; letter-spacing: -0.01em !important; font-size: 28px !important; line-height: 1.2 !important; font-weight: 700 !important; margin: 0 0 8px !important; padding: 0 !important; text-transform: none !important; }
-${BODY} [data-cvent-id^=widget-NucleusText] :is(h1, h2, h3, h4) * { font-family: inherit !important; font-size: inherit !important; font-weight: inherit !important; line-height: inherit !important; letter-spacing: inherit !important; color: inherit !important; text-transform: none !important; }
+${BODY} [class*=TextWidget__container] :is(p, li, span):not(:is(h1, h2, h3, h4) *) { font-family: ${FONT} !important; font-size: 16.5px !important; line-height: 1.55 !important; color: var(--r-body) !important; letter-spacing: 0 !important; }
+${BODY} [class*=TextWidget__container] p { margin: 0 !important; }
+${BODY} [class*=TextWidget__container] :is(h1, h2, h3, h4) { font-family: ${FONT} !important; color: var(--r-ink) !important; letter-spacing: -0.01em !important; font-size: 28px !important; line-height: 1.2 !important; font-weight: 700 !important; margin: 0 0 8px !important; padding: 0 !important; text-transform: none !important; }
+${BODY} [class*=TextWidget__container] :is(h1, h2, h3, h4) * { font-family: inherit !important; font-size: inherit !important; font-weight: inherit !important; line-height: inherit !important; letter-spacing: inherit !important; color: inherit !important; text-transform: none !important; }
 /* Intro heading: a Heading 2 in the text block is styled by the rule above.
    Written as plain paragraphs instead, the widget marks the heading
    (data-bbg-intro-h): a first text block followed by another one, or the first
@@ -185,12 +168,8 @@ ${R}.bbg-reg--intro-heading [data-bbg-intro-h=block] { padding: 0 !important; }
 }
 /* Intro text blocks (marked data-bbg-intro) start on the fields' left edge. */
 ${R} [data-bbg-intro] { padding: 0 !important; margin-left: var(--bbg-intro-shift, 0px) !important; margin-top: var(--bbg-intro-gap, 0px) !important; margin-bottom: var(--bbg-intro-after, 0px) !important; }
-/* The spacing fix can pull the fields' row up over the intro line, and that
-   row has a white background (Planner Registration's prefilled details):
-   the intro text paints above it. */
-${R} [data-bbg-intro] { position: relative; z-index: 2; }
 ${R} [data-bbg-intro] :is(p, h1, h2, h3, h4):last-child { margin-bottom: 0 !important; }
-${R} [data-cvent-id^=widget-NucleusText] [data-bbg-empty] { display: none !important; }
+${R} [class*=TextWidget__container] [data-bbg-empty] { display: none !important; }
 ${R} [data-bbg-intro] :is(div, p, h1, h2, h3, h4) { padding-left: 0 !important; margin-left: 0 !important; text-indent: 0 !important; }
 /* "* Required" under the last intro text block (marked data-bbg-req). */
 /* z-index: the spacing fix can pull the next row up over the note's line; the
@@ -306,33 +285,6 @@ ${BODY} fieldset { border: 0 !important; margin: 0 !important; padding: 0 !impor
 ${BODY} fieldset > legend { float: left !important; width: 100% !important; }
 ${BODY} fieldset > legend + * { clear: both; }
 ${BODY} :is([data-cvent-id=attendeeListOptIn], [data-cvent-id*=AttendeeListOptIn-widget]), ${BODY} fieldset[class*=Forms__element] { margin-top: 22px !important; padding-top: 22px !important; border-top: 1px solid var(--r-hair) !important; }
-/* State / region before Country has an answer (the widget marks it). */
-${R} [data-bbg-state-wait] { display: none !important; }
-/* The registrant's name / email placed with Cvent data tags for the widget to read. */
-${R} .bbg-person, .bbg-person { display: none !important; }
-/* Cvent's own Modify / Cancel Registration buttons, when the widget's buttons stand in for them (still clickable by the widget). */
-[data-bbg-native-hidden] { display: none !important; }
-/* A whole-page copy (shared header) on a status page draws the page itself:
-   Cvent's own page content below it is hidden (still in the page, so Cvent's
-   Modify / Cancel buttons and the bbg-person block keep working). */
-${R}.bbg-reg--hide-body [role=main] [class*=Grid__sectionContainer]:not(:has([data-bbg-reg], .site-footer, .cus_nav, #navigationContainer)):not([data-bbg-reg] *):not(.site-footer *):not([class*=Grid__grid]:has(.site-footer) *) { display: none !important; }
-/* The site CSS holds #main at a screen tall while pages load; with the page's own
-   content hidden, that height would be empty white below the widget. */
-${R}.bbg-reg--hide-body.bbg-reg--page-drawn :is(#main, [role=main]) { min-height: 0 !important; }
-/* Tall screens: the footer stays at the bottom of the window (the emptied
-   page body takes up the spare height between the drawn page and the footer). */
-${R}.bbg-reg--hide-body.bbg-reg--page-drawn div:has(> [role=banner]):has(> :is(#main, [role=main])) { display: flex !important; flex-direction: column !important; min-height: 100vh; }
-${R}.bbg-reg--hide-body.bbg-reg--page-drawn div:has(> [role=banner]) > :is(#main, [role=main]) { flex: 1 0 auto; }
-${R}.bbg-reg--hide-body.bbg-reg--page-drawn div:has(> [role=banner]) > :not(#main, [role=main]) { flex: 0 0 auto; }
-/* Website pages pin the nav section (.scroll = position:fixed) once scrolled.
-   With a whole page drawn inside that section, pinning pulls it out of the
-   page, the page shrinks, the scroll resets and it unpins: a jumping loop. */
-${R}.bbg-reg--hide-body .cus_nav.scroll:has([data-bbg-reg-mode=page]) { position: relative !important; box-shadow: none !important; }
-${R} [data-bbg-fadein] { animation: bbgRegFieldIn .28s ease both; }
-@keyframes bbgRegFieldIn { from { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { ${R} [data-bbg-fadein] { animation: none; } }
-/* Cvent pads the opt-in wrapper 15px on each side; every other question sits flush. */
-${BODY} [data-cvent-id=attendeeListOptIn] { padding-left: 0 !important; padding-right: 0 !important; }
 /* A fieldset sits in a Forms__container that already has the 22px above it
    (Cvent's flex rows don't collapse the two margins): mockup, 22px to the rule. */
 ${BODY} [class*=Forms__container] > fieldset[class*=Forms__element] { margin-top: 0 !important; }
@@ -389,7 +341,7 @@ ${BODY} [class*=RegistrationSummary__attendee] > h4::before { content: var(--bbg
 ${BODY} [class*=RegistrationSummary__attendee] > [class*=fieldStyles]::before { content: var(--bbg-sum-email, "Work email"); }
 ${BODY} [class*=RegistrationSummary__attendee] > div:has(> [class*=summaryHeaderActionLinks]) { position: absolute !important; top: 15px; right: 22px; margin: 0 !important; padding: 0 !important; }
 ${BODY} [class*=RegistrationSummary__attendee] [class*=summaryHeaderActionLinks] {
-  padding: 0 !important; cursor: pointer; font-family: ${FONT} !important; font-size: 14px !important; line-height: 1.4 !important; font-weight: 700 !important; color: var(--r-link) !important; text-decoration: none !important; }
+  padding: 0 !important; cursor: pointer; font-family: ${FONT} !important; font-size: 14px !important; line-height: 1.4 !important; font-weight: 700 !important; color: var(--r-accent) !important; text-decoration: none !important; }
 ${BODY} [class*=RegistrationSummary__attendee] [class*=summaryHeaderActionLinks]:hover { text-decoration: underline !important; text-underline-offset: 3px; }
 /* card 2: About you (the answers) */
 ${BODY} [data-cvent-id^=widget-RegistrationSummary] [class*=RegistrationSummary__body] { margin-top: 16px !important; border: 1px solid var(--r-hair) !important; border-radius: 2px !important; background: var(--r-bg) !important; }
@@ -407,7 +359,7 @@ ${BODY} [data-bbg-sum-value] { margin-top: 2px !important; }
 /* consent line above the buttons */
 ${BODY} [data-bbg-consent] { margin-top: 20px !important; padding: 0 !important; }
 ${BODY} [data-bbg-consent][data-bbg-consent] :is(p, span, div) { max-width: 62ch; font-family: ${FONT} !important; font-size: 14px !important; line-height: 1.55 !important; color: var(--r-body) !important; text-align: left !important; }
-${BODY} [data-bbg-consent][data-bbg-consent] a { color: var(--r-link) !important; font-weight: 600 !important; }
+${BODY} [data-bbg-consent][data-bbg-consent] a { color: var(--r-accent) !important; font-weight: 600 !important; }
 @media (max-width: 600px) {
   ${BODY} [class*=RegistrationSummary__attendee] { grid-template-columns: minmax(0, 1fr); row-gap: 12px; }
   ${BODY} [class*=RegistrationSummary__attendee]::before { margin-bottom: 6px; }
@@ -440,15 +392,12 @@ ${BODY} ul[class*=ButtonGroup__buttonGroup] > li:has(> button#exit) { order: 3; 
 ${BODY} button#exit[class*=LinearNavigator__button] {
   height: auto !important; padding: 8px 4px !important; border: 0 !important; background: transparent !important;
   color: var(--r-muted) !important; font-size: 14px !important; font-weight: 600 !important; text-decoration: underline !important; text-underline-offset: 3px; }
-/* Not the dropdown's own search input: it is a few px wide inside the
-   control, so an outline on it draws two blue bars. The control shows focus. */
-${BODY} :is(button, a, input):not([class*=-control] input, [data-cvent-id=async-dropdown-wrapper] input):focus-visible { outline: 3px solid var(--r-focus) !important; outline-offset: 2px !important; }
-${BODY} :is([class*=-control], [data-cvent-id=async-dropdown-wrapper]) input:is(:focus, :focus-visible, .focus-visible) { outline: none !important; box-shadow: none !important; }
+${BODY} :is(button, a, input):focus-visible { outline: 3px solid var(--r-focus) !important; outline-offset: 2px !important; }
 
 @media (max-width: 767px) {
   ${R} [class*=ProgressBar__wrapper] { padding: 16px 20px !important; }
-  ${BODY} [data-cvent-id^=widget-NucleusText] :is(p, li, span):not(:is(h1, h2, h3, h4) *) { font-size: 15.5px !important; }
-  ${BODY} [data-cvent-id^=widget-NucleusText] :is(h1, h2, h3, h4) { font-size: 23px !important; }
+  ${BODY} [class*=TextWidget__container] :is(p, li, span):not(:is(h1, h2, h3, h4) *) { font-size: 15.5px !important; }
+  ${BODY} [class*=TextWidget__container] :is(h1, h2, h3, h4) { font-size: 23px !important; }
   ${BODY} ul[class*=ButtonGroup__buttonGroup] { flex-direction: column !important; align-items: stretch !important; }
   ${BODY} ul[class*=ButtonGroup__buttonGroup] > li { width: 100% !important; }
   ${BODY} ul[class*=ButtonGroup__buttonGroup] > li > button[class*=LinearNavigator__button] { width: 100% !important; }

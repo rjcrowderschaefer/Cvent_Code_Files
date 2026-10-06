@@ -183,6 +183,11 @@ order hero → facts → about → speakers (carousel). `page-kit.js`,
 `editor-kit.js` and the page copy of `FeaturedSpeaker.js` are identical in
 every page-widget folder: edit the canonical copy, then copy it to each folder.
 
+**CSS policy (2026-10-03):** the Cvent site theme CSS is full and frozen to
+critical rules. New page-level CSS goes into `CONFIRM_PAGE_CSS` in `page-kit.js`
+(injected as `#bbg-site-css`; the FAB holds an identical copy), never the theme.
+See FLAGSHIP_TEMPLATE_DESIGN_RULES.md "Where CSS lives".
+
 ## Known open items / edge cases
 
 - No debug `console.log` calls remain in the three widget files (as of

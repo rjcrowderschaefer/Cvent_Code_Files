@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>widget frame: shared header (whole-page copy)</title>
+<style>
+  /* A stand-in for a registration page whose header (shared by all the
+     post-registration pages) holds one whole-page copy of the widget. The body
+     holds Cvent's own content; the test swaps it between a status page and a
+     form page and changes the address, as Cvent does between pages. */
+  body { margin: 0; font: 14px/1.4 Arial, sans-serif; background: #fff; }
+  .cus_nav { height: 64px; background: #0b0b0c; display: flex; align-items: center; padding: 0 24px; font: 700 13px Arial; letter-spacing: .08em; color: #aaa; }
+  [class*=Grid__row] { display: flex; gap: 16px; }
+  [class*=Grid__col_8] { width: 66%; } [class*=Grid__col_4] { width: 33%; }
+  .old { background: #666; color: #fff; padding: 30px; border-radius: 20px; margin: 20px; }
+  .site-footer { background: #000; color: #999; padding: 40px 24px; }
+  #slot-panel:empty, #slot-banner:empty, #slot-confirm:empty { display: none; }
+</style>
+</head>
+<body>
+<div class="AppContainer__container___9f2a">
+  <div role="banner"><div class="cus_nav">FAKE CVENT NAV</div><div id="slot-banner"></div></div>
+  <div role="main" id="main">
+    <div class="Grid__grid___1a" id="body-grid"><div class="Grid__sectionContainer___2b" id="body-sec">
+      <div class="old">Cvent's own pending-approval text (should be hidden)</div>
+      <div class="Container__container___x bbg-person"><div><p>Morgan</p></div><div><p>morgan@example.com</p></div></div>
+    </div></div>
+    <div class="Grid__grid___1a"><div class="Grid__sectionContainer___2b" style="padding:0;background:#0b0b0c"><div class="site-footer">Black site footer (never restyled)</div></div></div>
+  </div>
+  <div id="slot-confirm"></div><div id="slot-panel"></div>
+</div>
+<script type="module">import(`./frame.js?v=${Date.now()}`);</script>
+</body>
+</html>

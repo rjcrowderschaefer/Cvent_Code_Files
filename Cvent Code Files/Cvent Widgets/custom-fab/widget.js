@@ -76,6 +76,70 @@ function findPlannerContact() {
     PLANNER_TEXT.test(el.textContent || "") && !el.closest("[class*='WebsiteNavigator'], nav")) || null;
 }
 
+// Page CSS the widgets carry instead of the site theme (the theme is at
+// Cvent's character limit). COPY of page-kit.js CONFIRM_PAGE_CSS: keep the two
+// identical. Same style id, so whichever widget loads first injects it once.
+// BEGIN CONFIRM_PAGE_CSS
+const CONFIRM_PAGE_CSS = `
+:is(.bbg-confirm-banner,.bbg-confirm,.bbg-confirm-panel) *{font-family:AvenirNextPForBBG,Helvetica,Arial,sans-serif!important;text-align:left!important;letter-spacing:0}
+:is(.bbg-confirm-banner,.bbg-confirm,.bbg-confirm-panel) :is([data-cvent-id*=usText],[data-cvent-id*=usText]>div){padding:0!important;background:none!important}
+:is(.bbg-confirm-banner,.bbg-confirm,.bbg-confirm-panel) :is(p,h1,h3,h4){margin:0!important;padding:0!important}
+.bbg-confirm-banner{background:#0B0B0C!important;box-shadow:0 0 0 100vmax #0B0B0C;clip-path:inset(0 -100vmax);padding:clamp(32px,4vw,44px) max(20px,calc((100% - 1144px)/2)) clamp(28px,3.5vw,38px)!important}
+.bbg-confirm-banner :is(p,p *){font-size:16px!important;line-height:1.5!important;font-weight:400!important;color:#fffc!important}
+.bbg-confirm-banner [class*=Grid__row]:first-child :is(p,p *){margin-bottom:12px!important;font-size:14.4px!important;font-weight:700!important;letter-spacing:.14em;text-transform:uppercase;color:#FF9D00!important}
+.bbg-confirm-banner :is(h1,h1 *){margin-bottom:12px!important;font-size:clamp(34px,4vw,48px)!important;line-height:1.1!important;font-weight:700!important;letter-spacing:-.02em;color:#fff!important}
+[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel){display:flex!important;align-items:flex-start!important;gap:56px;max-width:1240px;margin:auto!important;padding:44px 48px 64px!important;box-sizing:border-box}
+[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel)>[class*=Grid__col]{flex:1 1 auto!important;width:auto!important;max-width:620px!important}
+[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel)>[class*=Grid__col]:has(.bbg-confirm-panel){flex:0 0 380px!important;max-width:380px!important;margin-left:auto!important;position:sticky;top:96px}
+[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel) [data-cvent-id^=containerP]:not(.bbg-confirm-panel){padding:0!important}
+.bbg-confirm,.bbg-confirm [data-cvent-id^=containerP]{padding:0!important;background:none!important;border-radius:0!important}
+.bbg-confirm :is(p,li,span){font-size:16.5px!important;line-height:1.55!important;font-weight:400!important;color:#3F3F3D!important}
+.bbg-confirm [data-cvent-id*=usText]:has(h1)::before{content:"✓";display:grid;place-items:center;width:52px;height:52px;margin-bottom:22px;border-radius:50%;background:#FF9D0029;color:#FF9D00;font:700 20px/1 Arial}
+.bbg-confirm :is(h1,h2,h1 *,h2 *){margin-bottom:12px!important;font-size:32px!important;line-height:1.15!important;font-weight:700!important;letter-spacing:-.02em;color:#141416!important}
+.bbg-confirm ul{margin:28px 0 0!important;padding:0!important;list-style:none!important;border-top:1px solid #E4E4E0}
+.bbg-confirm li{position:relative;margin:0!important;padding:16px 0 16px 42px!important;list-style:none!important;border-bottom:1px solid #E4E4E0}
+.bbg-confirm :is(li,li *){font-size:14.5px!important}
+.bbg-confirm li::before{content:"";position:absolute;left:0;top:21px;width:14px;height:14px;box-sizing:border-box;border-radius:50%;border:2px solid #C9C9C4}
+.bbg-confirm li:first-child::before{border-color:#FF9D00;background:#FF9D00}
+.bbg-confirm li span[style*=bold]{font-size:16px!important;font-weight:700!important;color:#141416!important}
+.bbg-confirm p:has(a){display:flex!important;flex-wrap:wrap;gap:12px;margin-top:28px!important;font-size:0!important}
+.bbg-confirm p:has(a) br{display:none}
+.bbg-confirm p:has(a) a{display:inline-flex!important;align-items:center;height:52px;padding:0 28px!important;border:1px solid #141416;border-radius:2px;color:#141416!important;font-size:15px!important;font-weight:700!important;text-decoration:none!important}
+.bbg-confirm p:has(a) a:hover{background:#F5F5F3}
+.bbg-confirm p:has(a) a:first-of-type{background:#0062DD;border-color:#0062DD;color:#fff!important}
+.bbg-confirm p:has(a) a:first-of-type:hover{background:#0050B5}
+.bbg-confirm-panel{padding:28px!important;background:#F5F5F3!important;border-top:3px solid #FF9D00!important}
+.bbg-confirm-panel :is(p,span){font-size:14px!important;line-height:1.5!important;color:#3F3F3D!important}
+.bbg-confirm-panel [class*=Grid__row]:first-child :is(p,p *){margin-bottom:8px!important;font-size:13.2px!important;font-weight:700!important;letter-spacing:.14em;text-transform:uppercase;color:#FF9D00!important}
+.bbg-confirm-panel :is(h3,h3 *){font-size:21px!important;line-height:1.25!important;font-weight:700!important;letter-spacing:-.01em;color:#141416!important}
+.bbg-confirm-panel :is(h4,h4 *){margin:14px 0 2px!important;font-size:13.2px!important;font-weight:700!important;letter-spacing:.08em;text-transform:uppercase;color:#FF9D00!important}
+.bbg-confirm-panel [class*=Grid__row]:has(h3)+[class*=Grid__row] h4{margin-top:18px!important}
+.bbg-confirm-panel [class*=Grid__row]:has(h4)+[class*=Grid__row] p{font-size:15.5px!important;color:#141416!important}
+.bbg-confirm-panel [class*=Grid__row]:last-child:not(:first-child) p{margin-top:18px!important;padding-top:16px!important;border-top:1px solid #E4E4E0;font-size:14.5px!important}
+.bbg-confirm-panel a{color:#0062DD!important;font-weight:700!important;text-decoration:none!important}
+.bbg-confirm.bbg-steps-2 li:nth-child(-n+2)::before,.bbg-confirm.bbg-steps-3 li:nth-child(-n+3)::before{border-color:#FF9D00;background:#FF9D00}
+.bbg-confirm p:has(a) a:nth-of-type(3){height:auto;margin-left:auto;align-self:center;padding:0!important;border:0;background:none!important;color:#5C5C5A!important;font-size:14px!important;font-weight:600!important;text-decoration:underline!important;text-underline-offset:3px}
+.bbg-confirm p:has(a) a:nth-of-type(3):hover{color:#0062DD!important}
+:is(.bbg-confirm-callout,.bbg-confirm-note),:is(.bbg-confirm-callout,.bbg-confirm-note) *{font-family:AvenirNextPForBBG,Helvetica,Arial,sans-serif!important;text-align:left!important}
+.bbg-confirm-callout:not(#bbg-x){max-width:620px;margin-top:26px!important;padding:20px 22px!important;border:1px solid #E4E4E0!important;border-radius:2px!important;background:#fff!important}
+.bbg-confirm-note:not(#bbg-x){max-width:620px;margin-top:22px!important;padding:14px 16px!important;border-left:3px solid #FF9D00!important;border-radius:0!important;background:#F5F5F3!important}
+:is(.bbg-confirm-callout,.bbg-confirm-note) :is([data-cvent-id*=usText],[data-cvent-id*=usText]>div){padding:0!important;background:none!important}
+.bbg-confirm :is(.bbg-confirm-callout,.bbg-confirm-note) :is(p,span),:is(.bbg-confirm-callout,.bbg-confirm-note) :is(p,span){margin:0!important;font-size:14.5px!important;line-height:1.5!important;color:#3F3F3D!important}
+.bbg-confirm .bbg-confirm-callout [class*=Grid__row]:first-child :is(p,p *),.bbg-confirm-callout [class*=Grid__row]:first-child :is(p,p *){margin-bottom:4px!important;font-size:16px!important;font-weight:700!important;color:#141416!important}
+.bbg-confirm .bbg-confirm-note :is(b,strong,span[style*=bold]),.bbg-confirm-note :is(b,strong,span[style*=bold]){font-weight:700!important;color:#141416!important}
+html.bbg-live div:has(>[role=banner]):has(>#main){display:flex!important;flex-direction:column!important;min-height:100vh}
+html.bbg-live div:has(>[role=banner])>#main{flex:1 0 auto;min-height:0!important}
+html.bbg-live div:has(>[role=banner])>:not(#main){flex:0 0 auto}
+@media(max-width:1023px){[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel){flex-direction:column;gap:32px;padding:32px 20px 48px!important}[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel)>[class*=Grid__col],[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel)>[class*=Grid__col]:has(.bbg-confirm-panel){flex:none!important;width:100%!important;max-width:100%!important;margin-left:0!important;position:static}.bbg-confirm-panel{padding:22px 20px!important}.bbg-confirm :is(h1,h2,h1 *,h2 *){font-size:26px!important}.bbg-confirm-banner p{font-size:15px!important}.bbg-confirm p:has(a){flex-direction:column}.bbg-confirm p:has(a) a{justify-content:center}.bbg-confirm p:has(a) a:nth-of-type(3){margin:6px auto 0}}
+`;
+// END CONFIRM_PAGE_CSS
+function ensureSiteCss() {
+  // html.bbg-live scopes the page-layout rules to the live site (as page-kit).
+  if (/\/event\/[^/]+\/[^/]+/.test(location.pathname)) document.documentElement.classList.add("bbg-live");
+  if (!document.head || document.getElementById("bbg-site-css")) return;
+  const st = document.createElement("style"); st.id = "bbg-site-css"; st.textContent = CONFIRM_PAGE_CSS; document.head.append(st);
+}
+
 // "Submit a question" goes through the same Contact Planner widget, unseen:
 // open its pop-up hidden, fill its email + message fields from the FAB form,
 // press its Send, read the result, close it. Resolves "sent", "invalid"
@@ -222,7 +286,9 @@ const WIDGET_CSS = `
   .wrap {
     position: fixed;
     right: clamp(16px, 4vw, 32px);
-    bottom: clamp(16px, 4vh, 32px);
+    /* --fab-lift: how far the footer has come up into the window, so the
+       button rests on top of the footer instead of sitting over it. */
+    bottom: calc(clamp(16px, 4vh, 32px) + var(--fab-lift, 0px));
     left: auto;
     z-index: 2147483000;
     display: flex;
@@ -605,6 +671,7 @@ const WIDGET_CSS = `
   .done p { margin: 0 0 10px; font: 400 12.5px/1.45 var(--f); color: #5C5C5A; }
   .done .fine { color: #FF9D00; }
   .ferr { margin: 0; font: 400 12px/1.4 var(--f); color: #B42318; }
+  .ferr a { color: #0062DD; font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
   .btn:disabled { opacity: .7; cursor: default; }
 
   /* --- mobile ----------------------------------------------------------- */
@@ -643,6 +710,40 @@ const WIDGET_CSS = `
   }
 `;
 
+// ---- one FAB for the whole site -------------------------------------------
+// Place ONE copy in the site header (Header & Footer), set it up once, and it
+// shows on every website page. It never shows on registration or
+// post-registration pages (their addresses end in "<pageType>:<id>", e.g.
+// regProcessStep1:..., registrationPendingApprovalPage:...), nor in Planner
+// Registration mode. If copies are also left on individual pages, only one
+// shows: the header copy (its settings win), else the first on the page.
+const FABS = new Set();
+let fabTimer = 0;
+function isRegPage() {
+  let path = "";
+  try { path = window.location.pathname || ""; } catch (e) { return false; }
+  if (/PlannerRegistration/i.test(path)) return true;
+  if (!/\/event\/[^/]+\/[^/]+/.test(path)) return false;   // Site Designer etc.: show
+  let seg = path.split("/").filter(Boolean).pop() || "";
+  try { seg = decodeURIComponent(seg); } catch (e) { /* keep */ }
+  return seg.includes(":") || /regprocess|registration|register|pending|confirmation|cancel|decline|guest|denied|archive/i.test(seg);
+}
+function inHeaderOrFooter(el) {
+  return !!el.closest("[role=banner], footer, [class*=Grid__grid]:has(.site-footer)");
+}
+function syncFabs() {
+  const live = [...FABS].filter((w) => w.isConnected);
+  const hideAll = isRegPage();
+  const lead = live.find(inHeaderOrFooter) || live.sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1))[0];
+  live.forEach((w) => {
+    const show = !hideAll && w === lead;
+    if (!show && w._close) w._close(true);
+    w.style.display = show ? "" : "none";
+  });
+  if (!live.length) { clearInterval(fabTimer); fabTimer = 0; }
+  else if (!fabTimer) fabTimer = setInterval(syncFabs, 500); // Cvent changes pages without reloading
+}
+
 export default class BbgContactWidget extends HTMLElement {
   constructor({ configuration, theme }) {
     super();
@@ -656,8 +757,14 @@ export default class BbgContactWidget extends HTMLElement {
     // a DOM move/reflow). Without this guard, connectedCallback would run
     // again and append a second full set of markup into the same shadow
     // root, producing stacked duplicate buttons.
-    if (this._initialized) return;
+    FABS.add(this);
+    syncFabs();
+    if (this._initialized) {
+      if (this._onLift) { window.addEventListener("scroll", this._onLift, { passive: true }); window.addEventListener("resize", this._onLift); clearInterval(this._liftPoll); this._liftPoll = setInterval(() => { this._findBand?.(); this._onLift(); }, 1000); this._onLift(); }
+      return;
+    }
     this._initialized = true;
+    try { ensureSiteCss(); } catch (e) { /* page CSS is a nicety */ }
 
     // Any throw below would leave the widget permanently dead - the guard
     // above blocks a retry - and surfaces as an errored widget in Site
@@ -824,15 +931,18 @@ export default class BbgContactWidget extends HTMLElement {
       document.body.style.overflow = "hidden";
       setView("menu");
     };
-    const close = () => {
+    const close = (quiet) => {
       wrap.classList.remove("is-open");
       fab.setAttribute("aria-expanded", "false");
       document.body.style.overflow = "";
       wrap.setAttribute("data-view", "menu");
       // Programmatic focus doesn't match :focus-visible, so the hint stays
       // hidden for a mouse user while keyboard users still get it back.
-      fab.focus();
+      if (quiet !== true) fab.focus();
     };
+    // Hidden by syncFabs (registration page, or another copy leads): close
+    // first so the page is never left with its scrolling locked.
+    this._close = (quiet) => { if (isOpen()) close(quiet); };
 
     fab.addEventListener("click", () => (isOpen() ? close() : open()));
     mclose.addEventListener("click", close);
@@ -884,8 +994,19 @@ export default class BbgContactWidget extends HTMLElement {
         };
         let result;
         try { result = await sendViaPlanner({ email: v("email"), message }); } catch (e) {
+          // No Contact Planner widget on this page (or Cvent's pop-up didn't
+          // open): hand the question to the visitor's email app, already
+          // written, rather than a dead end.
           console.warn("[fab] question not sent:", e.message);
-          fail(`Sorry, questions can't be sent from this page. Email us at ${c.eventEmail}.`);
+          const subject = `Question about ${document.title || "the event"}`;
+          const href = `mailto:${encodeURIComponent(c.eventEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+          fail(`We couldn't send that from this page.`);
+          const err = form.querySelector(".ferr");
+          if (err && c.eventEmail) {
+            const link = document.createElement("a");
+            link.href = href; link.textContent = `Email it to ${c.eventEmail} instead`;
+            err.append(" ", link);
+          }
           return;
         }
         if (result === "invalid") { fail("Please check your email address and try again."); return; }
@@ -964,6 +1085,41 @@ export default class BbgContactWidget extends HTMLElement {
       this._stopNudging = stopNudging;
     }
 
+    // Live site: once the footer scrolls into view, the button rides up with
+    // the footer's top edge instead of covering the footer.
+    if (!isEditorPreview) {
+      let raf = 0;
+      // The page widgets' closing "Request to attend" band: on narrower
+      // screens its button sits where the FAB is, so the FAB stops above the
+      // band instead (only when they would overlap; on desktop it rests on the
+      // footer). Found in the widgets' shadow roots; re-found once a second.
+      let band = null;
+      const findBand = () => {
+        const hosts = [...document.querySelectorAll("#main *, [role=main] *")].filter((e) => e.shadowRoot && /^WIDGET-/.test(e.tagName));
+        const all = hosts.flatMap((h) => [...h.shadowRoot.querySelectorAll(".pk-band-sec")]);
+        band = all[all.length - 1] || null;
+      };
+      const lift = () => {
+        raf = 0;
+        const foot = document.querySelector("footer") || document.querySelector("[class*=Grid__grid]:has(.site-footer)");
+        let anchor = foot && foot.getClientRects().length ? foot.getBoundingClientRect().top : Infinity;
+        if (band && band.isConnected && band.getClientRects().length) {
+          const cta = (band.querySelector(".pk-band-cta") || band).getBoundingClientRect();
+          const f = fab.getBoundingClientRect();
+          if (cta.height && cta.right > f.left - 12 && cta.left < f.right + 12) anchor = Math.min(anchor, band.getBoundingClientRect().top);
+        }
+        const px = anchor === Infinity ? 0 : Math.max(0, Math.round(window.innerHeight - anchor));
+        wrap.style.setProperty("--fab-lift", `${px}px`);
+      };
+      this._onLift = () => { if (!raf) raf = requestAnimationFrame(lift); };
+      window.addEventListener("scroll", this._onLift, { passive: true });
+      window.addEventListener("resize", this._onLift);
+      this._findBand = findBand;
+      this._liftPoll = setInterval(() => { findBand(); this._onLift(); }, 1000); // pages that grow after load
+      findBand();
+      this._onLift();
+    }
+
     // In Site Designer, pin to the bottom-right of the page preview rather
     // than of the whole browser window. Cosmetic only, and fully contained
     // so it can never break the render.
@@ -1012,8 +1168,11 @@ export default class BbgContactWidget extends HTMLElement {
   }
 
   disconnectedCallback() {
+    FABS.delete(this);
+    syncFabs();
     if (this._onKeydown) document.removeEventListener("keydown", this._onKeydown);
     if (this._onResize) window.removeEventListener("resize", this._onResize);
+    if (this._onLift) { window.removeEventListener("scroll", this._onLift); window.removeEventListener("resize", this._onLift); clearInterval(this._liftPoll); }
     if (this._pinPollId) clearInterval(this._pinPollId);
     if (this._stopNudging) this._stopNudging();
   }

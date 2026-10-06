@@ -42,14 +42,16 @@ function place(cfg) {
   document.getElementById(SLOT[cfg?.mode] || SLOT.banner).appendChild(w);
   return w;
 }
-function mount(cfg) {
+// extra: optional {banner: cfg, panel: cfg, confirmation: cfg} for the other
+// copies placed with ?all=1 (default: a minimal config each).
+function mount(cfg, extra = {}) {
   if (widget) { widget.remove(); widget = null; }
   extras.forEach((w) => w.remove()); extras = [];
   cfg = cfg || {};
   widget = place(cfg);
   if (new URLSearchParams(location.search).has("all") || window.__all) {
     const mode = cfg.mode || "banner";
-    extras = ["banner", "panel", "confirmation"].filter((m) => m !== mode).map((m) => place({ theme: cfg.theme, mode: m, panel: { contactUrl: "/contact" }, confirmation: { primaryUrl: "/agenda", secondaryUrl: "/contact" } }));
+    extras = ["banner", "panel", "confirmation"].filter((m) => m !== mode).map((m) => place(extra[m] ? { theme: cfg.theme, ...extra[m], mode: m } : { theme: cfg.theme, mode: m, panel: { contactUrl: "/contact" }, confirmation: { primaryUrl: "/agenda", secondaryUrl: "/contact" } }));
   }
 }
 

@@ -28,7 +28,7 @@ import {
 const CARD_TAG = "bbg-home-speaker-card";
 // Bump on every change. Shown in the editor footer and as data-build on the
 // widget root, so a stale Cvent/CDN copy is obvious (Playbook §0).
-export const BUILD = "home-2026-10-02a";
+export const BUILD = "home-2026-10-05b";
 
 // ---------------------------------------------------------------------------
 // Defaults (exported for editor.js). Copy defaults are GENERIC on purpose:
@@ -191,11 +191,28 @@ export function mergeHomeConfig(incoming = {}) {
 }
 
 // ---------------------------------------------------------------------------
+// Button links picked from a list of the site's pages, so planners never copy
+// a URL. Stored as "page:<address ending>" and turned into a link at render
+// time from the current site address (/event/<site>/<page>), so a copy of the
+// template keeps working without editing links. Anything else (a full URL, a
+// path, blank) passes through unchanged. Address endings are Cvent's: Home is
+// "summary", Contact Us is "contact-us".
+export const SITE_PAGES = [["summary", "Home"], ["agenda", "Agenda"], ["speakers", "Speakers"], ["venue", "Venue"], ["contact-us", "Contact Us"]];
+export const PAGE_SLUG = /^page:([a-z0-9][a-z0-9_-]*)$/i;
+export function pageHref(v) {
+  const s = String(v ?? "").trim();
+  const m = PAGE_SLUG.exec(s);
+  if (!m) return /^page:/i.test(s) ? "" : s;
+  const base = (window.location.pathname.match(/^(.*?\/event\/[^/]+)(?:\/|$)/) || [])[1];
+  if (base) return `${base}/${m[1]}`;
+  try { return new URL(m[1], window.location.href).pathname; } catch (e) { return ""; }
+}
+
 // List markers (About list + Themes cards): numbers, bullets or an icon per
 // item. Icons are inline stroke SVGs (24 × 24, currentColor), so they follow
 // the text colour of where they sit and need no extra files.
 // ---------------------------------------------------------------------------
-export const LIST_STYLES = [["numbered", "Numbered (01, 02, 03)"], ["bullets", "Bullets"], ["icons", "An icon for each item"]];
+export const LIST_STYLES = [["numbered", "Ordered (01, 02, 03)"], ["bullets", "Unordered (bullets)"], ["icons", "An icon for each item"], ["none", "None"]];
 export const ICONS = {
   check: ["Check", '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16 9.5"/>'],
   chart: ["Line chart", '<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-7"/>'],
@@ -225,18 +242,47 @@ export const iconSvg = (name, cls = "mk-ico") => {
 };
 const listStyleOf = (v) => (LIST_STYLES.some(([k]) => k === v) ? v : "numbered");
 function listMarker(style, i, icon) {
+  if (style === "none") return "";
   if (style === "icons") return `<span class="mk mk--icon">${iconSvg(icon)}</span>`;
   if (style === "bullets") return '<span class="mk mk--dot" aria-hidden="true"></span>';
   return `<span class="mk mk--num" aria-hidden="true">${String(i + 1).padStart(2, "0")}</span>`;
 }
 
-// Speakers heading: always one line. 24 characters fit on one line at every
-// breakpoint (42px desktop down to 1025px wide with the carousel arrows, 32px
-// tablet down to 601px, 28px phone, scaled down slightly under ~430px). The
+// Facts card "Program" cell: what kind of program it is, not how many
+// sessions. Value = the first three session formats in program order, from the
+// Cvent session category ("Keynotes, fireside chats and panels"); detail =
+// "Closing with a networking reception" when the day ends with one. Breaks,
+// logistics and welcome remarks are not formats.
+const NOT_FORMAT = /^(break|logistics|networking|registration|arrivals?|meal|lunch|breakfast|dinner|reception|remarks|welcome|other)$/i;
+const plural = (w) => (/(s|x|ch|sh)$/i.test(w) ? w : /[^aeiou]y$/i.test(w) ? `${w.slice(0, -1)}ies` : `${w}s`);
+function programShape(sessions, lang) {
+  const sorted = [...sessions].filter((s) => !isHiddenSession(s)).sort((a, b) => new Date(a.startDateTime) - new Date(b.startDateTime));
+  const formats = [];
+  sorted.forEach((s) => {
+    const c = String(s?.category?.name || s?.categoryName || "").trim();
+    if (c && !NOT_FORMAT.test(c) && !formats.some((f) => f.toLowerCase() === c.toLowerCase())) formats.push(c);
+  });
+  const words = formats.slice(0, 3).map((f, i) => {
+    const w = plural(f);
+    if (/^[A-Z]{2}/.test(w)) return w; // "AI demos", "CEO interviews": keep the acronym
+    return i ? w.charAt(0).toLowerCase() + w.slice(1) : w.charAt(0).toUpperCase() + w.slice(1);
+  });
+  let programFormats = "";
+  if (words.length) {
+    try { programFormats = new Intl.ListFormat(lang, { style: "long", type: "conjunction" }).format(words); } catch (e) { programFormats = words.join(", "); }
+  }
+  const last = sorted[sorted.length - 1];
+  const closingReception = !!last && /reception|networking|cocktail|drinks/i.test(`${last?.category?.name || ""} ${last?.name || ""}`);
+  return { programFormats, closingReception };
+}
+
+// Speakers heading: always one line. 20 characters fit on one line at every
+// breakpoint, all capitals included (measured 320px to 1440px, carousel and
+// grid layouts; the tightest are phones and 601px with the grid link). The
 // editor caps the field at this length; anything longer that is already saved
-// (or a long translation) is cut with an ellipsis and kept whole in a tooltip.
-export const SPEAKER_HEADING_MAX = 24;
-const spkTitle = (h) => (String(h || "").length > SPEAKER_HEADING_MAX ? ` title="${esc(h)}"` : "");
+// (or a long translation) wraps to a second line. Never an ellipsis.
+export const SPEAKER_HEADING_MAX = 20;
+const spkTitle = () => "";
 
 // Same rule as the Speakers page widget: the speaker's Cvent category.
 const normCat = (v) => String(v ?? "").trim().toLowerCase();
@@ -440,7 +486,7 @@ export default class extends HTMLElement {
       // Cvent's header button usually carries the same text as ours.
       label: cfg.nativeRegisterLabel || P("hero", "primaryLabel", cfg.hero.primaryLabel),
       selector: cfg.nativeRegisterSelector,
-      url: cfg.registerUrl,
+      url: pageHref(cfg.registerUrl),
     });
     this._mountVideo(root, cfg);
     this._carouselCleanup?.();
@@ -472,6 +518,7 @@ export default class extends HTMLElement {
       venueLine: [venueName, a.address1].filter(Boolean).join(", "),
       sessionCount: sessions.length,
       speakerCount: spk.length,
+      ...programShape(sessions, lang),
       companies,
       startMs: start ? new Date(start).getTime() : 0,
     };
@@ -493,9 +540,9 @@ export default class extends HTMLElement {
     const lede = P("hero", "lede", h.lede);
     const btns = `<div class="hero-btns">
         ${cfg.registerMode === "url"
-          ? button({ label: P("hero", "primaryLabel", h.primaryLabel), href: cfg.registerUrl, variant: "primary", ground: "dark", size: "lg", lang })
+          ? button({ label: P("hero", "primaryLabel", h.primaryLabel), href: pageHref(cfg.registerUrl), variant: "primary", ground: "dark", size: "lg", lang })
           : registerButton({ label: P("hero", "primaryLabel", h.primaryLabel), variant: "primary", ground: "dark", size: "lg" })}
-        ${button({ label: P("hero", "secondaryLabel", h.secondaryLabel), href: h.secondaryUrl, variant: "secondary", ground: "dark", size: "lg", lang })}
+        ${button({ label: P("hero", "secondaryLabel", h.secondaryLabel), href: pageHref(h.secondaryUrl), variant: "secondary", ground: "dark", size: "lg", lang })}
       </div>`;
     const countdown = h.showCountdown && facts.startMs > Date.now()
       ? `<div class="hero-count" role="timer" aria-live="off">
@@ -617,7 +664,9 @@ export default class extends HTMLElement {
     const cells = [
       [P("facts", "dateLabel", f.dateLabel), P("facts", "dateValue", f.dateValue) || facts.dateShort, P("facts", "dateDetail", f.dateDetail) || [facts.timeRange, facts.tzLong].filter(Boolean).join(" ")],
       [P("facts", "venueLabel", f.venueLabel), P("facts", "venueValue", f.venueValue) || facts.venueName, P("facts", "venueDetail", f.venueDetail) || facts.street],
-      [P("facts", "programLabel", f.programLabel), P("facts", "programValue", f.programValue) || (facts.sessionCount ? fixed(lang, "sessions", { n: facts.sessionCount }) : ""), P("facts", "programDetail", f.programDetail)],
+      [P("facts", "programLabel", f.programLabel),
+        P("facts", "programValue", f.programValue) || facts.programFormats || (facts.speakerCount ? fixed(lang, "speakers", { n: facts.speakerCount }) : ""),
+        P("facts", "programDetail", f.programDetail) || (facts.closingReception ? fixed(lang, "closingReception") : facts.programFormats && facts.speakerCount ? fixed(lang, "speakers", { n: facts.speakerCount }) : "")],
       f.showSpeakers ? [P("facts", "speakersLabel", f.speakersLabel), P("facts", "speakersValue", f.speakersValue) || (facts.speakerCount ? fixed(lang, "speakers", { n: facts.speakerCount }) : ""), P("facts", "speakersDetail", f.speakersDetail) || autoSpkDetail] : null,
     ].filter((c) => c && c[1]);
     if (!cells.length) return "";
@@ -826,10 +875,13 @@ export default class extends HTMLElement {
     const style = listStyleOf(t.listStyle);
     // Numbered: the kicker replaces the number ("01"); bullets / icons sit
     // beside the kicker text, if any.
+    // Kickers written for the old numbered style carried their own number
+    // ("01 / Valuation"); the marker shows it now, so drop that prefix.
     const themeMarker = (st, i, it) => {
-      if (st === "numbered") return `<p class="theme-kicker">${esc(it.kicker || String(i + 1).padStart(2, "0"))}</p>`;
-      const mk = st === "icons" ? `<span class="mk mk--icon">${iconSvg(it.icon)}</span>` : '<span class="mk mk--dot" aria-hidden="true"></span>';
-      return `<p class="theme-kicker theme-kicker--${st}">${mk}${it.kicker ? `<span>${esc(it.kicker)}</span>` : ""}</p>`;
+      const k = st === "numbered" ? String(it.kicker || "").replace(/^\s*0*\d{1,2}\s*(?:[/·.:|–—-]\s*|$)/u, "") : it.kicker;
+      const text = k ? `<span>${esc(k)}</span>` : "";
+      if (st === "none") return text ? `<p class="theme-kicker">${text}</p>` : "";
+      return `<p class="theme-kicker theme-kicker--${st}">${listMarker(st, i, it.icon)}${text}</p>`;
     };
     if (!items.length) {
       return `
@@ -1036,8 +1088,10 @@ export default class extends HTMLElement {
     .spk-empty { margin-top: 32px; }
     /* Carousel: 4 cards in view (3 tablet, ~1.6 phone so the next one peeks) */
     .spk-sec--carousel .pk-head { align-items: flex-end; }
-    /* Heading on one line at every size (SPEAKER_HEADING_MAX characters). */
-    .spk-h { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: none; }
+    /* One line at every size: the editor caps it at SPEAKER_HEADING_MAX
+       characters. Never clipped and no ellipsis: a longer saved value or a
+       long translation wraps instead. */
+    .spk-h { white-space: normal; overflow: visible; overflow-wrap: anywhere; max-width: none; }
     .pk-head .pk-head-text { min-width: 0; }
     .spk-track { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: calc((100% - 3 * 32px) / 4);
       overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-behavior: smooth;
@@ -1067,9 +1121,12 @@ export default class extends HTMLElement {
     /* Markers: numbers, bullets or icons (decorative; the list itself is the
        semantics). Bullets and icons are centred on the title's first line. */
     .mk { display: inline-flex; align-items: center; color: ${t.ink}; }
-    .mk--num { font-size: 14px; font-weight: 700; color: ${t.faint}; font-variant-numeric: tabular-nums; }
+    .mk--num { font-size: 15px; font-weight: 700; letter-spacing: .04em; color: ${t.ink}; font-variant-numeric: tabular-nums; }
     .num-list--bullets .ai-row, .num-list--icons .ai-row { grid-template-columns: 28px minmax(0, 1fr); align-items: start; }
     .num-list--bullets .ai-row { grid-template-columns: 20px minmax(0, 1fr); }
+    .num-list--none .ai-row { grid-template-columns: minmax(0, 1fr); }
+    .num-list--none .ai-d > summary.ai-row { grid-template-columns: minmax(0, 1fr) auto; }
+    .num-list--none .ai-desc { padding-left: 0; }
     .mk--dot { height: 1.4em; font-size: 18px; }
     .mk--dot::before { content: ""; width: 7px; height: 7px; background: ${t.amber}; }
     .mk--icon { height: calc(18px * 1.4); }
@@ -1100,7 +1157,8 @@ export default class extends HTMLElement {
     .themes-grid { margin-top: 48px; display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); gap: 24px; }
     .theme-card { background: ${t.panel}; border: 1px solid ${t.onDarkHair}; border-radius: 2px; padding: 36px; display: flex; flex-direction: column; gap: 14px; }
     .theme-kicker { font-size: ${LABEL_PX.small}px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: ${t.amber}; }
-    .theme-kicker--bullets, .theme-kicker--icons { display: flex; align-items: center; gap: 12px; min-height: 20px; }
+    .theme-kicker--numbered, .theme-kicker--bullets, .theme-kicker--icons { display: flex; align-items: center; gap: 12px; min-height: 20px; }
+    .theme-kicker .mk--num { font-size: inherit; letter-spacing: inherit; color: #fff; }
     .theme-kicker .mk { color: ${t.amber}; }
     .theme-kicker .mk--dot { height: auto; font-size: inherit; }
     .theme-kicker .mk--icon { height: auto; }
@@ -1174,6 +1232,9 @@ export default class extends HTMLElement {
       .hero-logo-h { margin-bottom: ${gapT - 22}px; }
       .facts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .facts-cell { border-bottom: 1px solid ${t.hair}; }
+      /* Three facts stay in one row (two columns would leave an empty cell). */
+      .facts-grid[style*="--cols:3"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .facts-grid[style*="--cols:3"] .facts-cell { border-bottom: 0; }
       .spk-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px 24px; }
       .spk-track { grid-template-columns: none; grid-auto-columns: calc((100% - 2 * 24px) / 3); }
       .about { grid-template-columns: minmax(0, 1fr); }
@@ -1199,14 +1260,15 @@ export default class extends HTMLElement {
       .hero-lede { font-size: 15px; }
       .hero-btns { flex-direction: column; width: 100%; }
       .hero-btns .pk-btn { width: 100%; }
-      .facts-grid { grid-template-columns: minmax(0, 1fr); border-left: 0; }
+      .facts-grid, .facts-grid[style*="--cols:3"] { grid-template-columns: minmax(0, 1fr); border-left: 0; }
       .facts-cell { padding: 18px 0; border-right: 0; }
+      .facts-grid[style*="--cols:3"] .facts-cell { border-bottom: 1px solid ${t.hair}; }
       .facts--docked .facts-cell { padding: 18px 20px; }
       .spk-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 16px; margin-top: 28px; }
       .spk-track { grid-template-columns: none; grid-auto-columns: 62%; }
       .spk-sec--carousel .pk-head { flex-wrap: wrap; gap: 16px; }
       .spk-sec--carousel .pk-head-text { flex: 1 1 100%; }
-      /* 24 characters at 0.55em need ~13.2em: shrink a little on narrow phones. */
+      /* Shrink a little on narrow phones so a full-length heading stays on one line. */
       .spk-h { font-size: min(28px, calc((100vw - 40px) / 13.2)); }
       .num-t { font-size: 16px; }
       .mk--dot { font-size: 16px; }

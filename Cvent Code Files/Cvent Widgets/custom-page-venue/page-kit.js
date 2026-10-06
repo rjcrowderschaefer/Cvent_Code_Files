@@ -24,7 +24,7 @@
 import { FONT_STACK, TYPE_SCALE, ensureBrandFont } from "./type-scale.js";
 
 // Shown in the page widgets' editor footer, so a stale copy in Cvent is visible.
-export const PAGE_KIT_BUILD = "pagekit-2026-10-02c"; // + planner contact proxy, scroll hold
+export const PAGE_KIT_BUILD = "pagekit-2026-10-05d"; // + page CSS channel (confirm page), planner contact proxy, scroll hold
 
 // ---------------------------------------------------------------------------
 // Tokens
@@ -214,11 +214,11 @@ export const dateLocale = (lang) => DATE_LOCALE[lang] || "en-US";
 export const capFirst = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
 const FIXED = {
-  en: { days: "Days", hours: "Hours", mins: "Min", countdownAria: "{d} days, {h} hours, {m} minutes until the event", sessions: "{n} sessions", session1: "1 session", speakers: "{n} speakers", tba: "Speakers to be announced", andMore: "and more", opensNewTab: "(opens in a new tab)", loading: "Loading…", noSpeakers: "No speakers have been selected. Use the editor to choose the speakers to feature here.", until: "Until {t}",
+  en: { closingReception: "Closing with a networking reception", days: "Days", hours: "Hours", mins: "Min", countdownAria: "{d} days, {h} hours, {m} minutes until the event", sessions: "{n} sessions", session1: "1 session", speakers: "{n} speakers", tba: "Speakers to be announced", andMore: "and more", opensNewTab: "(opens in a new tab)", loading: "Loading…", noSpeakers: "No speakers have been selected. Use the editor to choose the speakers to feature here.", until: "Until {t}",
     toTime: "to {t}", readMore: "Read more", readLess: "Show less", allSessions: "All sessions", filterSessions: "Filter sessions", noMatch: "No sessions match this filter.", noSessions: "The program will be announced soon.", getDirections: "Get directions", addToCalendar: "Add to calendar", moreTba: "More speakers to be announced.", featured: "Featured", speakersLabel: "Speakers", viewBio: "View bio for {name}", mapTitle: "Map of {place}", regOpens: "Registration opens at {t} {tz}", joinUsAt: "Join us at {place} on {date}", joinUsOn: "Join us on {date}", noSpeakersYet: "Speakers will be announced soon.", email: "Email", sessionsAcrossDays: "{n} sessions across {d} days", agendaIntro: "{n} at {place}. All times are {tz}.", agendaIntroNoPlace: "{n}. All times are {tz}.", sessionHdr1: "Session", sessionHdrN: "Sessions", filterLocation: "Location", filterTopics: "Topics", clearFilters: "Clear filters", moderator: "Moderator", speakerOne: "Speaker", prevSpeakers: "Previous speakers", nextSpeakers: "Next speakers" },
-  es: { days: "Días", hours: "Horas", mins: "Min", countdownAria: "Faltan {d} días, {h} horas y {m} minutos para el evento", sessions: "{n} sesiones", session1: "1 sesión", speakers: "{n} ponentes", tba: "Ponentes por anunciar", andMore: "y más", opensNewTab: "(se abre en una pestaña nueva)", loading: "Cargando…", noSpeakers: "No se han seleccionado ponentes.", until: "Hasta las {t}",
+  es: { closingReception: "Cierre con una recepción de networking", days: "Días", hours: "Horas", mins: "Min", countdownAria: "Faltan {d} días, {h} horas y {m} minutos para el evento", sessions: "{n} sesiones", session1: "1 sesión", speakers: "{n} ponentes", tba: "Ponentes por anunciar", andMore: "y más", opensNewTab: "(se abre en una pestaña nueva)", loading: "Cargando…", noSpeakers: "No se han seleccionado ponentes.", until: "Hasta las {t}",
     toTime: "hasta las {t}", readMore: "Leer más", readLess: "Mostrar menos", allSessions: "Todas las sesiones", filterSessions: "Filtrar sesiones", noMatch: "Ninguna sesión coincide con este filtro.", noSessions: "El programa se anunciará pronto.", getDirections: "Cómo llegar", addToCalendar: "Añadir al calendario", moreTba: "Más ponentes por anunciar.", featured: "Destacados", speakersLabel: "Ponentes", viewBio: "Ver la biografía de {name}", mapTitle: "Mapa de {place}", regOpens: "La acreditación abre a las {t} {tz}", joinUsAt: "Acompáñenos en {place} el {date}", joinUsOn: "Acompáñenos el {date}", noSpeakersYet: "Los ponentes se anunciarán pronto.", email: "Correo electrónico", sessionsAcrossDays: "{n} sesiones en {d} días", agendaIntro: "{n} en {place}. Todos los horarios son en {tz}.", agendaIntroNoPlace: "{n}. Todos los horarios son en {tz}.", sessionHdr1: "Sesión", sessionHdrN: "Sesiones", filterLocation: "Ubicación", filterTopics: "Temas", clearFilters: "Borrar filtros", moderator: "Moderador", speakerOne: "Ponente", prevSpeakers: "Ponentes anteriores", nextSpeakers: "Más ponentes" },
-  pt: { days: "Dias", hours: "Horas", mins: "Min", countdownAria: "Faltam {d} dias, {h} horas e {m} minutos para o evento", sessions: "{n} sessões", session1: "1 sessão", speakers: "{n} palestrantes", tba: "Palestrantes a anunciar", andMore: "e mais", opensNewTab: "(abre em uma nova aba)", loading: "Carregando…", noSpeakers: "Nenhum palestrante foi selecionado.", until: "Até {t}",
+  pt: { closingReception: "Encerramento com uma recepção de networking", days: "Dias", hours: "Horas", mins: "Min", countdownAria: "Faltam {d} dias, {h} horas e {m} minutos para o evento", sessions: "{n} sessões", session1: "1 sessão", speakers: "{n} palestrantes", tba: "Palestrantes a anunciar", andMore: "e mais", opensNewTab: "(abre em uma nova aba)", loading: "Carregando…", noSpeakers: "Nenhum palestrante foi selecionado.", until: "Até {t}",
     toTime: "até {t}", readMore: "Leia mais", readLess: "Mostrar menos", allSessions: "Todas as sessões", filterSessions: "Filtrar sessões", noMatch: "Nenhuma sessão corresponde a este filtro.", noSessions: "A programação será anunciada em breve.", getDirections: "Como chegar", addToCalendar: "Adicionar à agenda", moreTba: "Mais palestrantes a anunciar.", featured: "Destaques", speakersLabel: "Palestrantes", viewBio: "Ver a biografia de {name}", mapTitle: "Mapa de {place}", regOpens: "O credenciamento abre às {t} {tz}", joinUsAt: "Junte-se a nós em {place} em {date}", joinUsOn: "Junte-se a nós em {date}", noSpeakersYet: "Os palestrantes serão anunciados em breve.", email: "E-mail", sessionsAcrossDays: "{n} sessões em {d} dias", agendaIntro: "{n} em {place}. Todos os horários estão em {tz}.", agendaIntroNoPlace: "{n}. Todos os horários estão em {tz}.", sessionHdr1: "Sessão", sessionHdrN: "Sessões", filterLocation: "Local", filterTopics: "Temas", clearFilters: "Limpar filtros", moderator: "Moderador", speakerOne: "Palestrante", prevSpeakers: "Palestrantes anteriores", nextSpeakers: "Mais palestrantes" },
 };
 export const countSessions = (lang, n) => (n === 1 ? fixed(lang, "session1") : fixed(lang, "sessions", { n }));
@@ -477,6 +477,155 @@ function ensurePlannerModalCss() {
   st.textContent = PLANNER_MODAL_CSS;
   document.head.append(st);
 }
+// ---------------------------------------------------------------------------
+// Page CSS carried by the widgets, not by the site theme.
+// Cvent's site custom CSS is full (character limit), so the theme now holds
+// only what must apply before any widget loads (early hide of the reg pages,
+// the Contact Planner button). Everything else that styles Cvent's own page
+// content is injected here, once per page, by whichever page widget (or the
+// FAB) loads first. Rules are keyed on our own marker classes, so a page
+// without them is untouched. New page-level CSS goes here, never the theme.
+//
+// Pending approval / confirmation page: native text sections given the classes
+// bbg-confirm-banner, bbg-confirm and bbg-confirm-panel (source:
+// css-files/bbg-reg-confirm.css, kept as the readable copy).
+export const CONFIRM_PAGE_CSS = `
+:is(.bbg-confirm-banner,.bbg-confirm,.bbg-confirm-panel) *{font-family:AvenirNextPForBBG,Helvetica,Arial,sans-serif!important;text-align:left!important;letter-spacing:0}
+:is(.bbg-confirm-banner,.bbg-confirm,.bbg-confirm-panel) :is([data-cvent-id*=usText],[data-cvent-id*=usText]>div){padding:0!important;background:none!important}
+:is(.bbg-confirm-banner,.bbg-confirm,.bbg-confirm-panel) :is(p,h1,h3,h4){margin:0!important;padding:0!important}
+.bbg-confirm-banner{background:#0B0B0C!important;box-shadow:0 0 0 100vmax #0B0B0C;clip-path:inset(0 -100vmax);padding:clamp(32px,4vw,44px) max(20px,calc((100% - 1144px)/2)) clamp(28px,3.5vw,38px)!important}
+.bbg-confirm-banner :is(p,p *){font-size:16px!important;line-height:1.5!important;font-weight:400!important;color:#fffc!important}
+.bbg-confirm-banner [class*=Grid__row]:first-child :is(p,p *){margin-bottom:12px!important;font-size:14.4px!important;font-weight:700!important;letter-spacing:.14em;text-transform:uppercase;color:#FF9D00!important}
+.bbg-confirm-banner :is(h1,h1 *){margin-bottom:12px!important;font-size:clamp(34px,4vw,48px)!important;line-height:1.1!important;font-weight:700!important;letter-spacing:-.02em;color:#fff!important}
+[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel){display:flex!important;align-items:flex-start!important;gap:56px;max-width:1240px;margin:auto!important;padding:44px 48px 64px!important;box-sizing:border-box}
+[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel)>[class*=Grid__col]{flex:1 1 auto!important;width:auto!important;max-width:620px!important}
+[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel)>[class*=Grid__col]:has(.bbg-confirm-panel){flex:0 0 380px!important;max-width:380px!important;margin-left:auto!important;position:sticky;top:96px}
+[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel) [data-cvent-id^=containerP]:not(.bbg-confirm-panel){padding:0!important}
+.bbg-confirm,.bbg-confirm [data-cvent-id^=containerP]{padding:0!important;background:none!important;border-radius:0!important}
+.bbg-confirm :is(p,li,span){font-size:16.5px!important;line-height:1.55!important;font-weight:400!important;color:#3F3F3D!important}
+.bbg-confirm [data-cvent-id*=usText]:has(h1)::before{content:"✓";display:grid;place-items:center;width:52px;height:52px;margin-bottom:22px;border-radius:50%;background:#FF9D0029;color:#FF9D00;font:700 20px/1 Arial}
+.bbg-confirm :is(h1,h2,h1 *,h2 *){margin-bottom:12px!important;font-size:32px!important;line-height:1.15!important;font-weight:700!important;letter-spacing:-.02em;color:#141416!important}
+.bbg-confirm ul{margin:28px 0 0!important;padding:0!important;list-style:none!important;border-top:1px solid #E4E4E0}
+.bbg-confirm li{position:relative;margin:0!important;padding:16px 0 16px 42px!important;list-style:none!important;border-bottom:1px solid #E4E4E0}
+.bbg-confirm :is(li,li *){font-size:14.5px!important}
+.bbg-confirm li::before{content:"";position:absolute;left:0;top:21px;width:14px;height:14px;box-sizing:border-box;border-radius:50%;border:2px solid #C9C9C4}
+.bbg-confirm li:first-child::before{border-color:#FF9D00;background:#FF9D00}
+.bbg-confirm li span[style*=bold]{font-size:16px!important;font-weight:700!important;color:#141416!important}
+.bbg-confirm p:has(a){display:flex!important;flex-wrap:wrap;gap:12px;margin-top:28px!important;font-size:0!important}
+.bbg-confirm p:has(a) br{display:none}
+.bbg-confirm p:has(a) a{display:inline-flex!important;align-items:center;height:52px;padding:0 28px!important;border:1px solid #141416;border-radius:2px;color:#141416!important;font-size:15px!important;font-weight:700!important;text-decoration:none!important}
+.bbg-confirm p:has(a) a:hover{background:#F5F5F3}
+.bbg-confirm p:has(a) a:first-of-type{background:#0062DD;border-color:#0062DD;color:#fff!important}
+.bbg-confirm p:has(a) a:first-of-type:hover{background:#0050B5}
+.bbg-confirm-panel{padding:28px!important;background:#F5F5F3!important;border-top:3px solid #FF9D00!important}
+.bbg-confirm-panel :is(p,span){font-size:14px!important;line-height:1.5!important;color:#3F3F3D!important}
+.bbg-confirm-panel [class*=Grid__row]:first-child :is(p,p *){margin-bottom:8px!important;font-size:13.2px!important;font-weight:700!important;letter-spacing:.14em;text-transform:uppercase;color:#FF9D00!important}
+.bbg-confirm-panel :is(h3,h3 *){font-size:21px!important;line-height:1.25!important;font-weight:700!important;letter-spacing:-.01em;color:#141416!important}
+.bbg-confirm-panel :is(h4,h4 *){margin:14px 0 2px!important;font-size:13.2px!important;font-weight:700!important;letter-spacing:.08em;text-transform:uppercase;color:#FF9D00!important}
+.bbg-confirm-panel [class*=Grid__row]:has(h3)+[class*=Grid__row] h4{margin-top:18px!important}
+.bbg-confirm-panel [class*=Grid__row]:has(h4)+[class*=Grid__row] p{font-size:15.5px!important;color:#141416!important}
+.bbg-confirm-panel [class*=Grid__row]:last-child:not(:first-child) p{margin-top:18px!important;padding-top:16px!important;border-top:1px solid #E4E4E0;font-size:14.5px!important}
+.bbg-confirm-panel a{color:#0062DD!important;font-weight:700!important;text-decoration:none!important}
+.bbg-confirm.bbg-steps-2 li:nth-child(-n+2)::before,.bbg-confirm.bbg-steps-3 li:nth-child(-n+3)::before{border-color:#FF9D00;background:#FF9D00}
+.bbg-confirm p:has(a) a:nth-of-type(3){height:auto;margin-left:auto;align-self:center;padding:0!important;border:0;background:none!important;color:#5C5C5A!important;font-size:14px!important;font-weight:600!important;text-decoration:underline!important;text-underline-offset:3px}
+.bbg-confirm p:has(a) a:nth-of-type(3):hover{color:#0062DD!important}
+:is(.bbg-confirm-callout,.bbg-confirm-note),:is(.bbg-confirm-callout,.bbg-confirm-note) *{font-family:AvenirNextPForBBG,Helvetica,Arial,sans-serif!important;text-align:left!important}
+.bbg-confirm-callout:not(#bbg-x){max-width:620px;margin-top:26px!important;padding:20px 22px!important;border:1px solid #E4E4E0!important;border-radius:2px!important;background:#fff!important}
+.bbg-confirm-note:not(#bbg-x){max-width:620px;margin-top:22px!important;padding:14px 16px!important;border-left:3px solid #FF9D00!important;border-radius:0!important;background:#F5F5F3!important}
+:is(.bbg-confirm-callout,.bbg-confirm-note) :is([data-cvent-id*=usText],[data-cvent-id*=usText]>div){padding:0!important;background:none!important}
+.bbg-confirm :is(.bbg-confirm-callout,.bbg-confirm-note) :is(p,span),:is(.bbg-confirm-callout,.bbg-confirm-note) :is(p,span){margin:0!important;font-size:14.5px!important;line-height:1.5!important;color:#3F3F3D!important}
+.bbg-confirm .bbg-confirm-callout [class*=Grid__row]:first-child :is(p,p *),.bbg-confirm-callout [class*=Grid__row]:first-child :is(p,p *){margin-bottom:4px!important;font-size:16px!important;font-weight:700!important;color:#141416!important}
+.bbg-confirm .bbg-confirm-note :is(b,strong,span[style*=bold]),.bbg-confirm-note :is(b,strong,span[style*=bold]){font-weight:700!important;color:#141416!important}
+html.bbg-live div:has(>[role=banner]):has(>#main){display:flex!important;flex-direction:column!important;min-height:100vh}
+html.bbg-live div:has(>[role=banner])>#main{flex:1 0 auto;min-height:0!important}
+html.bbg-live div:has(>[role=banner])>:not(#main){flex:0 0 auto}
+@media(max-width:1023px){[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel){flex-direction:column;gap:32px;padding:32px 20px 48px!important}[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel)>[class*=Grid__col],[class*=Grid__row]:has(>[class*=Grid__col_6] .bbg-confirm-panel)>[class*=Grid__col]:has(.bbg-confirm-panel){flex:none!important;width:100%!important;max-width:100%!important;margin-left:0!important;position:static}.bbg-confirm-panel{padding:22px 20px!important}.bbg-confirm :is(h1,h2,h1 *,h2 *){font-size:26px!important}.bbg-confirm-banner p{font-size:15px!important}.bbg-confirm p:has(a){flex-direction:column}.bbg-confirm p:has(a) a{justify-content:center}.bbg-confirm p:has(a) a:nth-of-type(3){margin:6px auto 0}}
+`;
+export const SITE_CSS_ID = "bbg-site-css";
+// The live site (not Site Designer, not Planner Registration): html.bbg-live
+// scopes the page-layout rules (footer at the bottom of a tall window).
+export const isLiveSite = (doc) => { try { return /\/event\/[^/]+\/[^/]+/.test(doc.defaultView.location.pathname); } catch (e) { return false; } };
+export function ensureSiteCss(doc = typeof document !== "undefined" ? document : null) {
+  if (doc?.documentElement && isLiveSite(doc)) { doc.documentElement.classList.add("bbg-live"); pinClosingBand(doc); }
+  if (doc?.documentElement) watchPageReady(doc);
+  if (!doc?.head || doc.getElementById(SITE_CSS_ID)) return;
+  const st = doc.createElement("style");
+  st.id = SITE_CSS_ID;
+  st.textContent = CONFIRM_PAGE_CSS;
+  doc.head.append(st);
+}
+// Tall windows: the footer sits at the bottom of the window (the bbg-live
+// rules above) and the closing "Request to attend" band sits right above it;
+// the spare height goes above the band, not between the band and the footer.
+// Recomputed from scratch each time (margin off, measure, margin on) in one
+// frame, so nothing flickers and it never feeds back into itself.
+export function pinClosingBand(doc) {
+  const win = doc?.defaultView;
+  if (!win || doc.__bbgPinBand) return;
+  doc.__bbgPinBand = true;
+  let raf = 0, watched = null;
+  const ro = typeof win.ResizeObserver === "function" ? new win.ResizeObserver(() => ask()) : null;
+  const run = () => {
+    raf = 0;
+    const main = doc.querySelector("#main, [role=main]");
+    if (!main) return;
+    if (ro && watched !== main) { ro.disconnect(); ro.observe(main); watched = main; }
+    const bands = [...main.querySelectorAll("*")].filter((e) => e.shadowRoot).flatMap((h) => [...h.shadowRoot.querySelectorAll(".pk-band-sec")]);
+    const band = bands[bands.length - 1];
+    bands.forEach((b) => b.style.removeProperty("margin-top"));
+    if (!band || !band.getClientRects().length) return;
+    const mainBottom = main.getBoundingClientRect().bottom;
+    const lowest = Math.max(0, ...[...main.children].map((c) => c.getBoundingClientRect().bottom));
+    // Only when the band is the last thing on the page (Home has a section
+    // after it): otherwise the spare height stays below the content.
+    if (lowest - band.getBoundingClientRect().bottom > 4) return;
+    const spare = Math.floor(mainBottom - lowest);
+    if (spare > 1) band.style.setProperty("margin-top", `${spare}px`);
+  };
+  const ask = () => { if (!raf) raf = win.requestAnimationFrame(run); };
+  win.addEventListener("resize", ask);
+  [0, 600, 1500, 3000, 6000].forEach((ms) => win.setTimeout(ask, ms));
+}
+// Loading screen: the site theme CSS hides the page body behind a pulsing
+// Bloomberg "B" while a page that has custom widgets is still drawing them
+// (6 s at most). This marks Cvent's app container data-bbg-ready once every
+// custom widget on the page has drawn (or is hidden on purpose), and clears it
+// again when Cvent moves to another page without reloading. (Cvent prefixes
+// every theme rule with ".custom-css-scope ", so the mark must sit inside that
+// element, not on <html>; an attribute, since Cvent re-sets its class names.)
+const READY_ATTR = "data-bbg-ready";
+export function watchPageReady(doc) {
+  const win = doc?.defaultView;
+  if (!win || doc.__bbgReadyWatch) return;
+  doc.__bbgReadyWatch = true;
+  let path = "", since = 0, okFrom = 0, ready = false;
+  const loading = (box) => {
+    if (!box.getClientRects().length) return false;                // hidden column
+    const host = [...box.querySelectorAll("*")].find((e) => /^WIDGET-/.test(e.tagName));
+    if (!host || !host.matches(":defined")) return true;           // script not in yet
+    if (!host.getClientRects().length || host.getBoundingClientRect().height >= 4) return false;
+    const sr = host.shadowRoot;                                      // drawn nothing yet
+    return !!sr && (!!sr.querySelector(".pk-sr[role=status]") || !!sr.querySelector(".pk:empty"));
+  };
+  const tick = () => {
+    const now = Date.now();
+    const p = win.location.pathname;
+    if (p !== path) { path = p; since = now; okFrom = 0; ready = false; }
+    if (!ready) {
+      const boxes = [...doc.querySelectorAll("[data-cvent-id^=widget-content-]")];
+      const ok = now - since > 250 && boxes.length > 0 && !boxes.some(loading);
+      okFrom = ok ? okFrom || now : 0;
+      if (ok && now - okFrom >= 150) ready = true;
+    }
+    doc.querySelectorAll("[class*=AppContainer__container]").forEach((el) => {
+      if (ready !== el.hasAttribute(READY_ATTR)) el.toggleAttribute(READY_ATTR, ready);
+    });
+    win.setTimeout(tick, ready ? 400 : 60);
+  };
+  tick();
+}
+try { ensureSiteCss(); } catch (e) { /* no document (tests) */ }
+
 // Hide the native widget's button (its Site Designer column) when the page
 // has our contact links: the links open the same pop-up. Only a column that
 // holds nothing but that one button is hidden.

@@ -121,6 +121,25 @@ the speakers.
 - **Editor changes keep the page where it is** (`holdHeight`, `trackScroll`
   / `restoreScroll` in `page-kit.js`).
 
+## Where CSS lives (2026-10-03)
+
+Cvent's site custom CSS is at its character limit, and every rebuild of it risks
+dropping a rule that something already relies on (that is how the pending
+approval page lost its styling). So:
+
+1. **The site theme is frozen to critical rules only**: the reg-page early hide
+   (`css-files/bbg-reg-pages-early.css`), the Contact Planner button hide, and
+   the existing nav / footer / hero rules. Nothing new goes into it.
+2. **All new page-level CSS is injected by the widgets.** `page-kit.js` exports
+   `CONFIRM_PAGE_CSS` and injects it once per page as `<style id="bbg-site-css">`
+   as soon as any page widget loads; the FAB carries an identical copy (marked
+   `BEGIN/END CONFIRM_PAGE_CSS`) because it does not import the kit. Add new
+   page-level rules to that block (and the FAB copy), keyed on our own marker
+   classes so pages without them are untouched.
+3. Reg-form CSS stays in `custom-reg-pages/reg-form-css.js`; the Contact
+   Planner pop-up CSS stays in `PLANNER_MODAL_CSS` (page-kit).
+4. `css-files/*.css` remain the readable copies; the live source is the widget.
+
 ## Where it lives in code
 
 | Rule | File |
